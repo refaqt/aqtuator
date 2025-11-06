@@ -11,7 +11,7 @@
 /* -------------------------------------------------------------------------- */
 
 #include "OptaBlue.h"
-#include <HardwareTimer.h>
+#include "mbed.h"
 
 using namespace Opta;
 
@@ -21,7 +21,11 @@ using namespace Opta;
 
 #define SERIAL_BAUD 115200
 #define MAX_CSV_SAMPLES 10000  // Maximum samples in CSV file
-#define MAX_ACQ_SAMPLES 100000 // Maximum acquisition samples (6 channels)
+#define MAX_ACQ_SAMPLES 4000   // Maximum acquisition samples (6 channels)
+                                // Memory constraint: ~96 KB (4000 × 6 channels × 4 bytes/float)
+                                // Maximum acquisition duration = MAX_ACQ_SAMPLES / sample_rate
+                                // Example: At 1 kHz = 4 seconds, at 100 Hz = 40 seconds
+                                // See specifications.md "Memory Management" section
 #define OUTPUT_CHANNEL 0       // O1 on A0602 expansion board
 #define INPUT_CHANNELS 6       // I1-I6 on Opta Lite base unit
 
@@ -38,7 +42,7 @@ bool acquisition_active = false;
 bool output_active = false;
 
 // Timing
-HardwareTimer *timer = NULL;
+mbed::Ticker timer;
 uint32_t output_index = 0;
 uint32_t acq_index = 0;
 
@@ -106,11 +110,10 @@ void setup() {
   
   // Initialize Opta Lite base unit analog inputs I1-I6
   // Note: Using Arduino's built-in analogRead for base unit
-  // For hardware-timed acquisition, we'll use timer interrupts
+  // For hardware-timed acquisition, we'll use Mbed OS Ticker for periodic interrupts
   
-  // Setup hardware timer for precise timing
-  timer = new HardwareTimer(TIM3);  // Use TIM3 on STM32
-  timer->setOverflow(1000, MICROSEC_FORMAT);  // Default 1kHz
+  // Timer will be configured when starting output/acquisition
+  // Default period is 1kHz (0.001s)
   
   Serial.println("INFO: System initialized");
   Serial.println("INFO: Ready for commands");
@@ -170,38 +173,95 @@ void timerISR() {
 
 bool parseCSVFromSerial() {
   csv_sample_count = 0;
+  bool found_header = false;
+  bool sample_period_extracted = false;
+  float first_time = -1.0;
+  float second_time = -1.0;
   
-  // Read first line (sample period)
-  String line = Serial.readStringUntil('\n');
-  line.trim();
-  csv_sample_period = line.toFloat();
+  // Read and parse CSV file
+  while (Serial.available() > 0 && csv_sample_count < MAX_CSV_SAMPLES) {
+    String line = Serial.readStringUntil('\n');
+    line.trim();
+    
+    if (line.length() == 0) continue;
+    
+    // Skip header comment lines (starting with #)
+    if (line.startsWith("#")) {
+      // Try to extract sample period from metadata header
+      // Format: "# fs: 5000.0 Hz"
+      if (line.indexOf("fs:") >= 0) {
+        int fs_start = line.indexOf("fs:") + 3;
+        String fs_str = line.substring(fs_start);
+        fs_str.trim();
+        int hz_pos = fs_str.indexOf("Hz");
+        if (hz_pos > 0) {
+          fs_str = fs_str.substring(0, hz_pos);
+          fs_str.trim();
+          float fs = fs_str.toFloat();
+          if (fs > 0) {
+            csv_sample_period = 1.0 / fs;
+            sample_period_extracted = true;
+          }
+        }
+      }
+      continue;
+    }
+    
+    // Check for CSV header row
+    if (line.equalsIgnoreCase("Time_s,Signal") || line.equalsIgnoreCase("Time_s,Signal\n")) {
+      found_header = true;
+      continue;
+    }
+    
+    // Parse data rows (comma-separated: time, signal)
+    int comma_pos = line.indexOf(',');
+    if (comma_pos > 0) {
+      // Extract time and signal values
+      String time_str = line.substring(0, comma_pos);
+      String signal_str = line.substring(comma_pos + 1);
+      time_str.trim();
+      signal_str.trim();
+      
+      float time_val = time_str.toFloat();
+      float voltage = signal_str.toFloat();
+      
+      // Store first two time values to calculate sample period if not extracted from metadata
+      if (first_time < 0) {
+        first_time = time_val;
+      } else if (second_time < 0 && !sample_period_extracted) {
+        second_time = time_val;
+        if (second_time > first_time) {
+          csv_sample_period = second_time - first_time;
+          sample_period_extracted = true;
+        }
+      }
+      
+      // Validate voltage range
+      if (voltage < 0.0 || voltage > 3.3) {
+        Serial.print("ERROR: Voltage out of range: ");
+        Serial.println(voltage);
+        return false;
+      }
+      
+      csv_voltage_values[csv_sample_count++] = voltage;
+    } else {
+      // Fallback: try to parse as single value (for backward compatibility)
+      float voltage = line.toFloat();
+      if (voltage >= 0.0 && voltage <= 3.3) {
+        csv_voltage_values[csv_sample_count++] = voltage;
+      }
+    }
+  }
+  
+  // Validate sample period
+  if (!sample_period_extracted) {
+    Serial.println("ERROR: Could not extract sample period from CSV");
+    return false;
+  }
   
   if (csv_sample_period <= 0 || csv_sample_period > 1.0) {
     Serial.println("ERROR: Invalid sample period");
     return false;
-  }
-  
-  // Configure timer for this sample period
-  uint32_t period_us = (uint32_t)(csv_sample_period * 1000000);
-  timer->setOverflow(period_us, MICROSEC_FORMAT);
-  
-  // Read voltage values
-  while (Serial.available() > 0 && csv_sample_count < MAX_CSV_SAMPLES) {
-    line = Serial.readStringUntil('\n');
-    line.trim();
-    
-    if (line.length() == 0) break;
-    
-    float voltage = line.toFloat();
-    
-    // Validate voltage range
-    if (voltage < 0.0 || voltage > 3.3) {
-      Serial.print("ERROR: Voltage out of range: ");
-      Serial.println(voltage);
-      return false;
-    }
-    
-    csv_voltage_values[csv_sample_count++] = voltage;
   }
   
   if (csv_sample_count == 0) {
@@ -212,7 +272,7 @@ bool parseCSVFromSerial() {
   Serial.print("INFO: Loaded ");
   Serial.print(csv_sample_count);
   Serial.print(" samples, period: ");
-  Serial.print(csv_sample_period);
+  Serial.print(csv_sample_period, 6);
   Serial.println("s");
   
   return true;
@@ -233,15 +293,18 @@ void processCommand(String cmd) {
     output_active = true;
     output_index = 0;
     current_state = STATE_OUTPUTTING;
-    timer->attachInterrupt(timerISR);
+    // Attach timer interrupt with period from csv_sample_period
+    timer.attach(&timerISR, csv_sample_period);
     Serial.println("ACK: Output started");
     
   } else if (cmd.startsWith("STOP_OUTPUT")) {
     output_active = false;
-    if (acquisition_active) {
-      current_state = STATE_ACQUIRING;
-    } else {
+    if (!acquisition_active) {
+      // Only detach timer if acquisition is also not active
+      timer.detach();
       current_state = STATE_IDLE;
+    } else {
+      current_state = STATE_ACQUIRING;
     }
     Serial.println("ACK: Output stopped");
     
@@ -276,9 +339,9 @@ void processCommand(String cmd) {
       output_active = true;
       output_index = 0;
       current_state = STATE_ACQUIRING;
+      // Attach timer interrupt with period from csv_sample_period
+      timer.attach(&timerISR, acq_sample_period);
     }
-    
-    timer->attachInterrupt(timerISR);
     
     Serial.println("ACK: Acquisition started");
     
@@ -288,7 +351,7 @@ void processCommand(String cmd) {
       delay(10);
     }
     
-    timer->detachInterrupt();
+    timer.detach();
     output_active = false;
     current_state = STATE_IDLE;
     

@@ -70,12 +70,17 @@ class SerialThread(QThread):
     
     def send_command(self, cmd):
         """Send command to Arduino."""
-        if self.serial_port and self.serial_port.is_open:
-            try:
-                self.serial_port.write((cmd + '\n').encode())
-                self.serial_port.flush()
-            except Exception as e:
-                self.error_occurred.emit(f"Send command failed: {e}")
+        if not self.serial_port or not self.serial_port.is_open:
+            self.error_occurred.emit("Serial port not connected. Please connect to Arduino first.")
+            return False
+        
+        try:
+            self.serial_port.write((cmd + '\n').encode())
+            self.serial_port.flush()
+            return True
+        except Exception as e:
+            self.error_occurred.emit(f"Send command failed: {e}")
+            return False
     
     def upload_csv(self, csv_path):
         """Upload CSV file to Arduino."""
@@ -186,6 +191,8 @@ class MainWindow(QMainWindow):
         self.data = None
         self.csv_path = None
         self.csv_info = {}
+        self.csv_time = None
+        self.csv_voltage = None
         
         # Controllers
         self.serial_thread = SerialThread()
@@ -314,6 +321,33 @@ class MainWindow(QMainWindow):
         
         layout.addWidget(status_group)
         
+        # Arduino Connection Section
+        arduino_group = QWidget()
+        arduino_layout = QVBoxLayout(arduino_group)
+        arduino_layout.addWidget(QLabel("<b>Arduino Connection</b>"))
+        
+        # Serial port selection
+        port_layout = QHBoxLayout()
+        port_layout.addWidget(QLabel("Serial port:"))
+        self.serial_port_combo = QComboBox()
+        self.refresh_ports()
+        port_layout.addWidget(self.serial_port_combo)
+        
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.clicked.connect(self.refresh_ports)
+        port_layout.addWidget(refresh_btn)
+        arduino_layout.addLayout(port_layout)
+        
+        # Connection button
+        self.arduino_connect_btn = QPushButton("Connect Arduino")
+        self.arduino_connect_btn.clicked.connect(self.connect_arduino)
+        arduino_layout.addWidget(self.arduino_connect_btn)
+        
+        self.arduino_status_label = QLabel("Arduino: Not connected")
+        arduino_layout.addWidget(self.arduino_status_label)
+        
+        layout.addWidget(arduino_group)
+        
         # ODrive Configuration Section
         odrive_group = QWidget()
         odrive_layout = QVBoxLayout(odrive_group)
@@ -356,6 +390,17 @@ class MainWindow(QMainWindow):
         
         # Create tab widget
         tabs = QTabWidget()
+        
+        # CSV Signal plot tab
+        csv_tab = QWidget()
+        csv_layout = QVBoxLayout(csv_tab)
+        
+        # Plot canvas
+        self.csv_figure = Figure(figsize=(10, 6))
+        self.csv_canvas = FigureCanvas(self.csv_figure)
+        csv_layout.addWidget(self.csv_canvas)
+        
+        tabs.addTab(csv_tab, "CSV Signal")
         
         # Time domain plot tab
         time_tab = QWidget()
@@ -437,29 +482,100 @@ class MainWindow(QMainWindow):
         if filename:
             try:
                 with open(filename, 'r') as f:
-                    reader = csv.reader(f)
-                    lines = list(reader)
+                    lines = f.readlines()
                 
                 if len(lines) < 2:
                     QMessageBox.warning(self, "Error", "CSV file too short")
                     return
                 
-                # First line is sample period
-                sample_period = float(lines[0][0])
-                sample_rate = 1.0 / sample_period if sample_period > 0 else 0
-                
-                # Remaining lines are voltage values
+                # Parse CSV with header comments
+                sample_period = None
+                sample_rate = None
                 voltage_values = []
-                for line in lines[1:]:
-                    if len(line) > 0:
-                        voltage = float(line[0])
-                        if voltage < 0 or voltage > 3.3:
-                            QMessageBox.warning(self, "Error", f"Voltage out of range: {voltage}V")
-                            return
-                        voltage_values.append(voltage)
+                time_values = []
+                found_header = False
+                first_time = None
+                second_time = None
+                has_time_column = False
+                
+                for line in lines:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    # Skip header comment lines (starting with #)
+                    if line.startswith('#'):
+                        # Try to extract sample rate from metadata header
+                        # Format: "# fs: 5000.0 Hz"
+                        if 'fs:' in line:
+                            try:
+                                fs_part = line.split('fs:')[1].split('Hz')[0].strip()
+                                fs_value = float(fs_part)
+                                if fs_value > 0:
+                                    sample_rate = fs_value
+                                    sample_period = 1.0 / fs_value
+                            except (ValueError, IndexError):
+                                pass
+                        continue
+                    
+                    # Check for CSV header row
+                    if line.lower() == 'time_s,signal':
+                        found_header = True
+                        has_time_column = True
+                        continue
+                    
+                    # Parse data rows (comma-separated: time, signal)
+                    if ',' in line:
+                        parts = line.split(',')
+                        if len(parts) >= 2:
+                            try:
+                                time_val = float(parts[0].strip())
+                                voltage = float(parts[1].strip())
+                                
+                                # Store first two time values to calculate sample period if not extracted
+                                if first_time is None:
+                                    first_time = time_val
+                                elif second_time is None and sample_period is None:
+                                    second_time = time_val
+                                    if second_time > first_time:
+                                        sample_period = second_time - first_time
+                                        sample_rate = 1.0 / sample_period
+                                
+                                # Validate voltage range
+                                if voltage < 0 or voltage > 3.3:
+                                    QMessageBox.warning(self, "Error", f"Voltage out of range: {voltage}V")
+                                    return
+                                
+                                voltage_values.append(voltage)
+                                time_values.append(time_val)
+                                has_time_column = True
+                            except ValueError:
+                                continue
+                    else:
+                        # Fallback: try to parse as single value (for backward compatibility)
+                        try:
+                            voltage = float(line)
+                            if 0 <= voltage <= 3.3:
+                                voltage_values.append(voltage)
+                        except ValueError:
+                            continue
+                
+                # Calculate sample period from time differences if not extracted from metadata
+                if sample_period is None and len(voltage_values) > 1:
+                    # Try to extract from time column if available
+                    if first_time is not None and second_time is not None:
+                        sample_period = second_time - first_time
+                        sample_rate = 1.0 / sample_period
+                    else:
+                        QMessageBox.warning(self, "Error", "Could not determine sample period from CSV")
+                        return
                 
                 if len(voltage_values) == 0:
                     QMessageBox.warning(self, "Error", "No voltage values found")
+                    return
+                
+                if sample_period is None or sample_period <= 0:
+                    QMessageBox.warning(self, "Error", "Invalid sample period")
                     return
                 
                 self.csv_path = filename
@@ -470,6 +586,15 @@ class MainWindow(QMainWindow):
                     'samples': len(voltage_values)
                 }
                 
+                # Store CSV data for visualization
+                self.csv_voltage = np.array(voltage_values)
+                if has_time_column and len(time_values) > 0:
+                    # Use time values from CSV
+                    self.csv_time = np.array(time_values)
+                else:
+                    # Generate time array from sample period
+                    self.csv_time = np.arange(len(voltage_values)) * sample_period
+                
                 self.file_label.setText(f"File: {self.csv_info['filename']}")
                 self.csv_info_label.setText(
                     f"Rate: {sample_rate:.1f} Hz\n"
@@ -477,9 +602,14 @@ class MainWindow(QMainWindow):
                     f"Samples: {self.csv_info['samples']}"
                 )
                 
-                # Upload to Arduino
-                if self.serial_thread.serial_port:
+                # Update CSV plot
+                self.update_csv_plot()
+                
+                # Upload to Arduino if connected
+                if self.serial_thread.serial_port and self.serial_thread.serial_port.is_open:
                     self.serial_thread.upload_csv(filename)
+                else:
+                    QMessageBox.information(self, "Info", "CSV file loaded but not uploaded. Please connect to Arduino and load the file again to upload.")
                 
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to load CSV: {e}")
@@ -490,15 +620,23 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Warning", "Please load a CSV file first")
             return
         
-        self.serial_thread.send_command("START_OUTPUT")
-        self.start_output_btn.setEnabled(False)
-        self.stop_output_btn.setEnabled(True)
+        if not self.serial_thread.serial_port or not self.serial_thread.serial_port.is_open:
+            QMessageBox.warning(self, "Warning", "Please connect to Arduino first")
+            return
+        
+        if self.serial_thread.send_command("START_OUTPUT"):
+            self.start_output_btn.setEnabled(False)
+            self.stop_output_btn.setEnabled(True)
     
     def stop_output(self):
         """Stop voltage output."""
-        self.serial_thread.send_command("STOP_OUTPUT")
-        self.start_output_btn.setEnabled(True)
-        self.stop_output_btn.setEnabled(False)
+        if not self.serial_thread.serial_port or not self.serial_thread.serial_port.is_open:
+            QMessageBox.warning(self, "Warning", "Please connect to Arduino first")
+            return
+        
+        if self.serial_thread.send_command("STOP_OUTPUT"):
+            self.start_output_btn.setEnabled(True)
+            self.stop_output_btn.setEnabled(False)
     
     def start_acquisition(self):
         """Start data acquisition."""
@@ -506,18 +644,58 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Warning", "Please load a CSV file first")
             return
         
+        if not self.serial_thread.serial_port or not self.serial_thread.serial_port.is_open:
+            QMessageBox.warning(self, "Warning", "Please connect to Arduino first")
+            return
+        
         duration = self.acq_duration.value()
         delay = self.acq_delay.value()
         
-        self.serial_thread.send_command(f"START_ACQUISITION,{duration},{delay}")
-        self.start_acq_btn.setEnabled(False)
-        self.stop_acq_btn.setEnabled(True)
+        if self.serial_thread.send_command(f"START_ACQUISITION,{duration},{delay}"):
+            self.start_acq_btn.setEnabled(False)
+            self.stop_acq_btn.setEnabled(True)
     
     def stop_acquisition(self):
         """Stop data acquisition."""
-        self.serial_thread.send_command("STOP_ACQUISITION")
-        self.start_acq_btn.setEnabled(True)
-        self.stop_acq_btn.setEnabled(False)
+        if not self.serial_thread.serial_port or not self.serial_thread.serial_port.is_open:
+            QMessageBox.warning(self, "Warning", "Please connect to Arduino first")
+            return
+        
+        if self.serial_thread.send_command("STOP_ACQUISITION"):
+            self.start_acq_btn.setEnabled(True)
+            self.stop_acq_btn.setEnabled(False)
+    
+    def refresh_ports(self):
+        """Refresh the list of available serial ports."""
+        self.serial_port_combo.clear()
+        ports = serial.tools.list_ports.comports()
+        for port in ports:
+            port_str = f"{port.device} - {port.description}"
+            self.serial_port_combo.addItem(port_str, port.device)
+    
+    def connect_arduino(self):
+        """Connect to Arduino serial port."""
+        if self.serial_thread.serial_port and self.serial_thread.serial_port.is_open:
+            # Disconnect
+            self.serial_thread.disconnect_serial()
+            self.arduino_connect_btn.setText("Connect Arduino")
+            self.arduino_status_label.setText("Arduino: Not connected")
+        else:
+            # Connect
+            if self.serial_port_combo.count() == 0:
+                QMessageBox.warning(self, "Warning", "No serial ports available. Please refresh.")
+                return
+            
+            port = self.serial_port_combo.currentData()
+            if not port:
+                QMessageBox.warning(self, "Warning", "Please select a serial port")
+                return
+            
+            if self.serial_thread.connect_serial(port):
+                self.arduino_connect_btn.setText("Disconnect Arduino")
+                self.arduino_status_label.setText(f"Arduino: Connected ({port})")
+            else:
+                QMessageBox.warning(self, "Error", f"Failed to connect to {port}")
     
     def connect_odrive(self):
         """Connect to ODrive."""
@@ -546,6 +724,15 @@ class MainWindow(QMainWindow):
     
     def on_status_update(self, status):
         """Handle status update from Arduino."""
+        # Handle connection status
+        if 'connected' in status:
+            if status['connected']:
+                port = self.serial_port_combo.currentData() if self.serial_port_combo.count() > 0 else "Unknown"
+                self.arduino_status_label.setText(f"Arduino: Connected ({port})")
+            else:
+                self.arduino_status_label.setText("Arduino: Not connected")
+        
+        # Handle state updates
         state_names = ['IDLE', 'OUTPUTTING', 'ACQUIRING', 'TRANSFERRING']
         if status.get('state') is not None:
             state = state_names[status['state']]
@@ -650,6 +837,21 @@ class MainWindow(QMainWindow):
         axes[-1].set_xlabel('Time (s)')
         self.time_figure.tight_layout()
         self.time_canvas.draw()
+    
+    def update_csv_plot(self):
+        """Update CSV signal plot."""
+        if self.csv_time is None or self.csv_voltage is None:
+            return
+        
+        self.csv_figure.clear()
+        ax = self.csv_figure.add_subplot(1, 1, 1)
+        ax.plot(self.csv_time, self.csv_voltage)
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('Voltage (V)')
+        ax.set_title('CSV Input Signal')
+        ax.grid(True)
+        self.csv_figure.tight_layout()
+        self.csv_canvas.draw()
     
     def calculate_bode(self):
         """Calculate and plot Bode plot."""
