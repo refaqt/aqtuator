@@ -40,6 +40,7 @@ uint32_t acq_sample_count = 0;
 float acq_sample_period = 0.001;
 bool acquisition_active = false;
 bool output_active = false;
+bool parsing_csv = false;  // Flag to prevent loop() from processing commands during CSV upload
 
 // Timing
 mbed::Ticker timer;
@@ -171,15 +172,30 @@ void timerISR() {
 // CSV File Parsing
 // ============================================================================
 
-bool parseCSVFromSerial() {
+bool parseCSVFromSerial(uint32_t expected_lines) {
+  Serial.print("DEBUG: parseCSVFromSerial() entered, expected_lines=");
+  Serial.println(expected_lines);
+  Serial.print("DEBUG: Serial.available()=");
+  Serial.println(Serial.available());
+  
   csv_sample_count = 0;
-  bool found_header = false;
   bool sample_period_extracted = false;
   float first_time = -1.0;
   float second_time = -1.0;
+  unsigned long start_time = millis();
+  const unsigned long timeout_per_line_ms = 5000;  // 5 seconds max per line
   
-  // Read and parse CSV file
-  while (Serial.available() > 0 && csv_sample_count < MAX_CSV_SAMPLES) {
+  // Read exactly expected_lines lines
+  for (uint32_t i = 0; i < expected_lines && csv_sample_count < MAX_CSV_SAMPLES; i++) {
+    // Wait for data to be available with timeout
+    unsigned long line_start = millis();
+    while (Serial.available() == 0) {
+      if (millis() - line_start > timeout_per_line_ms) {
+        Serial.println("ERROR: Timeout waiting for CSV data");
+        return false;
+      }
+    }
+    
     String line = Serial.readStringUntil('\n');
     line.trim();
     
@@ -198,7 +214,7 @@ bool parseCSVFromSerial() {
           fs_str = fs_str.substring(0, hz_pos);
           fs_str.trim();
           float fs = fs_str.toFloat();
-          if (fs > 0) {
+          if (fs > 0 && fs < 1000000) {
             csv_sample_period = 1.0 / fs;
             sample_period_extracted = true;
           }
@@ -207,16 +223,14 @@ bool parseCSVFromSerial() {
       continue;
     }
     
-    // Check for CSV header row
-    if (line.equalsIgnoreCase("Time_s,Signal") || line.equalsIgnoreCase("Time_s,Signal\n")) {
-      found_header = true;
+    // Skip CSV header row
+    if (line.equalsIgnoreCase("Time_s,Signal")) {
       continue;
     }
     
     // Parse data rows (comma-separated: time, signal)
     int comma_pos = line.indexOf(',');
     if (comma_pos > 0) {
-      // Extract time and signal values
       String time_str = line.substring(0, comma_pos);
       String signal_str = line.substring(comma_pos + 1);
       time_str.trim();
@@ -225,12 +239,17 @@ bool parseCSVFromSerial() {
       float time_val = time_str.toFloat();
       float voltage = signal_str.toFloat();
       
-      // Store first two time values to calculate sample period if not extracted from metadata
-      if (first_time < 0) {
+      // Validate parsed values
+      if (isnan(time_val) || isnan(voltage) || isinf(time_val) || isinf(voltage)) {
+        continue;
+      }
+      
+      // Store first two time values to calculate sample period if not extracted
+      if (first_time < 0 && time_val >= 0) {
         first_time = time_val;
-      } else if (second_time < 0 && !sample_period_extracted) {
+      } else if (second_time < 0 && !sample_period_extracted && time_val > first_time) {
         second_time = time_val;
-        if (second_time > first_time) {
+        if (second_time > first_time && second_time - first_time < 10.0) {
           csv_sample_period = second_time - first_time;
           sample_period_extracted = true;
         }
@@ -245,18 +264,27 @@ bool parseCSVFromSerial() {
       
       csv_voltage_values[csv_sample_count++] = voltage;
     } else {
-      // Fallback: try to parse as single value (for backward compatibility)
+      // Fallback: try to parse as single value
       float voltage = line.toFloat();
-      if (voltage >= 0.0 && voltage <= 3.3) {
+      if (!isnan(voltage) && !isinf(voltage) && voltage >= 0.0 && voltage <= 3.3) {
         csv_voltage_values[csv_sample_count++] = voltage;
+        if (!sample_period_extracted && csv_sample_count == 2) {
+          csv_sample_period = 0.001;  // Default 1kHz
+          sample_period_extracted = true;
+        }
       }
     }
   }
   
-  // Validate sample period
+  // Validate sample period - use fallback if extraction failed
   if (!sample_period_extracted) {
-    Serial.println("ERROR: Could not extract sample period from CSV");
-    return false;
+    if (csv_sample_count > 0) {
+      csv_sample_period = 0.001;  // Default 1kHz
+      Serial.println("WARNING: Could not extract sample period, using default 0.001s (1kHz)");
+    } else {
+      Serial.println("ERROR: Could not extract sample period from CSV and no samples loaded");
+      return false;
+    }
   }
   
   if (csv_sample_period <= 0 || csv_sample_period > 1.0) {
@@ -275,6 +303,7 @@ bool parseCSVFromSerial() {
   Serial.print(csv_sample_period, 6);
   Serial.println("s");
   
+  Serial.println("DEBUG: parseCSVFromSerial() completed successfully");
   return true;
 }
 
@@ -284,6 +313,10 @@ bool parseCSVFromSerial() {
 
 void processCommand(String cmd) {
   cmd.trim();
+  Serial.print("DEBUG: processCommand() - cmd='");
+  Serial.print(cmd);
+  Serial.print("', parsing_csv=");
+  Serial.println(parsing_csv);
   
   if (cmd.startsWith("START_OUTPUT")) {
     if (csv_sample_count == 0) {
@@ -358,12 +391,93 @@ void processCommand(String cmd) {
     Serial.println("ACK: Acquisition complete");
     
   } else if (cmd.startsWith("UPLOAD_CSV")) {
+    // Parse line count from command: UPLOAD_CSV,<num_lines>
+    int comma_pos = cmd.indexOf(',');
+    if (comma_pos < 0) {
+      Serial.println("ERROR: Missing line count in UPLOAD_CSV command");
+      return;
+    }
+    
+    uint32_t expected_lines = cmd.substring(comma_pos + 1).toInt();
+    if (expected_lines == 0 || expected_lines > MAX_CSV_SAMPLES) {
+      Serial.println("ERROR: Invalid line count");
+      return;
+    }
+    
+    parsing_csv = true;  // Set flag immediately to prevent loop() from reading
+    
+    // Clear any stale data from serial buffer BEFORE sending READY
+    // This ensures no CSV lines are in the buffer when Python starts sending
+    int cleared = 0;
+    while (Serial.available() > 0) {
+      Serial.read();
+      cleared++;
+    }
+    if (cleared > 0) {
+      Serial.print("DEBUG: Cleared ");
+      Serial.print(cleared);
+      Serial.println(" bytes from buffer");
+    }
+    
+    Serial.print("DEBUG: parsing_csv set to true, Serial.available()=");
+    Serial.println(Serial.available());
     Serial.println("READY");
-    if (parseCSVFromSerial()) {
+    
+    if (parseCSVFromSerial(expected_lines)) {
       Serial.println("ACK: CSV loaded");
     } else {
       Serial.println("NACK: CSV load failed");
     }
+    
+    // Clear any leftover data from serial buffer before setting parsing_csv = false
+    // This prevents leftover CSV lines from being processed as commands
+    int leftover_cleared = 0;
+    while (Serial.available() > 0) {
+      Serial.read();
+      leftover_cleared++;
+    }
+    if (leftover_cleared > 0) {
+      Serial.print("DEBUG: Cleared ");
+      Serial.print(leftover_cleared);
+      Serial.println(" leftover bytes from buffer after CSV parsing");
+    }
+    
+    parsing_csv = false;  // Clear flag when done
+    Serial.println("DEBUG: parsing_csv set to false");
+    
+  } else if (cmd.startsWith("RESET")) {
+    // Reset parsing state and clear buffers
+    Serial.println("DEBUG: RESET command received");
+    parsing_csv = false;
+    Serial.println("DEBUG: parsing_csv set to false");
+    int cleared = 0;
+    while (Serial.available() > 0) {
+      Serial.read();
+      cleared++;
+    }
+    Serial.print("DEBUG: Cleared ");
+    Serial.print(cleared);
+    Serial.println(" bytes from buffer");
+    Serial.println("ACK: Reset complete");
+    
+  } else if (cmd.startsWith("DEBUG")) {
+    // Debug command - dump current state
+    Serial.println("DEBUG: === State Dump ===");
+    Serial.print("DEBUG: parsing_csv = ");
+    Serial.println(parsing_csv);
+    Serial.print("DEBUG: Serial.available() = ");
+    Serial.println(Serial.available());
+    Serial.print("DEBUG: csv_sample_count = ");
+    Serial.println(csv_sample_count);
+    Serial.print("DEBUG: output_active = ");
+    Serial.println(output_active);
+    Serial.print("DEBUG: acquisition_active = ");
+    Serial.println(acquisition_active);
+    Serial.print("DEBUG: current_state = ");
+    Serial.println(current_state);
+    Serial.print("DEBUG: csv_sample_period = ");
+    Serial.println(csv_sample_period, 6);
+    Serial.println("DEBUG: === End State Dump ===");
     
   } else if (cmd.startsWith("GET_STATUS")) {
     Serial.print("STATUS:");
@@ -425,9 +539,23 @@ void processCommand(String cmd) {
 void loop() {
   OptaController.update();
   
+  // Skip reading Serial if parsing CSV to avoid race condition
+  if (parsing_csv) {
+    static unsigned long last_debug = 0;
+    if (millis() - last_debug > 1000) {  // Print every second when stuck
+      Serial.print("DEBUG: loop() - parsing_csv=true, Serial.available()=");
+      Serial.println(Serial.available());
+      last_debug = millis();
+    }
+    delay(1);
+    return;
+  }
+  
   // Check for incoming serial commands
   if (Serial.available() > 0) {
     String cmd = Serial.readStringUntil('\n');
+    Serial.print("DEBUG: Received command: ");
+    Serial.println(cmd);
     processCommand(cmd);
   }
   
