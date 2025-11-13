@@ -15,6 +15,8 @@ import serial.tools.list_ports
 import numpy as np
 import pandas as pd
 from scipy import signal
+import time
+import threading
 
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QHBoxLayout, QPushButton, QLabel, QFileDialog, 
@@ -54,6 +56,7 @@ class SerialThread(QThread):
         self.csv_upload_queue = []  # Queue for CSV upload requests
         self.uploading_csv = False  # Flag to indicate CSV upload in progress
         self.error_suppress_count = 0  # Counter for suppressed errors during upload
+        self.serial_lock = threading.Lock()  # Lock for exclusive serial port access
         
     def connect_serial(self, port, baud_rate=115200):
         """Connect to Arduino serial port."""
@@ -79,23 +82,96 @@ class SerialThread(QThread):
             self.error_occurred.emit("Serial port not connected. Please connect to Arduino first.")
             return False
         
-        try:
-            # Write the command (match test_serial.py approach)
-            bytes_written = self.serial_port.write((cmd + '\n').encode())
-            if bytes_written == 0:
-                self.error_occurred.emit("Send command failed: No bytes written")
-                return False
-            
-            # Try to flush (ignore timeout - command may still be sent)
+        with self.serial_lock:
             try:
-                self.serial_port.flush()
-            except:
-                pass
-            
-            return True
-        except Exception as e:
-            self.error_occurred.emit(f"Send command failed: {e}")
-            return False
+                # Write the command (match test_serial.py approach)
+                bytes_written = self.serial_port.write((cmd + '\n').encode())
+                if bytes_written == 0:
+                    self.error_occurred.emit("Send command failed: No bytes written")
+                    return False
+                
+                # Try to flush (ignore timeout - command may still be sent)
+                try:
+                    self.serial_port.flush()
+                except:
+                    pass
+                
+                return True
+            except Exception as e:
+                self.error_occurred.emit(f"Send command failed: {e}")
+                return False
+    
+    def send_command_and_wait_response(self, cmd, expected_ack, timeout=2):
+        """Send command to Arduino and wait for expected ACK or ERROR response.
+        
+        Args:
+            cmd: Command string to send
+            expected_ack: Expected ACK message (e.g., "ACK: Output started") or prefix (e.g., "STATUS:")
+            timeout: Timeout in seconds (default 2)
+        
+        Returns:
+            tuple: (success: bool, response: str, error: str)
+        """
+        if not self.serial_port or not self.serial_port.is_open:
+            return (False, "", "Serial port not connected")
+        
+        with self.serial_lock:
+            try:
+                # Clear input buffer before sending command
+                while self.serial_port.in_waiting > 0:
+                    self.serial_port.read(self.serial_port.in_waiting)
+                
+                # Write the command
+                bytes_written = self.serial_port.write((cmd + '\n').encode())
+                if bytes_written == 0:
+                    return (False, "", "Send command failed: No bytes written")
+                
+                # Try to flush (ignore timeout)
+                try:
+                    self.serial_port.flush()
+                except:
+                    pass
+                
+                # Wait for expected ACK or ERROR response
+                # Handle both exact match and prefix match (for STATUS: responses)
+                ack_received = False
+                timeout_count = 0
+                max_timeout = int(timeout * 100)  # Convert seconds to 10ms increments
+                response_received = ""
+                error_received = ""
+                
+                while timeout_count < max_timeout and not ack_received:
+                    if self.serial_port.in_waiting > 0:
+                        response = self.serial_port.readline().decode().strip()
+                        # Check for exact match or prefix match (for STATUS:)
+                        if response == expected_ack or response.startswith(expected_ack):
+                            ack_received = True
+                            response_received = response
+                        elif response.startswith("ERROR:"):
+                            # Error received - return immediately
+                            error_received = response[6:] if len(response) > 6 else "Unknown error"
+                            return (False, response, error_received)
+                        elif response == "" or response.startswith("DEBUG:") or response.startswith("INFO:"):
+                            # Skip empty lines, DEBUG, and INFO messages
+                            continue
+                        else:
+                            # Unexpected response - might be the ACK we're waiting for
+                            response_received = response
+                            # Continue waiting for expected ACK
+                    else:
+                        timeout_count += 1
+                        time.sleep(0.01)  # 10ms delay
+                
+                if ack_received:
+                    return (True, response_received, "")
+                else:
+                    if response_received:
+                        return (False, response_received, f"Expected '{expected_ack}', got '{response_received}'")
+                    else:
+                        return (False, "", f"Timeout waiting for '{expected_ack}'")
+                        
+            except Exception as e:
+                return (False, "", f"Send command failed: {e}")
     
     def request_csv_upload(self, csv_path):
         """Queue a CSV upload request (called from main thread)."""
@@ -132,97 +208,108 @@ class SerialThread(QThread):
                 self.uploading_csv = False
                 return
             
-            # Clear input buffer (match test_serial.py)
-            if self.serial_port.in_waiting > 0:
-                self.serial_port.read(self.serial_port.in_waiting)
-            
-            # Send UPLOAD_CSV command (match test_serial.py exactly)
-            cmd = f"UPLOAD_CSV,{len(data_lines)}\n"
-            try:
-                bytes_written = self.serial_port.write(cmd.encode())
-                if bytes_written == 0:
-                    self.csv_upload_complete.emit(False, "Failed to send UPLOAD_CSV command")
-                    self.uploading_csv = False
-                    return
-            except Exception as e:
-                self.csv_upload_complete.emit(False, f"Failed to send command: {e}")
-                self.uploading_csv = False
-                return
-            
-            # Try to flush (ignore timeout - match test_serial.py)
-            try:
-                self.serial_port.flush()
-            except:
-                pass
-            
-            # Wait for READY, skipping DEBUG messages (match test_serial.py)
-            ready_received = False
-            timeout_count = 0
-            max_timeout = 200  # 2 seconds
-            
-            while timeout_count < max_timeout and not ready_received:
-                if self.serial_port.in_waiting > 0:
-                    response = self.serial_port.readline().decode().strip()
-                    if response == "READY":
-                        ready_received = True
-                    elif response.startswith("DEBUG:"):
-                        continue
-                    else:
-                        self.csv_upload_complete.emit(False, f"Expected READY, got: {response}")
+            # All serial port operations protected by lock
+            with self.serial_lock:
+                # Clear input buffer completely - read until buffer is empty
+                # This ensures no leftover data from previous sessions remains
+                while self.serial_port.in_waiting > 0:
+                    self.serial_port.read(self.serial_port.in_waiting)
+                
+                # Send UPLOAD_CSV command (match test_serial.py exactly)
+                cmd = f"UPLOAD_CSV,{len(data_lines)}\n"
+                try:
+                    bytes_written = self.serial_port.write(cmd.encode())
+                    if bytes_written == 0:
+                        self.csv_upload_complete.emit(False, "Failed to send UPLOAD_CSV command")
                         self.uploading_csv = False
                         return
-                else:
-                    timeout_count += 1
-                    self.msleep(10)  # Equivalent to time.sleep(0.01)
-            
-            if not ready_received:
-                self.csv_upload_complete.emit(False, "Timeout waiting for READY")
-                self.uploading_csv = False
-                return
-            
-            # Send CSV data lines (match test_serial.py - no delays)
-            for i, line in enumerate(data_lines):
-                if not self.running:
-                    break
-                try:
-                    self.serial_port.write((line + '\n').encode())
                 except Exception as e:
-                    self.csv_upload_complete.emit(False, f"Failed to send line {i+1}: {e}")
+                    self.csv_upload_complete.emit(False, f"Failed to send command: {e}")
                     self.uploading_csv = False
                     return
-            
-            # Flush output (ignore timeout - match test_serial.py)
-            try:
-                self.serial_port.flush()
-            except:
-                pass
-            
-            # Wait for ACK/NACK, skipping DEBUG/INFO messages (match test_serial.py)
-            ack_received = False
-            timeout_count = 0
-            max_timeout = 500  # 5 seconds
-            
-            while timeout_count < max_timeout and not ack_received:
-                if self.serial_port.in_waiting > 0:
-                    response = self.serial_port.readline().decode().strip()
-                    if response == "ACK: CSV loaded":
-                        ack_received = True
-                        self.csv_upload_complete.emit(True, f"CSV uploaded successfully ({len(data_lines)} lines)")
-                    elif response.startswith("NACK:"):
-                        ack_received = True
-                        error_msg = response[6:] if len(response) > 6 else "CSV load failed"
-                        self.csv_upload_complete.emit(False, error_msg)
-                    elif response.startswith("DEBUG:") or response.startswith("INFO:"):
-                        continue
+                
+                # Try to flush (ignore timeout - match test_serial.py)
+                try:
+                    self.serial_port.flush()
+                except:
+                    pass
+                
+                # Wait for READY, skipping DEBUG messages (match test_serial.py)
+                ready_received = False
+                timeout_count = 0
+                max_timeout = 200  # 2 seconds
+                
+                while timeout_count < max_timeout and not ready_received:
+                    if self.serial_port.in_waiting > 0:
+                        response = self.serial_port.readline().decode().strip()
+                        if response == "READY":
+                            ready_received = True
+                        elif response == "" or response.startswith("DEBUG:") or response.startswith("ERROR:"):
+                            # Skip empty lines, DEBUG messages, and ERROR messages
+                            continue
+                        else:
+                            self.csv_upload_complete.emit(False, f"Expected READY, got: {response}")
+                            self.uploading_csv = False
+                            return
                     else:
-                        self.csv_upload_complete.emit(False, f"Unexpected response: {response}")
-                        ack_received = True
-                else:
-                    timeout_count += 1
-                    self.msleep(10)  # Equivalent to time.sleep(0.01)
-            
-            if not ack_received:
-                self.csv_upload_complete.emit(False, "Timeout waiting for ACK/NACK")
+                        timeout_count += 1
+                        time.sleep(0.01)  # Match test_serial.py exactly
+                
+                if not ready_received:
+                    self.csv_upload_complete.emit(False, "Timeout waiting for READY")
+                    self.uploading_csv = False
+                    return
+                
+                # Send ALL CSV lines in simple loop (match test_serial.py exactly)
+                for i, line in enumerate(data_lines):
+                    if not self.running:
+                        break
+                    try:
+                        self.serial_port.write((line + '\n').encode())
+                    except Exception as e:
+                        self.csv_upload_complete.emit(False, f"Failed to send line {i+1}: {e}")
+                        self.uploading_csv = False
+                        return
+                
+                # Flush output (ignore timeout - match test_serial.py)
+                try:
+                    self.serial_port.flush()
+                except:
+                    pass
+                
+                # Wait for ACK/NACK, skipping DEBUG/INFO messages (match test_serial.py)
+                ack_received = False
+                timeout_count = 0
+                max_timeout = 500  # 5 seconds
+                
+                while timeout_count < max_timeout and not ack_received:
+                    if self.serial_port.in_waiting > 0:
+                        response = self.serial_port.readline().decode().strip()
+                        if response == "ACK: CSV loaded":
+                            ack_received = True
+                            self.csv_upload_complete.emit(True, f"CSV uploaded successfully ({len(data_lines)} lines)")
+                        elif response.startswith("NACK:"):
+                            ack_received = True
+                            error_msg = response[6:] if len(response) > 6 else "CSV load failed"
+                            self.csv_upload_complete.emit(False, error_msg)
+                        elif response.startswith("DEBUG:") or response.startswith("INFO:"):
+                            continue
+                        else:
+                            self.csv_upload_complete.emit(False, f"Unexpected response: {response}")
+                            ack_received = True
+                    else:
+                        timeout_count += 1
+                        time.sleep(0.01)  # Match test_serial.py exactly
+                
+                if not ack_received:
+                    self.csv_upload_complete.emit(False, "Timeout waiting for ACK/NACK")
+                
+                # Clear any leftover CSV lines from input buffer after upload completes
+                # This prevents leftover lines from being read as commands
+                if self.serial_port and self.serial_port.is_open:
+                    if self.serial_port.in_waiting > 0:
+                        leftover = self.serial_port.read(self.serial_port.in_waiting)
+                        # Discard leftover data - prevents "Unknown command" errors
             
             self.uploading_csv = False
                 
@@ -250,71 +337,76 @@ class SerialThread(QThread):
                 continue
             
             if self.serial_port and self.serial_port.is_open:
-                try:
-                    if self.serial_port.in_waiting > 0:
-                        line = self.serial_port.readline().decode().strip()
-                        
-                        # Suppress ERROR messages during CSV upload
-                        if line.startswith("ERROR:"):
-                            if self.uploading_csv:
-                                # Count but don't emit during upload
-                                self.error_suppress_count += 1
-                            else:
-                                # Throttle error messages to prevent spam
-                                current_time = error_timer.elapsed()
-                                if current_time - last_error_time > error_throttle_interval:
-                                    self.error_occurred.emit(line[6:])
-                                    last_error_time = current_time
-                                    error_count = 0
+                with self.serial_lock:
+                    try:
+                        if self.serial_port.in_waiting > 0:
+                            line = self.serial_port.readline().decode().strip()
+                            
+                            # Suppress ERROR messages during CSV upload
+                            if line.startswith("ERROR:"):
+                                if self.uploading_csv:
+                                    # Count but don't emit during upload
+                                    self.error_suppress_count += 1
                                 else:
-                                    error_count += 1
-                                    # Show summary if too many errors
-                                    if error_count == 10:
-                                        self.error_occurred.emit(f"Multiple errors detected ({error_count}+). Check Arduino connection.")
+                                    # Throttle error messages to prevent spam
+                                    current_time = error_timer.elapsed()
+                                    if current_time - last_error_time > error_throttle_interval:
+                                        self.error_occurred.emit(line[6:])
+                                        last_error_time = current_time
                                         error_count = 0
-                        elif line.startswith("DATA:"):
-                            # Parse data header
-                            parts = line[5:].split(',')
-                            sample_count = int(parts[0])
-                            sample_period = float(parts[1])
-                            num_channels = int(parts[2])
-                            
-                            # Read data samples
-                            data_array = []
-                            for _ in range(sample_count):
-                                line = self.serial_port.readline().decode().strip()
-                                if line == "DATA_END":
-                                    break
+                                    else:
+                                        error_count += 1
+                                        # Show summary if too many errors
+                                        if error_count == 10:
+                                            self.error_occurred.emit(f"Multiple errors detected ({error_count}+). Check Arduino connection.")
+                                            error_count = 0
+                            elif line.startswith("DATA:"):
+                                # Parse data header
+                                parts = line[5:].split(',')
+                                sample_count = int(parts[0])
+                                sample_period = float(parts[1])
+                                num_channels = int(parts[2])
                                 
-                                values = [float(x) for x in line.split(',')]
-                                data_array.append(values)
-                            
-                            # Emit data
-                            data = {
-                                'samples': data_array,
-                                'sample_rate': 1.0 / sample_period,
-                                'channels': num_channels
-                            }
-                            self.data_received.emit(data)
-                            
-                        elif line.startswith("STATUS:"):
-                            # Parse status
-                            parts = line[7:].split(',')
-                            status = {
-                                'state': int(parts[0]),
-                                'output_active': parts[1] == '1',
-                                'acquisition_active': parts[2] == '1',
-                                'csv_samples': int(parts[3]),
-                                'csv_period': float(parts[4])
-                            }
-                            self.status_update.emit(status)
-                            
-                except Exception as e:
-                    # Throttle exception errors too
-                    current_time = error_timer.elapsed()
-                    if current_time - last_error_time > error_throttle_interval:
-                        self.error_occurred.emit(f"Read error: {e}")
-                        last_error_time = current_time
+                                # Read data samples
+                                data_array = []
+                                for _ in range(sample_count):
+                                    line = self.serial_port.readline().decode().strip()
+                                    if line == "DATA_END":
+                                        break
+                                    
+                                    values = [float(x) for x in line.split(',')]
+                                    data_array.append(values)
+                                
+                                # Emit data
+                                data = {
+                                    'samples': data_array,
+                                    'sample_rate': 1.0 / sample_period,
+                                    'channels': num_channels
+                                }
+                                self.data_received.emit(data)
+                                
+                            elif line.startswith("ACK:"):
+                                # Log ACK messages (e.g., "ACK: Output started", "ACK: Output stopped")
+                                self.error_occurred.emit(line)  # Use error_occurred signal for logging (it goes to log window)
+                                
+                            elif line.startswith("STATUS:"):
+                                # Parse status
+                                parts = line[7:].split(',')
+                                status = {
+                                    'state': int(parts[0]),
+                                    'output_active': parts[1] == '1',
+                                    'acquisition_active': parts[2] == '1',
+                                    'csv_samples': int(parts[3]),
+                                    'csv_period': float(parts[4])
+                                }
+                                self.status_update.emit(status)
+                                
+                    except Exception as e:
+                        # Throttle exception errors too
+                        current_time = error_timer.elapsed()
+                        if current_time - last_error_time > error_throttle_interval:
+                            self.error_occurred.emit(f"Read error: {e}")
+                            last_error_time = current_time
             
             self.msleep(10)  # Small delay to prevent tight loop
     
@@ -790,9 +882,45 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Warning", "Please connect to Arduino first")
             return
         
-        if self.serial_thread.send_command("START_OUTPUT"):
+        # Get current status to validate CSV sample period
+        self.log_message("Checking Arduino status...", "INFO")
+        status_success, status_response, status_error = self.serial_thread.send_command_and_wait_response(
+            "GET_STATUS", "STATUS:", timeout=1
+        )
+        
+        if status_success:
+            # Parse status to get csv_period
+            try:
+                parts = status_response.split(':')[1].split(',') if ':' in status_response else status_response.split(',')
+                if len(parts) >= 5:
+                    csv_period = float(parts[4])
+                    # Validate sample period (0 < period <= 1.0 seconds)
+                    if csv_period <= 0 or csv_period > 1.0:
+                        error_msg = f"Invalid sample period: {csv_period}s (must be 0 < period <= 1.0s)"
+                        self.log_message(error_msg, "ERROR")
+                        QMessageBox.warning(self, "Error", error_msg)
+                        return
+                    self.log_message(f"CSV sample period validated: {csv_period}s", "INFO")
+            except (ValueError, IndexError) as e:
+                self.log_message(f"Could not parse status response: {status_response}", "WARNING")
+        else:
+            self.log_message(f"Could not get status: {status_error}", "WARNING")
+            # Continue anyway - Arduino will validate on its side
+        
+        # Send START_OUTPUT command and wait for response
+        self.log_message("Sending START_OUTPUT command...", "INFO")
+        success, response, error = self.serial_thread.send_command_and_wait_response(
+            "START_OUTPUT", "ACK: Output started", timeout=2
+        )
+        
+        if success:
+            self.log_message(f"Arduino response: {response}", "INFO")
             self.start_output_btn.setEnabled(False)
             self.stop_output_btn.setEnabled(True)
+        else:
+            error_msg = error if error else f"Unexpected response: {response}"
+            self.log_message(f"Start Output failed: {error_msg}", "ERROR")
+            QMessageBox.warning(self, "Error", f"Failed to start output: {error_msg}")
     
     def stop_output(self):
         """Stop voltage output."""
@@ -800,9 +928,20 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Warning", "Please connect to Arduino first")
             return
         
-        if self.serial_thread.send_command("STOP_OUTPUT"):
+        # Send STOP_OUTPUT command and wait for response
+        self.log_message("Sending STOP_OUTPUT command...", "INFO")
+        success, response, error = self.serial_thread.send_command_and_wait_response(
+            "STOP_OUTPUT", "ACK: Output stopped", timeout=2
+        )
+        
+        if success:
+            self.log_message(f"Arduino response: {response}", "INFO")
             self.start_output_btn.setEnabled(True)
             self.stop_output_btn.setEnabled(False)
+        else:
+            error_msg = error if error else f"Unexpected response: {response}"
+            self.log_message(f"Stop Output failed: {error_msg}", "ERROR")
+            QMessageBox.warning(self, "Error", f"Failed to stop output: {error_msg}")
     
     def start_acquisition(self):
         """Start data acquisition."""
@@ -1163,7 +1302,11 @@ class MainWindow(QMainWindow):
     
     def on_error(self, error_msg):
         """Handle errors from serial thread (non-blocking)."""
-        self.log_message(error_msg, "ERROR")
+        # Check if message is an ACK (success message) and log as INFO instead of ERROR
+        if error_msg.startswith("ACK:"):
+            self.log_message(error_msg, "INFO")
+        else:
+            self.log_message(error_msg, "ERROR")
     
     def on_csv_upload_complete(self, success, message):
         """Handle CSV upload completion."""

@@ -28,6 +28,7 @@ using namespace Opta;
                                 // See specifications.md "Memory Management" section
 #define OUTPUT_CHANNEL 0       // O1 on A0602 expansion board
 #define INPUT_CHANNELS 6       // I1-I6 on Opta Lite base unit
+#define CSV_BATCH_SIZE 10000   // Effectively disabled - no chunk acknowledgments needed
 
 // Memory buffers
 float csv_voltage_values[MAX_CSV_SAMPLES];
@@ -184,6 +185,7 @@ bool parseCSVFromSerial(uint32_t expected_lines) {
   float second_time = -1.0;
   unsigned long start_time = millis();
   const unsigned long timeout_per_line_ms = 5000;  // 5 seconds max per line
+  uint32_t lines_read = 0;  // Track lines read from serial for batch acknowledgment
   
   // Read exactly expected_lines lines
   for (uint32_t i = 0; i < expected_lines && csv_sample_count < MAX_CSV_SAMPLES; i++) {
@@ -198,6 +200,10 @@ bool parseCSVFromSerial(uint32_t expected_lines) {
     
     String line = Serial.readStringUntil('\n');
     line.trim();
+    
+    lines_read++;  // Increment counter for each line read from serial
+    
+    // No chunk acknowledgments - simple line reading (matches test_serial.py approach)
     
     if (line.length() == 0) continue;
     
