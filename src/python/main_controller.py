@@ -160,6 +160,7 @@ class SerialThread(QThread):
                             # Continue waiting for expected ACK
                     else:
                         timeout_count += 1
+                        QApplication.processEvents()  # Process GUI events to prevent freeze
                         time.sleep(0.01)  # 10ms delay
                 
                 if ack_received:

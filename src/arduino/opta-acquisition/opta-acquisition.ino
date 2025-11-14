@@ -51,6 +51,10 @@ uint32_t acq_index = 0;
 // A0602 expansion board reference
 int8_t expansion_index = -1;
 
+// Pending tick counters for producer-consumer pattern
+volatile uint32_t pending_output_ticks = 0;
+volatile uint32_t pending_acq_ticks = 0;
+
 // ============================================================================
 // Serial Protocol Definitions
 // ============================================================================
@@ -126,46 +130,13 @@ void setup() {
 // ============================================================================
 
 void timerISR() {
+  // Minimal ISR - just increment counters (takes ~1µs)
   if (output_active && current_state != STATE_TRANSFERRING) {
-    // Output next voltage value from CSV
-    if (expansion_index >= 0 && csv_sample_count > 0) {
-      AnalogExpansion exp = OptaController.getExpansion(expansion_index);
-      if (exp) {
-        float voltage = csv_voltage_values[output_index];
-        // Convert voltage (0-3.3V) to DAC value (0-4095 for 12-bit)
-        uint16_t dac_value = (uint16_t)(voltage * 4095.0 / 3.3);
-        dac_value = constrain(dac_value, 0, 4095);
-        exp.setDac(OUTPUT_CHANNEL, dac_value);
-        
-        // Increment and wrap for cyclic playback
-        output_index = (output_index + 1) % csv_sample_count;
-      }
-    }
+    pending_output_ticks++;
   }
   
   if (acquisition_active) {
-    // Acquire all 6 input channels
-    if (acq_index < MAX_ACQ_SAMPLES) {
-      float *sample_ptr = &acq_buffer[acq_index * 6];
-      
-      // Read all 6 channels on Opta Lite base unit (PA0-PA5 for I1-I6)
-      // Using analogRead with direct register access for speed
-      sample_ptr[0] = analogRead(A0) * 3.3 / 4095.0;  // I1
-      sample_ptr[1] = analogRead(A1) * 3.3 / 4095.0;  // I2
-      sample_ptr[2] = analogRead(A2) * 3.3 / 4095.0;  // I3
-      sample_ptr[3] = analogRead(A3) * 3.3 / 4095.0;  // I4
-      sample_ptr[4] = analogRead(A4) * 3.3 / 4095.0;  // I5
-      sample_ptr[5] = analogRead(A5) * 3.3 / 4095.0;  // I6
-      
-      acq_index++;
-      acq_sample_count = acq_index;
-      
-      // Stop if buffer full
-      if (acq_index >= MAX_ACQ_SAMPLES) {
-        acquisition_active = false;
-        current_state = STATE_IDLE;
-      }
-    }
+    pending_acq_ticks++;
   }
 }
 
@@ -539,11 +510,75 @@ void processCommand(String cmd) {
 }
 
 // ============================================================================
+// Helper Functions for Processing Frames
+// ============================================================================
+
+// Process one output frame (called from loop())
+static inline void processOneOutputFrame() {
+  if (expansion_index >= 0 && csv_sample_count > 0) {
+    AnalogExpansion exp = OptaController.getExpansion(expansion_index);
+    if (exp) {
+      float voltage = csv_voltage_values[output_index];
+      uint16_t dac_value = (uint16_t)(voltage * 4095.0 / 3.3);
+      dac_value = constrain(dac_value, 0, 4095);
+      exp.setDac(OUTPUT_CHANNEL, dac_value);
+      output_index = (output_index + 1) % csv_sample_count;
+    }
+  }
+}
+
+// Process one acquisition frame (called from loop())
+static inline void processOneAcqFrame() {
+  if (acq_index < MAX_ACQ_SAMPLES) {
+    float *sample_ptr = &acq_buffer[acq_index * 6];
+    sample_ptr[0] = analogRead(A0) * 3.3 / 4095.0;  // I1
+    sample_ptr[1] = analogRead(A1) * 3.3 / 4095.0;  // I2
+    sample_ptr[2] = analogRead(A2) * 3.3 / 4095.0;  // I3
+    sample_ptr[3] = analogRead(A3) * 3.3 / 4095.0;  // I4
+    sample_ptr[4] = analogRead(A4) * 3.3 / 4095.0;  // I5
+    sample_ptr[5] = analogRead(A5) * 3.3 / 4095.0;  // I6
+    acq_index++;
+    acq_sample_count = acq_index;
+    
+    if (acq_index >= MAX_ACQ_SAMPLES) {
+      acquisition_active = false;
+      current_state = STATE_IDLE;
+    }
+  }
+}
+
+// ============================================================================
 // Main Loop
 // ============================================================================
 
 void loop() {
   OptaController.update();
+  
+  // Process pending output ticks (drain from ISR using atomic operations)
+  uint32_t output_n;
+  noInterrupts();
+  output_n = pending_output_ticks;
+  pending_output_ticks = 0;
+  interrupts();
+  
+  while (output_n-- > 0) {
+    if (output_active && current_state != STATE_TRANSFERRING) {
+      processOneOutputFrame();
+    }
+  }
+  
+  // Process pending acquisition ticks
+  uint32_t acq_n;
+  noInterrupts();
+  acq_n = pending_acq_ticks;
+  pending_acq_ticks = 0;
+  interrupts();
+  
+  while (acq_n-- > 0) {
+    if (acquisition_active) {
+      processOneAcqFrame();
+    }
+  }
   
   // Skip reading Serial if parsing CSV to avoid race condition
   if (parsing_csv) {
