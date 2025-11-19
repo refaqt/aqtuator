@@ -18,6 +18,23 @@ This project integrates an Arduino Giga R1 WiFi and an ODrive S1 motor driver to
 2. **ODrive configuration script** (.py): Configures ODrive S1 parameters and capture modes
 3. **Main control application** (.py): Provides GUI for user interaction and data management
 
+## Channel Naming Convention
+
+To maintain consistency and clarity, this document uses a direct mapping between hardware pin names and logical channel names:
+
+- **Hardware Pins**: Physical pin names on Arduino Giga R1 WiFi (A0, A1, A2, A3, A4, A5, DAC0, etc.)
+- **Logical Channels**: Names used in data arrays, processing, and storage (A0, A1, A2, A3, A4, A5)
+
+**Mapping:**
+- Hardware pin A0 → Logical channel A0 (array index 0)
+- Hardware pin A1 → Logical channel A1 (array index 1)
+- Hardware pin A2 → Logical channel A2 (array index 2)
+- Hardware pin A3 → Logical channel A3 (array index 3)
+- Hardware pin A4 → Logical channel A4 (array index 4)
+- Hardware pin A5 → Logical channel A5 (array index 5)
+
+This direct mapping ensures that hardware pin names and logical channel names are identical, eliminating confusion and making the system more intuitive.
+
 ## Arduino Firmware Requirements
 
 ### Analog Output
@@ -31,7 +48,15 @@ This project integrates an Arduino Giga R1 WiFi and an ODrive S1 motor driver to
 
 ### Analog Input Acquisition
 
-- **Channels**: A0 through A5 (six channels using built-in ADC)
+- **Hardware Pins**: A0, A1, A2, A3, A4, A5 (six channels using built-in ADC on Arduino Giga R1 WiFi)
+- **Logical Channel Names**: A0, A1, A2, A3, A4, A5 (used in data processing and storage)
+- **Pin-to-Channel Mapping**: 
+  - Hardware pin A0 → Logical channel A0 (array index 0)
+  - Hardware pin A1 → Logical channel A1 (array index 1)
+  - Hardware pin A2 → Logical channel A2 (array index 2)
+  - Hardware pin A3 → Logical channel A3 (array index 3)
+  - Hardware pin A4 → Logical channel A4 (array index 4)
+  - Hardware pin A5 → Logical channel A5 (array index 5)
 - **Timing**: Hardware-timed sampling with accurate clock
 - **Implementation**: Arduino language with hardware timer interrupts for precise timing
 - **Real-time Constraint**: No interruptions during acquisition period
@@ -85,9 +110,111 @@ Time_s,Signal
 
 ### Serial Communication Protocol
 
-- Receive commands from Python application (start, stop, configuration)
-- Transmit acquired data arrays after acquisition completes
-- Include metadata: timestamps, sample count, actual sample rate
+**Communication Settings:**
+- **Baud Rate**: 115200
+- **Data Format**: Text-based commands and responses (newline-terminated)
+- **Line Endings**: Commands and responses terminated with `\n` (newline character)
+
+**Command Format:**
+All commands are sent from Python application to Arduino as text strings terminated with newline (`\n`). Commands are case-sensitive.
+
+**Commands (Python → Arduino):**
+
+1. **START_OUTPUT**
+   - Format: `START_OUTPUT\n`
+   - Description: Begin cyclic voltage output playback from loaded CSV data
+   - Prerequisites: CSV file must be loaded via UPLOAD_CSV
+   - Response: `ACK: Output started\n` on success, or `ERROR: <message>\n` on failure
+
+2. **STOP_OUTPUT**
+   - Format: `STOP_OUTPUT\n`
+   - Description: Halt voltage output (output remains at last value)
+   - Response: `ACK: Output stopped\n`
+
+3. **START_ACQUISITION**
+   - Format: `START_ACQUISITION,<duration>,<start_delay>\n`
+   - Parameters:
+     - `<duration>`: Acquisition duration in seconds (float, e.g., `1.5`)
+     - `<start_delay>`: Delay before starting acquisition in seconds (float, e.g., `0.5`)
+   - Description: Start synchronized data acquisition. If output is not active, it will be started automatically.
+   - Behavior: Blocks until acquisition completes (Arduino waits in loop)
+   - Response: `ACK: Acquisition started\n` when acquisition begins, then `ACK: Acquisition complete\n` when finished
+   - Error: `ERROR: Invalid acquisition duration\n` if duration <= 0
+
+4. **STOP_ACQUISITION**
+   - Format: `STOP_ACQUISITION\n`
+   - Description: Stop data acquisition immediately (if supported by firmware)
+   - Response: `ACK: Acquisition stopped\n` (implementation dependent)
+
+5. **UPLOAD_CSV**
+   - Format: `UPLOAD_CSV,<num_lines>\n`
+   - Parameters:
+     - `<num_lines>`: Number of data lines to follow (integer, excludes header comments and CSV header row)
+   - Description: Upload CSV voltage waveform data to Arduino
+   - Protocol Flow:
+     1. Python sends: `UPLOAD_CSV,<num_lines>\n`
+     2. Arduino responds: `READY\n` (after clearing serial buffer)
+     3. Python sends CSV data lines (one per line, newline-terminated)
+     4. Arduino responds: `ACK: CSV loaded\n` on success, or `NACK: <error_message>\n` on failure
+   - CSV Format: See "CSV File Format" section above
+   - Notes: Arduino clears serial buffer before sending READY. Python should wait for READY before sending data.
+
+6. **GET_STATUS**
+   - Format: `GET_STATUS\n`
+   - Description: Request current system status
+   - Response: `STATUS:<state>,<output_active>,<acquisition_active>,<csv_sample_count>,<csv_sample_period>\n`
+     - `<state>`: Integer state code (0=IDLE, 1=OUTPUTTING, 2=ACQUIRING, 3=TRANSFERRING)
+     - `<output_active>`: Boolean (0 or 1)
+     - `<acquisition_active>`: Boolean (0 or 1)
+     - `<csv_sample_count>`: Integer number of loaded CSV samples
+     - `<csv_sample_period>`: Float sample period in seconds (6 decimal places)
+
+7. **GET_DATA**
+   - Format: `GET_DATA\n`
+   - Description: Request transfer of acquired data
+   - Prerequisites: Acquisition must be complete (acq_sample_count > 0)
+   - Response Format:
+     - Header: `DATA:<sample_count>,<sample_period>,<num_channels>\n`
+       - `<sample_count>`: Integer number of samples
+       - `<sample_period>`: Float sample period in seconds (6 decimal places)
+       - `<num_channels>`: Integer number of channels (always 6)
+     - Data Lines: One line per sample, comma-separated values
+       - Format: `<ch0>,<ch1>,<ch2>,<ch3>,<ch4>,<ch5>\n`
+       - Values are floats with 4 decimal places
+       - Channels correspond to logical channels A0-A5 (mapped directly from hardware pins A0-A5)
+     - Terminator: `DATA_END\n`
+   - Error: `ERROR: No acquisition data available\n` if no data
+
+8. **RESET** (Optional/Debug)
+   - Format: `RESET\n`
+   - Description: Reset parsing state and clear serial buffer
+   - Response: `ACK: Reset complete\n`
+
+9. **DEBUG** (Optional/Debug)
+   - Format: `DEBUG\n`
+   - Description: Dump current system state for debugging
+   - Response: Multiple `DEBUG: <key> = <value>\n` lines
+
+**Response Messages:**
+
+- **ACK Messages**: `ACK: <message>\n` - Command executed successfully
+- **NACK Messages**: `NACK: <error_message>\n` - Command failed with error
+- **ERROR Messages**: `ERROR: <error_message>\n` - Error occurred
+- **INFO Messages**: `INFO: <message>\n` - Informational message
+- **DEBUG Messages**: `DEBUG: <message>\n` - Debug information (can be filtered by Python)
+
+**State Codes:**
+- `0` = STATE_IDLE: System idle, ready for commands
+- `1` = STATE_OUTPUTTING: Outputting voltage waveform
+- `2` = STATE_ACQUIRING: Acquiring data (output may also be active)
+- `3` = STATE_TRANSFERRING: Transferring data to Python (output stopped)
+
+**Protocol Notes:**
+- All commands and responses are text-based (not binary)
+- Commands are matched using `startsWith()` - partial matches are acceptable
+- Python should filter DEBUG/INFO messages during normal operation
+- Serial buffer should be cleared before sending UPLOAD_CSV to avoid race conditions
+- Arduino may send DEBUG messages during CSV upload - Python should ignore these until READY is received
 
 ## ODrive Configuration Script Requirements
 
@@ -163,15 +290,17 @@ r_a = 5 * 9.81 / 10  # Accelerometer sensitivity (m/s²/V)
 
 Angular displacements:
 ```
-theta_x = -(A1 + A2 - A3 - A4) * sin(alpha) / (2 * L3)
-theta_y = -(A1 - A2 - A3 + A4) * cos(alpha) / (2 * L3)
+theta_x = -(A0 + A1 - A2 - A3) * sin(alpha) / (2 * L3)
+theta_y = -(A0 - A1 - A2 + A3) * cos(alpha) / (2 * L3)
 ```
 
 Linear accelerations (voltage to m/s²):
 ```
-x = (-(A1 - A2 + A3 - A4) * cos(alpha) / 4 - theta_y * (L1 + L2 + L3 / 2) - A6) * r_a
-y = ((A1 + A2 + A3 + A4) * sin(alpha) / 4 + theta_x * (L1 + L2 + L3 / 2) - A5) * r_a
+x = (-(A0 - A1 + A2 - A3) * cos(alpha) / 4 - theta_y * (L1 + L2 + L3 / 2) - A5) * r_a
+y = ((A0 + A1 + A2 + A3) * sin(alpha) / 4 + theta_x * (L1 + L2 + L3 / 2) - A4) * r_a
 ```
+
+**Note:** The formulas above use logical channel names A0-A5. If the Python implementation uses different variable names (e.g., A1-A6), those should be mapped as: A0→A1, A1→A2, A2→A3, A3→A4, A4→A5, A5→A6 in the code.
 
 ### Data Storage
 
@@ -179,7 +308,7 @@ y = ((A1 + A2 + A3 + A4) * sin(alpha) / 4 + theta_x * (L1 + L2 + L3 / 2) - A5) *
 
 **CSV File Contents:**
 - Output voltage signal (synchronized with inputs)
-- Acquired analog inputs: A1, A2, A3, A4, A5, A6
+- Acquired analog inputs: A0, A1, A2, A3, A4, A5 (logical channel names, mapped directly from hardware pins A0-A5)
 - Calculated signals: x, y, theta_x, theta_y
 - ODrive feedback variables:
   - Velocity command
@@ -324,7 +453,7 @@ project_root/
 5. Arduino begins cyclic voltage output on DAC0
 6. ODrive receives analog input and operates motor
 7. User initiates acquisition from GUI
-8. Arduino acquires A0-A5 synchronously with output
+8. Arduino acquires data from hardware pins A0-A5 (logical channels A0-A5) synchronously with output
 9. ODrive captures motor feedback at matching rate
 10. After specified duration, Arduino stops and transfers data via serial
 11. Python retrieves ODrive capture buffer
@@ -337,7 +466,7 @@ project_root/
 ## Success Criteria
 
 - Voltage output accurately reproduces CSV file waveform cyclically
-- All six analog input channels sampled synchronously with accurate timing
+- All six analog input channels (hardware pins A0-A5, logical channels A0-A5) sampled synchronously with accurate timing
 - ODrive captures motor data at matching sample rate
 - Data transfer completes without corruption or loss
 - Calculated signals correctly derived from raw inputs
