@@ -4,6 +4,59 @@
 
 This project integrates an Arduino Giga R1 WiFi and an ODrive S1 motor driver to create a synchronized data acquisition and motor control system. The system outputs analog control signals, acquires multiple analog input channels, and captures motor feedback data for analysis.
 
+## Development Phases
+
+The development of the main control application is split into two phases:
+
+### Phase 1: Sequential Flow (Current)
+
+**Objective**: Create a simple, sequential workflow without a full GUI to establish a working version that performs all necessary steps.
+
+**Implementation**: `main_sequential.py`
+
+**Workflow**:
+1. **Connect to Arduino**: Automatically connects to hard-coded port COM10
+2. **ODrive Connection Prompt**: User is prompted via command line to connect to ODrive (default COM12, uses USB via `odrive.find_any()`)
+3. **CSV File Selection**: File dialog opens to select the multisine CSV file
+4. **Acquisition Duration**: Command-line prompt asks user for acquisition duration in seconds
+5. **Start Output Window**: Dialog window with "Start Output" button appears
+6. **Control Window**: After output starts, a new dialog window appears with:
+   - "Stop Output" button (stops voltage output and ends the program)
+   - "Start Acquisition" button (keeps output going and starts acquisition)
+7. **Stop Acquisition Window**: When acquisition starts, a new dialog window appears with "Stop Acquisition" button
+8. **Acquisition Completion**: Acquisition stops when either:
+   - The specified duration is reached, OR
+   - User clicks "Stop Acquisition" button
+9. **Time Series Visualization**: A graph window opens displaying all selected variables vs. time:
+   - All plots in one window with synchronized x-axes
+   - Variables displayed: Voltage output, A0-A5, acc0-acc5, x, y, theta_x, theta_y, and ODrive variables
+   - Variable selection is hard-coded in the program
+10. **Bode Plot Visualization**: Six Bode plots open in a 2 rows × 3 columns grid:
+    - Input/output pairs are hard-coded in the program
+    - Each plot shows magnitude (log-log) and phase (log-linear) subplots
+
+**Features**:
+- Minimal GUI: Only simple dialog windows with buttons, no full GUI application
+- Hard-coded configuration: Arduino port (COM10), variable lists, and Bode plot configurations
+- Sequential execution: Step-by-step flow with user interaction at each stage
+- Full functionality: All core features (connection, CSV upload, output, acquisition, visualization)
+
+### Phase 2: Full GUI (Future)
+
+**Objective**: Create a comprehensive GUI application for ease of use.
+
+**Implementation**: `main_controller.py` (existing, to be enhanced)
+
+**Planned Features**:
+- Full graphical user interface with all controls visible
+- Real-time status updates and data visualization
+- Interactive plot controls (zoom, pan, signal selection)
+- Configuration management and presets
+- Data export and import capabilities
+- Advanced visualization options
+
+**Status**: Phase 2 will be implemented after Phase 1 is fully tested and validated.
+
 ## System Architecture
 
 ### Hardware Components
