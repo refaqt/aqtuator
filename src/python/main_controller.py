@@ -47,6 +47,7 @@ class SerialThread(QThread):
     status_update = pyqtSignal(dict)  # Emitted for status updates
     error_occurred = pyqtSignal(str)  # Emitted on errors
     csv_upload_complete = pyqtSignal(bool, str)  # Emitted when CSV upload completes (success, message)
+    acquisition_complete = pyqtSignal()  # Emitted when acquisition completes
     
     def __init__(self):
         super().__init__()
@@ -389,6 +390,9 @@ class SerialThread(QThread):
                             elif line.startswith("ACK:"):
                                 # Log ACK messages (e.g., "ACK: Output started", "ACK: Output stopped")
                                 self.error_occurred.emit(line)  # Use error_occurred signal for logging (it goes to log window)
+                                # Check for acquisition completion
+                                if line == "ACK: Acquisition complete":
+                                    self.acquisition_complete.emit()
                                 
                             elif line.startswith("STATUS:"):
                                 # Parse status
@@ -444,6 +448,7 @@ class MainWindow(QMainWindow):
         self.serial_thread.status_update.connect(self.on_status_update)
         self.serial_thread.error_occurred.connect(self.on_error)
         self.serial_thread.csv_upload_complete.connect(self.on_csv_upload_complete)
+        self.serial_thread.acquisition_complete.connect(self.on_acquisition_complete)
         
         # Start serial thread
         self.serial_thread.start()
@@ -970,6 +975,11 @@ class MainWindow(QMainWindow):
         if self.serial_thread.send_command("STOP_ACQUISITION"):
             self.start_acq_btn.setEnabled(True)
             self.stop_acq_btn.setEnabled(False)
+    
+    def on_acquisition_complete(self):
+        """Handle acquisition completion - update button states."""
+        self.start_acq_btn.setEnabled(True)
+        self.stop_acq_btn.setEnabled(False)
     
     def refresh_ports(self):
         """Refresh the list of available serial ports."""

@@ -44,7 +44,15 @@ This direct mapping ensures that hardware pin names and logical channel names ar
 - **Signal Source**: CSV file with voltage samples
 - **Behavior**: Cyclic playback - restart from beginning when end of file is reached
 - **Timing**: Sample rate specified in CSV file header
-- **Implementation**: Use Arduino's built-in `analogWrite()` function with DAC0 pin
+- **Implementation**: 
+  - Uses **Arduino_AdvancedAnalog library** (`AdvancedDAC` class) for hardware-timed DMA-based output
+  - Initialization: `dac.begin(AN_RESOLUTION_12, sample_rate, buffer_size, queue_size)`
+  - Writing pattern: Use `dac.dequeue()` to get a `SampleBuffer`, fill it with values, then call `dac.write(buf)`
+  - `SampleBuffer` API: `buf.size()`, `buf[i]` for indexed access, `buf.release()` after writing (handled by library)
+  - For cyclic playback: Fill buffer with CSV voltage values, write to DAC, repeat
+  - Reference: [Arduino Giga R1 WiFi Audio Tutorial](https://docs.arduino.cc/tutorials/giga-r1-wifi/giga-audio/) and [AdvancedAnalog API Documentation](https://github.com/arduino-libraries/Arduino_AdvancedAnalog/blob/main/docs/api.md)
+  - The AdvancedAnalog library provides reliable high-speed waveform generation without Mbed OS crashes
+  - DMA-based operation ensures minimal jitter and precise timing
 
 ### Analog Input Acquisition
 
@@ -57,10 +65,31 @@ This direct mapping ensures that hardware pin names and logical channel names ar
   - Hardware pin A3 → Logical channel A3 (array index 3)
   - Hardware pin A4 → Logical channel A4 (array index 4)
   - Hardware pin A5 → Logical channel A5 (array index 5)
-- **Timing**: Hardware-timed sampling with accurate clock
-- **Implementation**: Arduino language with hardware timer interrupts for precise timing
+- **ADC Architecture**: 
+  - Arduino Giga R1 WiFi has **3 independent ADCs** (ADC1, ADC2, ADC3), but we use only ADC1 and ADC2 for hardware compatibility
+  - For synchronized timing of 6 channels, channels are grouped by ADC:
+    - **A0, A1, A2 → ADC1** (one `AdvancedADC` instance with 3 pins)
+    - **A3, A4, A5 → ADC2** (one `AdvancedADC` instance with 3 pins)
+  - All channels in one `AdvancedADC` instance must belong to the same ADC hardware unit
+  - Multi-channel data from each ADC is **interleaved** in the `SampleBuffer`:
+    - ADC1 buffer: [A0, A1, A2, A0, A1, A2, ...] (3 channels interleaved)
+    - ADC2 buffer: [A3, A4, A5, A3, A4, A5, ...] (3 channels interleaved)
+- **Timing**: Hardware-timed sampling with accurate clock via DMA
+- **Implementation**: 
+  - Uses **Arduino_AdvancedAnalog library** (`AdvancedADC` class) for hardware-timed DMA-based sampling
+  - **Two `AdvancedADC` instances** (one per ADC hardware unit, each with 3 channels):
+    - `AdvancedADC adc1(A0, A1, A2)` - ADC1 with channels A0, A1, A2
+    - `AdvancedADC adc2(A3, A4, A5)` - ADC2 with channels A3, A4, A5
+  - Initialization: `adc.begin(AN_RESOLUTION_12, sample_rate, buffer_size, queue_size, start=false)` for each instance
+  - Start sampling: `adc.start(sample_rate)` when `START_ACQUISITION` is called
+  - Reading: `adc.read()` returns a `SampleBuffer` object (not a direct value)
+  - `SampleBuffer` API: `buf.size()`, `buf.channels()`, `buf[i]` for indexed access, `buf.release()` after reading
+  - Multi-channel data is interleaved in the buffer - must extract channel data correctly (3 channels per ADC)
+  - Reference: [Arduino Giga R1 WiFi Audio Tutorial](https://docs.arduino.cc/tutorials/giga-r1-wifi/giga-audio/) and [AdvancedAnalog API Documentation](https://github.com/arduino-libraries/Arduino_AdvancedAnalog/blob/main/docs/api.md)
+  - The AdvancedAnalog library provides reliable high-speed multi-channel sampling without Mbed OS crashes
+  - DMA-based operation ensures minimal jitter and precise timing synchronization
 - **Real-time Constraint**: No interruptions during acquisition period
-- **Synchronization**: Output voltage set immediately before input acquisition
+- **Synchronization**: Output voltage and input acquisition synchronized via AdvancedAnalog's built-in timing
 
 ### CSV File Format
 
@@ -361,6 +390,7 @@ y = ((A0 + A1 + A2 + A3) * sin(alpha) / 4 + theta_x * (L1 + L2 + L3 / 2) - A4) *
 
 - Official documentation: `https://docs.arduino.cc/hardware/giga-r1-wifi/`
 - Arduino Giga tutorials: `https://docs.arduino.cc/tutorials/giga-r1-wifi/`
+- **Advanced ADC and DAC (Audio Tutorial)**: `https://docs.arduino.cc/tutorials/giga-r1-wifi/giga-audio/` - Demonstrates advanced ADC and DAC capabilities for high-speed waveform generation and sampling, suitable for CSV file waveform output and synchronized multi-channel acquisition
 - STM32H7 reference: `https://www.st.com/en/microcontrollers-microprocessors/stm32h7-series.html`
 - DAC functionality: `https://docs.arduino.cc/learn/microcontrollers/analog-to-digital-converter/`
 - Timer interrupts: `https://docs.arduino.cc/learn/microcontrollers/processor-interrupts/`
@@ -379,6 +409,12 @@ y = ((A0 + A1 + A2 + A3) * sin(alpha) / 4 + theta_x * (L1 + L2 + L3 / 2) - A4) *
 - Matplotlib for plotting: `https://matplotlib.org/stable/gallery/index.html`
 - NumPy for signal processing: `https://numpy.org/doc/stable/reference/routines.fft.html`
 - SciPy for frequency analysis: `https://docs.scipy.org/doc/scipy/reference/signal.html`
+
+### Arduino_AdvancedAnalog Library
+
+- **API Documentation**: `https://github.com/arduino-libraries/Arduino_AdvancedAnalog/blob/main/docs/api.md` - Complete API reference for AdvancedADC, AdvancedDAC, and SampleBuffer classes
+- **Multi-Channel ADC Documentation**: `https://github.com/arduino-libraries/Arduino_AdvancedAnalog/tree/main/docs#adc-multichannel-giga-r1-wifi` - Specific documentation for multi-channel ADC configuration on Arduino Giga R1 WiFi
+- **GitHub Repository**: `https://github.com/arduino-libraries/Arduino_AdvancedAnalog` - Source code and examples
 
 ## Technical Constraints
 
