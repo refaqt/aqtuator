@@ -158,10 +158,6 @@ void stopDAC() {
 // ============================================================================
 
 bool parseCSVFromSerial(uint32_t expected_lines) {
-  Serial.print("DEBUG: parseCSVFromSerial() entered, expected_lines=");
-  Serial.println(expected_lines);
-  Serial.print("DEBUG: Serial.available()=");
-  Serial.println(Serial.available());
   
   csv_sample_count = 0;
   bool sample_period_extracted = false;
@@ -319,7 +315,6 @@ bool parseCSVFromSerial(uint32_t expected_lines) {
     return false;
   }
   
-  Serial.println("DEBUG: parseCSVFromSerial() completed successfully");
   return true;
 }
 
@@ -329,10 +324,6 @@ bool parseCSVFromSerial(uint32_t expected_lines) {
 
 void processCommand(String cmd) {
   cmd.trim();
-  Serial.print("DEBUG: processCommand() - cmd='");
-  Serial.print(cmd);
-  Serial.print("', parsing_csv=");
-  Serial.println(parsing_csv);
   
   if (cmd.startsWith("START_OUTPUT")) {
     if (csv_sample_count == 0) {
@@ -349,16 +340,6 @@ void processCommand(String cmd) {
     // AdvancedAnalog DAC handles timing via DMA - no timer needed
     // Just start writing to DAC buffer in loop()
     Serial.println("ACK: Output started");
-    
-  } else if (cmd.startsWith("STOP_OUTPUT")) {
-    output_active = false;
-    if (!acquisition_active) {
-      current_state = STATE_IDLE;
-    } else {
-      current_state = STATE_ACQUIRING;
-    }
-    // AdvancedAnalog DAC will stop when we stop writing
-    Serial.println("ACK: Output stopped");
     
   } else if (cmd.startsWith("START_ACQUISITION")) {
     // Parse acquisition parameters
@@ -378,13 +359,11 @@ void processCommand(String cmd) {
     
     // Check if acquisition is already active - stop it first
     if (acquisition_active) {
-      Serial.println("WARNING: Acquisition already active, stopping first");
       acquisition_active = false;
       if (adc_initialized) {
         adc_all.stop();
       }
-      // Wait a bit for ADC to fully stop
-      delay(100);
+      delay(1);  // Minimal delay to ensure ADC stops
     }
     
     // Calculate number of samples needed
@@ -401,57 +380,22 @@ void processCommand(String cmd) {
       return;
     }
     
-    Serial.print("DEBUG: Acquisition parameters - duration=");
-    Serial.print(duration, 3);
-    Serial.print("s, start_delay=");
-    Serial.print(start_delay, 3);
-    Serial.print("s, required_samples=");
-    Serial.print(calc_required_samples);
-    Serial.print(", sample_period=");
-    Serial.print(acq_sample_period, 6);
-    Serial.println("s");
-    
-    // Delay before starting
-    delay((uint32_t)(start_delay * 1000));
-    
     // Reset acquisition state
     acq_index = 0;
     acq_sample_count = 0;
-    current_output_voltage = 0.0;  // Reset voltage value
+    current_output_voltage = 0.0;
     
-    // Ensure ADC is stopped before starting (in case it was left running)
+    // Ensure ADC is stopped before starting
     adc_all.stop();
-    delay(50);  // Give ADC time to fully stop
+    // Minimal delay to ensure ADC fully stops (matches test program pattern)
+    delay(1);
     
-    // Start ADC sampling (ADC was initialized with start=false, so we need to start it now)
-    Serial.print("DEBUG: Starting ADC with sample_rate=");
-    Serial.print(current_sample_rate);
-    Serial.println(" Hz");
-    
-    if (!adc_all.start(current_sample_rate)) {
-      Serial.println("ERROR: Failed to start ADC sampling");
-      Serial.print("  adc_all.available()=");
-      Serial.println(adc_all.available());
-      // Clean up on failure
-      adc_all.stop();
-      return;
-    }
-    
-    // Debug: Verify ADC started
-    Serial.print("DEBUG: ADC started, available()=");
-    Serial.print(adc_all.available());
-    Serial.print(", sample_rate=");
-    Serial.print(current_sample_rate);
-    Serial.println(" Hz");
-    
+    // Prepare output state before starting ADC
     if (output_active) {
       current_state = STATE_ACQUIRING;
     } else {
-      // Start output at the same time
       if (!dac_initialized) {
         Serial.println("ERROR: DAC not initialized. Please load CSV file first.");
-        // Stop ADC if DAC is not ready
-        adc_all.stop();
         return;
       }
       output_active = true;
@@ -459,43 +403,26 @@ void processCommand(String cmd) {
       current_state = STATE_ACQUIRING;
     }
     
-    // Store required samples and start time for duration-based completion
-    // Now set acquisition_active after everything is set up
+    // Store required samples and start time
     required_samples = calc_required_samples;
     acquisition_start_time = millis();
+    
+    // Send ACK BEFORE starting ADC (all Serial communication must be done before DMA starts)
+    Serial.println("ACK: Acquisition started");
+    
+    // Start ADC sampling (DMA starts immediately - no blocking operations after this)
+    if (!adc_all.start(current_sample_rate)) {
+      Serial.println("ERROR: Failed to start ADC sampling");
+      adc_all.stop();
+      return;
+    }
+    
+    // Set acquisition_active as the VERY LAST thing before returning
+    // This ensures loop() can immediately start processing ADC data
     acquisition_active = true;
     
-    Serial.println("ACK: Acquisition started");
-    Serial.flush();  // Ensure message is sent before continuing
+    // Return immediately - no more Serial operations after this point
     // Note: Acquisition is now handled in loop(), not blocking here
-    // This allows STOP_ACQUISITION and other commands to be processed
-    
-  } else if (cmd.startsWith("STOP_ACQUISITION")) {
-    // Stop acquisition immediately
-    Serial.println("DEBUG: STOP_ACQUISITION command received");
-    acquisition_active = false;
-    
-    // Stop ADC sampling
-    if (adc_initialized) {
-      adc_all.stop();
-      Serial.println("DEBUG: ADC stopped");
-    }
-    
-    // Reset acquisition state
-    acq_index = 0;
-    acq_sample_count = 0;
-    required_samples = 0;
-    acquisition_start_time = 0;
-    
-    // Update state
-    if (output_active) {
-      current_state = STATE_OUTPUTTING;
-    } else {
-      current_state = STATE_IDLE;
-    }
-    
-    Serial.println("ACK: Acquisition stopped");
-    Serial.flush();  // Ensure message is sent
     
   } else if (cmd.startsWith("UPLOAD_CSV")) {
     // Parse line count from command: UPLOAD_CSV,<num_lines>
@@ -520,14 +447,6 @@ void processCommand(String cmd) {
       Serial.read();
       cleared++;
     }
-    if (cleared > 0) {
-      Serial.print("DEBUG: Cleared ");
-      Serial.print(cleared);
-      Serial.println(" bytes from buffer");
-    }
-    
-    Serial.print("DEBUG: parsing_csv set to true, Serial.available()=");
-    Serial.println(Serial.available());
     Serial.println("READY");
     
     if (parseCSVFromSerial(expected_lines)) {
@@ -543,48 +462,14 @@ void processCommand(String cmd) {
       Serial.read();
       leftover_cleared++;
     }
-    if (leftover_cleared > 0) {
-      Serial.print("DEBUG: Cleared ");
-      Serial.print(leftover_cleared);
-      Serial.println(" leftover bytes from buffer after CSV parsing");
-    }
-    
     parsing_csv = false;  // Clear flag when done
-    Serial.println("DEBUG: parsing_csv set to false");
     
   } else if (cmd.startsWith("RESET")) {
-    // Reset parsing state and clear buffers
-    Serial.println("DEBUG: RESET command received");
     parsing_csv = false;
-    Serial.println("DEBUG: parsing_csv set to false");
-    int cleared = 0;
     while (Serial.available() > 0) {
       Serial.read();
-      cleared++;
     }
-    Serial.print("DEBUG: Cleared ");
-    Serial.print(cleared);
-    Serial.println(" bytes from buffer");
     Serial.println("ACK: Reset complete");
-    
-  } else if (cmd.startsWith("DEBUG")) {
-    // Debug command - dump current state
-    Serial.println("DEBUG: === State Dump ===");
-    Serial.print("DEBUG: parsing_csv = ");
-    Serial.println(parsing_csv);
-    Serial.print("DEBUG: Serial.available() = ");
-    Serial.println(Serial.available());
-    Serial.print("DEBUG: csv_sample_count = ");
-    Serial.println(csv_sample_count);
-    Serial.print("DEBUG: output_active = ");
-    Serial.println(output_active);
-    Serial.print("DEBUG: acquisition_active = ");
-    Serial.println(acquisition_active);
-    Serial.print("DEBUG: current_state = ");
-    Serial.println(current_state);
-    Serial.print("DEBUG: csv_sample_period = ");
-    Serial.println(csv_sample_period, 6);
-    Serial.println("DEBUG: === End State Dump ===");
     
   } else if (cmd.startsWith("GET_STATUS")) {
     Serial.print("STATUS:");
@@ -790,96 +675,51 @@ void processAnalogIO() {
 // ============================================================================
 
 void loop() {
-  
-  // Process analog I/O (DAC and ADC) - combined function
-  // This function handles both DAC output and ADC acquisition in same execution
-  // NO Serial communication in this function
+  // Process analog I/O (matches test program structure)
   processAnalogIO();
   
-  // Check for errors from processing function
-  if (error_flag) {
-    static unsigned long last_error_report = 0;
-    if (millis() - last_error_report > 1000) {
-      Serial.print("ERROR: Processing error code=");
-      Serial.print(error_code);
-      Serial.print(" (1=DAC buffer, 2=ADC buffer size, 3=Buffer overflow, 4=ADC read)");
-      Serial.print(", acq_index=");
-      Serial.println(acq_index);
-      last_error_report = millis();
-    }
-    error_flag = false;  // Clear flag after reporting
-  }
-  
-  // Check for duration-based completion
-  if (acquisition_active && required_samples > 0 && acq_index >= required_samples) {
-    acquisition_active = false;
-    adc_all.stop();
-    Serial.println("DEBUG: Acquisition completed - reached required samples");
-  }
-  
-  // Progress reporting (reduced frequency to prevent serial buffer overflow)
+  // During active acquisition: no serial communication, no command parsing
   if (acquisition_active) {
-    static unsigned long last_progress = 0;
-    if (millis() - last_progress > 1000) {
-      Serial.print("DEBUG: Acquisition progress: ");
-      Serial.print(acq_index);
-      if (required_samples > 0) {
-        Serial.print("/");
-        Serial.print(required_samples);
-        Serial.print(" samples (");
-        Serial.print((float)acq_index / required_samples * 100.0, 1);
-        Serial.print("%)");
-      } else {
-        Serial.print(" samples");
-      }
-      if (acquisition_start_time > 0) {
-        Serial.print(", elapsed=");
-        Serial.print((millis() - acquisition_start_time) / 1000.0, 1);
-        Serial.print("s");
-      }
-      Serial.print(", adc.avail=");
-      Serial.println(adc_all.available());
-      Serial.flush();
-      last_progress = millis();
+    // Check for completion
+    if (required_samples > 0 && acq_index >= required_samples) {
+      acquisition_active = false;
+      adc_all.stop();
     }
+    // No serial communication, no command parsing during acquisition
+    return;
   }
+  
+  // Non-acquisition mode: handle completion and commands
   
   // Check if acquisition just completed
   static bool was_acquiring = false;
   if (was_acquiring && !acquisition_active && adc_initialized) {
-    // Acquisition just finished - stop ADC
     adc_all.stop();
     output_active = false;
     current_state = STATE_IDLE;
     required_samples = 0;
     acquisition_start_time = 0;
     Serial.println("ACK: Acquisition complete");
-    Serial.flush();  // Ensure message is sent
     was_acquiring = false;
   } else if (acquisition_active) {
     was_acquiring = true;
   }
   
-  // Skip reading Serial if parsing CSV to avoid race condition
+  // Skip reading Serial if parsing CSV
   if (parsing_csv) {
-    static unsigned long last_debug = 0;
-    if (millis() - last_debug > 1000) {  // Print every second when stuck
-      Serial.print("DEBUG: loop() - parsing_csv=true, Serial.available()=");
-      Serial.println(Serial.available());
-      last_debug = millis();
-    }
     delay(1);
     return;
   }
   
-  // Check for incoming serial commands
+  // Check for incoming serial commands (only when not acquiring)
   if (Serial.available() > 0) {
     String cmd = Serial.readStringUntil('\n');
-    Serial.print("DEBUG: Received command: ");
-    Serial.println(cmd);
     processCommand(cmd);
   }
   
-  delay(1);
+  // Delay only when not acquiring
+  if (!acquisition_active && !parsing_csv) {
+    delay(1);
+  }
 }
 
