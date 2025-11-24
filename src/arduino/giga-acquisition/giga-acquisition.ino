@@ -22,10 +22,10 @@
 
 #define SERIAL_BAUD 115200
 #define MAX_CSV_SAMPLES 10000  // Maximum samples in CSV file
-#define MAX_ACQ_SAMPLES 10000  // Maximum acquisition samples (6 channels)
-                                // Memory constraint: ~480 KB (20000 × 6 channels × 4 bytes/float)
+#define MAX_ACQ_SAMPLES 10000  // Maximum acquisition samples (7 channels: 6 inputs + 1 output voltage)
+                                // Memory constraint: ~560 KB (10000 × 7 channels × 4 bytes/float = 280 KB)
                                 // Maximum acquisition duration = MAX_ACQ_SAMPLES / sample_rate
-                                // Example: At 1 kHz = 20 seconds, at 10 kHz = 2 seconds
+                                // Example: At 1 kHz = 10 seconds, at 10 kHz = 1 second
                                 // See specifications_giga.md "Memory Management" section
 #define DAC0_PIN A12          // DAC0 on Arduino Giga R1 WiFi (A12 is DAC0 channel)
 #define INPUT_CHANNELS 6       // A0-A5 on Arduino Giga R1 WiFi
@@ -52,8 +52,8 @@ float csv_voltage_values[MAX_CSV_SAMPLES];
 uint32_t csv_sample_count = 0;
 float csv_sample_period = 0.001;  // Default 1kHz
 
-// Acquisition buffers (6 channels)
-float acq_buffer[MAX_ACQ_SAMPLES * 6];
+// Acquisition buffers (7 channels: 6 inputs + 1 output voltage)
+float acq_buffer[MAX_ACQ_SAMPLES * 7];
 uint32_t acq_sample_count = 0;
 float acq_sample_period = 0.001;
 bool acquisition_active = false;
@@ -63,6 +63,7 @@ bool parsing_csv = false;  // Flag to prevent loop() from processing commands du
 // Timing
 uint32_t output_index = 0;
 uint32_t acq_index = 0;
+uint32_t output_index_at_acq_start = 0;  // Output index when acquisition started (for synchronization)
 uint32_t required_samples = 0;  // Required samples for current acquisition (0 = use buffer limit)
 unsigned long acquisition_start_time = 0;  // Start time of current acquisition
 
@@ -424,6 +425,10 @@ void processCommand(String cmd) {
     acq_index = 0;
     acq_sample_count = 0;
     
+    // Store current output_index for synchronization
+    // This allows us to determine which voltage was output at each acquisition sample
+    output_index_at_acq_start = output_index;
+    
     // Ensure ADCs are stopped before starting (in case they were left running)
     adc1.stop();
     adc2.stop();
@@ -492,6 +497,7 @@ void processCommand(String cmd) {
     acq_sample_count = 0;
     required_samples = 0;
     acquisition_start_time = 0;
+    output_index_at_acq_start = 0;
     
     // Update state
     if (output_active) {
@@ -613,20 +619,22 @@ void processCommand(String cmd) {
     current_state = STATE_TRANSFERRING;
     
     // Send data header
+    // Note: 7 channels = 6 input channels + 1 output voltage channel
     Serial.print("DATA:");
     Serial.print(acq_sample_count);
     Serial.print(",");
     Serial.print(acq_sample_period, 6);
     Serial.print(",");
-    Serial.print(INPUT_CHANNELS);
+    Serial.print(7);  // 7 channels: A0-A5 (6) + output_voltage (1)
     Serial.println();
     
     // Send data samples (text format)
+    // Format: A0,A1,A2,A3,A4,A5,output_voltage
     for (uint32_t i = 0; i < acq_sample_count; i++) {
-      float *sample_ptr = &acq_buffer[i * 6];
+      float *sample_ptr = &acq_buffer[i * 7];
       
-      Serial.print(sample_ptr[0], 4);
-      for (int ch = 1; ch < 6; ch++) {
+      Serial.print(sample_ptr[0], 4);  // A0
+      for (int ch = 1; ch < 7; ch++) {  // A1-A5, output_voltage
         Serial.print(",");
         Serial.print(sample_ptr[ch], 4);
       }
@@ -776,7 +784,7 @@ void processADCAcquisition() {
           break;
         }
         
-        float *sample_ptr = &acq_buffer[acq_index * 6];
+        float *sample_ptr = &acq_buffer[acq_index * 7];
         
         // Extract interleaved channel data from each buffer
         // Buffer 1 (ADC1): A0, A1, A2 at indices i*3, i*3+1, i*3+2
@@ -796,6 +804,20 @@ void processADCAcquisition() {
         sample_ptr[3] = adc2_ch0 * 3.3 / 4095.0;  // A3
         sample_ptr[4] = adc2_ch1 * 3.3 / 4095.0;  // A4
         sample_ptr[5] = adc2_ch2 * 3.3 / 4095.0;  // A5
+        
+        // Record output voltage synchronized with this acquisition sample
+        // Since DAC and ADC run at the same sample rate and are hardware-synchronized,
+        // we can calculate which CSV voltage index corresponds to this acquisition sample
+        if (output_active && csv_sample_count > 0) {
+          // Calculate which output sample corresponds to this acquisition sample
+          // output_index_at_acq_start is the output index when acquisition started
+          // acq_index is the current acquisition sample index
+          // Both are synchronized by the same sample rate
+          uint32_t corresponding_output_index = (output_index_at_acq_start + acq_index) % csv_sample_count;
+          sample_ptr[6] = csv_voltage_values[corresponding_output_index];  // Output voltage
+        } else {
+          sample_ptr[6] = 0.0;  // No output active
+        }
         
         acq_index++;
         acq_sample_count = acq_index;

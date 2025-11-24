@@ -56,8 +56,24 @@ TIME_SERIES_VARIABLES = [
     'odrive_Controller_vel_integrator_torque',
 ]
 
+# ============================================================================
+# Configuration: Bode Plot Settings
+# ============================================================================
+# 
 # Bode plot configurations: List of 6 (input, output) pairs
+# Each pair defines one Bode plot showing the transfer function from input to output
 # Format: (input_variable_name, output_variable_name)
+# 
+# Available variables for inputs/outputs:
+#   - output_voltage: Voltage output (multisine) as recorded by Arduino
+#   - A0, A1, A2, A3, A4, A5: Analog input voltages
+#   - acc0, acc1, acc2, acc3, acc4, acc5: Accelerations (calculated)
+#   - x, y, theta_x, theta_y: Geometric calculations
+#   - ODrive variables (if ODrive is connected): odrive_* variables
+#
+# To modify Bode plots, edit the list below:
+# ============================================================================
+
 BODE_PLOT_CONFIGS = [
     ('output_voltage', 'theta_x'),
     ('output_voltage', 'theta_y'),
@@ -72,7 +88,6 @@ BODE_PLOT_CONFIGS = [
 # ============================================================================
 
 ARDUINO_PORT = 'COM10'  # Hard-coded Arduino port
-ODRIVE_PORT = 'COM12'   # Default ODrive port (if using serial, otherwise USB)
 
 # ============================================================================
 # Geometric calculation constants
@@ -468,20 +483,35 @@ class StopAcquisitionDialog(QDialog):
 # Main Sequential Flow
 # ============================================================================
 
-def process_data(data_array, sample_rate, csv_voltage=None, csv_time=None, odrive_data=None):
-    """Process acquired data including geometric calculations."""
+def process_data(data_array, sample_rate, odrive_data=None):
+    """Process acquired data including geometric calculations.
+    
+    Args:
+        data_array: numpy array with shape (num_samples, 7)
+                   Columns: [A0, A1, A2, A3, A4, A5, output_voltage]
+        sample_rate: Sample rate in Hz
+        odrive_data: Optional dict with ODrive variables (if ODrive connected)
+    """
     num_samples = data_array.shape[0]
+    num_channels = data_array.shape[1]
+    
+    # Verify we have 7 channels (6 inputs + 1 output voltage)
+    if num_channels != 7:
+        raise ValueError(f"Expected 7 channels (6 inputs + output voltage), got {num_channels}")
     
     # Create time vector
     t = np.arange(num_samples) / sample_rate
     
-    # Extract input channels (A0-A5)
+    # Extract input channels (A0-A5) - indices 0-5
     A0 = data_array[:, 0]
     A1 = data_array[:, 1]
     A2 = data_array[:, 2]
     A3 = data_array[:, 3]
     A4 = data_array[:, 4]
     A5 = data_array[:, 5]
+    
+    # Extract output voltage - index 6 (recorded by Arduino during acquisition)
+    output_voltage = data_array[:, 6]
     
     # Calculate accelerations (acc0-acc5) - these are the raw analog inputs
     # In this system, the analog inputs ARE the accelerometer readings
@@ -501,30 +531,6 @@ def process_data(data_array, sample_rate, csv_voltage=None, csv_time=None, odriv
          theta_y * (L1 + L2 + L3 / 2) - A5) * R_A
     y = ((A0 + A1 + A2 + A3) * np.sin(ALPHA) / 4 + 
          theta_x * (L1 + L2 + L3 / 2) - A4) * R_A
-    
-    # Prepare output voltage data
-    # If CSV voltage is provided and synchronized, use it
-    # Otherwise, create placeholder (will need Arduino firmware modification)
-    if csv_voltage is not None and csv_time is not None:
-        # Interpolate CSV voltage to match acquisition time
-        from scipy.interpolate import interp1d
-        if len(csv_voltage) > 1:
-            # Use periodic interpolation for cyclic signal
-            # Extend time to cover full acquisition
-            csv_duration = csv_time[-1] - csv_time[0] + (csv_time[1] - csv_time[0])
-            num_cycles = int(np.ceil(t[-1] / csv_duration)) + 1
-            extended_time = np.concatenate([csv_time + i * csv_duration for i in range(num_cycles)])
-            extended_voltage = np.tile(csv_voltage, num_cycles)
-            
-            # Interpolate
-            f = interp1d(extended_time, extended_voltage, kind='linear', 
-                        bounds_error=False, fill_value='extrapolate')
-            output_voltage = f(t)
-        else:
-            output_voltage = np.zeros_like(t)
-    else:
-        # Placeholder - TODO: Get from Arduino during acquisition
-        output_voltage = np.zeros_like(t)
     
     # Store processed data
     data = {
@@ -700,17 +706,14 @@ def main():
         
         print(f"CSV file selected: {os.path.basename(csv_path)}")
         
-        # Parse CSV file to get voltage values and timing
-        csv_voltage = None
-        csv_time = None
+        # Parse CSV file to extract sample rate (needed for ODrive configuration)
+        # Note: Voltage values will be read from Arduino acquisition data, not from CSV
+        sample_rate = None
         try:
             with open(csv_path, 'r') as f:
                 lines = f.readlines()
             
-            voltage_values = []
             time_values = []
-            sample_period = None
-            sample_rate = None
             
             for line in lines:
                 line = line.strip()
@@ -722,7 +725,6 @@ def main():
                             fs_value = float(fs_part)
                             if fs_value > 0:
                                 sample_rate = fs_value
-                                sample_period = 1.0 / fs_value
                         except (ValueError, IndexError):
                             pass
                     continue
@@ -730,32 +732,27 @@ def main():
                 if line.lower() == 'time_s,signal':
                     continue
                 
-                if ',' in line:
+                # Extract time values to calculate sample rate if not in metadata
+                if ',' in line and sample_rate is None:
                     parts = line.split(',')
                     if len(parts) >= 2:
                         try:
                             time_val = float(parts[0].strip())
-                            voltage = float(parts[1].strip())
-                            if 0 <= voltage <= 3.3:
-                                voltage_values.append(voltage)
-                                time_values.append(time_val)
+                            time_values.append(time_val)
+                            # Calculate sample rate from first two time values
+                            if len(time_values) == 2:
+                                sample_period = time_values[1] - time_values[0]
+                                if sample_period > 0:
+                                    sample_rate = 1.0 / sample_period
+                                    break  # Got what we need
                         except ValueError:
                             continue
-            
-            if len(voltage_values) > 0:
-                csv_voltage = np.array(voltage_values)
-                if len(time_values) > 0:
-                    csv_time = np.array(time_values)
-                    if sample_period is None and len(time_values) > 1:
-                        sample_period = time_values[1] - time_values[0]
-                        sample_rate = 1.0 / sample_period
-                else:
-                    # Generate time array
-                    if sample_period is None:
-                        sample_period = 0.001  # Default 1ms
-                    csv_time = np.arange(len(voltage_values)) * sample_period
         except Exception as e:
             print(f"Warning: Could not parse CSV file: {e}")
+        
+        if sample_rate is None:
+            print("Warning: Could not determine sample rate from CSV. Using default 1000 Hz.")
+            sample_rate = 1000.0
         
         # Upload CSV to Arduino
         print("Uploading CSV to Arduino...")
@@ -956,8 +953,6 @@ def main():
         processed_data = process_data(
             data_result['samples'],
             data_result['sample_rate'],
-            csv_voltage=csv_voltage,
-            csv_time=csv_time,
             odrive_data=odrive_data
         )
         

@@ -236,8 +236,8 @@ def main():
     """
     # Example parameters
     fmin_desired = 5.0  # Hz
-    fmax_desired = 500.0  # Hz
-    fs = 5000.0  # Hz
+    fmax_desired = 50.0  # Hz
+    fs = 500.0  # Hz
     df_des = 1.0  # Hz
     
     print("Multisine Generator Example")
@@ -273,7 +273,7 @@ def main():
     print()
     
     # Export to CSV
-    filename = "multisine_optimized.csv"
+    filename = "multisine_optimized_500Hz.csv"
     signal = optimizer.export_multisine(filename, phases)
     print(f"Multisine exported to {filename}")
     
