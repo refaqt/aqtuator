@@ -70,10 +70,6 @@ bool adc_initialized = false;
 bool dac_initialized = false;
 uint32_t current_sample_rate = 1000;  // Current sample rate in Hz (default 1kHz)
 
-// Error flags (set in processing function, checked in loop())
-volatile bool error_flag = false;
-volatile uint32_t error_code = 0;
-
 // ============================================================================
 // Serial Protocol Definitions
 // ============================================================================
@@ -183,7 +179,7 @@ bool parseCSVFromSerial(uint32_t expected_lines) {
     
     lines_read++;  // Increment counter for each line read from serial
     
-    // No chunk acknowledgments - simple line reading (matches test_serial.py approach)
+    // No chunk acknowledgments - simple line reading
     
     if (line.length() == 0) continue;
     
@@ -384,9 +380,10 @@ void processCommand(String cmd) {
     acq_index = 0;
     acq_sample_count = 0;
     current_output_voltage = 0.0;
+    // Note: completion_sent flag will be reset when acquisition_active becomes true
     
     // Ensure ADC is stopped before starting
-    adc_all.stop();
+    // adc_all.stop();
     // Minimal delay to ensure ADC fully stops (matches test program pattern)
     delay(1);
     
@@ -410,16 +407,22 @@ void processCommand(String cmd) {
     // Send ACK BEFORE starting ADC (all Serial communication must be done before DMA starts)
     Serial.println("ACK: Acquisition started");
     
+
     // Start ADC sampling (DMA starts immediately - no blocking operations after this)
+    // If start fails, silently stop and return - no Serial operations after DMA might have started
     if (!adc_all.start(current_sample_rate)) {
-      Serial.println("ERROR: Failed to start ADC sampling");
+      // Failed to start - stop ADC and set flags to prevent acquisition
       adc_all.stop();
+      acquisition_active = false;
+      output_active = false;
+      current_state = STATE_IDLE;
       return;
     }
     
     // Set acquisition_active as the VERY LAST thing before returning
     // This ensures loop() can immediately start processing ADC data
     acquisition_active = true;
+
     
     // Return immediately - no more Serial operations after this point
     // Note: Acquisition is now handled in loop(), not blocking here
@@ -572,9 +575,8 @@ void processAnalogIO() {
         dac_output.write(dac_buf);
         // Note: dac_buf.release() is handled automatically by the library
       } else {
-        // Invalid buffer - set error flag
-        error_flag = true;
-        error_code = 1;  // DAC buffer error
+        // Invalid buffer - stop output immediately
+        output_active = false;
         dac_voltage_count = 0;  // Reset count on error
       }
     }
@@ -594,8 +596,9 @@ void processAnalogIO() {
         // Check buffer size (must be multiple of 6 for 6 channels)
         if (adc_buf.size() % 6 != 0) {
           adc_buf.release();
-          error_flag = true;
-          error_code = 2;  // ADC buffer size error
+          // Invalid buffer size - stop acquisition immediately
+          acquisition_active = false;
+          adc_all.stop();
           return;
         }
         
@@ -606,14 +609,6 @@ void processAnalogIO() {
         
         for (size_t i = 0; i < samples_to_process; i++) {
           if (acq_index >= MAX_ACQ_SAMPLES) {
-            break;
-          }
-          
-          // Check for buffer overflow
-          if (acq_index * 7 + 6 >= MAX_ACQ_SAMPLES * 7) {
-            error_flag = true;
-            error_code = 3;  // Acquisition buffer overflow
-            acquisition_active = false;
             break;
           }
           
@@ -661,9 +656,9 @@ void processAnalogIO() {
         // Reset voltage count after processing (for next iteration)
         dac_voltage_count = 0;
       } else {
-        // Invalid buffer - set error flag
-        error_flag = true;
-        error_code = 4;  // ADC buffer read error
+        // Invalid buffer - stop acquisition immediately
+        acquisition_active = false;
+        adc_all.stop();
       }
     }
   }
@@ -675,34 +670,46 @@ void processAnalogIO() {
 // ============================================================================
 
 void loop() {
-  // Process analog I/O (matches test program structure)
+  // Always process analog I/O first (keeps DMA buffers flowing)
   processAnalogIO();
   
-  // During active acquisition: no serial communication, no command parsing
+  // Check for acquisition completion
   if (acquisition_active) {
-    // Check for completion
+    // Check if we've reached the required number of samples
     if (required_samples > 0 && acq_index >= required_samples) {
+      // Acquisition complete - stop everything
       acquisition_active = false;
       adc_all.stop();
+      output_active = false;
+      current_state = STATE_IDLE;
+      required_samples = 0;
+      acquisition_start_time = 0;
+    } else if (acq_index >= MAX_ACQ_SAMPLES) {
+      // Buffer limit reached
+      acquisition_active = false;
+      adc_all.stop();
+      output_active = false;
+      current_state = STATE_IDLE;
+      required_samples = 0;
+      acquisition_start_time = 0;
     }
-    // No serial communication, no command parsing during acquisition
+    
+    // During active acquisition: no serial communication, no command parsing
     return;
   }
   
-  // Non-acquisition mode: handle completion and commands
-  
-  // Check if acquisition just completed
-  static bool was_acquiring = false;
-  if (was_acquiring && !acquisition_active && adc_initialized) {
-    adc_all.stop();
-    output_active = false;
-    current_state = STATE_IDLE;
-    required_samples = 0;
-    acquisition_start_time = 0;
+  // Acquisition not active: handle completion notification and commands
+  // Check if acquisition just completed (we have data but acquisition is not active)
+  static bool completion_sent = false;
+  if (!completion_sent && acq_sample_count > 0 && !acquisition_active) {
+    // Just completed - send completion message once
     Serial.println("ACK: Acquisition complete");
-    was_acquiring = false;
-  } else if (acquisition_active) {
-    was_acquiring = true;
+    completion_sent = true;
+  }
+  
+  // Reset completion flag when new acquisition starts
+  if (acquisition_active) {
+    completion_sent = false;
   }
   
   // Skip reading Serial if parsing CSV
@@ -717,9 +724,6 @@ void loop() {
     processCommand(cmd);
   }
   
-  // Delay only when not acquiring
-  if (!acquisition_active && !parsing_csv) {
-    delay(1);
-  }
+
 }
 

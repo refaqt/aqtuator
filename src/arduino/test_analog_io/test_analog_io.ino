@@ -22,7 +22,7 @@
 // ============================================================================
 
 #define SERIAL_BAUD 115200
-#define SAMPLE_RATE 10000        // Hz (adjustable - change this value to test different rates)
+#define SAMPLE_RATE 5000        // Hz (adjustable - change this value to test different rates)
 #define DURATION_SEC 0.1       // Acquisition duration in seconds
 #define TOTAL_SAMPLES ((uint32_t)(SAMPLE_RATE * DURATION_SEC))
 
@@ -57,6 +57,8 @@ float input_voltage_buffer_5[TOTAL_SAMPLES];  // Channel 5 (A5)
 // Acquisition state
 volatile uint32_t sample_index = 0;
 volatile bool acquisition_complete = false;
+bool adc_started = false;
+bool output_started = false;
 
 // Output state
 uint32_t output_index = 0;
@@ -106,27 +108,7 @@ void setup() {
     }
   }
   
-  Serial.println("DAC and ADC initialized successfully");
-  Serial.println("Starting acquisition in 1 second...");
-  delay(1000);
-  
-  // Reset buffers
-  sample_index = 0;
-  output_index = 0;
-  acquisition_complete = false;
-  
-  // Start both DAC and ADC simultaneously
-  Serial.println("Starting DAC and ADC...");
-  
-  if (!adc_input.start(SAMPLE_RATE)) {
-    Serial.println("ERROR: Failed to start ADC!");
-    while (1) {
-      delay(1000);
-    }
-  }
-  
-  Serial.println("Acquisition started!");
-  Serial.println("Acquiring data...");
+  Serial.println("DAC and ADC initialized. Send 'O' to start output, then 'A' to start ADC acquisition.");
 }
 
 // ============================================================================
@@ -137,7 +119,7 @@ void processAnalogIO() {
   // ========================================================================
   // DAC Processing (first) - output voltage sequence
   // ========================================================================
-  if (dac_output.available() > 0) {
+  if (output_started && dac_output.available() > 0) {
     SampleBuffer dac_buf = dac_output.dequeue();
     
     if (dac_buf) {
@@ -172,7 +154,7 @@ void processAnalogIO() {
   // ========================================================================
   // ADC Processing (second) - acquire input voltages (6 channels)
   // ========================================================================
-  if (adc_input.available() > 0 && sample_index < TOTAL_SAMPLES) {
+  if (adc_started && adc_input.available() > 0 && sample_index < TOTAL_SAMPLES) {
     SampleBuffer adc_buf = adc_input.read();
     
     if (adc_buf) {
@@ -247,6 +229,46 @@ void processAnalogIO() {
 // ============================================================================
 
 void loop() {
+  // Check for serial commands
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    // Clear any remaining characters in buffer
+    while (Serial.available() > 0) {
+      Serial.read();
+    }
+    
+    // Handle "O" command to start output
+    if ((command == 'O' || command == 'o') && !output_started) {
+      output_started = true;
+      output_index = 0;  // Reset sequence to beginning
+      Serial.println("DAC output started!");
+    }
+    
+    // Handle "A" command to start ADC acquisition
+    if ((command == 'A' || command == 'a') && !adc_started) {
+      // Check if output has been started first
+      if (!output_started) {
+        Serial.println("ERROR: Output must be started first. Send 'O' to start output.");
+      } else {
+        // Reset acquisition state variables
+        sample_index = 0;
+        output_index = 0;
+        acquisition_complete = false;
+        
+        // Start ADC
+        if (!adc_input.start(SAMPLE_RATE)) {
+          Serial.println("ERROR: Failed to start ADC!");
+          while (1) {
+            delay(1000);
+          }
+        }
+        
+        adc_started = true;
+        Serial.println("ADC acquisition started!");
+      }
+    }
+  }
+  
   // Process analog I/O while acquiring
   if (!acquisition_complete) {
     processAnalogIO();
@@ -289,13 +311,57 @@ void loop() {
       
       Serial.println();
       Serial.println("Data printing complete!");
-      Serial.println("Reset Arduino to run test again.");
+      Serial.println("Send 'O' to start output, then 'A' to start a new acquisition.");
       
       data_printed = true;
+      // Reset both adc_started and output_started to allow restart
+      adc_started = false;
+      output_started = false;
     }
     
-    // Do nothing - wait for reset
-    delay(1000);
+    // Check for new commands
+    if (Serial.available() > 0) {
+      char command = Serial.read();
+      // Clear any remaining characters in buffer
+      while (Serial.available() > 0) {
+        Serial.read();
+      }
+      
+      // Handle "O" command to start output
+      if ((command == 'O' || command == 'o') && !output_started) {
+        output_started = true;
+        output_index = 0;  // Reset sequence to beginning
+        Serial.println("DAC output started!");
+      }
+      
+      // Handle "A" command to start new acquisition
+      if ((command == 'A' || command == 'a') && !adc_started) {
+        // Check if output has been started first
+        if (!output_started) {
+          Serial.println("ERROR: Output must be started first. Send 'O' to start output.");
+        } else {
+          // Reset for new acquisition
+          data_printed = false;
+          sample_index = 0;
+          output_index = 0;
+          acquisition_complete = false;
+          
+          // Start ADC
+          if (!adc_input.start(SAMPLE_RATE)) {
+            Serial.println("ERROR: Failed to start ADC!");
+            while (1) {
+              delay(1000);
+            }
+          }
+          
+          adc_started = true;
+          Serial.println("ADC acquisition started!");
+        }
+      }
+    } else {
+      // Do nothing - wait for command
+      delay(1000);
+    }
   }
 }
 
