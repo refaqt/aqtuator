@@ -55,6 +55,7 @@ float acq_sample_period = 0.001;
 volatile bool acquisition_active = false;
 volatile bool output_active = false;
 bool parsing_csv = false;  // Flag to prevent loop() from processing commands during CSV upload
+bool completion_sent = false;  // Flag to track if completion message was sent
 
 // Timing
 uint32_t output_index = 0;
@@ -401,7 +402,7 @@ void processCommand(String cmd) {
     acq_index = 0;
     acq_sample_count = 0;
     current_output_voltage = 0.0;
-    // Note: completion_sent flag will be reset when acquisition_active becomes true
+    completion_sent = false;  // Reset completion flag for new acquisition
     
     // Ensure ADC is stopped before starting
     // adc_all.stop();
@@ -741,16 +742,10 @@ void loop() {
   
   // Acquisition not active: handle completion notification and commands
   // Check if acquisition just completed (we have data but acquisition is not active)
-  static bool completion_sent = false;
   if (!completion_sent && acq_sample_count > 0 && !acquisition_active) {
     // Just completed - send completion message once
     Serial.println("ACK: Acquisition complete");
     completion_sent = true;
-  }
-  
-  // Reset completion flag when new acquisition starts
-  if (acquisition_active) {
-    completion_sent = false;
   }
   
   // Skip reading Serial if parsing CSV
