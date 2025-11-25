@@ -75,7 +75,7 @@ TIME_SERIES_VARIABLES = [
 # ============================================================================
 
 BODE_PLOT_CONFIGS = [
-    ('output_voltage', 'theta_x'),
+    ('output_voltage', 'A0'),
     ('output_voltage', 'theta_y'),
     ('output_voltage', 'x'),
     ('output_voltage', 'y'),
@@ -563,14 +563,23 @@ def process_data(data_array, sample_rate, odrive_data=None):
     
     return data
 
-def plot_time_series(data, variables_to_plot):
-    """Plot time series data - all plots in one window with synced x-axes."""
+def plot_time_series(data, variables_to_plot, active_figures=None):
+    """Plot time series data - all plots in one window with synced x-axes.
+    
+    Args:
+        data: Dictionary containing time series data
+        variables_to_plot: List of variable names to plot
+        active_figures: Optional list to track active figure references
+    
+    Returns:
+        Figure object or None if no data to plot
+    """
     # Filter variables that exist in data
     available_vars = [v for v in variables_to_plot if v in data]
     
     if len(available_vars) == 0:
         print("No variables available to plot")
-        return
+        return None
     
     # Create figure with subplots
     num_plots = len(available_vars)
@@ -587,10 +596,32 @@ def plot_time_series(data, variables_to_plot):
     axes[-1].set_xlabel('Time (s)')
     fig.suptitle('Time Series Data', fontsize=14)
     fig.tight_layout()
-    plt.show()
+    
+    # Add close event handler to track when window is closed
+    if active_figures is not None:
+        active_figures.append(fig)
+        
+        def on_close(event):
+            """Handle figure close event."""
+            if fig in active_figures:
+                active_figures.remove(fig)
+        
+        fig.canvas.mpl_connect('close_event', on_close)
+    
+    plt.show(block=False)
+    return fig
 
-def plot_bode_plots(data, bode_configs):
-    """Plot 6 Bode plots in 2x3 grid."""
+def plot_bode_plots(data, bode_configs, active_figures=None):
+    """Plot 6 Bode plots in 2x3 grid.
+    
+    Args:
+        data: Dictionary containing time series data
+        bode_configs: List of (input_var, output_var) tuples for Bode plots
+        active_figures: Optional list to track active figure references
+    
+    Returns:
+        Figure object or None if no valid configs
+    """
     # Filter configs where both input and output exist
     valid_configs = []
     for input_var, output_var in bode_configs:
@@ -601,7 +632,7 @@ def plot_bode_plots(data, bode_configs):
     
     if len(valid_configs) == 0:
         print("No valid Bode plot configurations")
-        return
+        return None
     
     # Create 2x3 grid (or adjust if fewer than 6)
     num_plots = min(len(valid_configs), 6)
@@ -657,7 +688,20 @@ def plot_bode_plots(data, bode_configs):
         axes[row * 2 + 1, col].set_visible(False)
     
     fig.tight_layout()
-    plt.show()
+    
+    # Add close event handler to track when window is closed
+    if active_figures is not None:
+        active_figures.append(fig)
+        
+        def on_close(event):
+            """Handle figure close event."""
+            if fig in active_figures:
+                active_figures.remove(fig)
+        
+        fig.canvas.mpl_connect('close_event', on_close)
+    
+    plt.show(block=False)
+    return fig
 
 def main():
     """Main sequential flow."""
@@ -986,27 +1030,62 @@ def main():
         
         # Step 10: Display time series plots
         print("\nStep 10: Displaying time series plots...")
-        plot_time_series(processed_data, TIME_SERIES_VARIABLES)
+        
+        # Track active figures for close detection
+        active_figures = []
+        
+        time_series_fig = plot_time_series(processed_data, TIME_SERIES_VARIABLES, active_figures)
         
         # Step 11: Display Bode plots
         print("\nStep 11: Displaying Bode plots...")
-        plot_bode_plots(processed_data, BODE_PLOT_CONFIGS)
+        bode_fig = plot_bode_plots(processed_data, BODE_PLOT_CONFIGS, active_figures)
         
         print("\n" + "=" * 60)
         print("Acquisition complete!")
         print("=" * 60)
         
-        # Cleanup
+        # Cleanup serial and ODrive connections
         serial_helper.disconnect()
         if odrive_connected:
             odrive_ctrl.disconnect()
         
         # Keep application running to show plots
         print("\nPlots are displayed. Close plot windows to exit.")
-        sys.exit(app.exec_())
+        
+        # If no figures were created, exit immediately
+        if len(active_figures) == 0:
+            print("No plots to display. Exiting.")
+            return 0
+        
+        # Set up mechanism to detect when all windows are closed
+        def check_figures_closed():
+            """Check if all figures are closed and exit if so."""
+            # Filter out any figures that are no longer valid
+            valid_figures = [fig for fig in active_figures if plt.fignum_exists(fig.number)]
+            active_figures[:] = valid_figures
+            
+            if len(active_figures) == 0:
+                # All figures closed - clean up and exit
+                plt.close('all')
+                app.quit()
+        
+        # Use QTimer to periodically check if all figures are closed
+        check_timer = QTimer()
+        check_timer.timeout.connect(check_figures_closed)
+        check_timer.start(500)  # Check every 500ms
+        
+        # Run Qt event loop
+        exit_code = app.exec_()
+        
+        # Cleanup: ensure all figures are closed
+        plt.close('all')
+        
+        return exit_code
         
     except KeyboardInterrupt:
         print("\n\nInterrupted by user. Cleaning up...")
+        # Clean up any open matplotlib figures
+        plt.close('all')
         if 'serial_helper' in locals():
             # Stop acquisition first, then output
             serial_helper.send_command("STOP_ACQUISITION")
@@ -1021,6 +1100,8 @@ def main():
         print(f"\nError: {e}")
         import traceback
         traceback.print_exc()
+        # Clean up any open matplotlib figures
+        plt.close('all')
         if 'serial_helper' in locals():
             # Try to stop acquisition and output before disconnecting
             try:
