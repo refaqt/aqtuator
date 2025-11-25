@@ -337,6 +337,27 @@ void processCommand(String cmd) {
     // Just start writing to DAC buffer in loop()
     Serial.println("ACK: Output started");
     
+  } else if (cmd.startsWith("STOP_OUTPUT")) {
+    output_active = false;
+    if (!acquisition_active) {
+      current_state = STATE_IDLE;
+    }
+    Serial.println("ACK: Output stopped");
+    
+  } else if (cmd.startsWith("STOP_ACQUISITION")) {
+    if (acquisition_active) {
+      acquisition_active = false;
+      if (adc_initialized) {
+        adc_all.stop();
+      }
+    }
+    if (!output_active) {
+      current_state = STATE_IDLE;
+    } else {
+      current_state = STATE_OUTPUTTING;
+    }
+    Serial.println("ACK: Acquisition stopped");
+    
   } else if (cmd.startsWith("START_ACQUISITION")) {
     // Parse acquisition parameters
     // Format: START_ACQUISITION,duration,start_delay
@@ -694,7 +715,27 @@ void loop() {
       acquisition_start_time = 0;
     }
     
-    // During active acquisition: no serial communication, no command parsing
+    // Check for STOP_ACQUISITION command even during acquisition
+    // Use minimal serial communication to allow user-initiated stops
+    if (Serial.available() > 0) {
+      String cmd = Serial.readStringUntil('\n');
+      cmd.trim();
+      if (cmd.startsWith("STOP_ACQUISITION")) {
+        acquisition_active = false;
+        if (adc_initialized) {
+          adc_all.stop();
+        }
+        if (!output_active) {
+          current_state = STATE_IDLE;
+        } else {
+          current_state = STATE_OUTPUTTING;
+        }
+        Serial.println("ACK: Acquisition stopped");
+        return;  // Return immediately after minimal serial communication
+      }
+    }
+    
+    // During active acquisition: no other serial communication, no command parsing
     return;
   }
   

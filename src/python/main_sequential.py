@@ -846,49 +846,77 @@ def main():
         
         # Monitor acquisition progress
         acquisition_complete = False
+        acquisition_stopped = False
         timer = QTimer()
         
         def check_acquisition():
-            nonlocal acquisition_complete
+            nonlocal acquisition_complete, acquisition_stopped
             if serial_helper.serial_port and serial_helper.serial_port.is_open:
                 if serial_helper.serial_port.in_waiting > 0:
                     line = serial_helper.serial_port.readline().decode().strip()
                     if line == "ACK: Acquisition complete":
                         acquisition_complete = True
                         stop_dialog.accept()
+                    elif line == "ACK: Acquisition stopped":
+                        acquisition_stopped = True
+                        stop_dialog.accept()
         
         timer.timeout.connect(check_acquisition)
         timer.start(100)  # Check every 100ms
         
-        # Show dialog (blocks until closed or acquisition completes)
+        # Show dialog (blocks until closed or acquisition completes/stops)
         stop_dialog.exec_()
         timer.stop()
         
-        # Check if user stopped or acquisition completed
-        if stop_dialog.stopped or not acquisition_complete:
+        # Handle user-initiated stop or wait for completion
+        if stop_dialog.stopped:
+            # User clicked stop button - send STOP_ACQUISITION command
             print("Stopping acquisition...")
-            serial_helper.send_command("STOP_ACQUISITION")
-            time.sleep(0.5)  # Wait for Arduino to stop
+            success, response, error = serial_helper.send_command_and_wait_response(
+                "STOP_ACQUISITION", "ACK: Acquisition stopped", timeout=2
+            )
+            if success:
+                acquisition_stopped = True
+                print("Acquisition stopped successfully.")
+            else:
+                print(f"Warning: Failed to stop acquisition: {error}")
+                # Continue anyway - acquisition may have completed naturally
         
-        # Stop output
-        print("Stopping output...")
-        serial_helper.send_command("STOP_OUTPUT")
-        
-        # Wait for acquisition to complete if not already
-        if not acquisition_complete:
+        # Wait for acquisition to complete if not already confirmed
+        if not acquisition_complete and not acquisition_stopped:
             print("Waiting for acquisition to complete...")
             timeout = 0
-            while timeout < 100:  # 10 seconds timeout
+            max_timeout = 100  # 10 seconds timeout
+            while timeout < max_timeout:
                 if serial_helper.serial_port.in_waiting > 0:
                     line = serial_helper.serial_port.readline().decode().strip()
                     if line == "ACK: Acquisition complete":
                         acquisition_complete = True
                         break
+                    elif line == "ACK: Acquisition stopped":
+                        acquisition_stopped = True
+                        break
                 time.sleep(0.1)
                 timeout += 1
+            
+            if not acquisition_complete and not acquisition_stopped:
+                print("Warning: Acquisition may not have completed properly")
         
-        if not acquisition_complete:
-            print("Warning: Acquisition may not have completed properly")
+        # Ensure acquisition is stopped before proceeding
+        if not acquisition_complete and not acquisition_stopped:
+            # Try one more time to stop acquisition
+            print("Attempting to stop acquisition...")
+            serial_helper.send_command("STOP_ACQUISITION")
+            time.sleep(0.5)
+        
+        # Now that acquisition is confirmed stopped, stop output
+        print("Stopping output...")
+        success, response, error = serial_helper.send_command_and_wait_response(
+            "STOP_OUTPUT", "ACK: Output stopped", timeout=2
+        )
+        if not success:
+            print(f"Warning: Failed to stop output: {error}")
+            # Continue anyway - output may have stopped already
         
         # Step 8: Retrieve data
         print("\nStep 8: Retrieving data from Arduino...")
@@ -980,8 +1008,11 @@ def main():
     except KeyboardInterrupt:
         print("\n\nInterrupted by user. Cleaning up...")
         if 'serial_helper' in locals():
-            serial_helper.send_command("STOP_OUTPUT")
+            # Stop acquisition first, then output
             serial_helper.send_command("STOP_ACQUISITION")
+            time.sleep(0.2)
+            serial_helper.send_command("STOP_OUTPUT")
+            time.sleep(0.2)
             serial_helper.disconnect()
         if 'odrive_connected' in locals() and odrive_connected and 'odrive_ctrl' in locals():
             odrive_ctrl.disconnect()
@@ -991,6 +1022,14 @@ def main():
         import traceback
         traceback.print_exc()
         if 'serial_helper' in locals():
+            # Try to stop acquisition and output before disconnecting
+            try:
+                serial_helper.send_command("STOP_ACQUISITION")
+                time.sleep(0.2)
+                serial_helper.send_command("STOP_OUTPUT")
+                time.sleep(0.2)
+            except:
+                pass
             serial_helper.disconnect()
         if 'odrive_connected' in locals() and odrive_connected and 'odrive_ctrl' in locals():
             odrive_ctrl.disconnect()
