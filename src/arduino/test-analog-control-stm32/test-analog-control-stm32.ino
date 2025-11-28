@@ -13,7 +13,8 @@
                 - Adjustable sample rate (default 2000 Hz)
                 - CSV output to serial for plotting
    LICENSE:     See project LICENSE file
-   NOTE:        Uses mbed Ticker for hardware-timed interrupts and direct ADC/DAC access
+   NOTE:        Uses mbed Ticker for hardware-timed interrupts and mbed AnalogIn/AnalogOut 
+                for interrupt-safe ADC/DAC access
 /* -------------------------------------------------------------------------- */
 
 #include <mbed.h>
@@ -45,6 +46,19 @@
 // mbed Ticker instance for hardware-timed interrupts
 mbed::Ticker sample_ticker;
 
+// mbed AnalogIn objects for ADC channels (interrupt-safe)
+// Initialized in setup() after PinName conversion
+mbed::AnalogIn *adc_ch0 = nullptr;  // Channel 0 (A0)
+mbed::AnalogIn *adc_ch1 = nullptr;  // Channel 1 (A1)
+mbed::AnalogIn *adc_ch2 = nullptr;  // Channel 2 (A2)
+mbed::AnalogIn *adc_ch3 = nullptr;  // Channel 3 (A3)
+mbed::AnalogIn *adc_ch4 = nullptr;  // Channel 4 (A4)
+mbed::AnalogIn *adc_ch5 = nullptr;  // Channel 5 (A5)
+
+// mbed AnalogOut object for DAC (interrupt-safe)
+// Initialized in setup() after PinName conversion
+mbed::AnalogOut *dac_out = nullptr;  // DAC0 on A12
+
 // Data storage buffers
 float output_voltage_buffer[TOTAL_SAMPLES];
 float input_voltage_buffer_0[TOTAL_SAMPLES];  // Channel 0 (A0)
@@ -69,6 +83,11 @@ void TimerISR() {
     return;
   }
   
+  // Safety check: ensure AnalogIn/AnalogOut objects are initialized
+  if (!adc_ch0 || !adc_ch1 || !adc_ch2 || !adc_ch3 || !adc_ch4 || !adc_ch5 || !dac_out) {
+    return;
+  }
+  
   // Check if we've collected enough samples
   if (sample_index >= TOTAL_SAMPLES) {
     acquisition_complete = true;
@@ -78,25 +97,25 @@ void TimerISR() {
   // ========================================================================
   // ADC Processing (first) - acquire input voltages (6 channels)
   // ========================================================================
-  // Read all 6 ADC channels sequentially
-  // Note: analogRead() on STM32H7 is relatively fast but not hardware-timed
-  // For true hardware timing, we'd need direct register access, but this
-  // approach works well for moderate sample rates
+  // Read all 6 ADC channels sequentially using mbed AnalogIn (interrupt-safe)
+  // read_u16() returns 16-bit value (0-65535) representing voltage as fraction of 3.3V
+  // Scale to 12-bit equivalent for consistency (divide by 16)
   
-  uint16_t adc_ch0_value = analogRead(ADC_PIN_0);  // Channel 0 (A0)
-  uint16_t adc_ch1_value = analogRead(ADC_PIN_1);  // Channel 1 (A1)
-  uint16_t adc_ch2_value = analogRead(ADC_PIN_2);  // Channel 2 (A2)
-  uint16_t adc_ch3_value = analogRead(ADC_PIN_3);  // Channel 3 (A3)
-  uint16_t adc_ch4_value = analogRead(ADC_PIN_4);  // Channel 4 (A4)
-  uint16_t adc_ch5_value = analogRead(ADC_PIN_5);  // Channel 5 (A5)
+  uint16_t adc_ch0_value_16bit = adc_ch0->read_u16();  // Channel 0 (A0)
+  uint16_t adc_ch1_value_16bit = adc_ch1->read_u16();  // Channel 1 (A1)
+  uint16_t adc_ch2_value_16bit = adc_ch2->read_u16();  // Channel 2 (A2)
+  uint16_t adc_ch3_value_16bit = adc_ch3->read_u16();  // Channel 3 (A3)
+  uint16_t adc_ch4_value_16bit = adc_ch4->read_u16();  // Channel 4 (A4)
+  uint16_t adc_ch5_value_16bit = adc_ch5->read_u16();  // Channel 5 (A5)
   
-  // Convert ADC values (0-4095) to voltage (0-3.3V)
-  float input_voltage_0 = adc_ch0_value * 3.3 / 4095.0;  // Channel 0 (A0)
-  float input_voltage_1 = adc_ch1_value * 3.3 / 4095.0;  // Channel 1 (A1)
-  float input_voltage_2 = adc_ch2_value * 3.3 / 4095.0;  // Channel 2 (A2)
-  float input_voltage_3 = adc_ch3_value * 3.3 / 4095.0;  // Channel 3 (A3)
-  float input_voltage_4 = adc_ch4_value * 3.3 / 4095.0;  // Channel 4 (A4)
-  float input_voltage_5 = adc_ch5_value * 3.3 / 4095.0;  // Channel 5 (A5)
+  // Convert 16-bit values (0-65535) to 12-bit equivalent (0-4095) and then to voltage
+  // read_u16() returns value where 65535 = 3.3V, so scale accordingly
+  float input_voltage_0 = (adc_ch0_value_16bit * 3.3) / 65535.0;  // Channel 0 (A0)
+  float input_voltage_1 = (adc_ch1_value_16bit * 3.3) / 65535.0;  // Channel 1 (A1)
+  float input_voltage_2 = (adc_ch2_value_16bit * 3.3) / 65535.0;  // Channel 2 (A2)
+  float input_voltage_3 = (adc_ch3_value_16bit * 3.3) / 65535.0;  // Channel 3 (A3)
+  float input_voltage_4 = (adc_ch4_value_16bit * 3.3) / 65535.0;  // Channel 4 (A4)
+  float input_voltage_5 = (adc_ch5_value_16bit * 3.3) / 65535.0;  // Channel 5 (A5)
   
   // Save input voltages
   input_voltage_buffer_0[sample_index] = input_voltage_0;
@@ -123,13 +142,13 @@ void TimerISR() {
   // ========================================================================
   // DAC Processing (third) - output calculated voltage
   // ========================================================================
-  // Convert voltage (0-3.3V) to DAC value (0-4095 for 12-bit DAC)
-  uint16_t dac_value = (uint16_t)(output_voltage * 4095.0 / 3.3);
-  dac_value = constrain(dac_value, 0, 4095);
+  // Convert voltage (0-3.3V) to normalized value (0.0-1.0) for mbed AnalogOut
+  // AnalogOut.write() takes normalized float value (0.0 = 0V, 1.0 = 3.3V)
+  float normalized_output = output_voltage / 3.3;
+  normalized_output = constrain(normalized_output, 0.0, 1.0);
   
-  // Write directly to DAC (single sample, no buffering)
-  // Note: analogWrite() on STM32H7 with DAC pin writes directly to hardware
-  analogWrite(DAC0_PIN, dac_value);
+  // Write directly to DAC using mbed AnalogOut (interrupt-safe, single sample, no buffering)
+  dac_out->write(normalized_output);
   
   // Increment sample index
   sample_index++;
@@ -163,19 +182,34 @@ void setup() {
   Serial.println(" seconds");
   Serial.print("Total Samples: ");
   Serial.println(TOTAL_SAMPLES);
-  Serial.println("Initializing mbed Ticker...");
+  Serial.println("Initializing mbed Ticker and Analog I/O...");
   
-  // Set ADC resolution to 12 bits (0-4095)
-  analogReadResolution(12);
+  // Convert Arduino pin constants to mbed PinName and initialize AnalogIn/AnalogOut objects
+  // digitalPinToPinName() converts Arduino pin numbers to mbed PinName type
+  PinName adc_pin0 = digitalPinToPinName(ADC_PIN_0);
+  PinName adc_pin1 = digitalPinToPinName(ADC_PIN_1);
+  PinName adc_pin2 = digitalPinToPinName(ADC_PIN_2);
+  PinName adc_pin3 = digitalPinToPinName(ADC_PIN_3);
+  PinName adc_pin4 = digitalPinToPinName(ADC_PIN_4);
+  PinName adc_pin5 = digitalPinToPinName(ADC_PIN_5);
+  PinName dac_pin0 = digitalPinToPinName(DAC0_PIN);
   
-  // Set DAC resolution to 12 bits (0-4095)
-  analogWriteResolution(12);
+  // Initialize AnalogIn objects for ADC channels
+  adc_ch0 = new mbed::AnalogIn(adc_pin0);
+  adc_ch1 = new mbed::AnalogIn(adc_pin1);
+  adc_ch2 = new mbed::AnalogIn(adc_pin2);
+  adc_ch3 = new mbed::AnalogIn(adc_pin3);
+  adc_ch4 = new mbed::AnalogIn(adc_pin4);
+  adc_ch5 = new mbed::AnalogIn(adc_pin5);
+  
+  // Initialize AnalogOut object for DAC
+  dac_out = new mbed::AnalogOut(dac_pin0);
   
   // Note: Ticker will be attached in loop() when 'c' command is received
   // Calculate period in microseconds: period_us = 1000000 / SAMPLE_RATE
   // This will be done when starting the control loop
   
-  Serial.println("mbed Ticker ready. Send 'c' to start control loop.");
+  Serial.println("mbed Ticker and Analog I/O ready. Send 'c' to start control loop.");
 }
 
 // ============================================================================
