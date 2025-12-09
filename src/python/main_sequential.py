@@ -2,7 +2,7 @@
 Sequential Phase 1 Control Application
 
 Simplified sequential workflow for synchronized data acquisition and motor control system.
-Integrates Arduino Giga R1 WiFi and ODrive S1.
+Integrates NUCLEO-G474RE and ODrive S1.
 Phase 1: Sequential flow without full GUI - minimal dialog windows for control.
 """
 
@@ -36,7 +36,7 @@ from odrive_config import ODriveController
 
 # Time series variables to plot (all in one window, synced x-axes)
 TIME_SERIES_VARIABLES = [
-    'output_voltage',  # Voltage output (multisine) as output by Arduino
+    'output_voltage',  # Voltage output (multisine) as output by NUCLEO
     'A0', 'A1', 'A2', 'A3', 'A4', 'A5',  # Analog input voltages
     'acc0', 'acc1', 'acc2', 'acc3', 'acc4', 'acc5',  # Accelerations (calculated)
     'x', 'y', 'theta_x', 'theta_y',  # Geometric calculations
@@ -65,7 +65,7 @@ TIME_SERIES_VARIABLES = [
 # Format: (input_variable_name, output_variable_name)
 # 
 # Available variables for inputs/outputs:
-#   - output_voltage: Voltage output (multisine) as recorded by Arduino
+#   - output_voltage: Voltage output (multisine) as recorded by NUCLEO
 #   - A0, A1, A2, A3, A4, A5: Analog input voltages
 #   - acc0, acc1, acc2, acc3, acc4, acc5: Accelerations (calculated)
 #   - x, y, theta_x, theta_y: Geometric calculations
@@ -87,7 +87,7 @@ BODE_PLOT_CONFIGS = [
 # Configuration: Hardware ports (hard-coded)
 # ============================================================================
 
-ARDUINO_PORT = 'COM10'  # Hard-coded Arduino port
+NUCLEO_PORT = 'COM10'  # Hard-coded NUCLEO port
 
 # ============================================================================
 # Geometric calculation constants
@@ -104,7 +104,7 @@ R_A = 5 * 9.81 / 10     # m/s²/V accelerometer sensitivity
 # ============================================================================
 
 class SerialHelper:
-    """Helper class for serial communication with Arduino (non-threaded version)."""
+    """Helper class for serial communication with NUCLEO (non-threaded version)."""
     
     def __init__(self, port, baud_rate=115200):
         self.port = port
@@ -113,10 +113,10 @@ class SerialHelper:
         self.serial_lock = threading.Lock()
         
     def connect(self):
-        """Connect to Arduino serial port."""
+        """Connect to NUCLEO serial port."""
         try:
             self.serial_port = serial.Serial(self.port, self.baud_rate, timeout=1, write_timeout=30)
-            print(f"Connected to Arduino on {self.port}")
+            print(f"Connected to NUCLEO on {self.port}")
             return True
         except Exception as e:
             print(f"Serial connection failed: {e}")
@@ -127,10 +127,10 @@ class SerialHelper:
         if self.serial_port and self.serial_port.is_open:
             self.serial_port.close()
             self.serial_port = None
-            print("Disconnected from Arduino")
+            print("Disconnected from NUCLEO")
     
     def send_command(self, cmd):
-        """Send command to Arduino."""
+        """Send command to NUCLEO."""
         if not self.serial_port or not self.serial_port.is_open:
             print("Serial port not connected")
             return False
@@ -209,7 +209,7 @@ class SerialHelper:
                 return (False, "", f"Send command failed: {e}")
     
     def upload_csv(self, csv_path):
-        """Upload CSV file to Arduino."""
+        """Upload CSV file to NUCLEO."""
         if not self.serial_port or not self.serial_port.is_open:
             return (False, "Serial port not connected")
         
@@ -310,7 +310,7 @@ class SerialHelper:
             return (False, f"CSV upload failed: {e}")
     
     def get_data(self):
-        """Retrieve acquired data from Arduino."""
+        """Retrieve acquired data from NUCLEO."""
         if not self.serial_port or not self.serial_port.is_open:
             return None
         
@@ -487,17 +487,17 @@ def process_data(data_array, sample_rate, odrive_data=None):
     """Process acquired data including geometric calculations.
     
     Args:
-        data_array: numpy array with shape (num_samples, 7)
-                   Columns: [A0, A1, A2, A3, A4, A5, output_voltage]
+        data_array: numpy array with shape (num_samples, 8)
+                   Columns: [A0, A1, A2, A3, A4, A5, position, torque_command]
         sample_rate: Sample rate in Hz
         odrive_data: Optional dict with ODrive variables (if ODrive connected)
     """
     num_samples = data_array.shape[0]
     num_channels = data_array.shape[1]
     
-    # Verify we have 7 channels (6 inputs + 1 output voltage)
-    if num_channels != 7:
-        raise ValueError(f"Expected 7 channels (6 inputs + output voltage), got {num_channels}")
+    # Verify we have 8 channels (6 inputs + position + torque command)
+    if num_channels != 8:
+        raise ValueError(f"Expected 8 channels (6 inputs + position + torque), got {num_channels}")
     
     # Create time vector
     t = np.arange(num_samples) / sample_rate
@@ -510,8 +510,15 @@ def process_data(data_array, sample_rate, odrive_data=None):
     A4 = data_array[:, 4]
     A5 = data_array[:, 5]
     
-    # Extract output voltage - index 6 (recorded by Arduino during acquisition)
-    output_voltage = data_array[:, 6]
+    # Extract position feedback - index 6 (from ODrive via CAN)
+    position_feedback = data_array[:, 6]
+    
+    # Extract torque command - index 7 (sent to ODrive via CAN)
+    torque_command = data_array[:, 7]
+    
+    # For compatibility with existing code, also store as output_voltage
+    # (though it's actually torque command)
+    output_voltage = torque_command
     
     # Calculate accelerations (acc0-acc5) - these are the raw analog inputs
     # In this system, the analog inputs ARE the accelerometer readings
@@ -535,7 +542,9 @@ def process_data(data_array, sample_rate, odrive_data=None):
     # Store processed data
     data = {
         'time': t,
-        'output_voltage': output_voltage,
+        'output_voltage': output_voltage,  # For compatibility (actually torque command)
+        'torque_command': torque_command,
+        'position_feedback': position_feedback,
         'A0': A0,
         'A1': A1,
         'A2': A2,
@@ -713,13 +722,13 @@ def main():
     app = QApplication(sys.argv)
     
     try:
-        # Step 1: Connect to Arduino (hard-coded COM10)
-        print(f"\nStep 1: Connecting to Arduino on {ARDUINO_PORT}...")
-        serial_helper = SerialHelper(ARDUINO_PORT)
+        # Step 1: Connect to NUCLEO (hard-coded COM10)
+        print(f"\nStep 1: Connecting to NUCLEO on {NUCLEO_PORT}...")
+        serial_helper = SerialHelper(NUCLEO_PORT)
         if not serial_helper.connect():
-            print("Failed to connect to Arduino. Exiting.")
+            print("Failed to connect to NUCLEO. Exiting.")
             return 1
-        print("Arduino connected successfully.")
+        print("NUCLEO connected successfully.")
         
         # Step 2: Prompt for ODrive connection
         print("\nStep 2: ODrive connection")
@@ -751,7 +760,7 @@ def main():
         print(f"CSV file selected: {os.path.basename(csv_path)}")
         
         # Parse CSV file to extract sample rate (needed for ODrive configuration)
-        # Note: Voltage values will be read from Arduino acquisition data, not from CSV
+        # Note: Voltage values will be read from NUCLEO acquisition data, not from CSV
         sample_rate = None
         try:
             with open(csv_path, 'r') as f:
@@ -798,8 +807,8 @@ def main():
             print("Warning: Could not determine sample rate from CSV. Using default 1000 Hz.")
             sample_rate = 1000.0
         
-        # Upload CSV to Arduino
-        print("Uploading CSV to Arduino...")
+        # Upload CSV to NUCLEO
+        print("Uploading CSV to NUCLEO...")
         success, message = serial_helper.upload_csv(csv_path)
         if not success:
             print(f"CSV upload failed: {message}")
@@ -963,10 +972,10 @@ def main():
             # Continue anyway - output may have stopped already
         
         # Step 8: Retrieve data
-        print("\nStep 8: Retrieving data from Arduino...")
+        print("\nStep 8: Retrieving data from NUCLEO...")
         data_result = serial_helper.get_data()
         if data_result is None:
-            print("Failed to retrieve data from Arduino.")
+            print("Failed to retrieve data from NUCLEO.")
             serial_helper.disconnect()
             if odrive_connected:
                 odrive_ctrl.disconnect()

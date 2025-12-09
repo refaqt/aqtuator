@@ -1,31 +1,30 @@
 # aqtuator-control
 
-Arduino Opta Lite-based synchronized data acquisition and motor control system with ODrive S1 integration.
+NUCLEO-G474RE-based synchronized data acquisition and motor control system with ODrive S1 integration.
 
 ## Overview
 
-This project integrates an Arduino Opta Lite with an A0602 expansion board and an ODrive S1 motor driver to create a synchronized data acquisition and motor control system. The system outputs analog control signals, acquires multiple analog input channels, and captures motor feedback data for analysis.
+This project integrates a NUCLEO-G474RE development board and an ODrive S1 motor driver to create a synchronized data acquisition and motor control system. The system sends torque commands via CAN V2.0, acquires multiple analog input channels, and captures motor feedback data for analysis.
 
 ## System Architecture
 
 ### Hardware Components
 
-- **Arduino Opta Lite**: Main controller for analog I/O operations
-- **A0602 Expansion Board**: Provides analog output capability (O1)
+- **NUCLEO-G474RE**: Main controller for analog input acquisition and CAN communication
 - **ODrive S1 Motor Driver**: High-rate motor control and feedback capture
-- **Communication**: Serial interface (Arduino-PC), USB (ODrive-PC)
+- **Communication**: Serial interface (NUCLEO-PC), CAN V2.0 (NUCLEO-ODrive), USB (ODrive-PC)
 
 ### Software Components
 
-1. **Arduino firmware** (`src/arduino/opta_acquisition.ino`): Real-time analog I/O operations
+1. **NUCLEO firmware** (`src/nucleo/nucleo-acquisition/`): Real-time analog input acquisition and CAN communication using HAL
 2. **ODrive configuration script** (`src/python/odrive_config.py`): ODrive S1 setup and control
 3. **Main control application** (`src/python/main_controller.py`): PyQt5 GUI for system control and visualization
 
 ## Features
 
-- **Synchronized Data Acquisition**: Hardware-timed sampling on 6 analog input channels with minimal jitter
-- **Cyclic Voltage Output**: Playback of pre-defined voltage waveforms from CSV files
-- **Real-time Control**: Start/stop acquisition and output control via intuitive GUI
+- **Synchronized Data Acquisition**: Hardware-timed sampling on 6 analog input channels with minimal jitter (default 8kHz, configurable)
+- **CAN V2.0 Motor Control**: Cyclic transmission of torque commands to ODrive S1 via CAN bus
+- **Real-time Control**: Start/stop acquisition and torque command control via intuitive GUI
 - **Geometric Calculations**: Automatic computation of angular displacements (theta_x, theta_y) and linear accelerations (x, y)
 - **Time-domain Visualization**: Multi-signal synchronized plots with zoom/pan functionality
 - **Frequency Analysis**: Bode plot visualization with magnitude and phase plots
@@ -41,11 +40,11 @@ Install required Python packages:
 pip install -r src/python/requirements.txt
 ```
 
-### Arduino Setup
+### NUCLEO Setup
 
-1. Install Arduino IDE and Arduino Opta Lite board support
-2. Install the OptaBlue library
-3. Upload `src/arduino/opta_acquisition.ino` to the Arduino Opta Lite
+1. Install STM32CubeIDE
+2. Open STM32CubeIDE and import/create project for NUCLEO-G474RE
+3. Build and upload firmware to the NUCLEO-G474RE
 
 ## Usage
 
@@ -57,15 +56,15 @@ python src/python/main_controller.py
 
 ### Typical Workflow
 
-1. **Load CSV File**: Click "Load CSV File" to select a voltage waveform file
-   - Format: First line = sample period (seconds), subsequent lines = voltage values (0-3.3V)
+1. **Load CSV File**: Click "Load CSV File" to select a torque command waveform file
+   - Format: First line = sample period (seconds), subsequent lines = torque values (Nm)
 
 2. **Configure ODrive** (optional):
    - Click "Connect ODrive" to establish USB connection
-   - Select control mode (Torque/Velocity/Position)
-   - Select analog input mapping (Position Command/Velocity FF/Torque FF)
+   - Configure CAN communication settings
+   - Set ODrive node ID for CAN communication
 
-3. **Start Output**: Click "Start Output" to begin cyclic voltage playback
+3. **Start Torque Commands**: Click "Start Torque Commands" to begin cyclic torque command transmission via CAN
 
 4. **Acquire Data**:
    - Set acquisition duration (seconds) and start delay
@@ -82,28 +81,28 @@ python src/python/main_controller.py
 
 ### CSV File Format
 
-Example `example_output.csv`:
+Example `example_torque.csv`:
 
 ```
-0.001
-1.65
-1.70
-1.75
-1.80
+0.000125
+0.0
+0.1
+0.2
+0.3
 ...
 ```
 
-- First line: Sample period in seconds (e.g., 0.001 = 1kHz)
-- Subsequent lines: Voltage values in range 0-3.3V
+- First line: Sample period in seconds (e.g., 0.000125 = 8kHz)
+- Subsequent lines: Torque values in Nm
 
 ## Project Structure
 
 ```
 aqtuator-control/
 ├── src/
-│   ├── arduino/
-│   │   ├── opta_acquisition.ino    # Arduino firmware
-│   │   └── example_output.csv      # Example waveform file
+│   ├── nucleo/
+│   │   ├── nucleo-acquisition/    # NUCLEO firmware (STM32CubeIDE project)
+│   │   └── example_torque.csv      # Example torque waveform file
 │   └── python/
 │       ├── main_controller.py      # PyQt5 GUI application
 │       ├── odrive_config.py        # ODrive configuration module
@@ -112,7 +111,7 @@ aqtuator-control/
 ├── plots/                           # Exported plot images
 └── docs/
     ├── specs/
-    │   └── specifications.md       # Detailed specifications
+    │   └── specifications-nucleo.md # Detailed specifications
     └── datasheets/                 # Hardware datasheets
 ```
 
@@ -123,12 +122,12 @@ aqtuator-control/
 The system automatically calculates derived signals from raw analog inputs:
 
 **Angular Displacements:**
-- `theta_x = -(A1 + A2 - A3 - A4) * sin(alpha) / (2 * L3)`
-- `theta_y = -(A1 - A2 - A3 + A4) * cos(alpha) / (2 * L3)`
+- `theta_x = -(A0 + A1 - A2 - A3) * sin(alpha) / (2 * L3)`
+- `theta_y = -(A0 - A1 - A2 + A3) * cos(alpha) / (2 * L3)`
 
 **Linear Accelerations:**
-- `x = (-(A1 - A2 + A3 - A4) * cos(alpha) / 4 - theta_y * (L1 + L2 + L3 / 2) - A6) * r_a`
-- `y = ((A1 + A2 + A3 + A4) * sin(alpha) / 4 + theta_x * (L1 + L2 + L3 / 2) - A5) * r_a`
+- `x = (-(A0 - A1 + A2 - A3) * cos(alpha) / 4 - theta_y * (L1 + L2 + L3 / 2) - A5) * r_a`
+- `y = ((A0 + A1 + A2 + A3) * sin(alpha) / 4 + theta_x * (L1 + L2 + L3 / 2) - A4) * r_a`
 
 **Constants:**
 - L1 = 0.01 m
@@ -139,26 +138,33 @@ The system automatically calculates derived signals from raw analog inputs:
 
 ## Technical Specifications
 
-### Arduino Opta Lite
+### NUCLEO-G474RE
 
-- **Analog Input Channels**: 6 (I1-I6) on base unit
-- **Analog Output**: 1 channel (O1) on A0602 expansion board
-- **Output Range**: 0-3.3V
-- **Sampling Rate**: Configurable via CSV (max ~100kHz)
-- **Timing**: Hardware-timed using STM32 TIM3 peripheral
-- **Memory**: ~400KB available for acquisition buffers
+- **MCU**: STM32G474RE (Cortex-M4, 170 MHz)
+- **Analog Input Channels**: 6 (A0-A5) using built-in ADC
+- **CAN Communication**: CAN V2.0 peripheral for ODrive control
+- **Sampling Rate**: 8kHz default (configurable)
+- **Timing**: Hardware-timed using STM32 HAL timer peripherals
+- **Memory**: 128KB RAM available for acquisition buffers
+- **Development**: STM32CubeIDE with STM32 HAL libraries
 
 ### Serial Communication
 
 - **Baud Rate**: 115200
 - **Protocol**: Text-based commands with ACK/NACK responses
-- **Commands**: START_OUTPUT, STOP_OUTPUT, START_ACQUISITION, UPLOAD_CSV, GET_DATA
+- **Commands**: START_TORQUE, STOP_TORQUE, START_ACQUISITION, UPLOAD_CSV, GET_DATA
+
+### CAN Communication
+
+- **Protocol**: CAN V2.0 (ISO 11898)
+- **Baud Rate**: 500 kbps
+- **Hardware**: STM32G474RE CAN peripheral
+- **Pins**: PA11/PA12 (CAN1) or PB8/PB9 (CAN2)
 
 ### ODrive S1
 
-- **Connection**: USB
-- **Control Modes**: Torque, Velocity, Position
-- **Analog Input Mapping**: Position setpoint, Velocity feedforward, Torque feedforward
+- **Connection**: USB (for configuration), CAN (for control)
+- **Control Mode**: Torque control via CAN commands
 - **Data Capture**: High-rate buffer for motor feedback variables
 
 ## License
@@ -167,6 +173,8 @@ See LICENSE file for details.
 
 ## References
 
-- [Arduino Opta Documentation](https://docs.arduino.cc/hardware/opta/)
-- [A0602 Expansion Module](https://www.findernet.com/en/italy/products/automation/controllers/plc-controllers/arduino-opta/)
+- [NUCLEO-G474RE Documentation](https://www.st.com/en/evaluation-tools/nucleo-g474re.html)
+- [STM32G4 Series Reference](https://www.st.com/en/microcontrollers-microprocessors/stm32g4-series.html)
+- [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html)
 - [ODrive Documentation](https://docs.odriverobotics.com/)
+- [ODrive CAN Protocol](https://docs.odriverobotics.com/v/latest/guides/can-protocol.html)
