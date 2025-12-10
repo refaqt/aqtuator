@@ -1,7 +1,9 @@
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch=x86_64
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/name=Local
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=win32
-configDescList=org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo-acquisition Release
+configDescList=org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo-acquisition Release,org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo-test-can Debug,org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo-test-can Release
 eclipse.preferences.version=1
 org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo-acquisition\ Release/activeLaunchMode=debug
 org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo-acquisition\ Release/activeLaunchTarget=null\:---
+org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo-test-can\ Debug/activeLaunchMode=debug
+org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo-test-can\ Release/activeLaunchMode=run

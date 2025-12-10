@@ -1,0 +1,9 @@
+../Core/Src/mcp2515.c:57:20:MCP2515_CS_Low	1
+../Core/Src/mcp2515.c:65:20:MCP2515_CS_High	1
+../Core/Src/mcp2515.c:75:19:MCP2515_Reset	1
+../Core/Src/mcp2515.c:93:19:MCP2515_WriteRegister	1
+../Core/Src/mcp2515.c:112:19:MCP2515_ReadRegister	2
+../Core/Src/mcp2515.c:135:19:MCP2515_SetBitrate	4
+../Core/Src/mcp2515.c:157:19:MCP2515_SetNormalMode	1
+../Core/Src/mcp2515.c:165:19:MCP2515_SendMessage	5
+../Core/Src/mcp2515.c:218:19:MCP2515_Init	7
