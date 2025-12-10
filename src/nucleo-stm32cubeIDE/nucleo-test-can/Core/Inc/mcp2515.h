@@ -57,6 +57,11 @@ typedef struct {
 #define MCP2515_REG_TXB0SIDL         0x32
 #define MCP2515_REG_TXB0DLC          0x35
 #define MCP2515_REG_TXB0D0           0x36
+#define MCP2515_REG_RXB0CTRL          0x60
+#define MCP2515_REG_RXB0SIDH         0x61
+#define MCP2515_REG_RXB0SIDL         0x62
+#define MCP2515_REG_RXB0DLC          0x65
+#define MCP2515_REG_RXB0D0           0x66
 
 /* CANCTRL Register Bits */
 #define MCP2515_MODE_NORMAL          0x00
@@ -71,6 +76,8 @@ typedef struct {
 
 /* CANINTF Register Bits */
 #define MCP2515_INT_TX0IF            0x04
+#define MCP2515_INT_RX0IF            0x01
+#define MCP2515_INT_RX1IF            0x02
 
 /* Bitrate Configuration for 1 Mbps (8 MHz crystal) */
 /* Time Quanta = 2 * (BRP + 1) / FOSC */
@@ -152,6 +159,16 @@ HAL_StatusTypeDef MCP2515_SetNormalMode(SPI_HandleTypeDef *hspi, GPIO_TypeDef *c
   * @retval HAL_StatusTypeDef: HAL_OK if successful
   */
 HAL_StatusTypeDef MCP2515_SendMessage(SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_port, uint16_t cs_pin, MCP2515_CanMessage_t *msg);
+
+/**
+  * @brief  Check if CAN message is available and receive it
+  * @param  hspi: SPI handle pointer
+  * @param  cs_port: GPIO port for chip select
+  * @param  cs_pin: GPIO pin for chip select
+  * @param  msg: Pointer to CAN message structure to store received message
+  * @retval HAL_StatusTypeDef: HAL_OK if message received, HAL_ERROR if no message
+  */
+HAL_StatusTypeDef MCP2515_ReceiveMessage(SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_port, uint16_t cs_pin, MCP2515_CanMessage_t *msg);
 
 #ifdef __cplusplus
 }

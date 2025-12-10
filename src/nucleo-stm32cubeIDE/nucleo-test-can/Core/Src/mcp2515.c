@@ -213,6 +213,63 @@ HAL_StatusTypeDef MCP2515_SendMessage(SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_
 }
 
 /**
+  * @brief  Check if CAN message is available and receive it
+  */
+HAL_StatusTypeDef MCP2515_ReceiveMessage(SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_port, uint16_t cs_pin, MCP2515_CanMessage_t *msg)
+{
+    uint8_t tx_buffer[13];
+    uint8_t canintf;
+    HAL_StatusTypeDef status;
+    uint8_t i;
+
+    /* Check if message is available in RX buffer 0 */
+    MCP2515_ReadRegister(hspi, cs_port, cs_pin, MCP2515_REG_CANINTF, &canintf);
+    if (!(canintf & MCP2515_INT_RX0IF)) {
+        /* No message available */
+        return HAL_ERROR;
+    }
+
+    /* Read message from RX buffer 0 */
+    /* Prepare read command: READ instruction + starting address */
+    tx_buffer[0] = MCP2515_INST_READ;
+    tx_buffer[1] = MCP2515_REG_RXB0SIDH;
+    /* Remaining bytes will be dummy for transmit, actual data for receive */
+
+    MCP2515_CS_Low(cs_port, cs_pin);
+    /* Transmit read command and address, receive data */
+    /* With SPI TransmitReceive: we send [READ, ADDR, dummy...] 
+     * First byte (READ) might receive garbage, second byte (ADDR) receives SIDH, then SIDL, EID8, EID0, DLC, D0-D7 */
+    status = HAL_SPI_TransmitReceive(hspi, tx_buffer, tx_buffer, 13, HAL_MAX_DELAY);
+    MCP2515_CS_High(cs_port, cs_pin);
+
+    if (status != HAL_OK) {
+        return status;
+    }
+
+    /* Parse CAN ID (11-bit standard) from received data */
+    /* tx_buffer[1] = SIDH (bits 10-3, received when we sent ADDR), tx_buffer[2] = SIDL (bits 2-0 in upper 3 bits) */
+    msg->id = ((uint32_t)tx_buffer[1] << 3) | ((tx_buffer[2] >> 5) & 0x07);
+
+    /* Parse DLC from tx_buffer[5] (DLC register, received as 5th byte) */
+    msg->dlc = tx_buffer[5] & 0x0F;
+    if (msg->dlc > 8) {
+        msg->dlc = 8;  /* Limit to 8 bytes */
+    }
+
+    /* Read data bytes (starting at offset 6: D0-D7) */
+    for (i = 0; i < msg->dlc; i++) {
+        msg->data[i] = tx_buffer[6 + i];
+    }
+
+    /* Clear RX0IF flag by modifying CANINTF register */
+    /* Reading the message doesn't automatically clear it, we need to clear it explicitly */
+    canintf &= ~MCP2515_INT_RX0IF;
+    MCP2515_WriteRegister(hspi, cs_port, cs_pin, MCP2515_REG_CANINTF, canintf);
+
+    return HAL_OK;
+}
+
+/**
   * @brief  Initialize MCP2515 CAN controller
   */
 HAL_StatusTypeDef MCP2515_Init(SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_port, uint16_t cs_pin)
@@ -249,8 +306,8 @@ HAL_StatusTypeDef MCP2515_Init(SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_port, u
         return status;
     }
 
-    /* Disable interrupts (not needed for basic TX) */
-    MCP2515_WriteRegister(hspi, cs_port, cs_pin, MCP2515_REG_CANINTE, 0x00);
+    /* Enable RX interrupts (RX0IF) so we can poll for received messages */
+    MCP2515_WriteRegister(hspi, cs_port, cs_pin, MCP2515_REG_CANINTE, MCP2515_INT_RX0IF);
 
     /* Set to normal mode */
     status = MCP2515_SetNormalMode(hspi, cs_port, cs_pin);

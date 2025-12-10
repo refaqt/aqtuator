@@ -223,3 +223,60 @@ Command-line arguments:  -os win32 -ws win32 -arch x86_64
 
 !ENTRY com.st.stm32cube.ide.mcu.debug.launch 2 0 2025-12-10 11:12:01.597
 !MESSAGE Won't launch debug session since we failed to locate the binary.
+
+!ENTRY org.eclipse.cdt.core 1 0 2025-12-10 12:00:10.283
+!MESSAGE Indexed 'nucleo-test-can' (27 sources, 89 headers) in 1.72 sec: 6,338 declarations; 35,392 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0048%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2025-12-10 12:00:38.764
+!MESSAGE Indexed 'nucleo-test-can' (27 sources, 89 headers) in 1.06 sec: 6,338 declarations; 35,392 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0048%)
+
+!ENTRY org.eclipse.remote.console 4 0 2025-12-10 12:04:06.770
+!MESSAGE Error opening \\.\COM5 (5)
+!STACK 0
+java.io.IOException: Error opening \\.\COM5 (5)
+	at org.eclipse.cdt.serial.SerialPort.open0(Native Method)
+	at org.eclipse.cdt.serial.SerialPort.open(SerialPort.java:316)
+	at org.eclipse.remote.serial.core.SerialPortCommandShell.<init>(SerialPortCommandShell.java:34)
+	at org.eclipse.remote.serial.core.SerialPortConnection.getCommandShell(SerialPortConnection.java:97)
+	at org.eclipse.remote.internal.console.TerminalConsoleConnector$1.run(TerminalConsoleConnector.java:140)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.remote.console 4 0 2025-12-10 12:05:50.937
+!MESSAGE Error opening \\.\COM5 (5)
+!STACK 0
+java.io.IOException: Error opening \\.\COM5 (5)
+	at org.eclipse.cdt.serial.SerialPort.open0(Native Method)
+	at org.eclipse.cdt.serial.SerialPort.open(SerialPort.java:316)
+	at org.eclipse.remote.serial.core.SerialPortCommandShell.<init>(SerialPortCommandShell.java:34)
+	at org.eclipse.remote.serial.core.SerialPortConnection.getCommandShell(SerialPortConnection.java:97)
+	at org.eclipse.remote.internal.console.TerminalConsoleConnector$1.run(TerminalConsoleConnector.java:140)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.remote.console 4 0 2025-12-10 12:07:02.815
+!MESSAGE Error opening \\.\COM5 (5)
+!STACK 0
+java.io.IOException: Error opening \\.\COM5 (5)
+	at org.eclipse.cdt.serial.SerialPort.open0(Native Method)
+	at org.eclipse.cdt.serial.SerialPort.open(SerialPort.java:316)
+	at org.eclipse.remote.serial.core.SerialPortCommandShell.<init>(SerialPortCommandShell.java:34)
+	at org.eclipse.remote.serial.core.SerialPortConnection.getCommandShell(SerialPortConnection.java:97)
+	at org.eclipse.remote.internal.console.TerminalConsoleConnector$1.run(TerminalConsoleConnector.java:140)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+!SESSION 2025-12-10 12:10:57.840 -----------------------------------------------
+eclipse.buildId=Version 1.19.0
+java.version=21.0.3
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_GB
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2025-12-10 12:11:15.251
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2025-12-10 12:11:15.253
+!MESSAGE Log4j2 initialized with config file C:\Users\niels\Documents\Github\aqtuator-control\src\nucleo-stm32cubeIDE\.metadata\.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2025-12-10 12:11:22.789
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2025-12-10 12:18:01.824
+!MESSAGE Indexed 'nucleo-test-can' (27 sources, 89 headers) in 1.99 sec: 6,338 declarations; 35,392 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0048%)

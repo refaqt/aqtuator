@@ -3,6 +3,9 @@
 	<item key="hasShownOverlayPopupBefore" value="true"/>
 	<item key="replaceBarOpen" value="false"/>
 	<list key="searchhistory">
+		<item value="ODRIVE"/>
+		<item value="Odrive"/>
+		<item value="odrive"/>
 		<item value="MX_GPIO_Init"/>
 		<item value="CAN_"/>
 	</list>

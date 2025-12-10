@@ -6,4 +6,5 @@
 ../Core/Src/mcp2515.c:135:19:MCP2515_SetBitrate	4
 ../Core/Src/mcp2515.c:157:19:MCP2515_SetNormalMode	1
 ../Core/Src/mcp2515.c:165:19:MCP2515_SendMessage	5
-../Core/Src/mcp2515.c:218:19:MCP2515_Init	7
+../Core/Src/mcp2515.c:218:19:MCP2515_ReceiveMessage	5
+../Core/Src/mcp2515.c:275:19:MCP2515_Init	7
