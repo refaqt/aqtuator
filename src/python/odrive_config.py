@@ -137,9 +137,112 @@ class ODriveController:
             print(f"ERROR: Failed to set analog mapping: {e}")
             return False
     
+    def set_torque_control_mode(self):
+        """
+        Configure ODrive for torque control via CAN.
+        This sets the control mode to torque and configures appropriate settings.
+        
+        Returns:
+            bool: True if configuration successful
+        """
+        if not self.connected:
+            print("ERROR: Not connected to ODrive")
+            return False
+        
+        try:
+            # Set control mode to torque
+            self.axis.controller.config.control_mode = CONTROL_MODE_TORQUE_CONTROL
+            self.control_mode = CONTROL_MODE_TORQUE_CONTROL
+            
+            print("ODrive configured for torque control via CAN")
+            return True
+            
+        except Exception as e:
+            print(f"ERROR: Failed to configure torque control mode: {e}")
+            return False
+    
+    def enter_closed_loop(self):
+        """
+        Enter closed-loop control state on ODrive.
+        This must be called before sending torque commands via CAN.
+        
+        Returns:
+            bool: True if successful
+        """
+        if not self.connected:
+            print("ERROR: Not connected to ODrive")
+            return False
+        
+        try:
+            # Request closed-loop control state
+            self.axis.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
+            
+            # Wait for state transition (with timeout)
+            import time
+            timeout = 2.0  # 2 seconds timeout
+            start_time = time.time()
+            
+            while time.time() - start_time < timeout:
+                if self.axis.current_state == AXIS_STATE_CLOSED_LOOP_CONTROL:
+                    print("ODrive entered closed-loop control state")
+                    return True
+                time.sleep(0.1)
+            
+            # Check final state
+            if self.axis.current_state == AXIS_STATE_CLOSED_LOOP_CONTROL:
+                print("ODrive entered closed-loop control state")
+                return True
+            else:
+                print(f"WARNING: ODrive state is {self.axis.current_state}, expected {AXIS_STATE_CLOSED_LOOP_CONTROL}")
+                return False
+            
+        except Exception as e:
+            print(f"ERROR: Failed to enter closed-loop control: {e}")
+            return False
+    
+    def exit_closed_loop(self):
+        """
+        Exit closed-loop control state and return to IDLE.
+        This should be called after acquisition completes.
+        
+        Returns:
+            bool: True if successful
+        """
+        if not self.connected:
+            print("ERROR: Not connected to ODrive")
+            return False
+        
+        try:
+            # Request IDLE state
+            self.axis.requested_state = AXIS_STATE_IDLE
+            
+            # Wait for state transition (with timeout)
+            import time
+            timeout = 2.0  # 2 seconds timeout
+            start_time = time.time()
+            
+            while time.time() - start_time < timeout:
+                if self.axis.current_state == AXIS_STATE_IDLE:
+                    print("ODrive returned to IDLE state")
+                    return True
+                time.sleep(0.1)
+            
+            # Check final state
+            if self.axis.current_state == AXIS_STATE_IDLE:
+                print("ODrive returned to IDLE state")
+                return True
+            else:
+                print(f"WARNING: ODrive state is {self.axis.current_state}, expected {AXIS_STATE_IDLE}")
+                return False
+            
+        except Exception as e:
+            print(f"ERROR: Failed to exit closed-loop control: {e}")
+            return False
+    
     def configure_capture(self, sample_rate):
         """
         Configure high-rate data capture buffer.
+        NOTE: Not used for Controllino implementation (no position feedback retrieved).
         
         Args:
             sample_rate (float): Capture rate in Hz
@@ -158,7 +261,7 @@ class ODriveController:
             # This is specific to ODrive S1 capabilities
             # May need to adjust based on actual ODrive firmware version
             
-            print(f"Capture rate configured: {sample_rate} Hz")
+            print(f"Capture rate configured: {sample_rate} Hz (not used - no position feedback)")
             return True
             
         except Exception as e:

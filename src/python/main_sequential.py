@@ -2,7 +2,7 @@
 Sequential Phase 1 Control Application
 
 Simplified sequential workflow for synchronized data acquisition and motor control system.
-Integrates NUCLEO-G474RE and ODrive S1.
+Integrates Controllino MICRO and ODrive S1.
 Phase 1: Sequential flow without full GUI - minimal dialog windows for control.
 """
 
@@ -36,7 +36,7 @@ from odrive_config import ODriveController
 
 # Time series variables to plot (all in one window, synced x-axes)
 TIME_SERIES_VARIABLES = [
-    'output_voltage',  # Voltage output (multisine) as output by NUCLEO
+    'output_voltage',  # Voltage output (multisine) as output by Controllino
     'A0', 'A1', 'A2', 'A3', 'A4', 'A5',  # Analog input voltages
     'acc0', 'acc1', 'acc2', 'acc3', 'acc4', 'acc5',  # Accelerations (calculated)
     'x', 'y', 'theta_x', 'theta_y',  # Geometric calculations
@@ -65,7 +65,7 @@ TIME_SERIES_VARIABLES = [
 # Format: (input_variable_name, output_variable_name)
 # 
 # Available variables for inputs/outputs:
-#   - output_voltage: Voltage output (multisine) as recorded by NUCLEO
+#   - output_voltage: Voltage output (multisine) as recorded by Controllino
 #   - A0, A1, A2, A3, A4, A5: Analog input voltages
 #   - acc0, acc1, acc2, acc3, acc4, acc5: Accelerations (calculated)
 #   - x, y, theta_x, theta_y: Geometric calculations
@@ -87,16 +87,16 @@ BODE_PLOT_CONFIGS = [
 # Configuration: Hardware ports (hard-coded)
 # ============================================================================
 
-NUCLEO_PORT = 'COM10'  # Hard-coded NUCLEO port
+CONTROLLINO_PORT = 'COM3'  # Hard-coded Controllino port (change as needed)
 
 # ============================================================================
 # Geometric calculation constants
 # ============================================================================
 
-L1 = 0.01    # m
-L2 = 0.05    # m
-L3 = 0.2     # m
-ALPHA = np.deg2rad(20)  # Convert to radians
+L1 = 0.02  # (m) Length parameter 1 - from tool tip to impact point
+L2 = 0.078  # (m) Length parameter 2 - from impact point to bottom accelerometers
+L3 = 0.160  # (m) Length parameter 3 - from bottom to top accelerometers
+ALPHA = 20.123 * np.pi / 180  # Angle in radians (20 degrees)
 R_A = 5 * 9.81 / 10     # m/s²/V accelerometer sensitivity
 
 # ============================================================================
@@ -104,7 +104,7 @@ R_A = 5 * 9.81 / 10     # m/s²/V accelerometer sensitivity
 # ============================================================================
 
 class SerialHelper:
-    """Helper class for serial communication with NUCLEO (non-threaded version)."""
+    """Helper class for serial communication with Controllino (non-threaded version)."""
     
     def __init__(self, port, baud_rate=115200):
         self.port = port
@@ -113,10 +113,10 @@ class SerialHelper:
         self.serial_lock = threading.Lock()
         
     def connect(self):
-        """Connect to NUCLEO serial port."""
+        """Connect to Controllino serial port."""
         try:
             self.serial_port = serial.Serial(self.port, self.baud_rate, timeout=1, write_timeout=30)
-            print(f"Connected to NUCLEO on {self.port}")
+            print(f"Connected to Controllino on {self.port}")
             return True
         except Exception as e:
             print(f"Serial connection failed: {e}")
@@ -127,10 +127,10 @@ class SerialHelper:
         if self.serial_port and self.serial_port.is_open:
             self.serial_port.close()
             self.serial_port = None
-            print("Disconnected from NUCLEO")
+            print("Disconnected from Controllino")
     
     def send_command(self, cmd):
-        """Send command to NUCLEO."""
+        """Send command to Controllino."""
         if not self.serial_port or not self.serial_port.is_open:
             print("Serial port not connected")
             return False
@@ -209,7 +209,7 @@ class SerialHelper:
                 return (False, "", f"Send command failed: {e}")
     
     def upload_csv(self, csv_path):
-        """Upload CSV file to NUCLEO."""
+        """Upload CSV file to Controllino."""
         if not self.serial_port or not self.serial_port.is_open:
             return (False, "Serial port not connected")
         
@@ -297,6 +297,9 @@ class SerialHelper:
                             return (False, error_msg)
                         elif response.startswith("DEBUG:") or response.startswith("INFO:"):
                             continue
+                        elif response.startswith("Hardware timer initialized"):
+                            # Ignore timer initialization message
+                            continue
                         else:
                             return (False, f"Unexpected response: {response}")
                     else:
@@ -310,7 +313,7 @@ class SerialHelper:
             return (False, f"CSV upload failed: {e}")
     
     def get_data(self):
-        """Retrieve acquired data from NUCLEO."""
+        """Retrieve acquired data from Controllino."""
         if not self.serial_port or not self.serial_port.is_open:
             return None
         
@@ -488,16 +491,16 @@ def process_data(data_array, sample_rate, odrive_data=None):
     
     Args:
         data_array: numpy array with shape (num_samples, 8)
-                   Columns: [A0, A1, A2, A3, A4, A5, position, torque_command]
+                   Columns: [A0, A1, A2, A3, A4, A5, torque_command, position_feedback]
         sample_rate: Sample rate in Hz
-        odrive_data: Optional dict with ODrive variables (if ODrive connected)
+        odrive_data: Optional dict with ODrive variables (if ODrive connected) - not used for Controllino
     """
     num_samples = data_array.shape[0]
     num_channels = data_array.shape[1]
     
-    # Verify we have 8 channels (6 inputs + position + torque command)
+    # Verify we have 8 channels (6 inputs + torque_command + position_feedback)
     if num_channels != 8:
-        raise ValueError(f"Expected 8 channels (6 inputs + position + torque), got {num_channels}")
+        raise ValueError(f"Expected 8 channels (6 inputs + torque_command + position_feedback), got {num_channels}")
     
     # Create time vector
     t = np.arange(num_samples) / sample_rate
@@ -510,11 +513,11 @@ def process_data(data_array, sample_rate, odrive_data=None):
     A4 = data_array[:, 4]
     A5 = data_array[:, 5]
     
-    # Extract position feedback - index 6 (from ODrive via CAN)
-    position_feedback = data_array[:, 6]
+    # Extract torque command - index 6 (sent to ODrive via CAN)
+    torque_command = data_array[:, 6]
     
-    # Extract torque command - index 7 (sent to ODrive via CAN)
-    torque_command = data_array[:, 7]
+    # Extract position feedback - index 7 (always 0 for Controllino - not retrieved from ODrive)
+    position_feedback = data_array[:, 7]
     
     # For compatibility with existing code, also store as output_voltage
     # (though it's actually torque command)
@@ -530,14 +533,14 @@ def process_data(data_array, sample_rate, odrive_data=None):
     acc5 = A5
     
     # Calculate theta_x and theta_y
-    theta_x = -(A0 + A1 - A2 - A3) * np.sin(ALPHA) / (2 * L3)
-    theta_y = -(A0 - A1 - A2 + A3) * np.cos(ALPHA) / (2 * L3)
+    theta_x = -(A0 + A1 - A2 - A3) / np.sin(ALPHA) / (2 * L3)
+    theta_y = -(A0 - A1 - A2 + A3) / np.cos(ALPHA) / (2 * L3)
     
     # Calculate x and y accelerations
-    x = (-(A0 - A1 + A2 - A3) * np.cos(ALPHA) / 4 - 
-         theta_y * (L1 + L2 + L3 / 2) - A5) * R_A
-    y = ((A0 + A1 + A2 + A3) * np.sin(ALPHA) / 4 + 
-         theta_x * (L1 + L2 + L3 / 2) - A4) * R_A
+    x = (-(A0 - A1 + A2 - A3) / np.cos(ALPHA) / 4 -
+         theta_y * (L1 + L2 + L3 / 2) - A4) * R_A
+    y = ((A0 + A1 + A2 + A3) / np.sin(ALPHA) / 4 +
+         theta_x * (L1 + L2 + L3 / 2) - A5) * R_A
     
     # Store processed data
     data = {
@@ -722,32 +725,29 @@ def main():
     app = QApplication(sys.argv)
     
     try:
-        # Step 1: Connect to NUCLEO (hard-coded COM10)
-        print(f"\nStep 1: Connecting to NUCLEO on {NUCLEO_PORT}...")
-        serial_helper = SerialHelper(NUCLEO_PORT)
+        # Step 1: Connect to Controllino (hard-coded COM10)
+        print(f"\nStep 1: Connecting to Controllino on {CONTROLLINO_PORT}...")
+        serial_helper = SerialHelper(CONTROLLINO_PORT)
         if not serial_helper.connect():
-            print("Failed to connect to NUCLEO. Exiting.")
+            print("Failed to connect to Controllino. Exiting.")
             return 1
-        print("NUCLEO connected successfully.")
+        print("Controllino connected successfully.")
         
-        # Step 2: Prompt for ODrive connection
+        # Step 2: Connect to ODrive automatically
         print("\nStep 2: ODrive connection")
         odrive_connected = False
         odrive_ctrl = None
-        response = input("Connect to ODrive? (y/n, default=n): ").strip().lower()
-        if response == 'y':
-            print("Connecting to ODrive via USB...")
-            odrive_ctrl = ODriveController()
-            if odrive_ctrl.connect():
-                odrive_connected = True
-                print("ODrive connected successfully.")
-                # Configure ODrive (default settings)
-                odrive_ctrl.set_control_mode('Position')
-                odrive_ctrl.set_analog_mapping('Position')
-            else:
-                print("ODrive connection failed. Continuing without ODrive.")
+        print("Connecting to ODrive via USB...")
+        odrive_ctrl = ODriveController()
+        if odrive_ctrl.connect():
+            odrive_connected = True
+            print("ODrive connected successfully.")
+            # Configure ODrive for torque control via CAN
+            odrive_ctrl.set_control_mode('Torque')
+            # Enter closed-loop control state (will be done before starting torque)
+            print("ODrive configured for torque control via CAN.")
         else:
-            print("Skipping ODrive connection.")
+            print("ODrive connection failed. Continuing without ODrive.")
         
         # Step 3: Select CSV file
         print("\nStep 3: Select CSV multisine file")
@@ -760,7 +760,7 @@ def main():
         print(f"CSV file selected: {os.path.basename(csv_path)}")
         
         # Parse CSV file to extract sample rate (needed for ODrive configuration)
-        # Note: Voltage values will be read from NUCLEO acquisition data, not from CSV
+        # Note: Voltage values will be read from Controllino acquisition data, not from CSV
         sample_rate = None
         try:
             with open(csv_path, 'r') as f:
@@ -807,21 +807,19 @@ def main():
             print("Warning: Could not determine sample rate from CSV. Using default 1000 Hz.")
             sample_rate = 1000.0
         
-        # Upload CSV to NUCLEO
-        print("Uploading CSV to NUCLEO...")
+        # Upload CSV to Controllino
+        print("Uploading CSV to Controllino...")
         success, message = serial_helper.upload_csv(csv_path)
         if not success:
             print(f"CSV upload failed: {message}")
             serial_helper.disconnect()
+            if odrive_connected:
+                odrive_ctrl.disconnect()
             return 1
         print(f"CSV uploaded: {message}")
         
-        # Configure ODrive capture rate if connected
-        if odrive_connected and sample_rate is not None:
-            odrive_ctrl.configure_capture(sample_rate)
-        
-        # Step 4: Get acquisition duration
-        print("\nStep 4: Acquisition duration")
+        # Step 4: Get acquisition parameters
+        print("\nStep 4: Acquisition parameters")
         while True:
             try:
                 duration_str = input("Enter acquisition duration (seconds): ").strip()
@@ -833,149 +831,136 @@ def main():
             except ValueError:
                 print("Invalid input. Please enter a number.")
         
-        print(f"Acquisition duration set to {duration} seconds.")
+        while True:
+            try:
+                delay_str = input("Enter acquisition start delay (seconds, default=0.0): ").strip()
+                if not delay_str:
+                    delay = 0.0
+                    break
+                delay = float(delay_str)
+                if delay >= 0:
+                    break
+                else:
+                    print("Delay must be non-negative. Please try again.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
         
-        # Step 5: Start Output dialog
-        print("\nStep 5: Start Output")
+        print(f"Acquisition duration: {duration} seconds")
+        print(f"Acquisition start delay: {delay} seconds")
+        
+        # Step 5 (Optional): Test output first
+        print("\nStep 5: Optional test output")
+        test_response = input("Test torque output first? (y/n, default=n): ").strip().lower()
+        if test_response == 'y':
+            while True:
+                try:
+                    test_duration_str = input("Enter test output duration (seconds): ").strip()
+                    test_duration = float(test_duration_str)
+                    if test_duration > 0:
+                        break
+                    else:
+                        print("Duration must be positive. Please try again.")
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+            
+            print(f"Starting test output for {test_duration} seconds...")
+            success, response, error = serial_helper.send_command_and_wait_response(
+                f"START_OUTPUT,{test_duration}", "ACK: Output started", timeout=2
+            )
+            if not success:
+                print(f"Failed to start test output: {error}")
+                serial_helper.disconnect()
+                if odrive_connected:
+                    odrive_ctrl.disconnect()
+                return 1
+            print("Test output started. Waiting for completion...")
+            
+            # Wait for test output to complete (serial will be blocked, then unblocked)
+            time.sleep(test_duration + 1)  # Wait a bit longer to ensure completion
+            print("Test output completed.")
+        
+        # Step 6: Enter ODrive closed-loop control (before starting identification)
+        if odrive_connected:
+            print("\nStep 6: Entering ODrive closed-loop control...")
+            if not odrive_ctrl.enter_closed_loop():
+                print("Warning: Failed to enter closed-loop control. Continuing anyway.")
+            else:
+                print("ODrive entered closed-loop control state.")
+            time.sleep(0.5)  # Give ODrive time to transition
+        
+        # Step 7: Start identification (torque output + acquisition)
+        print("\nStep 7: Start identification")
         start_dialog = StartOutputDialog()
         if start_dialog.exec_() != QDialog.Accepted:
-            print("Start Output cancelled. Exiting.")
+            print("Start identification cancelled. Exiting.")
+            if odrive_connected:
+                odrive_ctrl.exit_closed_loop()
             serial_helper.disconnect()
             if odrive_connected:
                 odrive_ctrl.disconnect()
             return 1
         
-        # Start output
-        print("Starting output...")
+        print("Starting identification (torque output + acquisition)...")
         success, response, error = serial_helper.send_command_and_wait_response(
-            "START_OUTPUT", "ACK: Output started", timeout=2
+            f"START_IDENTIFICATION,{duration},{delay}", "ACK: Identification started", timeout=2
         )
         if not success:
-            print(f"Failed to start output: {error}")
+            print(f"Failed to start identification: {error}")
+            if odrive_connected:
+                odrive_ctrl.exit_closed_loop()
             serial_helper.disconnect()
             if odrive_connected:
                 odrive_ctrl.disconnect()
             return 1
-        print("Output started successfully.")
+        print("Identification started. Serial communication will be blocked during operation.")
         
-        # Step 6: Control dialog (Stop Output / Start Acquisition)
-        print("\nStep 6: Control")
-        control_dialog = ControlDialog()
-        if control_dialog.exec_() != QDialog.Accepted:
-            print("Control dialog cancelled. Stopping output and exiting.")
-            serial_helper.send_command("STOP_OUTPUT")
-            serial_helper.disconnect()
-            if odrive_connected:
-                odrive_ctrl.disconnect()
-            return 1
+        # Step 8: Wait for acquisition completion
+        print("\nStep 8: Waiting for acquisition to complete...")
+        print("Note: Serial communication is blocked during operation.")
+        print(f"Estimated completion time: {duration + delay + 1} seconds")
         
-        if control_dialog.action == 'stop_output':
-            print("Stopping output...")
-            serial_helper.send_command("STOP_OUTPUT")
-            print("Output stopped. Exiting.")
-            serial_helper.disconnect()
-            if odrive_connected:
-                odrive_ctrl.disconnect()
-            return 0
-        
-        # Start acquisition
-        print("Starting acquisition...")
-        delay = 0.0  # No delay for Phase 1
-        success, response, error = serial_helper.send_command_and_wait_response(
-            f"START_ACQUISITION,{duration},{delay}", "ACK: Acquisition started", timeout=2
-        )
-        if not success:
-            print(f"Failed to start acquisition: {error}")
-            serial_helper.send_command("STOP_OUTPUT")
-            serial_helper.disconnect()
-            if odrive_connected:
-                odrive_ctrl.disconnect()
-            return 1
-        print("Acquisition started.")
-        
-        # Step 7: Stop Acquisition dialog (monitor acquisition)
-        print("\nStep 7: Acquisition in progress")
-        stop_dialog = StopAcquisitionDialog()
-        
-        # Monitor acquisition progress
+        # Calculate estimated completion time
+        estimated_completion = duration + delay + 1
         acquisition_complete = False
-        acquisition_stopped = False
-        timer = QTimer()
         
-        def check_acquisition():
-            nonlocal acquisition_complete, acquisition_stopped
+        # Wait for serial to become available again (acquisition completes automatically)
+        print("Waiting for serial communication to resume...")
+        timeout = 0
+        max_timeout = int((estimated_completion + 5) * 10)  # Wait a bit longer than estimated
+        
+        while timeout < max_timeout:
             if serial_helper.serial_port and serial_helper.serial_port.is_open:
                 if serial_helper.serial_port.in_waiting > 0:
                     line = serial_helper.serial_port.readline().decode().strip()
                     if line == "ACK: Acquisition complete":
                         acquisition_complete = True
-                        stop_dialog.accept()
-                    elif line == "ACK: Acquisition stopped":
-                        acquisition_stopped = True
-                        stop_dialog.accept()
-        
-        timer.timeout.connect(check_acquisition)
-        timer.start(100)  # Check every 100ms
-        
-        # Show dialog (blocks until closed or acquisition completes/stops)
-        stop_dialog.exec_()
-        timer.stop()
-        
-        # Handle user-initiated stop or wait for completion
-        if stop_dialog.stopped:
-            # User clicked stop button - send STOP_ACQUISITION command
-            print("Stopping acquisition...")
-            success, response, error = serial_helper.send_command_and_wait_response(
-                "STOP_ACQUISITION", "ACK: Acquisition stopped", timeout=2
-            )
-            if success:
-                acquisition_stopped = True
-                print("Acquisition stopped successfully.")
-            else:
-                print(f"Warning: Failed to stop acquisition: {error}")
-                # Continue anyway - acquisition may have completed naturally
-        
-        # Wait for acquisition to complete if not already confirmed
-        if not acquisition_complete and not acquisition_stopped:
-            print("Waiting for acquisition to complete...")
-            timeout = 0
-            max_timeout = 100  # 10 seconds timeout
-            while timeout < max_timeout:
-                if serial_helper.serial_port.in_waiting > 0:
-                    line = serial_helper.serial_port.readline().decode().strip()
-                    if line == "ACK: Acquisition complete":
-                        acquisition_complete = True
+                        print("Acquisition completed successfully.")
                         break
-                    elif line == "ACK: Acquisition stopped":
-                        acquisition_stopped = True
+                    elif line.startswith("ERROR:"):
+                        print(f"Error received: {line}")
                         break
-                time.sleep(0.1)
-                timeout += 1
+            time.sleep(0.1)
+            timeout += 1
             
-            if not acquisition_complete and not acquisition_stopped:
-                print("Warning: Acquisition may not have completed properly")
+            # Progress indicator
+            if timeout % 10 == 0:
+                elapsed = timeout * 0.1
+                print(f"  Elapsed: {elapsed:.1f}s / Estimated: {estimated_completion:.1f}s")
         
-        # Ensure acquisition is stopped before proceeding
-        if not acquisition_complete and not acquisition_stopped:
-            # Try one more time to stop acquisition
-            print("Attempting to stop acquisition...")
-            serial_helper.send_command("STOP_ACQUISITION")
+        if not acquisition_complete:
+            print("Warning: Acquisition completion not confirmed. Continuing anyway...")
+        
+        # Exit ODrive closed-loop control
+        if odrive_connected:
+            print("\nExiting ODrive closed-loop control...")
+            odrive_ctrl.exit_closed_loop()
             time.sleep(0.5)
         
-        # Now that acquisition is confirmed stopped, stop output
-        print("Stopping output...")
-        success, response, error = serial_helper.send_command_and_wait_response(
-            "STOP_OUTPUT", "ACK: Output stopped", timeout=2
-        )
-        if not success:
-            print(f"Warning: Failed to stop output: {error}")
-            # Continue anyway - output may have stopped already
-        
-        # Step 8: Retrieve data
-        print("\nStep 8: Retrieving data from NUCLEO...")
+        # Step 9: Retrieve data
+        print("\nStep 9: Retrieving data from Controllino...")
         data_result = serial_helper.get_data()
         if data_result is None:
-            print("Failed to retrieve data from NUCLEO.")
+            print("Failed to retrieve data from Controllino.")
             serial_helper.disconnect()
             if odrive_connected:
                 odrive_ctrl.disconnect()
@@ -983,70 +968,33 @@ def main():
         
         print(f"Retrieved {len(data_result['samples'])} samples at {data_result['sample_rate']:.1f} Hz")
         
-        # Retrieve ODrive data if connected
-        odrive_data = None
-        if odrive_connected:
-            print("Retrieving ODrive data...")
-            # TODO: Implement proper ODrive data retrieval from capture buffer
-            # For now, create placeholder structure with current values
-            # In practice, you'd retrieve time-series data from ODrive capture buffer
-            odrive_data = {}
-            num_samples = len(data_result['samples'])
-            try:
-                axis = odrive_ctrl.axis
-                # Map ODrive variables to match user requirements
-                # ODrive.Axis.pos_estimate
-                odrive_data['Axis_pos_estimate'] = np.full(num_samples, axis.pos_estimate)
-                # ODrive.Axis.vel_estimate
-                odrive_data['Axis_vel_estimate'] = np.full(num_samples, axis.vel_estimate)
-                # ODrive.Motor.torque_estimate
-                odrive_data['Motor_torque_estimate'] = np.full(num_samples, axis.motor.torque_estimate)
-                # ODrive.Rs485Encoder.raw32 (if available)
-                try:
-                    odrive_data['Rs485Encoder_raw32'] = np.full(num_samples, axis.encoder.config.rs485_encoder.raw32 if hasattr(axis.encoder.config, 'rs485_encoder') else 0)
-                except:
-                    odrive_data['Rs485Encoder_raw32'] = np.zeros(num_samples)
-                # ODrive.EncoderEstimator.pos_estimate
-                odrive_data['EncoderEstimator_pos_estimate'] = np.full(num_samples, axis.encoder.pos_estimate)
-                # ODrive.EncoderEstimator.vel_estimate
-                odrive_data['EncoderEstimator_vel_estimate'] = np.full(num_samples, axis.encoder.vel_estimate)
-                # ODrive.Controller.input_pos
-                odrive_data['Controller_input_pos'] = np.full(num_samples, axis.controller.input_pos)
-                # ODrive.Controller.input_vel
-                odrive_data['Controller_input_vel'] = np.full(num_samples, axis.controller.input_vel)
-                # ODrive.Controller.input_torque
-                odrive_data['Controller_input_torque'] = np.full(num_samples, axis.controller.input_torque)
-                # ODrive.Controller.pos_setpoint
-                odrive_data['Controller_pos_setpoint'] = np.full(num_samples, axis.controller.pos_setpoint)
-                # ODrive.Controller.vel_setpoint
-                odrive_data['Controller_vel_setpoint'] = np.full(num_samples, axis.controller.vel_setpoint)
-                # ODrive.Controller.torque_setpoint
-                odrive_data['Controller_torque_setpoint'] = np.full(num_samples, axis.controller.torque_setpoint)
-                # ODrive.Controller.vel_integrator_torque
-                odrive_data['Controller_vel_integrator_torque'] = np.full(num_samples, axis.controller.vel_integrator_torque)
-            except Exception as e:
-                print(f"Warning: Could not retrieve ODrive data: {e}")
-                import traceback
-                traceback.print_exc()
+        # Verify data format (should be 8 channels: A0-A5, torque_command, position_feedback)
+        if len(data_result['samples']) > 0:
+            num_channels = len(data_result['samples'][0])
+            if num_channels != 8:
+                print(f"Warning: Expected 8 channels, got {num_channels}")
         
-        # Step 9: Process data
-        print("\nStep 9: Processing data...")
+        # Note: ODrive data is not retrieved during operation to avoid interrupting torque signals
+        # Position feedback in data will be zeros
+        
+        # Step 10: Process data
+        print("\nStep 10: Processing data...")
         processed_data = process_data(
             data_result['samples'],
             data_result['sample_rate'],
-            odrive_data=odrive_data
+            odrive_data=None  # No ODrive data retrieved
         )
         
-        # Step 10: Display time series plots
-        print("\nStep 10: Displaying time series plots...")
+        # Step 11: Display time series plots
+        print("\nStep 11: Displaying time series plots...")
         
         # Track active figures for close detection
         active_figures = []
         
         time_series_fig = plot_time_series(processed_data, TIME_SERIES_VARIABLES, active_figures)
         
-        # Step 11: Display Bode plots
-        print("\nStep 11: Displaying Bode plots...")
+        # Step 12: Display Bode plots
+        print("\nStep 12: Displaying Bode plots...")
         bode_fig = plot_bode_plots(processed_data, BODE_PLOT_CONFIGS, active_figures)
         
         print("\n" + "=" * 60)
