@@ -250,7 +250,7 @@ class SerialHelper:
                 # Wait for READY
                 ready_received = False
                 timeout_count = 0
-                max_timeout = 200  # 2 seconds
+                max_timeout = 400  # 2 seconds
                 
                 while timeout_count < max_timeout and not ready_received:
                     if self.serial_port.in_waiting > 0:
@@ -818,8 +818,96 @@ def main():
             return 1
         print(f"CSV uploaded: {message}")
         
-        # Step 4: Get acquisition parameters
-        print("\nStep 4: Acquisition parameters")
+        # Step 4: Optional test output
+        print("\nStep 4: Optional test output")
+        test_response = input("Test torque output first? (y/n, default=n): ").strip().lower()
+        if test_response == 'y':
+            # Get test duration once
+            while True:
+                try:
+                    test_duration_str = input("Enter test output duration (seconds): ").strip()
+                    test_duration = float(test_duration_str)
+                    if test_duration > 0:
+                        break
+                    else:
+                        print("Duration must be positive. Please try again.")
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+            
+            # Repeat loop for test output
+            while True:
+                # Enable ODrive closed-loop control
+                if odrive_connected:
+                    print("Enabling ODrive closed-loop control...")
+                    if not odrive_ctrl.enter_closed_loop():
+                        print("Warning: Failed to enter closed-loop control. Continuing anyway.")
+                    else:
+                        print("ODrive entered closed-loop control state.")
+
+                # Wait 0.5s to ensure ODrive is ready before torque commands start
+                time.sleep(0.5)
+
+                print(f"Starting test output for {test_duration} seconds...")
+                success, response, error = serial_helper.send_command_and_wait_response(
+                    f"START_OUTPUT,{test_duration}", "ACK: Output started", timeout=2
+                )
+                if not success:
+                    print(f"Failed to start test output: {error}")
+                    if odrive_connected:
+                        odrive_ctrl.exit_closed_loop()
+                    serial_helper.disconnect()
+                    if odrive_connected:
+                        odrive_ctrl.disconnect()
+                    return 1
+                print("Test output started. Waiting for completion...")
+
+                # Wait for Controllino serial message that output has finished
+                # Controllino will set torque to zero at end of duration and send "ACK: Output complete"
+                output_complete = False
+                timeout = 0
+                max_timeout = int((test_duration + 5) * 10)  # Wait a bit longer than duration (0.1s increments)
+
+                while timeout < max_timeout:
+                    if serial_helper.serial_port and serial_helper.serial_port.is_open:
+                        if serial_helper.serial_port.in_waiting > 0:
+                            line = serial_helper.serial_port.readline().decode().strip()
+                            if line == "ACK: Output complete":
+                                output_complete = True
+                                print("Output completed. Torque commands set to zero.")
+                                break
+                            elif line.startswith("ERROR:"):
+                                print(f"Error received: {line}")
+                                break
+                    time.sleep(0.1)
+                    timeout += 1
+                    # Progress indicator
+                    if timeout % 10 == 0:
+                        elapsed = timeout * 0.1
+                        print(f"  Elapsed: {elapsed:.1f}s / Expected: {test_duration:.1f}s")
+
+                if not output_complete:
+                    print("Warning: Output completion not confirmed. Continuing anyway...")
+
+                # Disable ODrive closed-loop control
+                if odrive_connected:
+                    print("Disabling ODrive closed-loop control...")
+                    odrive_ctrl.exit_closed_loop()
+
+                    # Always ask if test should be repeated
+                    while True:
+                        repeat_response = input("Repeat test with same duration? (y/n, default=n): ").strip().lower()
+                        if repeat_response == 'y':
+                            break  # Continue repeat loop
+                        elif repeat_response == 'n' or repeat_response == '':
+                            break  # Exit repeat loop
+                        else:
+                            print("Please enter 'y' or 'n'.")
+
+                    if repeat_response != 'y':
+                        break  # Exit repeat loop
+        
+        # Step 5: Acquisition parameters
+        print("\nStep 5: Acquisition parameters")
         while True:
             try:
                 duration_str = input("Enter acquisition duration (seconds): ").strip()
@@ -848,57 +936,19 @@ def main():
         print(f"Acquisition duration: {duration} seconds")
         print(f"Acquisition start delay: {delay} seconds")
         
-        # Step 5 (Optional): Test output first
-        print("\nStep 5: Optional test output")
-        test_response = input("Test torque output first? (y/n, default=n): ").strip().lower()
-        if test_response == 'y':
-            while True:
-                try:
-                    test_duration_str = input("Enter test output duration (seconds): ").strip()
-                    test_duration = float(test_duration_str)
-                    if test_duration > 0:
-                        break
-                    else:
-                        print("Duration must be positive. Please try again.")
-                except ValueError:
-                    print("Invalid input. Please enter a number.")
-            
-            print(f"Starting test output for {test_duration} seconds...")
-            success, response, error = serial_helper.send_command_and_wait_response(
-                f"START_OUTPUT,{test_duration}", "ACK: Output started", timeout=2
-            )
-            if not success:
-                print(f"Failed to start test output: {error}")
-                serial_helper.disconnect()
-                if odrive_connected:
-                    odrive_ctrl.disconnect()
-                return 1
-            print("Test output started. Waiting for completion...")
-            
-            # Wait for test output to complete (serial will be blocked, then unblocked)
-            time.sleep(test_duration + 1)  # Wait a bit longer to ensure completion
-            print("Test output completed.")
+        # Step 6: Start identification directly (no dialog)
+        print("\nStep 6: Start identification")
         
-        # Step 6: Enter ODrive closed-loop control (before starting identification)
+        # Enable ODrive closed-loop control
         if odrive_connected:
-            print("\nStep 6: Entering ODrive closed-loop control...")
+            print("Enabling ODrive closed-loop control...")
             if not odrive_ctrl.enter_closed_loop():
                 print("Warning: Failed to enter closed-loop control. Continuing anyway.")
             else:
                 print("ODrive entered closed-loop control state.")
-            time.sleep(0.5)  # Give ODrive time to transition
         
-        # Step 7: Start identification (torque output + acquisition)
-        print("\nStep 7: Start identification")
-        start_dialog = StartOutputDialog()
-        if start_dialog.exec_() != QDialog.Accepted:
-            print("Start identification cancelled. Exiting.")
-            if odrive_connected:
-                odrive_ctrl.exit_closed_loop()
-            serial_helper.disconnect()
-            if odrive_connected:
-                odrive_ctrl.disconnect()
-            return 1
+        # Wait 0.5s to ensure ODrive is ready before starting identification
+        time.sleep(0.5)
         
         print("Starting identification (torque output + acquisition)...")
         success, response, error = serial_helper.send_command_and_wait_response(
@@ -914,19 +964,17 @@ def main():
             return 1
         print("Identification started. Serial communication will be blocked during operation.")
         
-        # Step 8: Wait for acquisition completion
-        print("\nStep 8: Waiting for acquisition to complete...")
-        print("Note: Serial communication is blocked during operation.")
-        print(f"Estimated completion time: {duration + delay + 1} seconds")
+        # Wait as long as delay time (output is running during this time)
+        if delay > 0:
+            print(f"Waiting for delay period ({delay} seconds)...")
+            time.sleep(delay)
         
-        # Calculate estimated completion time
-        estimated_completion = duration + delay + 1
+        # Wait for acquisition to complete
+        # Controllino will set torque to zero after acquisition and send "ACK: Acquisition complete"
+        print(f"\nWaiting for acquisition to complete (duration: {duration} seconds)...")
         acquisition_complete = False
-        
-        # Wait for serial to become available again (acquisition completes automatically)
-        print("Waiting for serial communication to resume...")
         timeout = 0
-        max_timeout = int((estimated_completion + 5) * 10)  # Wait a bit longer than estimated
+        max_timeout = int((duration + 5) * 10)  # Wait a bit longer than acquisition duration (0.1s increments)
         
         while timeout < max_timeout:
             if serial_helper.serial_port and serial_helper.serial_port.is_open:
@@ -934,7 +982,7 @@ def main():
                     line = serial_helper.serial_port.readline().decode().strip()
                     if line == "ACK: Acquisition complete":
                         acquisition_complete = True
-                        print("Acquisition completed successfully.")
+                        print("Acquisition completed. Torque commands set to zero.")
                         break
                     elif line.startswith("ERROR:"):
                         print(f"Error received: {line}")
@@ -945,18 +993,17 @@ def main():
             # Progress indicator
             if timeout % 10 == 0:
                 elapsed = timeout * 0.1
-                print(f"  Elapsed: {elapsed:.1f}s / Estimated: {estimated_completion:.1f}s")
+                print(f"  Elapsed: {elapsed:.1f}s / Expected: {duration:.1f}s")
         
         if not acquisition_complete:
             print("Warning: Acquisition completion not confirmed. Continuing anyway...")
         
-        # Exit ODrive closed-loop control
+        # Stop ODrive closed-loop control
         if odrive_connected:
-            print("\nExiting ODrive closed-loop control...")
+            print("\nDisabling ODrive closed-loop control...")
             odrive_ctrl.exit_closed_loop()
-            time.sleep(0.5)
         
-        # Step 9: Retrieve data
+        # Step 7: Retrieve data
         print("\nStep 9: Retrieving data from Controllino...")
         data_result = serial_helper.get_data()
         if data_result is None:
@@ -977,7 +1024,7 @@ def main():
         # Note: ODrive data is not retrieved during operation to avoid interrupting torque signals
         # Position feedback in data will be zeros
         
-        # Step 10: Process data
+        # Step 8: Process data
         print("\nStep 10: Processing data...")
         processed_data = process_data(
             data_result['samples'],
@@ -985,7 +1032,7 @@ def main():
             odrive_data=None  # No ODrive data retrieved
         )
         
-        # Step 11: Display time series plots
+        # Step 9: Display time series plots
         print("\nStep 11: Displaying time series plots...")
         
         # Track active figures for close detection
@@ -993,7 +1040,7 @@ def main():
         
         time_series_fig = plot_time_series(processed_data, TIME_SERIES_VARIABLES, active_figures)
         
-        # Step 12: Display Bode plots
+        # Step 10: Display Bode plots
         print("\nStep 12: Displaying Bode plots...")
         bode_fig = plot_bode_plots(processed_data, BODE_PLOT_CONFIGS, active_figures)
         

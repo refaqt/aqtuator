@@ -100,6 +100,7 @@ volatile bool acquisition_active = false;
 volatile bool serial_blocked = false;
 bool parsing_csv = false;
 bool completion_sent = false;
+bool is_test_output_mode = false;  // True for START_OUTPUT, false for START_IDENTIFICATION
 
 // Timing control
 volatile uint32_t csv_index = 0;  // Current position in CSV for cyclic playback
@@ -197,9 +198,18 @@ void loop() {
     return;
   }
   
-  // Check for acquisition completion notification
-  if (!completion_sent && acq_sample_count > 0 && !acquisition_active && !torque_output_active) {
+  // Check for test output completion (START_OUTPUT mode)
+  if (is_test_output_mode && !completion_sent && !torque_output_active && !serial_blocked && current_state == STATE_IDLE) {
+    Serial.println("ACK: Output complete");
+    Serial.flush();
+    completion_sent = true;
+    is_test_output_mode = false;  // Reset flag
+  }
+  
+  // Check for acquisition completion notification (START_IDENTIFICATION mode)
+  if (!is_test_output_mode && !completion_sent && acq_sample_count > 0 && !acquisition_active && !torque_output_active && !serial_blocked) {
     Serial.println("ACK: Acquisition complete");
+    Serial.flush();
     completion_sent = true;
   }
   
@@ -322,12 +332,19 @@ void timerISR() {
     sendTorqueSetpoint(current_torque);
     
     // Check if output duration expired (for START_OUTPUT test mode)
-    if (output_duration_ms > 0) {
+    if (output_duration_ms > 0 && is_test_output_mode) {
       unsigned long elapsed = millis() - output_start_time;
       if (elapsed >= output_duration_ms) {
+        // Set torque to zero before stopping (send once - ISR will be called again if needed)
+        sendTorqueSetpoint(0.0f);
+        
         torque_output_active = false;
         output_duration_ms = 0;
-        // Serial will be unblocked when torque stops
+        serial_blocked = false;  // Unblock serial to send completion message
+        
+        // Note: Serial.println cannot be called from ISR context
+        // Completion message will be sent from loop() function
+        current_state = STATE_IDLE;
       }
     }
   }
@@ -392,14 +409,28 @@ void timerISR() {
     // Check if acquisition duration reached
     if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
       acquisition_active = false;
-      torque_output_active = false;  // Stop torque when acquisition completes
-      serial_blocked = false;  // Unblock serial
+      
+      // Set torque to zero after acquisition completes
+      sendTorqueSetpoint(0.0f);
+      
+      torque_output_active = false;
+      serial_blocked = false;  // Unblock serial to send completion message
+      
+      // Note: Serial.println cannot be called from ISR context
+      // Completion message will be sent from loop() function
       current_state = STATE_IDLE;
     } else if (acq_index >= MAX_ACQ_SAMPLES) {
       // Buffer limit reached
       acquisition_active = false;
+      
+      // Set torque to zero
+      sendTorqueSetpoint(0.0f);
+      
       torque_output_active = false;
       serial_blocked = false;
+      
+      // Note: Serial.println cannot be called from ISR context
+      // Completion message will be sent from loop() function
       current_state = STATE_IDLE;
     }
   }
@@ -640,15 +671,21 @@ void processCommand(String cmd) {
       return;
     }
     
+    // Prepare all state variables first
     output_duration_ms = (unsigned long)(duration * 1000.0f);
     output_start_time = millis();
     csv_index = 0;
-    torque_output_active = true;
-    serial_blocked = true;  // Block serial during output
     current_state = STATE_OUTPUTTING;
+    is_test_output_mode = true;  // Mark as test output mode
+    completion_sent = false;  // Reset completion flag
     
+    // Send ACK BEFORE starting timer and blocking serial
     Serial.println("ACK: Output started");
     Serial.flush();
+    
+    // Now start the timer and block serial
+    torque_output_active = true;
+    serial_blocked = true;  // Block serial during output
     
   } else if (cmd.startsWith("START_IDENTIFICATION")) {
     // Main command: START_IDENTIFICATION,<acquisition_duration>,<acquisition_start_delay>
@@ -688,19 +725,23 @@ void processCommand(String cmd) {
     acq_sample_period = csv_sample_period;
     completion_sent = false;
     
-    // Start torque output immediately
+    // Prepare all state variables
     csv_index = 0;
     output_start_time = millis();
     acquisition_delay_ms = (unsigned long)(acq_delay * 1000.0f);
     acquisition_start_time = output_start_time + acquisition_delay_ms;
+    current_state = STATE_OUTPUTTING;
+    is_test_output_mode = false;  // Mark as identification mode (not test output)
+    output_duration_ms = 0;  // No duration limit for identification mode
     
+    // Send ACK BEFORE starting timer and blocking serial
+    Serial.println("ACK: Identification started");
+    Serial.flush();
+    
+    // Now start the timer and block serial
     torque_output_active = true;
     acquisition_active = false;  // Will be activated after delay
     serial_blocked = true;  // Block serial during operation
-    current_state = STATE_OUTPUTTING;
-    
-    Serial.println("ACK: Identification started");
-    Serial.flush();
     
   } else if (cmd.startsWith("GET_DATA")) {
     if (acq_sample_count == 0) {
