@@ -188,13 +188,8 @@ void loop() {
   
   // Skip reading Serial if blocked during operation
   if (serial_blocked) {
-    // Check if acquisition completed
-    if (!acquisition_active && acq_sample_count > 0 && !completion_sent) {
-      // Acquisition just completed - send completion message
-      // Note: This requires serial to be unblocked, which happens when torque stops
-      // For now, we'll send it when serial becomes available again
-      completion_sent = true;
-    }
+    // Don't set completion_sent here - wait until serial is unblocked
+    // The completion message will be sent when serial_blocked becomes false
     return;
   }
   
