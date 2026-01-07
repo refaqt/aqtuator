@@ -172,7 +172,7 @@ class MultisineOptimizer:
 
         return phases, cf
 
-    def export_multisine(self, filename, phases, amplitudes=None, min_value=0.0, max_value=3.3):
+    def export_multisine(self, filename, phases, amplitudes=None, min_value=-1.0, max_value=1.0):
         """
         Export multisine data to CSV file
         
@@ -235,9 +235,9 @@ def main():
     Example usage of the adapted multisine generator
     """
     # Example parameters
-    fmin_desired = 5.0  # Hz
-    fmax_desired = 500.0  # Hz
-    fs = 5000.0  # Hz
+    fmin_desired = 4.0  # Hz
+    fmax_desired = 800.0  # Hz
+    fs = 8000.0  # Hz
     df_des = 1.0  # Hz
     
     print("Multisine Generator Example")
@@ -273,7 +273,7 @@ def main():
     print()
     
     # Export to CSV
-    filename = "multisine_optimized.csv"
+    filename = f"multisine_{optimizer.fmin_desired}-{optimizer.fmax_desired}Hz_fs_{optimizer.fs}Hz_df_{optimizer.df}Hz_N{optimizer.N}.csv"
     signal = optimizer.export_multisine(filename, phases)
     print(f"Multisine exported to {filename}")
     

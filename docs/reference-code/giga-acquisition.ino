@@ -22,10 +22,10 @@
 
 #define SERIAL_BAUD 115200
 #define MAX_CSV_SAMPLES 10000  // Maximum samples in CSV file
-#define MAX_ACQ_SAMPLES 10000  // Maximum acquisition samples (6 channels)
-                                // Memory constraint: ~480 KB (20000 × 6 channels × 4 bytes/float)
+#define MAX_ACQ_SAMPLES 10000  // Maximum acquisition samples (7 channels: 6 inputs + 1 output voltage)
+                                // Memory constraint: ~560 KB (10000 × 7 channels × 4 bytes/float = 280 KB)
                                 // Maximum acquisition duration = MAX_ACQ_SAMPLES / sample_rate
-                                // Example: At 1 kHz = 20 seconds, at 10 kHz = 2 seconds
+                                // Example: At 1 kHz = 10 seconds, at 10 kHz = 1 second
                                 // See specifications_giga.md "Memory Management" section
 #define DAC0_PIN A12          // DAC0 on Arduino Giga R1 WiFi (A12 is DAC0 channel)
 #define INPUT_CHANNELS 6       // A0-A5 on Arduino Giga R1 WiFi
@@ -36,13 +36,9 @@
 #define DAC_BUFFER_SIZE 32     // DMA buffer size for DAC
 #define DAC_QUEUE_SIZE 32      // Queue size for DAC
 
-// AdvancedAnalog ADC instances (multi-channel configuration)
-// Arduino Giga R1 WiFi has 3 ADCs, but we use only ADC1 and ADC2 for hardware compatibility
-// For synchronized timing, group channels by ADC:
-// - A0, A1, A2 → ADC1 (3 channels)
-// - A3, A4, A5 → ADC2 (3 channels)
-AdvancedADC adc1(A0, A1, A2);  // ADC1 with channels A0, A1, A2
-AdvancedADC adc2(A3, A4, A5);  // ADC2 with channels A3, A4, A5
+// AdvancedAnalog ADC instance (single instance for all 6 channels)
+// Single ADC instance for all channels A0-A5 for simplified processing
+AdvancedADC adc_all(A0, A1, A2, A3, A4, A5);  // Single ADC with all 6 channels
 
 // AdvancedAnalog DAC instance
 AdvancedDAC dac_output(DAC0_PIN);
@@ -52,19 +48,23 @@ float csv_voltage_values[MAX_CSV_SAMPLES];
 uint32_t csv_sample_count = 0;
 float csv_sample_period = 0.001;  // Default 1kHz
 
-// Acquisition buffers (6 channels)
-float acq_buffer[MAX_ACQ_SAMPLES * 6];
+// Acquisition buffers (7 channels: 6 inputs + 1 output voltage)
+float acq_buffer[MAX_ACQ_SAMPLES * 7];
 uint32_t acq_sample_count = 0;
 float acq_sample_period = 0.001;
-bool acquisition_active = false;
-bool output_active = false;
+volatile bool acquisition_active = false;
+volatile bool output_active = false;
 bool parsing_csv = false;  // Flag to prevent loop() from processing commands during CSV upload
+bool completion_sent = false;  // Flag to track if completion message was sent
 
 // Timing
 uint32_t output_index = 0;
-uint32_t acq_index = 0;
+volatile uint32_t acq_index = 0;
 uint32_t required_samples = 0;  // Required samples for current acquisition (0 = use buffer limit)
 unsigned long acquisition_start_time = 0;  // Start time of current acquisition
+
+// Current output voltage (saved after DAC processing, used for acquisition)
+volatile float current_output_voltage = 0.0;
 
 // AdvancedAnalog state
 bool adc_initialized = false;
@@ -117,17 +117,10 @@ void setup() {
 // ============================================================================
 
 bool initializeADC(uint32_t sample_rate) {
-  // Initialize 2 multi-channel ADC instances (ADC1, ADC2)
-  // ADC1 handles 3 channels (A0, A1, A2), ADC2 handles 3 channels (A3, A4, A5)
+  // Initialize single ADC instance for all 6 channels (A0-A5)
   // Use start=false to prevent immediate sampling - will start when START_ACQUISITION is called
-  if (!adc1.begin(AN_RESOLUTION_12, sample_rate, ADC_BUFFER_SIZE, ADC_QUEUE_SIZE, false)) {
-    Serial.println("ERROR: Failed to initialize ADC1 (A0, A1, A2)");
-    return false;
-  }
-  if (!adc2.begin(AN_RESOLUTION_12, sample_rate, ADC_BUFFER_SIZE, ADC_QUEUE_SIZE, false)) {
-    Serial.println("ERROR: Failed to initialize ADC2 (A3, A4, A5)");
-    adc1.stop();  // Clean up on failure
-    return false;
+  if (!adc_all.begin(AN_RESOLUTION_12, sample_rate, ADC_BUFFER_SIZE, ADC_QUEUE_SIZE, false)) {
+    return false;  // Error reported in calling function
   }
   adc_initialized = true;
   current_sample_rate = sample_rate;
@@ -146,9 +139,8 @@ bool initializeDAC(uint32_t sample_rate) {
 }
 
 void stopADC() {
-  // Stop all ADC instances
-  adc1.stop();
-  adc2.stop();
+  // Stop ADC instance
+  adc_all.stop();
   adc_initialized = false;
 }
 
@@ -163,10 +155,6 @@ void stopDAC() {
 // ============================================================================
 
 bool parseCSVFromSerial(uint32_t expected_lines) {
-  Serial.print("DEBUG: parseCSVFromSerial() entered, expected_lines=");
-  Serial.println(expected_lines);
-  Serial.print("DEBUG: Serial.available()=");
-  Serial.println(Serial.available());
   
   csv_sample_count = 0;
   bool sample_period_extracted = false;
@@ -192,7 +180,7 @@ bool parseCSVFromSerial(uint32_t expected_lines) {
     
     lines_read++;  // Increment counter for each line read from serial
     
-    // No chunk acknowledgments - simple line reading (matches test_serial.py approach)
+    // No chunk acknowledgments - simple line reading
     
     if (line.length() == 0) continue;
     
@@ -324,7 +312,6 @@ bool parseCSVFromSerial(uint32_t expected_lines) {
     return false;
   }
   
-  Serial.println("DEBUG: parseCSVFromSerial() completed successfully");
   return true;
 }
 
@@ -334,10 +321,6 @@ bool parseCSVFromSerial(uint32_t expected_lines) {
 
 void processCommand(String cmd) {
   cmd.trim();
-  Serial.print("DEBUG: processCommand() - cmd='");
-  Serial.print(cmd);
-  Serial.print("', parsing_csv=");
-  Serial.println(parsing_csv);
   
   if (cmd.startsWith("START_OUTPUT")) {
     if (csv_sample_count == 0) {
@@ -359,11 +342,22 @@ void processCommand(String cmd) {
     output_active = false;
     if (!acquisition_active) {
       current_state = STATE_IDLE;
-    } else {
-      current_state = STATE_ACQUIRING;
     }
-    // AdvancedAnalog DAC will stop when we stop writing
     Serial.println("ACK: Output stopped");
+    
+  } else if (cmd.startsWith("STOP_ACQUISITION")) {
+    if (acquisition_active) {
+      acquisition_active = false;
+      if (adc_initialized) {
+        adc_all.stop();
+      }
+    }
+    if (!output_active) {
+      current_state = STATE_IDLE;
+    } else {
+      current_state = STATE_OUTPUTTING;
+    }
+    Serial.println("ACK: Acquisition stopped");
     
   } else if (cmd.startsWith("START_ACQUISITION")) {
     // Parse acquisition parameters
@@ -383,14 +377,11 @@ void processCommand(String cmd) {
     
     // Check if acquisition is already active - stop it first
     if (acquisition_active) {
-      Serial.println("WARNING: Acquisition already active, stopping first");
       acquisition_active = false;
       if (adc_initialized) {
-        adc1.stop();
-        adc2.stop();
+        adc_all.stop();
       }
-      // Wait a bit for ADCs to fully stop
-      delay(100);
+      delay(1);  // Minimal delay to ensure ADC stops
     }
     
     // Calculate number of samples needed
@@ -407,56 +398,23 @@ void processCommand(String cmd) {
       return;
     }
     
-    Serial.print("DEBUG: Acquisition parameters - duration=");
-    Serial.print(duration, 3);
-    Serial.print("s, start_delay=");
-    Serial.print(start_delay, 3);
-    Serial.print("s, required_samples=");
-    Serial.print(calc_required_samples);
-    Serial.print(", sample_period=");
-    Serial.print(acq_sample_period, 6);
-    Serial.println("s");
-    
-    // Delay before starting
-    delay((uint32_t)(start_delay * 1000));
-    
     // Reset acquisition state
     acq_index = 0;
     acq_sample_count = 0;
+    current_output_voltage = 0.0;
+    completion_sent = false;  // Reset completion flag for new acquisition
     
-    // Ensure ADCs are stopped before starting (in case they were left running)
-    adc1.stop();
-    adc2.stop();
-    delay(50);  // Give ADCs time to fully stop
+    // Ensure ADC is stopped before starting
+    // adc_all.stop();
+    // Minimal delay to ensure ADC fully stops (matches test program pattern)
+    delay(1);
     
-    // Start ADC sampling (ADCs were initialized with start=false, so we need to start them now)
-    // start() requires sample_rate parameter
-    if (!adc1.start(current_sample_rate) || !adc2.start(current_sample_rate)) {
-      Serial.println("ERROR: Failed to start ADC sampling");
-      // Clean up on failure
-      adc1.stop();
-      adc2.stop();
-      return;
-    }
-    
-    // Debug: Verify ADCs started
-    Serial.print("DEBUG: ADC1 started, available()=");
-    Serial.println(adc1.available());
-    Serial.print("DEBUG: ADC2 started, available()=");
-    Serial.println(adc2.available());
-    Serial.print("DEBUG: Sample rate=");
-    Serial.print(current_sample_rate);
-    Serial.println(" Hz");
-    
+    // Prepare output state before starting ADC
     if (output_active) {
       current_state = STATE_ACQUIRING;
     } else {
-      // Start output at the same time
       if (!dac_initialized) {
         Serial.println("ERROR: DAC not initialized. Please load CSV file first.");
-        // Stop ADCs if DAC is not ready
-        adc1.stop();
-        adc2.stop();
         return;
       }
       output_active = true;
@@ -464,44 +422,32 @@ void processCommand(String cmd) {
       current_state = STATE_ACQUIRING;
     }
     
-    // Store required samples and start time for duration-based completion
-    // Now set acquisition_active after everything is set up
+    // Store required samples and start time
     required_samples = calc_required_samples;
     acquisition_start_time = millis();
-    acquisition_active = true;
     
+    // Send ACK BEFORE starting ADC (all Serial communication must be done before DMA starts)
     Serial.println("ACK: Acquisition started");
-    Serial.flush();  // Ensure message is sent before continuing
-    // Note: Acquisition is now handled in loop(), not blocking here
-    // This allows STOP_ACQUISITION and other commands to be processed
     
-  } else if (cmd.startsWith("STOP_ACQUISITION")) {
-    // Stop acquisition immediately
-    Serial.println("DEBUG: STOP_ACQUISITION command received");
-    acquisition_active = false;
-    
-    // Stop ADC sampling
-    if (adc_initialized) {
-      adc1.stop();
-      adc2.stop();
-      Serial.println("DEBUG: ADCs stopped");
-    }
-    
-    // Reset acquisition state
-    acq_index = 0;
-    acq_sample_count = 0;
-    required_samples = 0;
-    acquisition_start_time = 0;
-    
-    // Update state
-    if (output_active) {
-      current_state = STATE_OUTPUTTING;
-    } else {
+
+    // Start ADC sampling (DMA starts immediately - no blocking operations after this)
+    // If start fails, silently stop and return - no Serial operations after DMA might have started
+    if (!adc_all.start(current_sample_rate)) {
+      // Failed to start - stop ADC and set flags to prevent acquisition
+      adc_all.stop();
+      acquisition_active = false;
+      output_active = false;
       current_state = STATE_IDLE;
+      return;
     }
     
-    Serial.println("ACK: Acquisition stopped");
-    Serial.flush();  // Ensure message is sent
+    // Set acquisition_active as the VERY LAST thing before returning
+    // This ensures loop() can immediately start processing ADC data
+    acquisition_active = true;
+
+    
+    // Return immediately - no more Serial operations after this point
+    // Note: Acquisition is now handled in loop(), not blocking here
     
   } else if (cmd.startsWith("UPLOAD_CSV")) {
     // Parse line count from command: UPLOAD_CSV,<num_lines>
@@ -526,14 +472,6 @@ void processCommand(String cmd) {
       Serial.read();
       cleared++;
     }
-    if (cleared > 0) {
-      Serial.print("DEBUG: Cleared ");
-      Serial.print(cleared);
-      Serial.println(" bytes from buffer");
-    }
-    
-    Serial.print("DEBUG: parsing_csv set to true, Serial.available()=");
-    Serial.println(Serial.available());
     Serial.println("READY");
     
     if (parseCSVFromSerial(expected_lines)) {
@@ -549,48 +487,14 @@ void processCommand(String cmd) {
       Serial.read();
       leftover_cleared++;
     }
-    if (leftover_cleared > 0) {
-      Serial.print("DEBUG: Cleared ");
-      Serial.print(leftover_cleared);
-      Serial.println(" leftover bytes from buffer after CSV parsing");
-    }
-    
     parsing_csv = false;  // Clear flag when done
-    Serial.println("DEBUG: parsing_csv set to false");
     
   } else if (cmd.startsWith("RESET")) {
-    // Reset parsing state and clear buffers
-    Serial.println("DEBUG: RESET command received");
     parsing_csv = false;
-    Serial.println("DEBUG: parsing_csv set to false");
-    int cleared = 0;
     while (Serial.available() > 0) {
       Serial.read();
-      cleared++;
     }
-    Serial.print("DEBUG: Cleared ");
-    Serial.print(cleared);
-    Serial.println(" bytes from buffer");
     Serial.println("ACK: Reset complete");
-    
-  } else if (cmd.startsWith("DEBUG")) {
-    // Debug command - dump current state
-    Serial.println("DEBUG: === State Dump ===");
-    Serial.print("DEBUG: parsing_csv = ");
-    Serial.println(parsing_csv);
-    Serial.print("DEBUG: Serial.available() = ");
-    Serial.println(Serial.available());
-    Serial.print("DEBUG: csv_sample_count = ");
-    Serial.println(csv_sample_count);
-    Serial.print("DEBUG: output_active = ");
-    Serial.println(output_active);
-    Serial.print("DEBUG: acquisition_active = ");
-    Serial.println(acquisition_active);
-    Serial.print("DEBUG: current_state = ");
-    Serial.println(current_state);
-    Serial.print("DEBUG: csv_sample_period = ");
-    Serial.println(csv_sample_period, 6);
-    Serial.println("DEBUG: === End State Dump ===");
     
   } else if (cmd.startsWith("GET_STATUS")) {
     Serial.print("STATUS:");
@@ -613,20 +517,22 @@ void processCommand(String cmd) {
     current_state = STATE_TRANSFERRING;
     
     // Send data header
+    // Note: 7 channels = 6 input channels + 1 output voltage channel
     Serial.print("DATA:");
     Serial.print(acq_sample_count);
     Serial.print(",");
     Serial.print(acq_sample_period, 6);
     Serial.print(",");
-    Serial.print(INPUT_CHANNELS);
+    Serial.print(7);  // 7 channels: A0-A5 (6) + output_voltage (1)
     Serial.println();
     
     // Send data samples (text format)
+    // Format: A0,A1,A2,A3,A4,A5,output_voltage
     for (uint32_t i = 0; i < acq_sample_count; i++) {
-      float *sample_ptr = &acq_buffer[i * 6];
+      float *sample_ptr = &acq_buffer[i * 7];
       
-      Serial.print(sample_ptr[0], 4);
-      for (int ch = 1; ch < 6; ch++) {
+      Serial.print(sample_ptr[0], 4);  // A0
+      for (int ch = 1; ch < 7; ch++) {  // A1-A5, output_voltage
         Serial.print(",");
         Serial.print(sample_ptr[ch], 4);
       }
@@ -649,266 +555,211 @@ void processCommand(String cmd) {
 // Helper Functions for Processing Frames
 // ============================================================================
 
-// Process DAC output (called from loop())
-// AdvancedAnalog handles timing via DMA, so we just need to keep the buffer filled
-void processDACOutput() {
-  if (!dac_initialized || csv_sample_count == 0 || !output_active) {
-    return;
+// Combined DAC and ADC processing (called from loop())
+// AdvancedAnalog handles timing via DMA
+// NO Serial communication in this function - all communication handled in loop()
+void processAnalogIO() {
+  // Temporary storage for voltage values from DAC buffer
+  // Used to synchronize output voltages with ADC samples
+  static float dac_voltage_buffer[DAC_BUFFER_SIZE];
+  static uint32_t dac_voltage_count = 0;
+  
+  // ========================================================================
+  // DAC Processing (first) - if output is active
+  // ========================================================================
+  if (output_active && dac_initialized && csv_sample_count > 0) {
+    if (dac_output.available() > 0) {
+      SampleBuffer dac_buf = dac_output.dequeue();
+      
+      if (dac_buf) {
+        // Reset voltage count for this buffer
+        dac_voltage_count = 0;
+        
+        // Fill buffer with CSV voltage values
+        for (size_t i = 0; i < dac_buf.size(); i++) {
+          float voltage = csv_voltage_values[output_index];
+          
+          // Store voltage for later use with ADC samples
+          if (dac_voltage_count < DAC_BUFFER_SIZE) {
+            dac_voltage_buffer[dac_voltage_count++] = voltage;
+          }
+          
+          // Convert voltage (0-3.3V) to DAC value (0-4095 for 12-bit DAC)
+          uint16_t dac_value = (uint16_t)(voltage * 4095.0 / 3.3);
+          dac_value = constrain(dac_value, 0, 4095);
+          dac_buf[i] = dac_value;
+          
+          // Advance to next CSV sample (cyclic)
+          output_index = (output_index + 1) % csv_sample_count;
+        }
+        
+        // Write filled buffer to DAC (DMA transfer happens automatically)
+        dac_output.write(dac_buf);
+        // Note: dac_buf.release() is handled automatically by the library
+      } else {
+        // Invalid buffer - stop output immediately
+        output_active = false;
+        dac_voltage_count = 0;  // Reset count on error
+      }
+    }
+  } else {
+    // Output not active - reset voltage count
+    dac_voltage_count = 0;
   }
   
-  // Check if DAC has a buffer available for writing
-  if (dac_output.available() > 0) {
-    // Get a SampleBuffer from the DAC queue
-    SampleBuffer buf = dac_output.dequeue();
-    
-    if (buf) {
-      // Fill the buffer with CSV voltage values
-      for (size_t i = 0; i < buf.size(); i++) {
-        float voltage = csv_voltage_values[output_index];
-        // Convert voltage (0-3.3V) to DAC value (0-4095 for 12-bit DAC)
-        uint16_t dac_value = (uint16_t)(voltage * 4095.0 / 3.3);
-        dac_value = constrain(dac_value, 0, 4095);
-        buf[i] = dac_value;
-        
-        // Advance to next CSV sample (cyclic)
-        output_index = (output_index + 1) % csv_sample_count;
-      }
+  // ========================================================================
+  // ADC Processing (second) - if acquisition is active
+  // ========================================================================
+  if (acquisition_active && adc_initialized && acq_index < MAX_ACQ_SAMPLES) {
+    if (adc_all.available() > 0) {
+      SampleBuffer adc_buf = adc_all.read();
       
-      // Write the filled buffer to DAC (DMA transfer happens automatically)
-      dac_output.write(buf);
-      // Note: buf.release() is handled automatically by the library after write()
+      if (adc_buf) {
+        // Check buffer size (must be multiple of 6 for 6 channels)
+        if (adc_buf.size() % 6 != 0) {
+          adc_buf.release();
+          // Invalid buffer size - stop acquisition immediately
+          acquisition_active = false;
+          adc_all.stop();
+          return;
+        }
+        
+        // Process samples from buffer
+        // Buffer format: [A0, A1, A2, A3, A4, A5, A0, A1, A2, ...] (6 channels interleaved)
+        size_t samples_to_process = adc_buf.size() / 6;
+        samples_to_process = min(samples_to_process, (size_t)(MAX_ACQ_SAMPLES - acq_index));
+        
+        for (size_t i = 0; i < samples_to_process; i++) {
+          if (acq_index >= MAX_ACQ_SAMPLES) {
+            break;
+          }
+          
+          float *sample_ptr = &acq_buffer[acq_index * 7];
+          
+          // Extract interleaved channel data from buffer
+          // Buffer: A0, A1, A2, A3, A4, A5 at indices i*6, i*6+1, ..., i*6+5
+          uint16_t adc_ch0 = adc_buf[i * 6 + 0];  // A0
+          uint16_t adc_ch1 = adc_buf[i * 6 + 1];  // A1
+          uint16_t adc_ch2 = adc_buf[i * 6 + 2];  // A2
+          uint16_t adc_ch3 = adc_buf[i * 6 + 3];  // A3
+          uint16_t adc_ch4 = adc_buf[i * 6 + 4];  // A4
+          uint16_t adc_ch5 = adc_buf[i * 6 + 5];  // A5
+          
+          // Convert ADC values (0-4095) to voltage (0-3.3V)
+          sample_ptr[0] = adc_ch0 * 3.3 / 4095.0;  // A0
+          sample_ptr[1] = adc_ch1 * 3.3 / 4095.0;  // A1
+          sample_ptr[2] = adc_ch2 * 3.3 / 4095.0;  // A2
+          sample_ptr[3] = adc_ch3 * 3.3 / 4095.0;  // A3
+          sample_ptr[4] = adc_ch4 * 3.3 / 4095.0;  // A4
+          sample_ptr[5] = adc_ch5 * 3.3 / 4095.0;  // A5
+          
+          // Save output voltage from corresponding DAC sample
+          // Each ADC sample uses the voltage from the corresponding DAC sample
+          if (i < dac_voltage_count) {
+            sample_ptr[6] = dac_voltage_buffer[i];
+          } else {
+            // No corresponding voltage (shouldn't happen if buffers are same size)
+            // Use 0.0 if output not active or buffer mismatch
+            sample_ptr[6] = 0.0;
+          }
+          
+          acq_index++;
+          acq_sample_count = acq_index;
+          
+          if (acq_index >= MAX_ACQ_SAMPLES) {
+            acquisition_active = false;
+            break;
+          }
+        }
+        
+        // Release buffer back to memory pool
+        adc_buf.release();
+        
+        // Reset voltage count after processing (for next iteration)
+        dac_voltage_count = 0;
+      } else {
+        // Invalid buffer - stop acquisition immediately
+        acquisition_active = false;
+        adc_all.stop();
+      }
     }
   }
 }
 
-// Process ADC acquisition (called from loop())
-// AdvancedAnalog handles timing via DMA, so we read from DMA buffers
-// Multi-channel data is interleaved in SampleBuffer (ch0, ch1, ch2, ch0, ch1, ch2, ...)
-void processADCAcquisition() {
-  // Debug: Periodic status output
-  static unsigned long last_debug = 0;
-  static uint32_t last_acq_index = 0;
-  static unsigned long last_data_time = 0;
-  
-  if (!adc_initialized || !acquisition_active || acq_index >= MAX_ACQ_SAMPLES) {
-    if (millis() - last_debug > 2000) {
-      Serial.print("DEBUG: processADCAcquisition() - adc_initialized=");
-      Serial.print(adc_initialized);
-      Serial.print(", acquisition_active=");
-      Serial.print(acquisition_active);
-      Serial.print(", acq_index=");
-      Serial.print(acq_index);
-      Serial.print("/");
-      Serial.println(MAX_ACQ_SAMPLES);
-      last_debug = millis();
-    }
-    return;
-  }
-  
-  // Check if both ADC instances have data available
-  int adc1_avail = adc1.available();
-  int adc2_avail = adc2.available();
-  
-  // Debug: Print status every second
-  if (millis() - last_debug > 1000) {
-    Serial.print("DEBUG: adc1.available()=");
-    Serial.print(adc1_avail);
-    Serial.print(", adc2.available()=");
-    Serial.print(adc2_avail);
-    Serial.print(", acq_index=");
-    Serial.print(acq_index);
-    Serial.print(", samples/sec=");
-    Serial.println(acq_index - last_acq_index);
-    last_acq_index = acq_index;
-    last_debug = millis();
-    
-    if (adc1_avail == 0 && adc2_avail == 0) {
-      Serial.println("WARNING: Both ADCs have no data available!");
-    } else if (adc1_avail == 0) {
-      Serial.println("WARNING: ADC1 has no data available!");
-    } else if (adc2_avail == 0) {
-      Serial.println("WARNING: ADC2 has no data available!");
-    }
-  }
-  
-  if (adc1_avail > 0 && adc2_avail > 0) {
-    // Read SampleBuffer from each ADC instance
-    SampleBuffer buf1 = adc1.read();
-    SampleBuffer buf2 = adc2.read();
-    
-    if (buf1 && buf2) {
-      // Process samples from each buffer
-      // Buffer 1 (ADC1): [A0, A1, A2, A0, A1, A2, ...] (3 channels interleaved)
-      // Buffer 2 (ADC2): [A3, A4, A5, A3, A4, A5, ...] (3 channels interleaved)
-      // We need to extract samples in sync across both ADCs
-      
-      size_t samples_to_process = min(buf1.size() / 3, buf2.size() / 3);
-      samples_to_process = min(samples_to_process, (size_t)(MAX_ACQ_SAMPLES - acq_index));
-      
-      // Debug: Print buffer info occasionally
-      if (millis() - last_data_time > 5000) {
-        Serial.print("DEBUG: Buffer sizes - buf1.size()=");
-        Serial.print(buf1.size());
-        Serial.print(", buf2.size()=");
-        Serial.print(buf2.size());
-        Serial.print(", samples_to_process=");
-        Serial.println(samples_to_process);
-        last_data_time = millis();
-      }
-      
-      if (samples_to_process == 0) {
-        Serial.println("WARNING: samples_to_process is 0 - buffer size issue?");
-        Serial.print("  buf1.size()=");
-        Serial.print(buf1.size());
-        Serial.print(", buf2.size()=");
-        Serial.print(buf2.size());
-        Serial.print(", buf1.size()/3=");
-        Serial.print(buf1.size() / 3);
-        Serial.print(", buf2.size()/3=");
-        Serial.println(buf2.size() / 3);
-        buf1.release();
-        buf2.release();
-        return;
-      }
-      
-      for (size_t i = 0; i < samples_to_process; i++) {
-        if (acq_index >= MAX_ACQ_SAMPLES) {
-          break;
-        }
-        
-        float *sample_ptr = &acq_buffer[acq_index * 6];
-        
-        // Extract interleaved channel data from each buffer
-        // Buffer 1 (ADC1): A0, A1, A2 at indices i*3, i*3+1, i*3+2
-        uint16_t adc1_ch0 = buf1[i * 3];      // A0
-        uint16_t adc1_ch1 = buf1[i * 3 + 1];  // A1
-        uint16_t adc1_ch2 = buf1[i * 3 + 2];  // A2
-        
-        // Buffer 2 (ADC2): A3, A4, A5 at indices i*3, i*3+1, i*3+2
-        uint16_t adc2_ch0 = buf2[i * 3];      // A3
-        uint16_t adc2_ch1 = buf2[i * 3 + 1];  // A4
-        uint16_t adc2_ch2 = buf2[i * 3 + 2];  // A5
-        
-        // Convert ADC values (0-4095) to voltage (0-3.3V)
-        sample_ptr[0] = adc1_ch0 * 3.3 / 4095.0;  // A0
-        sample_ptr[1] = adc1_ch1 * 3.3 / 4095.0;  // A1
-        sample_ptr[2] = adc1_ch2 * 3.3 / 4095.0;  // A2
-        sample_ptr[3] = adc2_ch0 * 3.3 / 4095.0;  // A3
-        sample_ptr[4] = adc2_ch1 * 3.3 / 4095.0;  // A4
-        sample_ptr[5] = adc2_ch2 * 3.3 / 4095.0;  // A5
-        
-        acq_index++;
-        acq_sample_count = acq_index;
-        
-        if (acq_index >= MAX_ACQ_SAMPLES) {
-          acquisition_active = false;
-          // Stop ADC sampling when buffer is full
-          adc1.stop();
-          adc2.stop();
-          current_state = STATE_IDLE;
-          Serial.println("DEBUG: Acquisition stopped - buffer full");
-          break;
-        }
-      }
-      
-      // Release buffers back to the memory pool
-      buf1.release();
-      buf2.release();
-    } else {
-      Serial.println("WARNING: Failed to read buffers from ADCs");
-      if (!buf1) Serial.println("  buf1 is invalid");
-      if (!buf2) Serial.println("  buf2 is invalid");
-    }
-  }
-}
 
 // ============================================================================
 // Main Loop
 // ============================================================================
 
 void loop() {
-  // Process DAC output (AdvancedAnalog handles timing via DMA)
-  if (output_active && current_state != STATE_TRANSFERRING && dac_initialized) {
-    processDACOutput();
-  }
+  // Always process analog I/O first (keeps DMA buffers flowing)
+  processAnalogIO();
   
-  // Process ADC acquisition (AdvancedAnalog handles timing via DMA)
-  if (acquisition_active && adc_initialized) {
-    processADCAcquisition();
-    
-    // Check for duration-based completion
+  // Check for acquisition completion
+  if (acquisition_active) {
+    // Check if we've reached the required number of samples
     if (required_samples > 0 && acq_index >= required_samples) {
+      // Acquisition complete - stop everything
       acquisition_active = false;
-      Serial.println("DEBUG: Acquisition completed - reached required samples");
+      adc_all.stop();
+      output_active = false;
+      current_state = STATE_IDLE;
+      required_samples = 0;
+      acquisition_start_time = 0;
+    } else if (acq_index >= MAX_ACQ_SAMPLES) {
+      // Buffer limit reached
+      acquisition_active = false;
+      adc_all.stop();
+      output_active = false;
+      current_state = STATE_IDLE;
+      required_samples = 0;
+      acquisition_start_time = 0;
     }
     
-    // Progress reporting (reduced frequency to prevent serial buffer overflow)
-    static unsigned long last_progress = 0;
-    if (millis() - last_progress > 1000) {  // Changed from 200ms to 1000ms to reduce serial traffic
-      Serial.print("DEBUG: Acquisition progress: ");
-      Serial.print(acq_index);
-      if (required_samples > 0) {
-        Serial.print("/");
-        Serial.print(required_samples);
-        Serial.print(" samples (");
-        Serial.print((float)acq_index / required_samples * 100.0, 1);
-        Serial.print("%)");
-      } else {
-        Serial.print(" samples");
+    // Check for STOP_ACQUISITION command even during acquisition
+    // Use minimal serial communication to allow user-initiated stops
+    if (Serial.available() > 0) {
+      String cmd = Serial.readStringUntil('\n');
+      cmd.trim();
+      if (cmd.startsWith("STOP_ACQUISITION")) {
+        acquisition_active = false;
+        if (adc_initialized) {
+          adc_all.stop();
+        }
+        if (!output_active) {
+          current_state = STATE_IDLE;
+        } else {
+          current_state = STATE_OUTPUTTING;
+        }
+        Serial.println("ACK: Acquisition stopped");
+        return;  // Return immediately after minimal serial communication
       }
-      if (acquisition_start_time > 0) {
-        Serial.print(", elapsed=");
-        Serial.print((millis() - acquisition_start_time) / 1000.0, 1);
-        Serial.print("s");
-      }
-      Serial.print(", adc1.avail=");
-      Serial.print(adc1.available());
-      Serial.print(", adc2.avail=");
-      Serial.println(adc2.available());
-      Serial.flush();  // Ensure progress message is sent
-      last_progress = millis();
     }
+    
+    // During active acquisition: no other serial communication, no command parsing
+    return;
   }
   
-  // Check if acquisition just completed
-  static bool was_acquiring = false;
-  if (was_acquiring && !acquisition_active && adc_initialized) {
-    // Acquisition just finished (either by duration, buffer full, or STOP command)
-    // Note: ADCs are already stopped by STOP_ACQUISITION handler or processADCAcquisition()
-    // But we stop them here too to be safe (stop() is safe to call multiple times)
-    adc1.stop();
-    adc2.stop();
-    output_active = false;
-    current_state = STATE_IDLE;
-    required_samples = 0;
-    acquisition_start_time = 0;
+  // Acquisition not active: handle completion notification and commands
+  // Check if acquisition just completed (we have data but acquisition is not active)
+  if (!completion_sent && acq_sample_count > 0 && !acquisition_active) {
+    // Just completed - send completion message once
     Serial.println("ACK: Acquisition complete");
-    Serial.flush();  // Ensure message is sent
-    was_acquiring = false;
-  } else if (acquisition_active) {
-    was_acquiring = true;
+    completion_sent = true;
   }
   
-  // Skip reading Serial if parsing CSV to avoid race condition
+  // Skip reading Serial if parsing CSV
   if (parsing_csv) {
-    static unsigned long last_debug = 0;
-    if (millis() - last_debug > 1000) {  // Print every second when stuck
-      Serial.print("DEBUG: loop() - parsing_csv=true, Serial.available()=");
-      Serial.println(Serial.available());
-      last_debug = millis();
-    }
     delay(1);
     return;
   }
   
-  // Check for incoming serial commands
+  // Check for incoming serial commands (only when not acquiring)
   if (Serial.available() > 0) {
     String cmd = Serial.readStringUntil('\n');
-    Serial.print("DEBUG: Received command: ");
-    Serial.println(cmd);
     processCommand(cmd);
   }
   
-  delay(1);
+
 }
 

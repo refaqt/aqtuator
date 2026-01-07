@@ -2,7 +2,7 @@
 Main Control Application
 
 PyQt5 GUI application for synchronized data acquisition and motor control system.
-Integrates Arduino Giga R1 WiFi and ODrive S1.
+Integrates NUCLEO-G474RE and ODrive S1.
 """
 
 import sys
@@ -1096,11 +1096,11 @@ class MainWindow(QMainWindow):
         A4 = data_array[:, 4]
         A5 = data_array[:, 5]
         
-        # Calculate theta_x and theta_y (using formulas from specifications_giga.md)
+        # Calculate theta_x and theta_y (using formulas from specifications-nucleo.md)
         theta_x = -(A0 + A1 - A2 - A3) * np.sin(ALPHA) / (2 * L3)
         theta_y = -(A0 - A1 - A2 + A3) * np.cos(ALPHA) / (2 * L3)
         
-        # Calculate x and y accelerations (using formulas from specifications_giga.md)
+        # Calculate x and y accelerations (using formulas from specifications-nucleo.md)
         x = (-(A0 - A1 + A2 - A3) * np.cos(ALPHA) / 4 - 
              theta_y * (L1 + L2 + L3 / 2) - A5) * R_A
         y = ((A0 + A1 + A2 + A3) * np.sin(ALPHA) / 4 + 
