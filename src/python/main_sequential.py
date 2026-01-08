@@ -90,6 +90,12 @@ BODE_PLOT_CONFIGS = [
 CONTROLLINO_PORT = 'COM3'  # Hard-coded Controllino port (change as needed)
 
 # ============================================================================
+# Configuration: Acquisition limits
+# ============================================================================
+
+MAX_ACQ_SAMPLES = 4000  # Maximum acquisition samples (must match Arduino firmware)
+
+# ============================================================================
 # Geometric calculation constants
 # ============================================================================
 
@@ -935,6 +941,13 @@ def main():
         
         print(f"Acquisition duration: {duration} seconds")
         print(f"Acquisition start delay: {delay} seconds")
+        
+        # Check if duration exceeds maximum and adjust if necessary
+        max_duration = MAX_ACQ_SAMPLES / sample_rate
+        if duration > max_duration:
+            print(f"\nWarning: Requested acquisition duration ({duration:.2f} s) exceeds maximum possible duration ({max_duration:.2f} s).")
+            print(f"Acquisition will proceed with maximum duration: {max_duration:.2f} s")
+            duration = max_duration
         
         # Step 6: Start identification directly (no dialog)
         print("\nStep 6: Start identification")
