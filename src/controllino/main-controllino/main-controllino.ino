@@ -10,7 +10,7 @@
  * 3. Connect CAN bus: CANH to CANH, CANL to CANL, common GND
  * 4. Add 120-ohm termination resistors at both ends of CAN bus
  * 5. Configure ODrive S1 node ID (default: 0) to match ODRIVE_NODE_ID constant
- * 6. Connect analog inputs A0-A5 to sensors
+ * 6. Connect analog inputs A0-A3 to sensors
  * 
  * USAGE:
  * - Open Serial Monitor at 115200 baud
@@ -35,9 +35,9 @@
 
 #define SERIAL_BAUD 115200
 #define MAX_CSV_SAMPLES 2000   // Maximum samples in CSV file (20 KB)
-#define MAX_ACQ_SAMPLES 4000   // Maximum acquisition samples (8 channels: 6 inputs + torque + position)
-                                // Memory: 2000 × 8 × 4 bytes = 64 KB
-                                // Total: CSV (20 KB) + Acquisition (64 KB) = 84 KB (RP2040 has 264KB RAM)
+#define MAX_ACQ_SAMPLES 4000   // Maximum acquisition samples (5 channels: 4 inputs + torque)
+                                // Memory: 4000 × 5 × 4 bytes = 80 KB
+                                // Total: CSV (20 KB) + Acquisition (80 KB) = 100 KB (RP2040 has 264KB RAM)
 #define ODRIVE_NODE_ID 0
 #define CAN_BAUD_RATE 1000000  // 1 Mbps
 
@@ -51,14 +51,11 @@
 
 // ADC pins (Controllino Micro - check pin mapping)
 // RP2040 ADC channels: GPIO26-29 are ADC0-3
-// Controllino Micro A0-A5 mapping needs to be verified
-// For now, assuming A0-A5 map to ADC channels 0-5 (GPIO26-31)
+// Controllino Micro A0-A3 mapping: hardware-timed ADC channels
 #define ADC_PIN_A0 26
 #define ADC_PIN_A1 27
 #define ADC_PIN_A2 28
 #define ADC_PIN_A3 29
-#define ADC_PIN_A4 30  // May need adjustment
-#define ADC_PIN_A5 31  // May need adjustment
 
 // ============================================================================
 // State Machine
@@ -86,7 +83,7 @@ uint32_t csv_sample_rate_hz = 1000;
 // Acquisition Data Storage
 // ============================================================================
 
-float acq_buffer[MAX_ACQ_SAMPLES * 8];  // 8 channels: A0-A5, torque_command, position_feedback
+float acq_buffer[MAX_ACQ_SAMPLES * 5];  // 5 channels: A0-A3, torque_command
 uint32_t acq_sample_count = 0;
 volatile uint32_t acq_index = 0;
 float acq_sample_period = 0.001;
@@ -124,7 +121,7 @@ unsigned long output_duration_ms = 0;
   
   // ADC configuration
   bool adc_initialized = false;
-  uint8_t adc_channels[6] = {ADC_PIN_A0, ADC_PIN_A1, ADC_PIN_A2, ADC_PIN_A3, ADC_PIN_A4, ADC_PIN_A5};
+  uint8_t adc_channels[4] = {ADC_PIN_A0, ADC_PIN_A1, ADC_PIN_A2, ADC_PIN_A3};
 #endif
 
 // ============================================================================
@@ -248,7 +245,7 @@ void setupADC() {
   #ifdef ARDUINO_ARCH_RP2040
     adc_init();
     // Configure ADC pins (will be read in ISR)
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 4; i++) {
       adc_gpio_init(adc_channels[i]);
     }
     adc_initialized = true;
@@ -362,25 +359,18 @@ void timerISR() {
   // Acquisition (if active)
   // ========================================================================
   if (acquisition_active && acq_index < MAX_ACQ_SAMPLES) {
-    float *sample_ptr = &acq_buffer[acq_index * 8];
+    float *sample_ptr = &acq_buffer[acq_index * 5];
     
-    // Read ADC channels (hardware-timed)
+    // Read ADC channels (hardware-timed) - only 4 channels (A0-A3)
     #ifdef ARDUINO_ARCH_RP2040
-      // RP2040 has 4 ADC inputs (GPIO26-29), map A0-A5 accordingly
-      // For 6 channels, we'll read the available ones and cycle
-      for (int ch = 0; ch < 6; ch++) {
+      // RP2040 has 4 ADC inputs (GPIO26-29), read A0-A3 using hardware-timed adc_read()
+      for (int ch = 0; ch < 4; ch++) {
         uint8_t gpio_pin = adc_channels[ch];
-        if (gpio_pin >= 26 && gpio_pin <= 29) {
-          // Valid ADC input (0-3)
-          adc_select_input(gpio_pin - 26);
-          uint16_t adc_raw = adc_read();
-          // Convert to voltage (0-3.3V, 12-bit ADC: 0-4095)
-          sample_ptr[ch] = (float)adc_raw * 3.3f / 4095.0f;
-        } else {
-          // For pins beyond ADC3, use analogRead as fallback
-          // Note: This is not hardware-timed, but necessary for A4-A5 if not on ADC0-3
-          sample_ptr[ch] = analogRead(gpio_pin) * 3.3f / 4095.0f;
-        }
+        // All pins are valid ADC inputs (GPIO26-29 map to ADC0-3)
+        adc_select_input(gpio_pin - 26);
+        uint16_t adc_raw = adc_read();
+        // Convert to voltage (0-3.3V, 12-bit ADC: 0-4095)
+        sample_ptr[ch] = (float)adc_raw * 3.3f / 4095.0f;
       }
     #else
       // Fallback: use analogRead (not hardware-timed, but works)
@@ -388,15 +378,10 @@ void timerISR() {
       sample_ptr[1] = analogRead(A1) * 3.3f / 4095.0f;
       sample_ptr[2] = analogRead(A2) * 3.3f / 4095.0f;
       sample_ptr[3] = analogRead(A3) * 3.3f / 4095.0f;
-      sample_ptr[4] = analogRead(A4) * 3.3f / 4095.0f;
-      sample_ptr[5] = analogRead(A5) * 3.3f / 4095.0f;
     #endif
     
     // Store torque command (current value being sent)
-    sample_ptr[6] = current_torque;
-    
-    // Position feedback (always 0 - not retrieved from ODrive)
-    sample_ptr[7] = 0.0f;
+    sample_ptr[4] = current_torque;
     
     acq_index++;
     acq_sample_count = acq_index;
@@ -752,15 +737,15 @@ void processCommand(String cmd) {
     Serial.print(",");
     Serial.print(acq_sample_period, 6);
     Serial.print(",");
-    Serial.print(8);  // 8 channels: A0-A5, torque_command, position_feedback
+    Serial.print(5);  // 5 channels: A0-A3, torque_command
     Serial.println();
     
     // Send data samples (text format)
     for (uint32_t i = 0; i < acq_sample_count; i++) {
-      float *sample_ptr = &acq_buffer[i * 8];
+      float *sample_ptr = &acq_buffer[i * 5];
       
       Serial.print(sample_ptr[0], 4);  // A0
-      for (int ch = 1; ch < 8; ch++) {  // A1-A5, torque_command, position_feedback
+      for (int ch = 1; ch < 5; ch++) {  // A1-A3, torque_command
         Serial.print(",");
         Serial.print(sample_ptr[ch], 4);
       }
