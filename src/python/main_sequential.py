@@ -37,9 +37,9 @@ from odrive_config import ODriveController
 # Time series variables to plot (all in one window, synced x-axes)
 TIME_SERIES_VARIABLES = [
     'output_voltage',  # Voltage output (multisine) as output by Controllino
-    'A0', 'A1', 'A2', 'A3', 'A4', 'A5',  # Analog input voltages
-    'acc0', 'acc1', 'acc2', 'acc3', 'acc4', 'acc5',  # Accelerations (calculated)
-    'x', 'y', 'theta_x', 'theta_y',  # Geometric calculations
+    'A0', 'A1', 'A2', 'A3',  # Analog input voltages
+    'acc0', 'acc1', 'acc2', 'acc3',  # Accelerations (calculated)
+    'x', 'y', 'z',  # Geometric calculations
     # ODrive variables (will be added if ODrive is connected)
     'odrive_Axis_pos_estimate',
     'odrive_Axis_vel_estimate',
@@ -66,21 +66,19 @@ TIME_SERIES_VARIABLES = [
 # 
 # Available variables for inputs/outputs:
 #   - output_voltage: Voltage output (multisine) as recorded by Controllino
-#   - A0, A1, A2, A3, A4, A5: Analog input voltages
-#   - acc0, acc1, acc2, acc3, acc4, acc5: Accelerations (calculated)
-#   - x, y, theta_x, theta_y: Geometric calculations
+#   - torque_command: Torque command sent to ODrive (same as output_voltage)
+#   - A0, A1, A2, A3: Analog input voltages
+#   - acc0, acc1, acc2, acc3: Accelerations (calculated)
+#   - x, y, z: Geometric calculations (x = A0 - A3, y = A1, z = A3)
 #   - ODrive variables (if ODrive is connected): odrive_* variables
 #
 # To modify Bode plots, edit the list below:
 # ============================================================================
 
 BODE_PLOT_CONFIGS = [
-    ('output_voltage', 'A0'),
-    ('output_voltage', 'theta_y'),
-    ('output_voltage', 'x'),
-    ('output_voltage', 'y'),
-    ('A0', 'theta_x'),
-    ('A0', 'x'),
+    ('torque_command', 'x'),
+    ('torque_command', 'y'),
+    ('torque_command', 'z'),
 ]
 
 # ============================================================================
@@ -90,14 +88,10 @@ BODE_PLOT_CONFIGS = [
 CONTROLLINO_PORT = 'COM3'  # Hard-coded Controllino port (change as needed)
 
 # ============================================================================
-# Geometric calculation constants
+# Configuration: Acquisition limits
 # ============================================================================
 
-L1 = 0.02  # (m) Length parameter 1 - from tool tip to impact point
-L2 = 0.078  # (m) Length parameter 2 - from impact point to bottom accelerometers
-L3 = 0.160  # (m) Length parameter 3 - from bottom to top accelerometers
-ALPHA = 20.123 * np.pi / 180  # Angle in radians (20 degrees)
-R_A = 5 * 9.81 / 10     # m/s²/V accelerometer sensitivity
+MAX_ACQ_SAMPLES = 4000  # Maximum acquisition samples (must match Arduino firmware)
 
 # ============================================================================
 # Serial Communication Helper Class
@@ -490,80 +484,62 @@ def process_data(data_array, sample_rate, odrive_data=None):
     """Process acquired data including geometric calculations.
     
     Args:
-        data_array: numpy array with shape (num_samples, 8)
-                   Columns: [A0, A1, A2, A3, A4, A5, torque_command, position_feedback]
+        data_array: numpy array with shape (num_samples, 5)
+                   Columns: [A0, A1, A2, A3, torque_command]
         sample_rate: Sample rate in Hz
         odrive_data: Optional dict with ODrive variables (if ODrive connected) - not used for Controllino
     """
     num_samples = data_array.shape[0]
     num_channels = data_array.shape[1]
     
-    # Verify we have 8 channels (6 inputs + torque_command + position_feedback)
-    if num_channels != 8:
-        raise ValueError(f"Expected 8 channels (6 inputs + torque_command + position_feedback), got {num_channels}")
+    # Verify we have 5 channels (4 inputs + torque_command)
+    if num_channels != 5:
+        raise ValueError(f"Expected 5 channels (4 inputs + torque_command), got {num_channels}")
     
     # Create time vector
     t = np.arange(num_samples) / sample_rate
     
-    # Extract input channels (A0-A5) - indices 0-5
+    # Extract input channels (A0-A3) - indices 0-3
     A0 = data_array[:, 0]
     A1 = data_array[:, 1]
     A2 = data_array[:, 2]
     A3 = data_array[:, 3]
-    A4 = data_array[:, 4]
-    A5 = data_array[:, 5]
     
-    # Extract torque command - index 6 (sent to ODrive via CAN)
-    torque_command = data_array[:, 6]
-    
-    # Extract position feedback - index 7 (always 0 for Controllino - not retrieved from ODrive)
-    position_feedback = data_array[:, 7]
+    # Extract torque command - index 4 (sent to ODrive via CAN)
+    torque_command = data_array[:, 4]
     
     # For compatibility with existing code, also store as output_voltage
     # (though it's actually torque command)
     output_voltage = torque_command
     
-    # Calculate accelerations (acc0-acc5) - these are the raw analog inputs
+    # Calculate accelerations (acc0-acc3) - these are the raw analog inputs
     # In this system, the analog inputs ARE the accelerometer readings
     acc0 = A0
     acc1 = A1
     acc2 = A2
     acc3 = A3
-    acc4 = A4
-    acc5 = A5
     
-    # Calculate theta_x and theta_y
-    theta_x = -(A0 + A1 - A2 - A3) / np.sin(ALPHA) / (2 * L3)
-    theta_y = -(A0 - A1 - A2 + A3) / np.cos(ALPHA) / (2 * L3)
-    
-    # Calculate x and y accelerations
-    x = (-(A0 - A1 + A2 - A3) / np.cos(ALPHA) / 4 -
-         theta_y * (L1 + L2 + L3 / 2) - A4) * R_A
-    y = ((A0 + A1 + A2 + A3) / np.sin(ALPHA) / 4 +
-         theta_x * (L1 + L2 + L3 / 2) - A5) * R_A
+    # Calculate x, y, z
+    x = A0 - A3
+    y = A1
+    z = A3
     
     # Store processed data
     data = {
         'time': t,
         'output_voltage': output_voltage,  # For compatibility (actually torque command)
         'torque_command': torque_command,
-        'position_feedback': position_feedback,
         'A0': A0,
         'A1': A1,
         'A2': A2,
         'A3': A3,
-        'A4': A4,
-        'A5': A5,
         'acc0': acc0,
         'acc1': acc1,
         'acc2': acc2,
         'acc3': acc3,
-        'acc4': acc4,
-        'acc5': acc5,
-        'theta_x': theta_x,
-        'theta_y': theta_y,
         'x': x,
         'y': y,
+        'z': z,
         'sample_rate': sample_rate
     }
     
@@ -936,6 +912,13 @@ def main():
         print(f"Acquisition duration: {duration} seconds")
         print(f"Acquisition start delay: {delay} seconds")
         
+        # Check if duration exceeds maximum and adjust if necessary
+        max_duration = MAX_ACQ_SAMPLES / sample_rate
+        if duration > max_duration:
+            print(f"\nWarning: Requested acquisition duration ({duration:.2f} s) exceeds maximum possible duration ({max_duration:.2f} s).")
+            print(f"Acquisition will proceed with maximum duration: {max_duration:.2f} s")
+            duration = max_duration
+        
         # Step 6: Start identification directly (no dialog)
         print("\nStep 6: Start identification")
         
@@ -1015,14 +998,13 @@ def main():
         
         print(f"Retrieved {len(data_result['samples'])} samples at {data_result['sample_rate']:.1f} Hz")
         
-        # Verify data format (should be 8 channels: A0-A5, torque_command, position_feedback)
+        # Verify data format (should be 5 channels: A0-A3, torque_command)
         if len(data_result['samples']) > 0:
             num_channels = len(data_result['samples'][0])
-            if num_channels != 8:
-                print(f"Warning: Expected 8 channels, got {num_channels}")
+            if num_channels != 5:
+                print(f"Warning: Expected 5 channels, got {num_channels}")
         
         # Note: ODrive data is not retrieved during operation to avoid interrupting torque signals
-        # Position feedback in data will be zeros
         
         # Step 8: Process data
         print("\nStep 10: Processing data...")
