@@ -33,15 +33,15 @@ from odrive_config import ODriveController
 # Configuration Parameters
 # ============================================================================
 
-fmin = 100.0  # Minimum frequency in Hz
-fmax = 400.0  # Maximum frequency in Hz
-fs = 2000.0  # Sampling rate in Hz (not used for acquisition, but for transfer function calculation)
-df = 100.0  # Frequency step in Hz
+fmin = 60.0  # Minimum frequency in Hz
+fmax = 100.0  # Maximum frequency in Hz
+fs = 1000.0  # Sampling rate in Hz (used for both Controllino acquisition and transfer function calculation)
+df = 20.0  # Frequency step in Hz
 duration = 0.5  # Measurement duration in seconds
 t_delay = 1.0  # Settling time before acquisition in seconds
 # control_mode is set via ODriveController.set_control_mode()
 torque_amplitude = 0.1  # Torque amplitude in Nm
-controllino_rate = 2000  # Controllino acquisition rate in Hz
+show_measurements = True  # Show time-domain plots of each measurement
 
 # Controllino serial port (hardcoded, can be changed)
 CONTROLLINO_PORT = 'COM3'  # Change as needed
@@ -321,8 +321,7 @@ def main():
     print("=" * 60)
     print(f"Parameters:")
     print(f"  Frequency range: {fmin} - {fmax} Hz (step: {df} Hz)")
-    print(f"  Sampling rate: {fs} Hz (for transfer function calculation)")
-    print(f"  Controllino acquisition rate: {controllino_rate} Hz")
+    print(f"  Sampling rate: {fs} Hz")
     print(f"  Measurement duration: {duration} s")
     print(f"  Settling time: {t_delay} s")
     print(f"  Torque amplitude: {torque_amplitude} Nm")
@@ -420,7 +419,7 @@ def main():
     with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"odrive_servo_identification.py:392","message":"Starting user_input_thread","data":{},"timestamp":int(time.time()*1000)}) + '\n')
     # #endregion
-    user_input_thread = threading.Thread(target=check_user_input, daemon=False)
+    user_input_thread = threading.Thread(target=check_user_input, daemon=True)
     user_input_thread.start()
     # #region agent log
     with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
@@ -491,7 +490,7 @@ def main():
             # Command Controllino to start acquisition
             print(" [acquiring...]", end='', flush=True)
             success, response, error = serial_helper.send_command_and_wait_response(
-                f"START_ACQUISITION,{duration}", "ACK: Acquisition started", timeout=2
+                f"START_ACQUISITION,{duration},{fs}", "ACK: Acquisition started", timeout=2
             )
             
             if not success:
@@ -544,6 +543,27 @@ def main():
             # Get actual sample rate from Controllino
             actual_sample_rate = data_result['sample_rate']
             
+            # Plot measurement data if enabled
+            if show_measurements:
+                time_array = np.arange(len(torque_setpoint)) / actual_sample_rate
+                fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 8))
+                
+                # Top subplot: Torque setpoint
+                ax1.plot(time_array, torque_setpoint, 'b-', linewidth=1)
+                ax1.set_ylabel('Torque Setpoint (Nm)')
+                ax1.set_title(f'Measurement at {freq:.1f} Hz')
+                ax1.grid(True, alpha=0.3)
+                
+                # Bottom subplot: Position estimate
+                ax2.plot(time_array, pos_estimate, 'r-', linewidth=1)
+                ax2.set_xlabel('Time (s)')
+                ax2.set_ylabel('Position Estimate (rad)')
+                ax2.grid(True, alpha=0.3)
+                
+                plt.tight_layout()
+                plt.show(block=True)
+                plt.close(fig)
+            
             # Calculate transfer function
             print(" [processing...]", end='', flush=True)
             gain, phase = calculate_transfer_function(torque_setpoint, pos_estimate, actual_sample_rate, freq)
@@ -563,55 +583,23 @@ def main():
             traceback.print_exc()
             continue
     
-    # Stop user input thread and wait for it to exit cleanly
+    # Stop user input thread
     # #region agent log
+
+
+
     with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
         f.write(json.dumps({"sessionId":"debug-session","runId":"run2","hypothesisId":"F","location":"odrive_servo_identification.py:566","message":"Setting stop_identification=True","data":{"thread_alive":user_input_thread.is_alive() if user_input_thread else None,"thread_ident":user_input_thread.ident if user_input_thread else None},"timestamp":int(time.time()*1000)}) + '\n')
     # #endregion
     stop_identification = True
-    
-    # Close stdin FIRST to unblock the thread if it's waiting on input()
-    # This will cause input() to raise EOFError, allowing the thread to exit
-    try:
-        # #region agent log
-        with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
-            f.write(json.dumps({"sessionId":"debug-session","runId":"run2","hypothesisId":"F","location":"odrive_servo_identification.py:572","message":"Closing stdin to unblock thread","data":{"stdin_closed":sys.stdin.closed if sys.stdin else None},"timestamp":int(time.time()*1000)}) + '\n')
-        # #endregion
-        if sys.stdin and not sys.stdin.closed:
-            sys.stdin.close()
-            # #region agent log
-            with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
-                f.write(json.dumps({"sessionId":"debug-session","runId":"run2","hypothesisId":"F","location":"odrive_servo_identification.py:577","message":"stdin closed successfully","data":{},"timestamp":int(time.time()*1000)}) + '\n')
-            # #endregion
-    except Exception as e:
-        # #region agent log
-        with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
-            f.write(json.dumps({"sessionId":"debug-session","runId":"run2","hypothesisId":"F","location":"odrive_servo_identification.py:581","message":"Exception closing stdin","data":{"exception":str(e)},"timestamp":int(time.time()*1000)}) + '\n')
-        # #endregion
-        pass  # Ignore errors when closing stdin
-    
-    # Give thread a moment to process the EOFError and exit
-    time.sleep(0.1)
-    
-    # Wait for thread to exit (with timeout to avoid hanging)
-    if user_input_thread and user_input_thread.is_alive():
-        # #region agent log
-        with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
-            f.write(json.dumps({"sessionId":"debug-session","runId":"run2","hypothesisId":"F","location":"odrive_servo_identification.py:589","message":"Thread still alive after stdin close, joining with timeout","data":{},"timestamp":int(time.time()*1000)}) + '\n')
-        # #endregion
-        # Join with timeout - if thread is still blocked, we'll timeout and continue
-        join_start = time.time()
-        user_input_thread.join(timeout=1.0)
-        join_duration = time.time() - join_start
-        # #region agent log
-        with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
-            f.write(json.dumps({"sessionId":"debug-session","runId":"run2","hypothesisId":"F","location":"odrive_servo_identification.py:595","message":"After join","data":{"thread_alive":user_input_thread.is_alive(),"join_duration":join_duration},"timestamp":int(time.time()*1000)}) + '\n')
-        # #endregion
-    else:
-        # #region agent log
-        with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
-            f.write(json.dumps({"sessionId":"debug-session","runId":"run2","hypothesisId":"F","location":"odrive_servo_identification.py:599","message":"Thread already dead or doesn't exist","data":{},"timestamp":int(time.time()*1000)}) + '\n')
-        # #endregion
+
+    # Don't wait for thread - on Windows, closing stdin doesn't immediately unblock input()
+    # Since we use os._exit() later, the thread will be terminated anyway
+    # The thread will exit when it processes the EOFError or when user types 'q'
+    # #region agent log
+    with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"run2","hypothesisId":"F","location":"odrive_servo_identification.py:593","message":"Skipping thread join - will use os._exit() which terminates all threads","data":{"thread_alive":user_input_thread.is_alive() if user_input_thread else None},"timestamp":int(time.time()*1000)}) + '\n')
+    # #endregion
     
     # Exit closed-loop control
     print("\nExiting closed-loop control...")

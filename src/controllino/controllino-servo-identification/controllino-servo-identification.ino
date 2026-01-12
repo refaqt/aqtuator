@@ -33,8 +33,8 @@
                                 // Memory: 2000 × 2 × 4 bytes = 16 KB
 #define ODRIVE_NODE_ID 0
 #define CAN_BAUD_RATE 1000000  // 1 Mbps
-#define ACQUISITION_RATE_HZ 2000  // 4 kHz acquisition rate
-#define ACQUISITION_PERIOD_US (1000000UL / ACQUISITION_RATE_HZ)  // 250 µs
+#define MIN_ACQUISITION_RATE_HZ 100   // Minimum acquisition rate
+#define MAX_ACQUISITION_RATE_HZ 10000 // Maximum acquisition rate
 
 // ODrive CAN message IDs (CANSimple protocol)
 #define CAN_ID_GET_ENCODER_ESTIMATES 0x09
@@ -59,7 +59,8 @@ State current_state = STATE_IDLE;
 float acq_buffer[MAX_ACQ_SAMPLES * 2];  // 2 channels: torque_setpoint, pos_estimate
 volatile uint32_t acq_sample_count = 0;
 volatile uint32_t acq_index = 0;
-float acq_sample_period = 1.0f / (float)ACQUISITION_RATE_HZ;
+uint32_t acquisition_rate_hz = 1000;  // Configurable acquisition rate (default 1 kHz)
+float acq_sample_period = 1.0f / 1000.0f;  // Will be recalculated when rate changes
 
 // ============================================================================
 // Operation Control
@@ -79,8 +80,7 @@ volatile float latest_pos_estimate = 0.0f;
 volatile bool torque_data_valid = false;
 volatile bool pos_data_valid = false;
 
-// CAN request counter (request both messages, alternate which one to prioritize)
-volatile uint8_t request_counter = 0;
+// CAN request counter no longer needed - both messages requested every cycle
 
 // ============================================================================
 // Hardware Timer (RP2040)
@@ -125,7 +125,8 @@ void setup() {
   Serial.println("INFO: Ready for commands");
   Serial.println();
   Serial.println("Commands:");
-  Serial.println("  START_ACQUISITION,<duration>");
+  Serial.println("  START_ACQUISITION,<duration>,<rate>");
+  Serial.println("    (rate is optional, defaults to 1000 Hz)");
   Serial.println("  GET_DATA");
   Serial.println("  GET_STATUS");
   Serial.flush();
@@ -197,12 +198,13 @@ void setupTimer() {
     
     // Use RP2040 hardware timer (alarm pool)
     // Negative delay means repeating timer
-    int64_t delay_us = -((int64_t)ACQUISITION_PERIOD_US);
+    uint32_t period_us = 1000000UL / acquisition_rate_hz;
+    int64_t delay_us = -((int64_t)period_us);
     
     if (add_repeating_timer_us(delay_us, timerCallback, NULL, &timer)) {
       timer_initialized = true;
       Serial.print("Hardware timer initialized: ");
-      Serial.print(ACQUISITION_RATE_HZ);
+      Serial.print(acquisition_rate_hz);
       Serial.println(" Hz");
     } else {
       Serial.println("ERROR: Hardware timer initialization failed!");
@@ -267,21 +269,16 @@ void timerISR() {
 // ============================================================================
 
 void requestCANData() {
-  // Request both messages alternately to ensure we get both values
-  // Request one per ISR cycle to avoid overloading CAN bus
+  // Request both messages every cycle to ensure synchronized data
   uint32_t canId;
   
-  if (request_counter % 2 == 0) {
-    // Request GET_TORQUES (0x1C)
-    canId = CAN_ID_GET_TORQUES + (ODRIVE_NODE_ID << 5);
-  } else {
-    // Request GET_ENCODER_ESTIMATES (0x09)
-    canId = CAN_ID_GET_ENCODER_ESTIMATES + (ODRIVE_NODE_ID << 5);
-  }
+  // Request GET_TORQUES (0x1C)
+  canId = CAN_ID_GET_TORQUES + (ODRIVE_NODE_ID << 5);
+  CAN.beginPacket(canId);
+  CAN.endPacket();
   
-  request_counter++;
-  
-  // Send empty packet to request data (ODrive protocol)
+  // Request GET_ENCODER_ESTIMATES (0x09)
+  canId = CAN_ID_GET_ENCODER_ESTIMATES + (ODRIVE_NODE_ID << 5);
   CAN.beginPacket(canId);
   CAN.endPacket();
 }
@@ -349,7 +346,7 @@ void processCommand(String cmd) {
   cmd.trim();
   
   if (cmd.startsWith("START_ACQUISITION")) {
-    // Command: START_ACQUISITION,<duration>
+    // Command: START_ACQUISITION,<duration>,<rate> (rate is optional, defaults to 1000 Hz)
     if (acquisition_active) {
       Serial.println("ERROR: Acquisition already in progress");
       return;
@@ -361,17 +358,49 @@ void processCommand(String cmd) {
       return;
     }
     
-    float acq_duration = cmd.substring(comma_pos + 1).toFloat();
+    // Parse duration
+    int second_comma_pos = cmd.indexOf(',', comma_pos + 1);
+    float acq_duration;
+    uint32_t new_rate = 1000;  // Default rate
+    
+    if (second_comma_pos > 0) {
+      // Both duration and rate provided
+      acq_duration = cmd.substring(comma_pos + 1, second_comma_pos).toFloat();
+      new_rate = (uint32_t)cmd.substring(second_comma_pos + 1).toFloat();
+    } else {
+      // Only duration provided (backward compatibility)
+      acq_duration = cmd.substring(comma_pos + 1).toFloat();
+    }
+    
     if (acq_duration <= 0) {
       Serial.println("ERROR: Invalid duration");
       return;
     }
     
-    // Calculate required samples
-    required_acq_samples = (uint32_t)(acq_duration * ACQUISITION_RATE_HZ);
+    // Validate rate
+    if (new_rate < MIN_ACQUISITION_RATE_HZ || new_rate > MAX_ACQUISITION_RATE_HZ) {
+      Serial.print("ERROR: Invalid rate. Must be between ");
+      Serial.print(MIN_ACQUISITION_RATE_HZ);
+      Serial.print(" and ");
+      Serial.print(MAX_ACQUISITION_RATE_HZ);
+      Serial.println(" Hz");
+      return;
+    }
+    
+    // Update acquisition rate if changed
+    if (new_rate != acquisition_rate_hz) {
+      acquisition_rate_hz = new_rate;
+      acq_sample_period = 1.0f / (float)acquisition_rate_hz;
+      
+      // Reinitialize timer with new rate
+      setupTimer();
+    }
+    
+    // Calculate required samples using the current rate
+    required_acq_samples = (uint32_t)(acq_duration * acquisition_rate_hz);
     if (required_acq_samples > MAX_ACQ_SAMPLES) {
       Serial.print("ERROR: Acquisition duration too long. Maximum: ");
-      Serial.print((float)MAX_ACQ_SAMPLES / ACQUISITION_RATE_HZ);
+      Serial.print((float)MAX_ACQ_SAMPLES / acquisition_rate_hz);
       Serial.println(" seconds");
       return;
     }
@@ -382,7 +411,6 @@ void processCommand(String cmd) {
     completion_sent = false;
     torque_data_valid = false;
     pos_data_valid = false;
-    request_counter = 0;  // Reset request counter
     
     // Initialize timer if not already done
     if (!timer_initialized) {
@@ -458,7 +486,7 @@ void printStatus() {
   Serial.print("Acquisition Samples: ");
   Serial.println(acq_sample_count);
   Serial.print("Acquisition Rate: ");
-  Serial.print(ACQUISITION_RATE_HZ);
+  Serial.print(acquisition_rate_hz);
   Serial.println(" Hz");
   Serial.print("Acquisition Period: ");
   Serial.print(acq_sample_period, 6);
