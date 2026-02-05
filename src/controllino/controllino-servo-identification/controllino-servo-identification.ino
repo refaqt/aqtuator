@@ -19,11 +19,6 @@
 
 #include <CAN.h>
 
-#ifdef ARDUINO_ARCH_RP2040
-  #include <hardware/timer.h>
-  #include <hardware/irq.h>
-#endif
-
 // ============================================================================
 // Configuration Constants
 // ============================================================================
@@ -56,7 +51,9 @@ State current_state = STATE_IDLE;
 // Acquisition Data Storage
 // ============================================================================
 
-float acq_buffer[MAX_ACQ_SAMPLES * 2];  // 2 channels: torque_setpoint, pos_estimate
+// Buffer size: MAX_ACQ_SAMPLES * 2 for dual-channel (Welch mode), MAX_ACQ_SAMPLES for single-channel (cyclic mode)
+// Use larger buffer to support both modes
+float acq_buffer[MAX_ACQ_SAMPLES * 2];  // 2 channels: torque_setpoint, pos_estimate (or 1 channel: pos_estimate in cyclic mode)
 volatile uint32_t acq_sample_count = 0;
 volatile uint32_t acq_index = 0;
 uint32_t acquisition_rate_hz = 1000;  // Configurable acquisition rate (default 1 kHz)
@@ -80,26 +77,13 @@ volatile float latest_pos_estimate = 0.0f;
 volatile bool torque_data_valid = false;
 volatile bool pos_data_valid = false;
 
-// CAN request counter no longer needed - both messages requested every cycle
-
-// ============================================================================
-// Hardware Timer (RP2040)
-// ============================================================================
-
-#ifdef ARDUINO_ARCH_RP2040
-  struct repeating_timer timer;
-  bool timer_initialized = false;
-#endif
+// Always using cyclic messages - no mode flag needed
 
 // ============================================================================
 // Function Prototypes
 // ============================================================================
 
 void setupCAN();
-void setupTimer();
-bool timerCallback(struct repeating_timer *t);
-void timerISR();
-void requestCANData();
 void processCANMessages();
 void processCommand(String cmd);
 void printStatus();
@@ -125,8 +109,8 @@ void setup() {
   Serial.println("INFO: Ready for commands");
   Serial.println();
   Serial.println("Commands:");
-  Serial.println("  START_ACQUISITION,<duration>,<rate>");
-  Serial.println("    (rate is optional, defaults to 1000 Hz)");
+  Serial.println("  START_ACQUISITION,<duration>,<rate>,cyclic");
+  Serial.println("    (always uses cyclic mode at 1000 Hz)");
   Serial.println("  GET_DATA");
   Serial.println("  GET_STATUS");
   Serial.flush();
@@ -137,8 +121,19 @@ void setup() {
 // ============================================================================
 
 void loop() {
-  // Process CAN messages (non-blocking)
-  processCANMessages();
+  // Process CAN messages continuously (non-blocking)
+  // This is critical to capture cyclic messages as soon as they arrive (1 kHz rate)
+  // Process multiple times per loop to ensure no messages are missed
+  if (acquisition_active) {
+    // During acquisition, prioritize CAN message processing
+    // Process CAN messages multiple times to catch all 1 kHz messages
+    for (int i = 0; i < 10; i++) {
+      processCANMessages();
+    }
+  } else {
+    // When not acquiring, process once per loop
+    processCANMessages();
+  }
   
   // Skip reading Serial if blocked during operation
   if (serial_blocked) {
@@ -185,103 +180,10 @@ void setupCAN() {
 }
 
 // ============================================================================
-// Timer Setup
-// ============================================================================
-
-void setupTimer() {
-  #ifdef ARDUINO_ARCH_RP2040
-    // Cancel existing timer if running
-    if (timer_initialized) {
-      cancel_repeating_timer(&timer);
-      timer_initialized = false;
-    }
-    
-    // Use RP2040 hardware timer (alarm pool)
-    // Negative delay means repeating timer
-    uint32_t period_us = 1000000UL / acquisition_rate_hz;
-    int64_t delay_us = -((int64_t)period_us);
-    
-    if (add_repeating_timer_us(delay_us, timerCallback, NULL, &timer)) {
-      timer_initialized = true;
-      Serial.print("Hardware timer initialized: ");
-      Serial.print(acquisition_rate_hz);
-      Serial.println(" Hz");
-    } else {
-      Serial.println("ERROR: Hardware timer initialization failed!");
-      timer_initialized = false;
-    }
-  #else
-    Serial.println("WARNING: Hardware timer not available for this board.");
-    timer_initialized = false;
-  #endif
-}
-
-// ============================================================================
-// Timer ISR Callback
-// ============================================================================
-
-#ifdef ARDUINO_ARCH_RP2040
-bool timerCallback(struct repeating_timer *t) {
-  timerISR();
-  return true;  // Continue repeating
-}
-#endif
-
-// ============================================================================
-// Timer ISR - Main Processing
-// ============================================================================
-
-void timerISR() {
-  if (acquisition_active && acq_index < MAX_ACQ_SAMPLES) {
-    // Request CAN data (alternate between torque and encoder)
-    requestCANData();
-    
-    // Store latest values (if valid)
-    if (torque_data_valid && pos_data_valid) {
-      float *sample_ptr = &acq_buffer[acq_index * 2];
-      sample_ptr[0] = latest_torque_setpoint;
-      sample_ptr[1] = latest_pos_estimate;
-      
-      acq_index++;
-      acq_sample_count = acq_index;
-      
-      // Reset validity flags (will be set when new data arrives)
-      torque_data_valid = false;
-      pos_data_valid = false;
-    }
-    
-    // Check if acquisition duration reached
-    if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
-      acquisition_active = false;
-      serial_blocked = false;  // Unblock serial to send completion message
-      current_state = STATE_IDLE;
-    } else if (acq_index >= MAX_ACQ_SAMPLES) {
-      // Buffer limit reached
-      acquisition_active = false;
-      serial_blocked = false;
-      current_state = STATE_IDLE;
-    }
-  }
-}
-
-// ============================================================================
 // CAN Communication
 // ============================================================================
 
-void requestCANData() {
-  // Request both messages every cycle to ensure synchronized data
-  uint32_t canId;
-  
-  // Request GET_TORQUES (0x1C)
-  canId = CAN_ID_GET_TORQUES + (ODRIVE_NODE_ID << 5);
-  CAN.beginPacket(canId);
-  CAN.endPacket();
-  
-  // Request GET_ENCODER_ESTIMATES (0x09)
-  canId = CAN_ID_GET_ENCODER_ESTIMATES + (ODRIVE_NODE_ID << 5);
-  CAN.beginPacket(canId);
-  CAN.endPacket();
-}
+// No requestCANData() function needed - messages come automatically via cyclic mode
 
 void processCANMessages() {
   // Process any available CAN messages (non-blocking)
@@ -311,8 +213,16 @@ void processCANMessages() {
           torqueBytes[2] = data[2];
           torqueBytes[3] = data[3];
           
-          latest_torque_setpoint = torque_target;
-          torque_data_valid = true;
+          // Store torque data immediately when cyclic message arrives (event-driven)
+          if (acquisition_active && acq_index < MAX_ACQ_SAMPLES) {
+            // Store torque in first channel
+            float *sample_ptr = &acq_buffer[acq_index * 2];
+            sample_ptr[0] = torque_target;
+            
+            // Mark torque as valid for this sample
+            latest_torque_setpoint = torque_target;
+            torque_data_valid = true;
+          }
         }
       } else if (baseId == CAN_ID_GET_ENCODER_ESTIMATES) {
         // Parse GET_ENCODER_ESTIMATES response: (pos_estimate, vel_estimate) as two floats
@@ -330,8 +240,34 @@ void processCANMessages() {
           posBytes[2] = data[2];
           posBytes[3] = data[3];
           
-          latest_pos_estimate = pos_est;
-          pos_data_valid = true;
+          // Store position data immediately when cyclic message arrives (event-driven)
+          if (acquisition_active && acq_index < MAX_ACQ_SAMPLES) {
+            // Store position in second channel
+            float *sample_ptr = &acq_buffer[acq_index * 2];
+            sample_ptr[1] = pos_est;
+            
+            // Mark position as valid for this sample
+            latest_pos_estimate = pos_est;
+            pos_data_valid = true;
+            
+            // Both torque and position received - advance index
+            // Note: We advance when position arrives since it's the last piece of data for a sample
+            // In practice, both messages arrive at 1 kHz, so they should be close together
+            acq_index++;
+            acq_sample_count = acq_index;
+            
+            // Check if acquisition duration reached
+            if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
+              acquisition_active = false;
+              serial_blocked = false;  // Unblock serial to send completion message
+              current_state = STATE_IDLE;
+            } else if (acq_index >= MAX_ACQ_SAMPLES) {
+              // Buffer limit reached
+              acquisition_active = false;
+              serial_blocked = false;
+              current_state = STATE_IDLE;
+            }
+          }
         }
       }
     }
@@ -346,7 +282,8 @@ void processCommand(String cmd) {
   cmd.trim();
   
   if (cmd.startsWith("START_ACQUISITION")) {
-    // Command: START_ACQUISITION,<duration>,<rate> (rate is optional, defaults to 1000 Hz)
+    // Command: START_ACQUISITION,<duration>,<rate>,cyclic
+    // Always uses cyclic mode - rate parameter is for compatibility but fixed at 1000 Hz
     if (acquisition_active) {
       Serial.println("ERROR: Acquisition already in progress");
       return;
@@ -361,14 +298,12 @@ void processCommand(String cmd) {
     // Parse duration
     int second_comma_pos = cmd.indexOf(',', comma_pos + 1);
     float acq_duration;
-    uint32_t new_rate = 1000;  // Default rate
     
     if (second_comma_pos > 0) {
-      // Both duration and rate provided
+      // Duration provided
       acq_duration = cmd.substring(comma_pos + 1, second_comma_pos).toFloat();
-      new_rate = (uint32_t)cmd.substring(second_comma_pos + 1).toFloat();
     } else {
-      // Only duration provided (backward compatibility)
+      // Only duration provided
       acq_duration = cmd.substring(comma_pos + 1).toFloat();
     }
     
@@ -377,26 +312,11 @@ void processCommand(String cmd) {
       return;
     }
     
-    // Validate rate
-    if (new_rate < MIN_ACQUISITION_RATE_HZ || new_rate > MAX_ACQUISITION_RATE_HZ) {
-      Serial.print("ERROR: Invalid rate. Must be between ");
-      Serial.print(MIN_ACQUISITION_RATE_HZ);
-      Serial.print(" and ");
-      Serial.print(MAX_ACQUISITION_RATE_HZ);
-      Serial.println(" Hz");
-      return;
-    }
+    // In cyclic mode, rate is fixed at 1000 Hz (1 ms interval from ODrive)
+    acquisition_rate_hz = 1000;
+    acq_sample_period = 1.0f / 1000.0f;
     
-    // Update acquisition rate if changed
-    if (new_rate != acquisition_rate_hz) {
-      acquisition_rate_hz = new_rate;
-      acq_sample_period = 1.0f / (float)acquisition_rate_hz;
-      
-      // Reinitialize timer with new rate
-      setupTimer();
-    }
-    
-    // Calculate required samples using the current rate
+    // Calculate required samples using the fixed rate
     required_acq_samples = (uint32_t)(acq_duration * acquisition_rate_hz);
     if (required_acq_samples > MAX_ACQ_SAMPLES) {
       Serial.print("ERROR: Acquisition duration too long. Maximum: ");
@@ -412,13 +332,8 @@ void processCommand(String cmd) {
     torque_data_valid = false;
     pos_data_valid = false;
     
-    // Initialize timer if not already done
-    if (!timer_initialized) {
-      setupTimer();
-    }
-    
     // Send ACK BEFORE starting acquisition and blocking serial
-    Serial.println("ACK: Acquisition started");
+    Serial.println("ACK: Acquisition started (cyclic mode)");
     Serial.flush();
     
     // Start acquisition
@@ -435,19 +350,22 @@ void processCommand(String cmd) {
     
     current_state = STATE_TRANSFERRING;
     
+    // Always 2 channels: torque and position
+    uint8_t num_channels = 2;
+    
     // Send data header
     Serial.print("DATA:");
     Serial.print(acq_sample_count);
     Serial.print(",");
     Serial.print(acq_sample_period, 6);
     Serial.print(",");
-    Serial.print(2);  // 2 channels: torque_setpoint, pos_estimate
+    Serial.print(num_channels);  // Always 2 channels: torque and position
     Serial.println();
     
     // Send data samples (text format)
     for (uint32_t i = 0; i < acq_sample_count; i++) {
+      // Always dual channel: torque and position
       float *sample_ptr = &acq_buffer[i * 2];
-      
       Serial.print(sample_ptr[0], 6);  // torque_setpoint
       Serial.print(",");
       Serial.print(sample_ptr[1], 6);  // pos_estimate

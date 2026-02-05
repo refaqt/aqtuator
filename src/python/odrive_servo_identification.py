@@ -33,11 +33,11 @@ from odrive_config import ODriveController
 # Configuration Parameters
 # ============================================================================
 
-fmin = 60.0  # Minimum frequency in Hz
-fmax = 100.0  # Maximum frequency in Hz
+fmin = 300.0  # Minimum frequency in Hz
+fmax = 400.0  # Maximum frequency in Hz
 fs = 1000.0  # Sampling rate in Hz (used for both Controllino acquisition and transfer function calculation)
 df = 20.0  # Frequency step in Hz
-duration = 0.5  # Measurement duration in seconds
+duration = 0.25  # Measurement duration in seconds
 t_delay = 1.0  # Settling time before acquisition in seconds
 # control_mode is set via ODriveController.set_control_mode()
 torque_amplitude = 0.1  # Torque amplitude in Nm
@@ -308,6 +308,47 @@ def calculate_transfer_function(input_signal, output_signal, sample_rate, excita
     
     return magnitude, phase
 
+def configure_cyclic_can_messages(axis, enable=True, interval_ms=1.0):
+    """
+    Configure ODrive cyclic CAN messages for Get_Encoder_Estimates.
+    
+    Based on ODrive CAN protocol docs: https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#can-msg-get-encoder-estimates
+    
+    The correct API path is: axis.config.can.encoder_msg_rate_ms = interval_ms
+    
+    Args:
+        axis: ODrive axis object
+        enable: If True, enable cyclic messages; if False, disable them
+        interval_ms: Interval in milliseconds (default 1.0 ms = 1000 Hz)
+    
+    Returns:
+        bool: True if configuration successful, False otherwise
+    """
+    try:
+        if enable:
+            # Configure cyclic message to send Get_Encoder_Estimates at specified interval
+            # The interval is in milliseconds (not seconds)
+            axis.config.can.encoder_msg_rate_ms = interval_ms
+            print(f"Cyclic CAN messages enabled: Get_Encoder_Estimates at {interval_ms} ms interval ({1000.0/interval_ms:.1f} Hz)")
+        else:
+            # Disable cyclic messages by setting interval to 0
+            axis.config.can.encoder_msg_rate_ms = 0.0
+            print("Cyclic CAN messages disabled")
+        return True
+    except AttributeError as e:
+        print(f"ERROR: Failed to configure cyclic CAN messages: {e}")
+        print("Available attributes in axis.config.can:")
+        try:
+            if hasattr(axis.config, 'can'):
+                attrs = [attr for attr in dir(axis.config.can) if not attr.startswith('_')]
+                print(f"  {', '.join(attrs)}")
+        except:
+            pass
+        return False
+    except Exception as e:
+        print(f"ERROR: Failed to configure cyclic CAN messages: {e}")
+        return False
+
 # ============================================================================
 # Main Identification Function
 # ============================================================================
@@ -376,6 +417,22 @@ def main():
     print("\nEntering closed-loop control...")
     if not odrive_ctrl.enter_closed_loop():
         print("WARNING: Failed to enter closed-loop control. Continuing anyway...")
+    
+    # Configure cyclic CAN messages (always enabled)
+    print("\nConfiguring cyclic CAN messages...")
+    if configure_cyclic_can_messages(axis, enable=True, interval_ms=1.0):
+        print("Cyclic CAN messages configured successfully.")
+        # Wait a bit for ODrive to process the configuration
+        time.sleep(0.2)
+    else:
+        print("ERROR: Failed to configure cyclic CAN messages.")
+        print("Please check ODrive firmware version and CAN protocol documentation.")
+        response = input("Continue anyway? (y/n): ").strip().lower()
+        if response != 'y':
+            odrive_ctrl.exit_closed_loop()
+            odrive_ctrl.disconnect()
+            serial_helper.disconnect()
+            return 1
     
     # Wait a bit for system to stabilize
     time.sleep(0.5)
@@ -487,10 +544,11 @@ def main():
             print(" [settling...]", end='', flush=True)
             time.sleep(t_delay)
             
-            # Command Controllino to start acquisition
+            # Command Controllino to start acquisition (always cyclic mode)
             print(" [acquiring...]", end='', flush=True)
+            cmd = f"START_ACQUISITION,{duration},{fs},cyclic"
             success, response, error = serial_helper.send_command_and_wait_response(
-                f"START_ACQUISITION,{duration},{fs}", "ACK: Acquisition started", timeout=2
+                cmd, "ACK: Acquisition started", timeout=2
             )
             
             if not success:
@@ -527,7 +585,7 @@ def main():
                 print(" [FAILED - no data]")
                 continue
             
-            # Parse data (2 channels: torque_setpoint, pos_estimate)
+            # Parse data (always 2 channels: torque and position)
             data_array = data_result['samples']
             if data_array.shape[1] != 2:
                 print(f" [FAILED - expected 2 channels, got {data_array.shape[1]}]")
@@ -546,15 +604,13 @@ def main():
             # Plot measurement data if enabled
             if show_measurements:
                 time_array = np.arange(len(torque_setpoint)) / actual_sample_rate
-                fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 8))
                 
-                # Top subplot: Torque setpoint
+                # Time-domain plots: torque and position
+                fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 8))
                 ax1.plot(time_array, torque_setpoint, 'b-', linewidth=1)
                 ax1.set_ylabel('Torque Setpoint (Nm)')
-                ax1.set_title(f'Measurement at {freq:.1f} Hz')
+                ax1.set_title(f'Time-Domain Measurement at {freq:.1f} Hz')
                 ax1.grid(True, alpha=0.3)
-                
-                # Bottom subplot: Position estimate
                 ax2.plot(time_array, pos_estimate, 'r-', linewidth=1)
                 ax2.set_xlabel('Time (s)')
                 ax2.set_ylabel('Position Estimate (rad)')
@@ -563,8 +619,49 @@ def main():
                 plt.tight_layout()
                 plt.show(block=True)
                 plt.close(fig)
+                
+                # FFT plots: gain and phase
+                # Compute FFT of both signals
+                fft_torque = np.fft.fft(torque_setpoint)
+                fft_position = np.fft.fft(pos_estimate)
+                
+                # Calculate transfer function: H(f) = FFT(position) / FFT(torque)
+                # Add small epsilon to avoid division by zero
+                fft_transfer = fft_position / (fft_torque + 1e-10)
+                
+                # Extract magnitude (gain) and phase
+                gain_fft = np.abs(fft_transfer)
+                phase_fft = np.angle(fft_transfer)
+                
+                # Create frequency array
+                freqs = np.fft.fftfreq(len(torque_setpoint), 1.0 / actual_sample_rate)
+                
+                # Use only positive frequencies (first half)
+                n_half = len(freqs) // 2
+                freqs_positive = freqs[:n_half]
+                gain_positive = gain_fft[:n_half]
+                phase_positive = phase_fft[:n_half]
+                
+                # Plot FFT gain and phase (linear scale)
+                fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 8))
+                
+                # Gain plot (linear-linear)
+                ax1.plot(freqs_positive, gain_positive, 'b-', linewidth=1)
+                ax1.set_ylabel('Gain')
+                ax1.set_title(f'FFT Transfer Function at {freq:.1f} Hz')
+                ax1.grid(True, alpha=0.3)
+                
+                # Phase plot (linear-linear)
+                ax2.plot(freqs_positive, phase_positive, 'r-', linewidth=1)
+                ax2.set_xlabel('Frequency (Hz)')
+                ax2.set_ylabel('Phase (radians)')
+                ax2.grid(True, alpha=0.3)
+                
+                plt.tight_layout()
+                plt.show(block=True)
+                plt.close(fig)
             
-            # Calculate transfer function
+            # Calculate transfer function using Welch/CSD method
             print(" [processing...]", end='', flush=True)
             gain, phase = calculate_transfer_function(torque_setpoint, pos_estimate, actual_sample_rate, freq)
             
@@ -600,6 +697,13 @@ def main():
     with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
         f.write(json.dumps({"sessionId":"debug-session","runId":"run2","hypothesisId":"F","location":"odrive_servo_identification.py:593","message":"Skipping thread join - will use os._exit() which terminates all threads","data":{"thread_alive":user_input_thread.is_alive() if user_input_thread else None},"timestamp":int(time.time()*1000)}) + '\n')
     # #endregion
+    
+    # Disable cyclic CAN messages
+    print("\nDisabling cyclic CAN messages...")
+    try:
+        configure_cyclic_can_messages(axis, enable=False)
+    except Exception as e:
+        print(f"WARNING: Failed to disable cyclic CAN messages: {e}")
     
     # Exit closed-loop control
     print("\nExiting closed-loop control...")
