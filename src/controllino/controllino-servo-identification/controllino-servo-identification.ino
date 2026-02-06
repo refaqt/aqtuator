@@ -61,6 +61,10 @@ volatile uint32_t acq_index = 0;
 uint32_t acquisition_rate_hz = 1000;  // Configurable acquisition rate (calculated from cycle time)
 float acq_sample_period = 1.0f / 1000.0f;  // Cycle time in seconds (calculated from parsed cycle time parameter)
 
+// Loop timestamp storage for diagnostic purposes
+uint32_t loop_timestamps[MAX_ACQ_SAMPLES];  // Memory: 2000 × 4 bytes = 8 KB
+volatile uint32_t loop_timestamp_count = 0;
+
 // ============================================================================
 // Operation Control
 // ============================================================================
@@ -136,6 +140,11 @@ void setup() {
 // ============================================================================
 
 void loop() {
+  // Collect loop timestamp at the very start (for diagnostic purposes)
+  if (acquisition_active && loop_timestamp_count < MAX_ACQ_SAMPLES) {
+    loop_timestamps[loop_timestamp_count++] = micros();
+  }
+  
   // Only process CAN messages during active acquisition
   if (acquisition_active) {
     processCANMessages();
@@ -426,6 +435,7 @@ void processCommand(String cmd) {
     pos_data_valid = false;
     first_position_received = false;  // Reset flag - no position messages received yet
     discard_first_sample = true;  // Discard the first complete sample pair
+    loop_timestamp_count = 0;  // Reset loop timestamp counter
     
     // Clear buffer to remove any old data from previous acquisitions
     memset(acq_buffer, 0, sizeof(acq_buffer));
@@ -486,6 +496,18 @@ void processCommand(String cmd) {
     }
     
     Serial.println("DATA_END");
+    
+    // Send loop timestamps as separate section
+    Serial.println("LOOP_TIMESTAMPS:");
+    Serial.print(loop_timestamp_count);
+    Serial.println();
+    for (uint32_t i = 0; i < loop_timestamp_count; i++) {
+      Serial.println(loop_timestamps[i]);
+      // Small delay to prevent serial buffer overflow
+      if (i % 100 == 0) delay(1);
+    }
+    Serial.println("LOOP_TIMESTAMPS_END");
+    
     current_state = STATE_IDLE;
     
   } else if (cmd.startsWith("GET_STATUS")) {

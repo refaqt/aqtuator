@@ -33,17 +33,17 @@ from odrive_config import ODriveController
 # Configuration Parameters
 # ============================================================================
 
-fmin = 20.0  # Minimum frequency in Hz
-fmax = 100.0  # Maximum frequency in Hz
+fmin = 40.0  # Minimum frequency in Hz
+fmax = 200.0  # Maximum frequency in Hz
 ts = 0.002  # Cycle time in seconds (primary parameter)
 fs = 1.0 / ts  # Sampling rate in Hz (calculated from cycle time, used for transfer function calculation)
-df = 20.0  # Frequency step in Hz
+df = 1.0  # Frequency step in Hz
 duration = 0.25  # Measurement duration in seconds
 t_delay = 1.0  # Settling time before acquisition in seconds
 # control_mode is set via ODriveController.set_control_mode()
 torque_amplitude = 0.1  # Torque amplitude in Nm
-show_measurements = True  # Show time-domain plots of each measurement
-message_order_debug = True  # Enable message order debugging (sets cycle time to 1000 ms when enabled)
+show_measurements = False  # Show time-domain plots of each measurement
+message_order_debug = False  # Enable message order debugging (sets cycle time to 1000 ms when enabled)
 
 # Controllino serial port (hardcoded, can be changed)
 CONTROLLINO_PORT = 'COM3'  # Change as needed
@@ -223,11 +223,78 @@ class SerialHelper:
                 if samples_received < sample_count:
                     print(f"Warning: Only received {samples_received} of {sample_count} samples")
                 
-                return {
+                # Read loop timestamps section (optional)
+                loop_timestamps = []
+                loop_timestamps_received = False
+                timeout_count = 0
+                max_timeout = 200
+                
+                while timeout_count < max_timeout and not loop_timestamps_received:
+                    if self.serial_port.in_waiting > 0:
+                        line = self.serial_port.readline().decode().strip()
+                        if line.startswith("LOOP_TIMESTAMPS:"):
+                            # Read loop timestamp count (on next line)
+                            timeout_count2 = 0
+                            loop_count = 0
+                            while timeout_count2 < 50:
+                                if self.serial_port.in_waiting > 0:
+                                    loop_count_line = self.serial_port.readline().decode().strip()
+                                    if loop_count_line:
+                                        try:
+                                            loop_count = int(loop_count_line)
+                                            break
+                                        except ValueError:
+                                            break
+                                else:
+                                    timeout_count2 += 1
+                                    time.sleep(0.01)
+                            
+                            # Read loop timestamps
+                            loop_samples_received = 0
+                            timeout_count3 = 0
+                            max_timeout3 = 10000
+                            
+                            while loop_samples_received < loop_count and timeout_count3 < max_timeout3:
+                                if self.serial_port.in_waiting > 0:
+                                    line = self.serial_port.readline().decode().strip()
+                                    if line == "LOOP_TIMESTAMPS_END":
+                                        loop_timestamps_received = True
+                                        break
+                                    if line == "" or line.startswith("DEBUG:") or line.startswith("INFO:"):
+                                        continue
+                                    
+                                    try:
+                                        timestamp = float(line)
+                                        loop_timestamps.append(timestamp)
+                                        loop_samples_received += 1
+                                    except ValueError:
+                                        continue
+                                else:
+                                    timeout_count3 += 1
+                                    time.sleep(0.01)
+                            
+                            if loop_timestamps_received or loop_samples_received >= loop_count:
+                                loop_timestamps_received = True
+                        elif line == "" or line.startswith("DEBUG:") or line.startswith("INFO:"):
+                            continue
+                        # Continue waiting for LOOP_TIMESTAMPS: instead of breaking on unexpected lines
+                    else:
+                        timeout_count += 1
+                        time.sleep(0.01)
+                
+                result = {
                     'samples': np.array(data_array),
                     'sample_rate': 1.0 / sample_period,
                     'sample_period': sample_period
                 }
+                
+                if loop_timestamps:
+                    result['loop_timestamps_us'] = np.array(loop_timestamps)
+                    print(f"DEBUG: Received {len(loop_timestamps)} loop timestamps")
+                else:
+                    print("DEBUG: No loop timestamps received")
+                
+                return result
                 
             except Exception as e:
                 print(f"Error retrieving data: {e}")
@@ -330,7 +397,7 @@ def calculate_transfer_function(input_signal, output_signal, sample_rate, excita
     
     return magnitude, phase
 
-def plot_message_timestamps(torque_timestamp_us, pos_timestamp_us, frequency):
+def plot_message_timestamps(torque_timestamp_us, pos_timestamp_us, frequency, loop_timestamp_us=None):
     """
     Plot message arrival timestamps as scatter plot to visualize message order.
     
@@ -338,22 +405,27 @@ def plot_message_timestamps(torque_timestamp_us, pos_timestamp_us, frequency):
         torque_timestamp_us: Array of torque message timestamps in microseconds
         pos_timestamp_us: Array of position message timestamps in microseconds
         frequency: Excitation frequency for plot title
+        loop_timestamp_us: Optional array of loop() execution timestamps in microseconds
     """
     # Filter out invalid timestamps (zero or negative) - only use current acquisition data
     torque_valid = (torque_timestamp_us > 0)
     pos_valid = (pos_timestamp_us > 0)
+    loop_valid = None
+    if loop_timestamp_us is not None:
+        loop_valid = (loop_timestamp_us > 0)
     
     # Find first valid timestamp from current acquisition (minimum of all valid timestamps)
     first_timestamp = None
-    if np.any(torque_valid) or np.any(pos_valid):
-        # Collect all valid timestamps and find the minimum
-        valid_timestamps = []
-        if np.any(torque_valid):
-            valid_timestamps.extend(torque_timestamp_us[torque_valid])
-        if np.any(pos_valid):
-            valid_timestamps.extend(pos_timestamp_us[pos_valid])
-        if valid_timestamps:
-            first_timestamp = min(valid_timestamps)
+    valid_timestamps = []
+    if np.any(torque_valid):
+        valid_timestamps.extend(torque_timestamp_us[torque_valid])
+    if np.any(pos_valid):
+        valid_timestamps.extend(pos_timestamp_us[pos_valid])
+    if loop_timestamp_us is not None and np.any(loop_valid):
+        valid_timestamps.extend(loop_timestamp_us[loop_valid])
+    
+    if valid_timestamps:
+        first_timestamp = min(valid_timestamps)
     
     if first_timestamp is None:
         print("Warning: No valid timestamps found for plotting")
@@ -362,12 +434,17 @@ def plot_message_timestamps(torque_timestamp_us, pos_timestamp_us, frequency):
     # Convert to relative time in seconds (relative to first timestamp of current acquisition)
     torque_time = (torque_timestamp_us - first_timestamp) / 1e6
     pos_time = (pos_timestamp_us - first_timestamp) / 1e6
+    loop_time = None
+    if loop_timestamp_us is not None:
+        loop_time = (loop_timestamp_us - first_timestamp) / 1e6
     
     # Additional filter: only plot timestamps that are non-negative after conversion
     # This ensures we only plot data from the current acquisition
     # (old data would have negative relative time)
     torque_valid = torque_valid & (torque_time >= 0)
     pos_valid = pos_valid & (pos_time >= 0)
+    if loop_timestamp_us is not None and loop_valid is not None:
+        loop_valid = loop_valid & (loop_time >= 0)
     
     # Create scatter plot
     fig, ax = plt.subplots(1, 1, figsize=(12, 4))
@@ -382,9 +459,14 @@ def plot_message_timestamps(torque_timestamp_us, pos_timestamp_us, frequency):
         ax.scatter(pos_time[pos_valid], np.ones(np.sum(pos_valid)), 
                   c='red', marker='o', s=20, label='Position', alpha=0.7)
     
+    # Plot loop timestamps (green circles)
+    if loop_timestamp_us is not None and loop_time is not None and np.any(loop_valid):
+        ax.scatter(loop_time[loop_valid], np.ones(np.sum(loop_valid)) * 1.05, 
+                  c='green', marker='o', s=20, label='Loop', alpha=0.7)
+    
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('')
-    ax.set_ylim([0.9, 1.1])
+    ax.set_ylim([0.9, 1.15])
     ax.set_title(f'Message Arrival Timestamps at {frequency:.1f} Hz')
     ax.legend()
     ax.grid(True, alpha=0.3)
@@ -703,9 +785,13 @@ def main():
             # Get actual sample rate from Controllino
             actual_sample_rate = data_result['sample_rate']
             
+            # Extract loop timestamps if available
+            loop_timestamp_us = data_result.get('loop_timestamps_us', None)
+            
             # Plot message timestamps if debug mode is enabled
             if message_order_debug:
-                plot_message_timestamps(torque_timestamp_us, pos_timestamp_us, freq)
+                plot_message_timestamps(torque_timestamp_us, pos_timestamp_us, freq, 
+                                       loop_timestamp_us=loop_timestamp_us)
             
             # Plot measurement data if enabled
             if show_measurements:
@@ -875,6 +961,9 @@ def main():
     # Unwrap phase
     phases_unwrapped = np.unwrap(phases)
     
+    # Convert phase from radians to degrees
+    phases_unwrapped_deg = np.degrees(phases_unwrapped)
+    
     # Generate Bode plot
     print("\nGenerating Bode plot...")
     # #region agent log
@@ -891,9 +980,9 @@ def main():
     ax1.grid(True, which='both', alpha=0.3)
     
     # Phase plot (semilogx)
-    ax2.semilogx(frequencies_result, phases_unwrapped, 'r-', linewidth=2)
+    ax2.semilogx(frequencies_result, phases_unwrapped_deg, 'r-', linewidth=2)
     ax2.set_xlabel('Frequency (Hz)')
-    ax2.set_ylabel('Phase (radians)')
+    ax2.set_ylabel('Phase (degrees)')
     ax2.grid(True, which='both', alpha=0.3)
     
     plt.tight_layout()
@@ -944,7 +1033,7 @@ def main():
     with open(csv_filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['frequency', 'gain', 'phase'])
-        for freq, gain, phase in zip(frequencies_result, gains, phases_unwrapped):
+        for freq, gain, phase in zip(frequencies_result, gains, phases_unwrapped_deg):
             writer.writerow([freq, gain, phase])
     # #region agent log
     with open(r'c:\Users\niels\Documents\Github\aqtuator-control\.cursor\debug.log', 'a') as f:
