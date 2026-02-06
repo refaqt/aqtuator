@@ -121,17 +121,8 @@ void setup() {
 // ============================================================================
 
 void loop() {
-  // Process CAN messages continuously (non-blocking)
-  // This is critical to capture cyclic messages as soon as they arrive (1 kHz rate)
-  // Process multiple times per loop to ensure no messages are missed
+  // Only process CAN messages during active acquisition
   if (acquisition_active) {
-    // During acquisition, prioritize CAN message processing
-    // Process CAN messages multiple times to catch all 1 kHz messages
-    for (int i = 0; i < 10; i++) {
-      processCANMessages();
-    }
-  } else {
-    // When not acquiring, process once per loop
     processCANMessages();
   }
   

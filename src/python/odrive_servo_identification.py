@@ -33,8 +33,8 @@ from odrive_config import ODriveController
 # Configuration Parameters
 # ============================================================================
 
-fmin = 300.0  # Minimum frequency in Hz
-fmax = 400.0  # Maximum frequency in Hz
+fmin = 20.0  # Minimum frequency in Hz
+fmax = 200.0  # Maximum frequency in Hz
 fs = 1000.0  # Sampling rate in Hz (used for both Controllino acquisition and transfer function calculation)
 df = 20.0  # Frequency step in Hz
 duration = 0.25  # Measurement duration in seconds
@@ -310,11 +310,13 @@ def calculate_transfer_function(input_signal, output_signal, sample_rate, excita
 
 def configure_cyclic_can_messages(axis, enable=True, interval_ms=1.0):
     """
-    Configure ODrive cyclic CAN messages for Get_Encoder_Estimates.
+    Configure ODrive cyclic CAN messages for Get_Encoder_Estimates and Get_Torques.
     
     Based on ODrive CAN protocol docs: https://docs.odriverobotics.com/v/latest/manual/can-protocol.html#can-msg-get-encoder-estimates
     
-    The correct API path is: axis.config.can.encoder_msg_rate_ms = interval_ms
+    The correct API paths are:
+    - axis.config.can.encoder_msg_rate_ms = interval_ms
+    - axis.config.can.torques_msg_rate_ms = interval_ms
     
     Args:
         axis: ODrive axis object
@@ -326,13 +328,15 @@ def configure_cyclic_can_messages(axis, enable=True, interval_ms=1.0):
     """
     try:
         if enable:
-            # Configure cyclic message to send Get_Encoder_Estimates at specified interval
+            # Configure cyclic messages to send Get_Encoder_Estimates and Get_Torques at specified interval
             # The interval is in milliseconds (not seconds)
             axis.config.can.encoder_msg_rate_ms = interval_ms
-            print(f"Cyclic CAN messages enabled: Get_Encoder_Estimates at {interval_ms} ms interval ({1000.0/interval_ms:.1f} Hz)")
+            axis.config.can.torques_msg_rate_ms = interval_ms
+            print(f"Cyclic CAN messages enabled: Get_Encoder_Estimates and Get_Torques at {interval_ms} ms interval ({1000.0/interval_ms:.1f} Hz)")
         else:
             # Disable cyclic messages by setting interval to 0
             axis.config.can.encoder_msg_rate_ms = 0.0
+            axis.config.can.torques_msg_rate_ms = 0.0
             print("Cyclic CAN messages disabled")
         return True
     except AttributeError as e:
@@ -605,33 +609,19 @@ def main():
             if show_measurements:
                 time_array = np.arange(len(torque_setpoint)) / actual_sample_rate
                 
-                # Time-domain plots: torque and position
-                fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 8))
-                ax1.plot(time_array, torque_setpoint, 'b-', linewidth=1)
-                ax1.set_ylabel('Torque Setpoint (Nm)')
-                ax1.set_title(f'Time-Domain Measurement at {freq:.1f} Hz')
-                ax1.grid(True, alpha=0.3)
-                ax2.plot(time_array, pos_estimate, 'r-', linewidth=1)
-                ax2.set_xlabel('Time (s)')
-                ax2.set_ylabel('Position Estimate (rad)')
-                ax2.grid(True, alpha=0.3)
-                
-                plt.tight_layout()
-                plt.show(block=True)
-                plt.close(fig)
-                
-                # FFT plots: gain and phase
                 # Compute FFT of both signals
                 fft_torque = np.fft.fft(torque_setpoint)
                 fft_position = np.fft.fft(pos_estimate)
                 
-                # Calculate transfer function: H(f) = FFT(position) / FFT(torque)
-                # Add small epsilon to avoid division by zero
-                fft_transfer = fft_position / (fft_torque + 1e-10)
+                # Set DC component to 0 for both signals
+                fft_torque[0] = 0
+                fft_position[0] = 0
                 
-                # Extract magnitude (gain) and phase
-                gain_fft = np.abs(fft_transfer)
-                phase_fft = np.angle(fft_transfer)
+                # Extract magnitude (gain) and phase for each signal
+                gain_torque = np.abs(fft_torque)
+                phase_torque = np.angle(fft_torque)
+                gain_position = np.abs(fft_position)
+                phase_position = np.angle(fft_position)
                 
                 # Create frequency array
                 freqs = np.fft.fftfreq(len(torque_setpoint), 1.0 / actual_sample_rate)
@@ -639,23 +629,62 @@ def main():
                 # Use only positive frequencies (first half)
                 n_half = len(freqs) // 2
                 freqs_positive = freqs[:n_half]
-                gain_positive = gain_fft[:n_half]
-                phase_positive = phase_fft[:n_half]
+                gain_torque_positive = gain_torque[:n_half]
+                phase_torque_positive = phase_torque[:n_half]
+                gain_position_positive = gain_position[:n_half]
+                phase_position_positive = phase_position[:n_half]
                 
-                # Plot FFT gain and phase (linear scale)
-                fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 8))
+                # Plot in 3x2 layout: 3 rows, 2 columns
+                # Row 0: time-domain signals
+                # Row 1: FFT gain
+                # Row 2: FFT phase
+                # Column 0: torque, Column 1: position estimate
+                fig, ax = plt.subplots(3, 2, figsize=(12, 10))
                 
-                # Gain plot (linear-linear)
-                ax1.plot(freqs_positive, gain_positive, 'b-', linewidth=1)
-                ax1.set_ylabel('Gain')
-                ax1.set_title(f'FFT Transfer Function at {freq:.1f} Hz')
-                ax1.grid(True, alpha=0.3)
+                # Top row: Time-domain signals
+                # Left: Torque time-domain
+                ax[0, 0].plot(time_array, torque_setpoint, 'b-', linewidth=1)
+                ax[0, 0].set_xlabel('Time (s)')
+                ax[0, 0].set_ylabel('Torque Setpoint (Nm)')
+                ax[0, 0].set_title(f'Torque Time-Domain at {freq:.1f} Hz')
+                ax[0, 0].grid(True, alpha=0.3)
                 
-                # Phase plot (linear-linear)
-                ax2.plot(freqs_positive, phase_positive, 'r-', linewidth=1)
-                ax2.set_xlabel('Frequency (Hz)')
-                ax2.set_ylabel('Phase (radians)')
-                ax2.grid(True, alpha=0.3)
+                # Right: Position time-domain
+                ax[0, 1].plot(time_array, pos_estimate, 'r-', linewidth=1)
+                ax[0, 1].set_xlabel('Time (s)')
+                ax[0, 1].set_ylabel('Position Estimate (rad)')
+                ax[0, 1].set_title(f'Position Time-Domain at {freq:.1f} Hz')
+                ax[0, 1].grid(True, alpha=0.3)
+                
+                # Middle row: FFT gain
+                # Left: Torque FFT gain (linear scale)
+                ax[1, 0].plot(freqs_positive, gain_torque_positive, 'b-', linewidth=1)
+                ax[1, 0].set_xlabel('Frequency (Hz)')
+                ax[1, 0].set_ylabel('Gain')
+                ax[1, 0].set_title('Torque FFT Gain')
+                ax[1, 0].grid(True, alpha=0.3)
+                
+                # Right: Position estimate FFT gain (linear scale)
+                ax[1, 1].plot(freqs_positive, gain_position_positive, 'r-', linewidth=1)
+                ax[1, 1].set_xlabel('Frequency (Hz)')
+                ax[1, 1].set_ylabel('Gain')
+                ax[1, 1].set_title('Position Estimate FFT Gain')
+                ax[1, 1].grid(True, alpha=0.3)
+                
+                # Bottom row: FFT phase
+                # Left: Torque FFT phase
+                ax[2, 0].plot(freqs_positive, phase_torque_positive, 'b-', linewidth=1)
+                ax[2, 0].set_xlabel('Frequency (Hz)')
+                ax[2, 0].set_ylabel('Phase (radians)')
+                ax[2, 0].set_title('Torque FFT Phase')
+                ax[2, 0].grid(True, alpha=0.3)
+                
+                # Right: Position estimate FFT phase
+                ax[2, 1].plot(freqs_positive, phase_position_positive, 'r-', linewidth=1)
+                ax[2, 1].set_xlabel('Frequency (Hz)')
+                ax[2, 1].set_ylabel('Phase (radians)')
+                ax[2, 1].set_title('Position Estimate FFT Phase')
+                ax[2, 1].grid(True, alpha=0.3)
                 
                 plt.tight_layout()
                 plt.show(block=True)
