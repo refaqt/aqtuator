@@ -34,14 +34,16 @@ from odrive_config import ODriveController
 # ============================================================================
 
 fmin = 20.0  # Minimum frequency in Hz
-fmax = 200.0  # Maximum frequency in Hz
-fs = 1000.0  # Sampling rate in Hz (used for both Controllino acquisition and transfer function calculation)
+fmax = 100.0  # Maximum frequency in Hz
+ts = 0.002  # Cycle time in seconds (primary parameter)
+fs = 1.0 / ts  # Sampling rate in Hz (calculated from cycle time, used for transfer function calculation)
 df = 20.0  # Frequency step in Hz
 duration = 0.25  # Measurement duration in seconds
 t_delay = 1.0  # Settling time before acquisition in seconds
 # control_mode is set via ODriveController.set_control_mode()
 torque_amplitude = 0.1  # Torque amplitude in Nm
 show_measurements = True  # Show time-domain plots of each measurement
+message_order_debug = True  # Enable message order debugging (sets cycle time to 1000 ms when enabled)
 
 # Controllino serial port (hardcoded, can be changed)
 CONTROLLINO_PORT = 'COM3'  # Change as needed
@@ -230,6 +232,26 @@ class SerialHelper:
             except Exception as e:
                 print(f"Error retrieving data: {e}")
                 return None
+    
+    def enable_message_order_debug(self):
+        """Enable message order debugging on Controllino."""
+        if not self.serial_port or not self.serial_port.is_open:
+            return False
+        
+        success, response, error = self.send_command_and_wait_response(
+            "DEBUG_ORDER_ON", "ACK: Message order debugging enabled", timeout=2
+        )
+        return success
+    
+    def disable_message_order_debug(self):
+        """Disable message order debugging on Controllino."""
+        if not self.serial_port or not self.serial_port.is_open:
+            return False
+        
+        success, response, error = self.send_command_and_wait_response(
+            "DEBUG_ORDER_OFF", "ACK: Message order debugging disabled", timeout=2
+        )
+        return success
 
 # ============================================================================
 # Helper Functions
@@ -308,6 +330,68 @@ def calculate_transfer_function(input_signal, output_signal, sample_rate, excita
     
     return magnitude, phase
 
+def plot_message_timestamps(torque_timestamp_us, pos_timestamp_us, frequency):
+    """
+    Plot message arrival timestamps as scatter plot to visualize message order.
+    
+    Args:
+        torque_timestamp_us: Array of torque message timestamps in microseconds
+        pos_timestamp_us: Array of position message timestamps in microseconds
+        frequency: Excitation frequency for plot title
+    """
+    # Filter out invalid timestamps (zero or negative) - only use current acquisition data
+    torque_valid = (torque_timestamp_us > 0)
+    pos_valid = (pos_timestamp_us > 0)
+    
+    # Find first valid timestamp from current acquisition (minimum of all valid timestamps)
+    first_timestamp = None
+    if np.any(torque_valid) or np.any(pos_valid):
+        # Collect all valid timestamps and find the minimum
+        valid_timestamps = []
+        if np.any(torque_valid):
+            valid_timestamps.extend(torque_timestamp_us[torque_valid])
+        if np.any(pos_valid):
+            valid_timestamps.extend(pos_timestamp_us[pos_valid])
+        if valid_timestamps:
+            first_timestamp = min(valid_timestamps)
+    
+    if first_timestamp is None:
+        print("Warning: No valid timestamps found for plotting")
+        return
+    
+    # Convert to relative time in seconds (relative to first timestamp of current acquisition)
+    torque_time = (torque_timestamp_us - first_timestamp) / 1e6
+    pos_time = (pos_timestamp_us - first_timestamp) / 1e6
+    
+    # Additional filter: only plot timestamps that are non-negative after conversion
+    # This ensures we only plot data from the current acquisition
+    # (old data would have negative relative time)
+    torque_valid = torque_valid & (torque_time >= 0)
+    pos_valid = pos_valid & (pos_time >= 0)
+    
+    # Create scatter plot
+    fig, ax = plt.subplots(1, 1, figsize=(12, 4))
+    
+    # Plot torque timestamps (blue circles)
+    if np.any(torque_valid):
+        ax.scatter(torque_time[torque_valid], np.ones(np.sum(torque_valid)), 
+                  c='blue', marker='o', s=20, label='Torque', alpha=0.7)
+    
+    # Plot position timestamps (red circles)
+    if np.any(pos_valid):
+        ax.scatter(pos_time[pos_valid], np.ones(np.sum(pos_valid)), 
+                  c='red', marker='o', s=20, label='Position', alpha=0.7)
+    
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('')
+    ax.set_ylim([0.9, 1.1])
+    ax.set_title(f'Message Arrival Timestamps at {frequency:.1f} Hz')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show(block=False)
+
 def configure_cyclic_can_messages(axis, enable=True, interval_ms=1.0):
     """
     Configure ODrive cyclic CAN messages for Get_Encoder_Estimates and Get_Torques.
@@ -366,7 +450,8 @@ def main():
     print("=" * 60)
     print(f"Parameters:")
     print(f"  Frequency range: {fmin} - {fmax} Hz (step: {df} Hz)")
-    print(f"  Sampling rate: {fs} Hz")
+    print(f"  Cycle time: {ts} s ({ts*1000} ms)")
+    print(f"  Sampling rate: {fs} Hz (calculated from cycle time)")
     print(f"  Measurement duration: {duration} s")
     print(f"  Settling time: {t_delay} s")
     print(f"  Torque amplitude: {torque_amplitude} Nm")
@@ -417,6 +502,17 @@ def main():
     
     print("Controllino connected successfully.")
     
+    # Configure message order debugging based on configuration variable
+    if message_order_debug:
+        print("\nEnabling message order debugging...")
+        if serial_helper.enable_message_order_debug():
+            print("Message order debugging enabled.")
+        else:
+            print("WARNING: Failed to enable message order debugging.")
+    else:
+        # Ensure debug mode is disabled
+        serial_helper.disable_message_order_debug()
+    
     # Enter closed-loop control
     print("\nEntering closed-loop control...")
     if not odrive_ctrl.enter_closed_loop():
@@ -424,7 +520,7 @@ def main():
     
     # Configure cyclic CAN messages (always enabled)
     print("\nConfiguring cyclic CAN messages...")
-    if configure_cyclic_can_messages(axis, enable=True, interval_ms=1.0):
+    if configure_cyclic_can_messages(axis, enable=True, interval_ms=ts * 1000.0):
         print("Cyclic CAN messages configured successfully.")
         # Wait a bit for ODrive to process the configuration
         time.sleep(0.2)
@@ -550,7 +646,7 @@ def main():
             
             # Command Controllino to start acquisition (always cyclic mode)
             print(" [acquiring...]", end='', flush=True)
-            cmd = f"START_ACQUISITION,{duration},{fs},cyclic"
+            cmd = f"START_ACQUISITION,{duration},{ts},cyclic"
             success, response, error = serial_helper.send_command_and_wait_response(
                 cmd, "ACK: Acquisition started", timeout=2
             )
@@ -589,14 +685,16 @@ def main():
                 print(" [FAILED - no data]")
                 continue
             
-            # Parse data (always 2 channels: torque and position)
+            # Parse data (4 channels: torque, position, torque_timestamp_us, pos_timestamp_us)
             data_array = data_result['samples']
-            if data_array.shape[1] != 2:
-                print(f" [FAILED - expected 2 channels, got {data_array.shape[1]}]")
+            if data_array.shape[1] != 4:
+                print(f" [FAILED - expected 4 channels, got {data_array.shape[1]}]")
                 continue
             
             torque_setpoint = data_array[:, 0]
             pos_estimate = data_array[:, 1]
+            torque_timestamp_us = data_array[:, 2]
+            pos_timestamp_us = data_array[:, 3]
             
             if len(torque_setpoint) < 10 or len(pos_estimate) < 10:
                 print(" [FAILED - insufficient data]")
@@ -604,6 +702,10 @@ def main():
             
             # Get actual sample rate from Controllino
             actual_sample_rate = data_result['sample_rate']
+            
+            # Plot message timestamps if debug mode is enabled
+            if message_order_debug:
+                plot_message_timestamps(torque_timestamp_us, pos_timestamp_us, freq)
             
             # Plot measurement data if enabled
             if show_measurements:
@@ -733,6 +835,9 @@ def main():
         configure_cyclic_can_messages(axis, enable=False)
     except Exception as e:
         print(f"WARNING: Failed to disable cyclic CAN messages: {e}")
+    
+    # Disable message order debugging to ensure clean state
+    serial_helper.disable_message_order_debug()
     
     # Exit closed-loop control
     print("\nExiting closed-loop control...")

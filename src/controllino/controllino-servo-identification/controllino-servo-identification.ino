@@ -1,8 +1,8 @@
 /*
  * Controllino Micro ODrive Servo Identification via CAN
  * 
- * Reads torque_setpoint and pos_estimate from ODrive S1 via CAN at 4 kHz
- * and sends data to Python via serial communication.
+ * Reads torque_setpoint and pos_estimate from ODrive S1 via CAN at configurable rate
+ * (set via cycle_time parameter) and sends data to Python via serial communication.
  * 
  * SETUP INSTRUCTIONS:
  * 1. Install Controllino board support in Arduino IDE
@@ -13,11 +13,13 @@
  * 
  * USAGE:
  * - Open Serial Monitor at 115200 baud
- * - Use START_ACQUISITION,<duration> to start data acquisition
+ * - Use START_ACQUISITION,<duration>,<cycle_time>,cyclic to start data acquisition
+ *   (cycle_time in seconds, e.g., 0.001 for 1 ms cycle time)
  * - Use GET_DATA to retrieve stored data
  */
 
 #include <CAN.h>
+#include <string.h>  // For memset
 
 // ============================================================================
 // Configuration Constants
@@ -51,13 +53,13 @@ State current_state = STATE_IDLE;
 // Acquisition Data Storage
 // ============================================================================
 
-// Buffer size: MAX_ACQ_SAMPLES * 2 for dual-channel (Welch mode), MAX_ACQ_SAMPLES for single-channel (cyclic mode)
-// Use larger buffer to support both modes
-float acq_buffer[MAX_ACQ_SAMPLES * 2];  // 2 channels: torque_setpoint, pos_estimate (or 1 channel: pos_estimate in cyclic mode)
+// Buffer size: MAX_ACQ_SAMPLES * 4 for 4-channel data
+// 4 channels: torque_setpoint, pos_estimate, torque_timestamp_us, pos_timestamp_us
+float acq_buffer[MAX_ACQ_SAMPLES * 4];  // Memory: 2000 × 4 × 4 bytes = 32 KB
 volatile uint32_t acq_sample_count = 0;
 volatile uint32_t acq_index = 0;
-uint32_t acquisition_rate_hz = 1000;  // Configurable acquisition rate (default 1 kHz)
-float acq_sample_period = 1.0f / 1000.0f;  // Will be recalculated when rate changes
+uint32_t acquisition_rate_hz = 1000;  // Configurable acquisition rate (calculated from cycle time)
+float acq_sample_period = 1.0f / 1000.0f;  // Cycle time in seconds (calculated from parsed cycle time parameter)
 
 // ============================================================================
 // Operation Control
@@ -76,6 +78,17 @@ volatile float latest_torque_setpoint = 0.0f;
 volatile float latest_pos_estimate = 0.0f;
 volatile bool torque_data_valid = false;
 volatile bool pos_data_valid = false;
+
+// Debug mode for message order tracking
+volatile bool debug_message_order = false;
+volatile unsigned long torque_timestamp_us = 0;
+volatile unsigned long pos_timestamp_us = 0;
+
+// Flag to track if first position message has been received (to discard early torque messages)
+volatile bool first_position_received = false;
+
+// Flag to discard the first complete sample pair after START_ACQUISITION
+volatile bool discard_first_sample = false;
 
 // Always using cyclic messages - no mode flag needed
 
@@ -109,10 +122,12 @@ void setup() {
   Serial.println("INFO: Ready for commands");
   Serial.println();
   Serial.println("Commands:");
-  Serial.println("  START_ACQUISITION,<duration>,<rate>,cyclic");
-  Serial.println("    (always uses cyclic mode at 1000 Hz)");
+  Serial.println("  START_ACQUISITION,<duration>,<cycle_time>,cyclic");
+  Serial.println("    (always uses cyclic mode, cycle_time in seconds)");
   Serial.println("  GET_DATA");
   Serial.println("  GET_STATUS");
+  Serial.println("  DEBUG_ORDER_ON");
+  Serial.println("  DEBUG_ORDER_OFF");
   Serial.flush();
 }
 
@@ -181,6 +196,9 @@ void processCANMessages() {
   int packetSize = CAN.parsePacket();
   
   if (packetSize > 0) {
+    // Capture timestamp immediately when packet is received
+    unsigned long msg_timestamp_us = micros();
+    
     uint32_t canId = CAN.packetId();
     
     // Check if this is a response from ODrive
@@ -204,15 +222,55 @@ void processCANMessages() {
           torqueBytes[2] = data[2];
           torqueBytes[3] = data[3];
           
-          // Store torque data immediately when cyclic message arrives (event-driven)
-          if (acquisition_active && acq_index < MAX_ACQ_SAMPLES) {
-            // Store torque in first channel
-            float *sample_ptr = &acq_buffer[acq_index * 2];
-            sample_ptr[0] = torque_target;
+          // Store timestamp for tracking
+          torque_timestamp_us = msg_timestamp_us;
+          
+          // Store torque data only if position has already been received for this sample
+          // Position always arrives first, so if position hasn't been stored yet,
+          // this torque message is from a previous cycle and should be discarded
+          // Also check that we've received at least one position message (first_position_received flag)
+          if (acquisition_active && acq_index < MAX_ACQ_SAMPLES && first_position_received) {
+            float *sample_ptr = &acq_buffer[acq_index * 4];
             
-            // Mark torque as valid for this sample
-            latest_torque_setpoint = torque_target;
-            torque_data_valid = true;
+            // Check if position has already been received for this sample
+            // If position timestamp is zero, discard this torque message (from previous cycle)
+            if (sample_ptr[3] > 0) {
+              // Position already received - store torque data for this sample
+              sample_ptr[0] = torque_target;
+              sample_ptr[2] = (float)msg_timestamp_us;
+              
+              // Mark torque as valid for this sample
+              latest_torque_setpoint = torque_target;
+              torque_data_valid = true;
+              
+              // Check if this is the first complete sample pair that should be discarded
+              if (discard_first_sample && acq_index == 0) {
+                // Discard first sample: clear buffer, reset counters, and reset flags
+                memset(sample_ptr, 0, 4 * sizeof(float));  // Clear this sample
+                acq_index = 0;
+                acq_sample_count = 0;
+                first_position_received = false;  // Reset so torque from "previous cycle" can't sneak in
+                discard_first_sample = false;  // Subsequent pairs will be recorded normally
+                // Don't increment index - we'll start recording from the next pair
+              } else {
+                // Both torque and position received - advance index
+                acq_index++;
+                acq_sample_count = acq_index;
+              }
+              
+              // Check if acquisition duration reached
+              if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
+                acquisition_active = false;
+                serial_blocked = false;  // Unblock serial to send completion message
+                current_state = STATE_IDLE;
+              } else if (acq_index >= MAX_ACQ_SAMPLES) {
+                // Buffer limit reached
+                acquisition_active = false;
+                serial_blocked = false;
+                current_state = STATE_IDLE;
+              }
+            }
+            // If position not yet received, discard this torque message (from previous cycle)
           }
         }
       } else if (baseId == CAN_ID_GET_ENCODER_ESTIMATES) {
@@ -231,32 +289,53 @@ void processCANMessages() {
           posBytes[2] = data[2];
           posBytes[3] = data[3];
           
+          // Store timestamp for tracking
+          pos_timestamp_us = msg_timestamp_us;
+          
           // Store position data immediately when cyclic message arrives (event-driven)
           if (acquisition_active && acq_index < MAX_ACQ_SAMPLES) {
-            // Store position in second channel
-            float *sample_ptr = &acq_buffer[acq_index * 2];
+            // Store position value in channel 1, timestamp in channel 3
+            float *sample_ptr = &acq_buffer[acq_index * 4];
             sample_ptr[1] = pos_est;
+            sample_ptr[3] = (float)msg_timestamp_us;  // Always store timestamp
             
             // Mark position as valid for this sample
             latest_pos_estimate = pos_est;
             pos_data_valid = true;
             
-            // Both torque and position received - advance index
-            // Note: We advance when position arrives since it's the last piece of data for a sample
-            // In practice, both messages arrive at 1 kHz, so they should be close together
-            acq_index++;
-            acq_sample_count = acq_index;
+            // Mark that we've received the first position message
+            // This allows torque messages to be processed from now on
+            first_position_received = true;
             
-            // Check if acquisition duration reached
-            if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
-              acquisition_active = false;
-              serial_blocked = false;  // Unblock serial to send completion message
-              current_state = STATE_IDLE;
-            } else if (acq_index >= MAX_ACQ_SAMPLES) {
-              // Buffer limit reached
-              acquisition_active = false;
-              serial_blocked = false;
-              current_state = STATE_IDLE;
+            // Only advance index if torque has also been received for this sample
+            // Check if torque timestamp is non-zero (indicating torque was stored)
+            if (sample_ptr[2] > 0) {
+              // Check if this is the first complete sample pair that should be discarded
+              if (discard_first_sample && acq_index == 0) {
+                // Discard first sample: clear buffer, reset counters, and reset flags
+                memset(sample_ptr, 0, 4 * sizeof(float));  // Clear this sample
+                acq_index = 0;
+                acq_sample_count = 0;
+                first_position_received = false;  // Reset so torque from "previous cycle" can't sneak in
+                discard_first_sample = false;  // Subsequent pairs will be recorded normally
+                // Don't increment index - we'll start recording from the next pair
+              } else {
+                // Both torque and position received - advance index
+                acq_index++;
+                acq_sample_count = acq_index;
+              }
+              
+              // Check if acquisition duration reached
+              if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
+                acquisition_active = false;
+                serial_blocked = false;  // Unblock serial to send completion message
+                current_state = STATE_IDLE;
+              } else if (acq_index >= MAX_ACQ_SAMPLES) {
+                // Buffer limit reached
+                acquisition_active = false;
+                serial_blocked = false;
+                current_state = STATE_IDLE;
+              }
             }
           }
         }
@@ -273,8 +352,8 @@ void processCommand(String cmd) {
   cmd.trim();
   
   if (cmd.startsWith("START_ACQUISITION")) {
-    // Command: START_ACQUISITION,<duration>,<rate>,cyclic
-    // Always uses cyclic mode - rate parameter is for compatibility but fixed at 1000 Hz
+    // Command: START_ACQUISITION,<duration>,<cycle_time>,cyclic
+    // Always uses cyclic mode - cycle_time parameter is in seconds
     if (acquisition_active) {
       Serial.println("ERROR: Acquisition already in progress");
       return;
@@ -303,9 +382,32 @@ void processCommand(String cmd) {
       return;
     }
     
-    // In cyclic mode, rate is fixed at 1000 Hz (1 ms interval from ODrive)
-    acquisition_rate_hz = 1000;
-    acq_sample_period = 1.0f / 1000.0f;
+    // Parse cycle time (third parameter)
+    float cycle_time = 0.001f;  // Default to 1 ms if not provided
+    if (second_comma_pos > 0) {
+      int third_comma_pos = cmd.indexOf(',', second_comma_pos + 1);
+      if (third_comma_pos > 0) {
+        // Cycle time provided
+        cycle_time = cmd.substring(second_comma_pos + 1, third_comma_pos).toFloat();
+      } else {
+        // Try to parse from end of string (in case "cyclic" is not present)
+        String cycle_time_str = cmd.substring(second_comma_pos + 1);
+        cycle_time_str.trim();
+        if (cycle_time_str.length() > 0 && cycle_time_str != "cyclic") {
+          cycle_time = cycle_time_str.toFloat();
+        }
+      }
+    }
+    
+    // Validate cycle time
+    if (cycle_time <= 0) {
+      Serial.println("ERROR: Invalid cycle time (must be > 0)");
+      return;
+    }
+    
+    // Calculate acquisition rate from cycle time
+    acq_sample_period = cycle_time;
+    acquisition_rate_hz = 1.0f / cycle_time;
     
     // Calculate required samples using the fixed rate
     required_acq_samples = (uint32_t)(acq_duration * acquisition_rate_hz);
@@ -322,6 +424,11 @@ void processCommand(String cmd) {
     completion_sent = false;
     torque_data_valid = false;
     pos_data_valid = false;
+    first_position_received = false;  // Reset flag - no position messages received yet
+    discard_first_sample = true;  // Discard the first complete sample pair
+    
+    // Clear buffer to remove any old data from previous acquisitions
+    memset(acq_buffer, 0, sizeof(acq_buffer));
     
     // Send ACK BEFORE starting acquisition and blocking serial
     Serial.println("ACK: Acquisition started (cyclic mode)");
@@ -333,6 +440,14 @@ void processCommand(String cmd) {
     serial_blocked = true;  // Block serial during acquisition
     current_state = STATE_ACQUIRING;
     
+  } else if (cmd.startsWith("DEBUG_ORDER_ON")) {
+    debug_message_order = true;
+    Serial.println("ACK: Message order debugging enabled");
+    
+  } else if (cmd.startsWith("DEBUG_ORDER_OFF")) {
+    debug_message_order = false;
+    Serial.println("ACK: Message order debugging disabled");
+    
   } else if (cmd.startsWith("GET_DATA")) {
     if (acq_sample_count == 0) {
       Serial.println("ERROR: No acquisition data available");
@@ -341,8 +456,8 @@ void processCommand(String cmd) {
     
     current_state = STATE_TRANSFERRING;
     
-    // Always 2 channels: torque and position
-    uint8_t num_channels = 2;
+    // Always 4 channels: torque, position, torque_timestamp_us, pos_timestamp_us
+    uint8_t num_channels = 4;
     
     // Send data header
     Serial.print("DATA:");
@@ -350,16 +465,20 @@ void processCommand(String cmd) {
     Serial.print(",");
     Serial.print(acq_sample_period, 6);
     Serial.print(",");
-    Serial.print(num_channels);  // Always 2 channels: torque and position
+    Serial.print(num_channels);  // 4 channels: torque, position, torque_timestamp_us, pos_timestamp_us
     Serial.println();
     
     // Send data samples (text format)
     for (uint32_t i = 0; i < acq_sample_count; i++) {
-      // Always dual channel: torque and position
-      float *sample_ptr = &acq_buffer[i * 2];
+      // 4 channels: torque, position, torque_timestamp_us, pos_timestamp_us
+      float *sample_ptr = &acq_buffer[i * 4];
       Serial.print(sample_ptr[0], 6);  // torque_setpoint
       Serial.print(",");
       Serial.print(sample_ptr[1], 6);  // pos_estimate
+      Serial.print(",");
+      Serial.print(sample_ptr[2], 1);  // torque_timestamp_us
+      Serial.print(",");
+      Serial.print(sample_ptr[3], 1);  // pos_timestamp_us
       Serial.println();
       
       // Small delay to prevent serial buffer overflow
