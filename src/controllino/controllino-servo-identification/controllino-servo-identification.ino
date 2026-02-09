@@ -88,11 +88,11 @@ volatile bool debug_message_order = false;
 volatile unsigned long torque_timestamp_us = 0;
 volatile unsigned long pos_timestamp_us = 0;
 
-// Flag to track if first position message has been received (to discard early torque messages)
-volatile bool first_position_received = false;
-
-// Flag to discard the first complete sample pair after START_ACQUISITION
+// Flag to discard the first batch after START_ACQUISITION
 volatile bool discard_first_sample = false;
+
+// Batch processing state variable
+bool first_batch_discarded = false;
 
 // Always using cyclic messages - no mode flag needed
 
@@ -200,156 +200,202 @@ void setupCAN() {
 
 // No requestCANData() function needed - messages come automatically via cyclic mode
 
-void processCANMessages() {
-  // Process any available CAN messages (non-blocking)
+// Helper function to parse a CAN message and return type (0=torque, 1=position, 255=invalid)
+// Also stores the value and timestamp in the provided pointers
+uint8_t parseCANMessage(float* torque_out, float* position_out, unsigned long* torque_ts_out, unsigned long* position_ts_out) {
   int packetSize = CAN.parsePacket();
+  if (packetSize <= 0) {
+    return 255;  // No message
+  }
   
-  if (packetSize > 0) {
-    // Capture timestamp immediately when packet is received
-    unsigned long msg_timestamp_us = micros();
+  unsigned long msg_timestamp_us = micros();
+  uint32_t canId = CAN.packetId();
+  uint32_t baseId = canId & 0x1F;  // Lower 5 bits are the command ID
+  uint32_t nodeId = (canId >> 5) & 0x7;  // Bits 5-7 are node ID
+  
+  if (nodeId != ODRIVE_NODE_ID) {
+    return 255;  // Not from our ODrive
+  }
+  
+  if (packetSize < 8) {
+    return 255;  // Invalid packet size
+  }
+  
+  uint8_t data[8];
+  for (int i = 0; i < 8 && i < packetSize; i++) {
+    data[i] = CAN.read();
+  }
+  
+  if (baseId == CAN_ID_GET_TORQUES) {
+    // Parse GET_TORQUES response: (Torque_Target, Torque_Estimate) as two floats
+    float torque_target;
+    uint8_t* torqueBytes = (uint8_t*)&torque_target;
+    torqueBytes[0] = data[0];
+    torqueBytes[1] = data[1];
+    torqueBytes[2] = data[2];
+    torqueBytes[3] = data[3];
     
-    uint32_t canId = CAN.packetId();
+    *torque_out = torque_target;
+    *torque_ts_out = msg_timestamp_us;
     
-    // Check if this is a response from ODrive
-    uint32_t baseId = canId & 0x1F;  // Lower 5 bits are the command ID
-    uint32_t nodeId = (canId >> 5) & 0x7;  // Bits 5-7 are node ID
+    // Update global tracking variables
+    torque_timestamp_us = msg_timestamp_us;
+    latest_torque_setpoint = torque_target;
+    torque_data_valid = true;
     
-    if (nodeId == ODRIVE_NODE_ID) {
-      if (baseId == CAN_ID_GET_TORQUES) {
-        // Parse GET_TORQUES response: (Torque_Target, Torque_Estimate) as two floats
-        if (packetSize >= 8) {
-          uint8_t data[8];
-          for (int i = 0; i < 8 && i < packetSize; i++) {
-            data[i] = CAN.read();
-          }
-          
-          // Extract Torque_Target (first float, little-endian)
-          float torque_target;
-          uint8_t* torqueBytes = (uint8_t*)&torque_target;
-          torqueBytes[0] = data[0];
-          torqueBytes[1] = data[1];
-          torqueBytes[2] = data[2];
-          torqueBytes[3] = data[3];
-          
-          // Store timestamp for tracking
-          torque_timestamp_us = msg_timestamp_us;
-          
-          // Store torque data only if position has already been received for this sample
-          // Position always arrives first, so if position hasn't been stored yet,
-          // this torque message is from a previous cycle and should be discarded
-          // Also check that we've received at least one position message (first_position_received flag)
-          if (acquisition_active && acq_index < MAX_ACQ_SAMPLES && first_position_received) {
-            float *sample_ptr = &acq_buffer[acq_index * 4];
-            
-            // Check if position has already been received for this sample
-            // If position timestamp is zero, discard this torque message (from previous cycle)
-            if (sample_ptr[3] > 0) {
-              // Position already received - store torque data for this sample
-              sample_ptr[0] = torque_target;
-              sample_ptr[2] = (float)msg_timestamp_us;
-              
-              // Mark torque as valid for this sample
-              latest_torque_setpoint = torque_target;
-              torque_data_valid = true;
-              
-              // Check if this is the first complete sample pair that should be discarded
-              if (discard_first_sample && acq_index == 0) {
-                // Discard first sample: clear buffer, reset counters, and reset flags
-                memset(sample_ptr, 0, 4 * sizeof(float));  // Clear this sample
-                acq_index = 0;
-                acq_sample_count = 0;
-                first_position_received = false;  // Reset so torque from "previous cycle" can't sneak in
-                discard_first_sample = false;  // Subsequent pairs will be recorded normally
-                // Don't increment index - we'll start recording from the next pair
-              } else {
-                // Both torque and position received - advance index
-                acq_index++;
-                acq_sample_count = acq_index;
-              }
-              
-              // Check if acquisition duration reached
-              if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
-                acquisition_active = false;
-                serial_blocked = false;  // Unblock serial to send completion message
-                current_state = STATE_IDLE;
-              } else if (acq_index >= MAX_ACQ_SAMPLES) {
-                // Buffer limit reached
-                acquisition_active = false;
-                serial_blocked = false;
-                current_state = STATE_IDLE;
-              }
-            }
-            // If position not yet received, discard this torque message (from previous cycle)
-          }
+    return 0;  // Torque message
+  } else if (baseId == CAN_ID_GET_ENCODER_ESTIMATES) {
+    // Parse GET_ENCODER_ESTIMATES response: (pos_estimate, vel_estimate) as two floats
+    float pos_est;
+    uint8_t* posBytes = (uint8_t*)&pos_est;
+    posBytes[0] = data[0];
+    posBytes[1] = data[1];
+    posBytes[2] = data[2];
+    posBytes[3] = data[3];
+    
+    *position_out = pos_est;
+    *position_ts_out = msg_timestamp_us;
+    
+    // Update global tracking variables
+    pos_timestamp_us = msg_timestamp_us;
+    latest_pos_estimate = pos_est;
+    pos_data_valid = true;
+    
+    return 1;  // Position message
+  }
+  
+  return 255;  // Unknown message type
+}
+
+void processCANMessages() {
+  if (!acquisition_active || acq_index >= MAX_ACQ_SAMPLES) {
+    return;
+  }
+  
+  // First batch: discard all messages
+  if (!first_batch_discarded) {
+    unsigned long batch_start = micros();
+    while ((micros() - batch_start) < 100) {  // Wait up to 0.1 ms
+      if (CAN.parsePacket() > 0) {
+        // Read and discard message
+        while (CAN.available()) {
+          CAN.read();
         }
-      } else if (baseId == CAN_ID_GET_ENCODER_ESTIMATES) {
-        // Parse GET_ENCODER_ESTIMATES response: (pos_estimate, vel_estimate) as two floats
-        if (packetSize >= 8) {
-          uint8_t data[8];
-          for (int i = 0; i < 8 && i < packetSize; i++) {
-            data[i] = CAN.read();
-          }
-          
-          // Extract pos_estimate (first float, little-endian)
-          float pos_est;
-          uint8_t* posBytes = (uint8_t*)&pos_est;
-          posBytes[0] = data[0];
-          posBytes[1] = data[1];
-          posBytes[2] = data[2];
-          posBytes[3] = data[3];
-          
-          // Store timestamp for tracking
-          pos_timestamp_us = msg_timestamp_us;
-          
-          // Store position data immediately when cyclic message arrives (event-driven)
-          if (acquisition_active && acq_index < MAX_ACQ_SAMPLES) {
-            // Store position value in channel 1, timestamp in channel 3
-            float *sample_ptr = &acq_buffer[acq_index * 4];
-            sample_ptr[1] = pos_est;
-            sample_ptr[3] = (float)msg_timestamp_us;  // Always store timestamp
-            
-            // Mark position as valid for this sample
-            latest_pos_estimate = pos_est;
-            pos_data_valid = true;
-            
-            // Mark that we've received the first position message
-            // This allows torque messages to be processed from now on
-            first_position_received = true;
-            
-            // Only advance index if torque has also been received for this sample
-            // Check if torque timestamp is non-zero (indicating torque was stored)
-            if (sample_ptr[2] > 0) {
-              // Check if this is the first complete sample pair that should be discarded
-              if (discard_first_sample && acq_index == 0) {
-                // Discard first sample: clear buffer, reset counters, and reset flags
-                memset(sample_ptr, 0, 4 * sizeof(float));  // Clear this sample
-                acq_index = 0;
-                acq_sample_count = 0;
-                first_position_received = false;  // Reset so torque from "previous cycle" can't sneak in
-                discard_first_sample = false;  // Subsequent pairs will be recorded normally
-                // Don't increment index - we'll start recording from the next pair
-              } else {
-                // Both torque and position received - advance index
-                acq_index++;
-                acq_sample_count = acq_index;
-              }
-              
-              // Check if acquisition duration reached
-              if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
-                acquisition_active = false;
-                serial_blocked = false;  // Unblock serial to send completion message
-                current_state = STATE_IDLE;
-              } else if (acq_index >= MAX_ACQ_SAMPLES) {
-                // Buffer limit reached
-                acquisition_active = false;
-                serial_blocked = false;
-                current_state = STATE_IDLE;
-              }
-            }
-          }
-        }
+        batch_start = micros();  // Reset timeout on new message
       }
+      delayMicroseconds(1);
     }
+    first_batch_discarded = true;
+    return;
+  }
+  
+  // Subsequent batches: process pairs sequentially
+  float torque = 0.0f, position = 0.0f;
+  unsigned long torque_ts = 0, position_ts = 0;
+  uint8_t first_msg_type = 255;  // 0=torque, 1=position, 255=none
+  uint8_t second_msg_type = 255;
+  
+  // Read first message
+  unsigned long wait_start = micros();
+  while ((micros() - wait_start) < 100) {  // Wait up to 0.1 ms
+    first_msg_type = parseCANMessage(&torque, &position, &torque_ts, &position_ts);
+    if (first_msg_type != 255) {
+      break;  // Got first message
+    }
+    delayMicroseconds(1);
+  }
+  
+  // If no first message, return (wait for next call)
+  if (first_msg_type == 255) {
+    return;
+  }
+  
+  // Wait for second message
+  wait_start = micros();
+  while ((micros() - wait_start) < 100) {  // Wait up to 0.1 ms
+    second_msg_type = parseCANMessage(&torque, &position, &torque_ts, &position_ts);
+    if (second_msg_type != 255) {
+      break;  // Got second message
+    }
+    delayMicroseconds(1);
+  }
+  
+  // Check if we have both messages
+  if (second_msg_type == 255) {
+    // Incomplete pair (only one message) - restart acquisition
+    acq_index = 0;
+    acq_sample_count = 0;
+    memset(acq_buffer, 0, sizeof(acq_buffer));
+    first_batch_discarded = false;
+    
+    bool was_blocked = serial_blocked;
+    serial_blocked = false;
+    Serial.println("WARNING: Incomplete pair detected - restarting acquisition");
+    Serial.flush();
+    serial_blocked = was_blocked;
+    return;
+  }
+  
+  // Validate pair: must have one torque (0) AND one position (1), not both same type
+  if (first_msg_type == second_msg_type) {
+    // Invalid pair (both same type) - restart acquisition
+    acq_index = 0;
+    acq_sample_count = 0;
+    memset(acq_buffer, 0, sizeof(acq_buffer));
+    first_batch_discarded = false;
+    
+    bool was_blocked = serial_blocked;
+    serial_blocked = false;
+    Serial.println("WARNING: Invalid pair detected (same type) - restarting acquisition");
+    Serial.flush();
+    serial_blocked = was_blocked;
+    return;
+  }
+  
+  // Valid pair: one torque and one position - store it
+  float *sample = &acq_buffer[acq_index * 4];
+  sample[0] = torque;
+  sample[1] = position;
+  sample[2] = (float)torque_ts;
+  sample[3] = (float)position_ts;
+  
+  acq_index++;
+  acq_sample_count = acq_index;
+  
+  // Check if acquisition duration reached
+  if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
+    acquisition_active = false;
+    serial_blocked = false;
+    current_state = STATE_IDLE;
+    return;
+  } else if (acq_index >= MAX_ACQ_SAMPLES) {
+    acquisition_active = false;
+    serial_blocked = false;
+    current_state = STATE_IDLE;
+    return;
+  }
+  
+  // Check for overflow: wait 0.1ms for third message
+  wait_start = micros();
+  while ((micros() - wait_start) < 100) {  // Wait up to 0.1 ms
+    if (CAN.parsePacket() > 0) {
+      // Overflow detected - discard the message and restart acquisition
+      while (CAN.available()) {
+        CAN.read();
+      }
+      acq_index = 0;
+      acq_sample_count = 0;
+      memset(acq_buffer, 0, sizeof(acq_buffer));
+      first_batch_discarded = false;
+      
+      bool was_blocked = serial_blocked;
+      serial_blocked = false;
+      Serial.println("WARNING: Message overflow detected - restarting acquisition");
+      Serial.flush();
+      serial_blocked = was_blocked;
+      return;
+    }
+    delayMicroseconds(1);
   }
 }
 
@@ -433,8 +479,8 @@ void processCommand(String cmd) {
     completion_sent = false;
     torque_data_valid = false;
     pos_data_valid = false;
-    first_position_received = false;  // Reset flag - no position messages received yet
-    discard_first_sample = true;  // Discard the first complete sample pair
+    discard_first_sample = true;  // Discard the first batch
+    first_batch_discarded = false;  // Track if first batch was discarded
     loop_timestamp_count = 0;  // Reset loop timestamp counter
     
     // Clear buffer to remove any old data from previous acquisitions

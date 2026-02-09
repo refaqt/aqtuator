@@ -35,7 +35,7 @@ from odrive_config import ODriveController
 
 fmin = 40.0  # Minimum frequency in Hz
 fmax = 200.0  # Maximum frequency in Hz
-ts = 0.002  # Cycle time in seconds (primary parameter)
+ts = 0.001  # Cycle time in seconds (primary parameter)
 fs = 1.0 / ts  # Sampling rate in Hz (calculated from cycle time, used for transfer function calculation)
 df = 1.0  # Frequency step in Hz
 duration = 0.25  # Measurement duration in seconds
@@ -122,6 +122,11 @@ class SerialHelper:
                         elif response.startswith("ERROR:"):
                             error_received = response[6:] if len(response) > 6 else "Unknown error"
                             return (False, response, error_received)
+                        elif response.startswith("WARNING:"):
+                            # WARNING messages are informational but don't indicate command failure
+                            # Log them but continue waiting for expected ACK
+                            print(f"  [WARNING: {response[8:]}]")
+                            continue
                         elif response == "" or response.startswith("DEBUG:") or response.startswith("INFO:"):
                             continue
                         else:
@@ -174,6 +179,11 @@ class SerialHelper:
                         elif response.startswith("ERROR:"):
                             error_msg = response[6:] if len(response) > 6 else "Unknown error"
                             print(f"Error: {error_msg}")
+                            return None
+                        elif response.startswith("WARNING:"):
+                            # WARNING indicates acquisition was restarted
+                            print(f"Warning: {response[8:]}")
+                            # Return None to indicate data retrieval failed
                             return None
                         elif response == "" or response.startswith("DEBUG:") or response.startswith("INFO:"):
                             continue
@@ -752,6 +762,13 @@ def main():
                         elif line.startswith("ERROR:"):
                             print(f" [ERROR: {line}]")
                             break
+                        elif line.startswith("WARNING:"):
+                            # WARNING indicates acquisition was restarted
+                            print(f" [WARNING: {line[8:]}]")
+                            # Acquisition restarted, so we need to wait again
+                            # Reset timeout to give it more time
+                            timeout = 0
+                            continue
                 time.sleep(0.01)
                 timeout += 1
             
