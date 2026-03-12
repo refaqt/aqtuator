@@ -31,6 +31,37 @@ import matplotlib.pyplot as plt
 from odrive_config import ODriveController
 
 # ============================================================================
+# ODrive Cleanup Helper
+# ============================================================================
+
+def cleanup_odrive(odrive_ctrl):
+    """Best-effort ODrive cleanup: go to IDLE, set Position control, then disconnect.
+
+    This is intentionally defensive: cleanup should never raise and block program exit.
+    """
+    if odrive_ctrl is None:
+        return
+
+    try:
+        if getattr(odrive_ctrl, "connected", False):
+            # Ensure we leave closed-loop (safe even if already idle).
+            try:
+                odrive_ctrl.exit_closed_loop()
+            except Exception:
+                pass
+
+            # Ensure final mode is Position (per safety requirement).
+            try:
+                odrive_ctrl.set_control_mode("Position")
+            except Exception:
+                pass
+    finally:
+        try:
+            odrive_ctrl.disconnect()
+        except Exception:
+            pass
+
+# ============================================================================
 # Configuration: Hard-coded variable lists for plotting
 # ============================================================================
 
@@ -731,6 +762,8 @@ def main():
         if not csv_path:
             print("No CSV file selected. Exiting.")
             serial_helper.disconnect()
+            if odrive_connected:
+                cleanup_odrive(odrive_ctrl)
             return 1
         
         print(f"CSV file selected: {os.path.basename(csv_path)}")
@@ -790,7 +823,7 @@ def main():
             print(f"CSV upload failed: {message}")
             serial_helper.disconnect()
             if odrive_connected:
-                odrive_ctrl.disconnect()
+                cleanup_odrive(odrive_ctrl)
             return 1
         print(f"CSV uploaded: {message}")
         
@@ -830,10 +863,8 @@ def main():
                 if not success:
                     print(f"Failed to start test output: {error}")
                     if odrive_connected:
-                        odrive_ctrl.exit_closed_loop()
+                        cleanup_odrive(odrive_ctrl)
                     serial_helper.disconnect()
-                    if odrive_connected:
-                        odrive_ctrl.disconnect()
                     return 1
                 print("Test output started. Waiting for completion...")
 
@@ -985,6 +1016,7 @@ def main():
         if odrive_connected:
             print("\nDisabling ODrive closed-loop control...")
             odrive_ctrl.exit_closed_loop()
+            odrive_ctrl.set_control_mode('Position')
         
         # Step 7: Retrieve data
         print("\nStep 9: Retrieving data from Controllino...")
