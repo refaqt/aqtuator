@@ -38,7 +38,27 @@ class MultisineOptimizer:
         
         # Generate frequency array
         self.frequencies = np.arange(self.fmin, self.fmax + self.df/2, self.df)
-        self.K = len(self.frequencies)
+        
+        # Filter frequencies to only those that map to valid FFT bins
+        # FFT bins are at indices 1 to N-1 (skip DC and Nyquist)
+        self.valid_freq_indices = []
+        self.valid_frequencies = []
+        self.valid_freq_bins = []  # FFT bin indices
+        
+        for k, freq in enumerate(self.frequencies):
+            freq_index = round(freq * self.N / self.fs)
+            # Valid FFT bin: must be between 1 and N-1, and frequency must be below Nyquist
+            if freq_index > 0 and freq_index < self.N and freq < self.fs / 2:
+                self.valid_freq_indices.append(k)
+                self.valid_frequencies.append(freq)
+                self.valid_freq_bins.append(freq_index)
+        
+        self.valid_frequencies = np.array(self.valid_frequencies)
+        self.valid_freq_bins = np.array(self.valid_freq_bins)
+        self.K = len(self.valid_frequencies)  # Actual number of usable frequencies
+        
+        # Store original K for reference
+        self.K_original = len(self.frequencies)
 
     def calculate_crest_factor(self, signal):
         """Calculate the crest factor of a signal"""
@@ -60,7 +80,7 @@ class MultisineOptimizer:
         Generate multisine signal from phases and amplitudes
 
         Parameters:
-        phases: Phase values for each frequency component
+        phases: Phase values for each frequency component (length K)
         amplitudes: Amplitude values (default: flat spectrum with unit amplitude)
         """
         if amplitudes is None:
@@ -69,10 +89,9 @@ class MultisineOptimizer:
         # Create frequency domain representation
         C = np.zeros(self.N, dtype=complex)
         for k in range(self.K):
-            # Calculate frequency index for this frequency component
-            freq_index = round(self.frequencies[k] * self.N / self.fs)
-            if freq_index > 0 and freq_index < self.N:  # Skip DC and Nyquist
-                C[freq_index] = amplitudes[k] * np.exp(1j * phases[k])
+            # Use the pre-computed FFT bin index
+            freq_index = self.valid_freq_bins[k]
+            C[freq_index] = amplitudes[k] * np.exp(1j * phases[k])
 
         # Generate time domain signal using IFFT
         x = self.N * ifft(C)
@@ -116,8 +135,8 @@ class MultisineOptimizer:
             # Transform back to frequency domain
             X_clipped = fft(x_clipped) / self.N
 
-            # Extract new phases while keeping amplitudes
-            new_phases = np.angle(X_clipped[1:self.K + 1])
+            # Extract new phases only for valid frequency bins
+            new_phases = np.angle(X_clipped[self.valid_freq_bins])
 
             # Check convergence
             phase_change = np.mean(np.abs(new_phases - current_phases))
@@ -203,17 +222,22 @@ class MultisineOptimizer:
 
         # Create metadata header
         cf = self.calculate_crest_factor(signal)
+        fmin_actual_str = f"{self.valid_frequencies[0]:.6f}" if self.K > 0 else "N/A"
+        fmax_actual_str = f"{self.valid_frequencies[-1]:.6f}" if self.K > 0 else "N/A"
         header_lines = [
             f"# Multisine Signal Data",
             f"# fmin_desired: {self.fmin_desired:.6f} Hz",
             f"# fmax_desired: {self.fmax_desired:.6f} Hz", 
             f"# fmin: {self.fmin:.6f} Hz",
             f"# fmax: {self.fmax:.6f} Hz",
+            f"# fmin_actual: {fmin_actual_str} Hz",
+            f"# fmax_actual: {fmax_actual_str} Hz",
             f"# fs: {self.fs:.6f} Hz",
             f"# df: {self.df:.6f} Hz",
             f"# df_des: {self.df_des:.6f} Hz",
             f"# N: {self.N}",
-            f"# K: {self.K}",
+            f"# K_original: {self.K_original}",
+            f"# K_actual: {self.K}",
             f"# Crest Factor: {cf:.6f}",
             f"# Columns: Time_s, Signal"
         ]
@@ -235,7 +259,7 @@ def main():
     Example usage of the adapted multisine generator
     """
     # Example parameters
-    fmin_desired = 4.0  # Hz
+    fmin_desired = 20.0  # Hz
     fmax_desired = 800.0  # Hz
     fs = 8000.0  # Hz
     df_des = 1.0  # Hz
@@ -258,8 +282,14 @@ def main():
     print(f"  fmax: {optimizer.fmax:.6f} Hz")
     print(f"  df: {optimizer.df:.6f} Hz")
     print(f"  N (signal length): {optimizer.N}")
-    print(f"  K (number of tones): {optimizer.K}")
-    print(f"  Frequencies: {optimizer.frequencies[0]:.3f} to {optimizer.frequencies[-1]:.3f} Hz")
+    print(f"  K_original (desired tones): {optimizer.K_original}")
+    print(f"  K_actual (usable tones): {optimizer.K}")
+    if optimizer.K > 0:
+        print(f"  Frequencies: {optimizer.valid_frequencies[0]:.3f} to {optimizer.valid_frequencies[-1]:.3f} Hz")
+    else:
+        print(f"  Frequencies: No valid frequencies found")
+    if optimizer.K_original != optimizer.K:
+        print(f"  Note: {optimizer.K_original - optimizer.K} frequencies were filtered out (beyond Nyquist)")
     print()
     
     # Optimize multisine
