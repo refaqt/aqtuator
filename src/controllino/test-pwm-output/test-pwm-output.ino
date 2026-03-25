@@ -39,17 +39,18 @@
 // Configuration — edit here
 // ============================================================================
 
-// GPIO0 screw terminal on the Controllino Micro = RP2040 GPIO2 = Arduino pin 2.
-// The controllino_rp2 BSP does not define a CONTROLLINO_MICRO_GPIO0 alias,
-// so we define it here. (PIN_WIRE0_SDA also maps to pin 2 but that is just
-// the alternate I2C function; the pin is freely usable as GPIO/PWM.)
-#define CONTROLLINO_MICRO_GPIO0     (2u)
-#define PWM_OUTPUT_PIN              CONTROLLINO_MICRO_GPIO0
+// Controllino MICRO header GPIO0 maps to RP2040 GPIO0 / Arduino D0.
+// Source of truth: Controllino MICRO docs + controllino_rp2 pins_arduino.h.
+#define PWM_OUTPUT_PIN              D0
+
+// Debug helper: set to 1 to scan candidate pins and verify terminal mapping.
+// In scan mode, PWM is disabled and pins are driven HIGH one by one.
+#define PWM_PIN_SCAN_MODE           0
 
 // Sine wave parameters
 #define SINE_FREQ_HZ        0.2f   // [Hz] Sine frequency
-#define SINE_AMPLITUDE_FRAC 0.9f     // Fraction of full range (0.0–1.0); 0.9 → 0.165–3.135 V
-#define SINE_OFFSET_FRAC    0.5f     // DC center as fraction; 0.5 → 1.65 V
+#define SINE_AMPLITUDE_FRAC 0.84f     // Fraction of full range (0.0–1.0); 0.9 → 0.165–3.135 V
+#define SINE_OFFSET_FRAC    SINE_AMPLITUDE_FRAC / 2     // DC center as fraction; 0.5 → 1.65 V
 
 // PWM resolution. Lower value → higher f_pwm → lower RC-filter ripple.
 // See trade-off table above.
@@ -82,6 +83,13 @@ static const float SINE_FREQ_ACTUAL_HZ =
 static uint16_t sine_table[SINE_TABLE_SIZE];
 static volatile uint32_t sine_index = 0;
 static struct repeating_timer sine_timer;
+static volatile bool pwm_update_pending = false;
+static volatile uint16_t pwm_duty_pending = 0;
+#if PWM_PIN_SCAN_MODE
+static const uint8_t PWM_SCAN_PINS[] = {0u, 2u};
+static uint8_t pwm_scan_index = 0;
+static uint32_t pwm_scan_last_switch_ms = 0;
+#endif
 
 // ============================================================================
 // Build sine lookup table
@@ -105,7 +113,11 @@ static void buildSineTable() {
 // ============================================================================
 
 static bool sineTimerCallback(struct repeating_timer *t) {
-    analogWrite(PWM_OUTPUT_PIN, (int)sine_table[sine_index]);
+    // Real-time callback: only compute/store the next duty.
+    // PWM updates are applied in loop() to avoid timing/driver issues.
+    pwm_duty_pending = sine_table[sine_index];
+    pwm_update_pending = true;
+
     sine_index = (sine_index + 1 < SINE_TABLE_SIZE) ? sine_index + 1 : 0;
     return true;  // Keep repeating
 }
@@ -116,13 +128,21 @@ static bool sineTimerCallback(struct repeating_timer *t) {
 
 void setup() {
     Serial.begin(115200);
-    delay(1500);
+
+    // Native-USB boards may need time to re-enumerate after reset.
+    // Wait a bounded amount of time so Serial Monitor output is reliable.
+    uint32_t serial_wait_start_ms = millis();
+    while (!Serial && (millis() - serial_wait_start_ms) < 3000) {
+        delay(10);
+    }
 
     // --- Print configuration ---
     Serial.println("=========================================");
     Serial.println("  PWM Sine Wave Output Test");
     Serial.println("=========================================");
-    Serial.print  ("Output pin (CONTROLLINO_MICRO_GPIO0, RP2040 GPIO2): "); Serial.println(PWM_OUTPUT_PIN);
+    Serial.print  ("Output pin (Controllino GPIO0 -> RP2040 GPIO0 -> Arduino D0): ");
+    Serial.println(PWM_OUTPUT_PIN);
+    Serial.println("D0 shares Serial1/I2C alternate functions; it is valid as GPIO/PWM.");
     Serial.println();
 
     Serial.println("--- Sine wave ---");
@@ -137,6 +157,15 @@ void setup() {
     Serial.print  (" V  to  ");
     Serial.print  ((SINE_OFFSET_FRAC + SINE_AMPLITUDE_FRAC * 0.5f) * 3.3f, 3);
     Serial.println(" V");
+    Serial.println();
+
+    // Measurement expectations (useful when verifying with a multimeter).
+    Serial.print  ("  Expected DC average : ");
+    Serial.print  (SINE_OFFSET_FRAC * 3.3f, 3);
+    Serial.println(" V");
+    Serial.print  ("  Sine period (actual): ");
+    Serial.print  (1.0f / SINE_FREQ_ACTUAL_HZ, 2);
+    Serial.println(" s");
     Serial.println();
 
     Serial.println("--- PWM carrier ---");
@@ -170,6 +199,18 @@ void setup() {
     // --- Build sine table ---
     buildSineTable();
 
+    #if PWM_PIN_SCAN_MODE
+    for (size_t i = 0; i < (sizeof(PWM_SCAN_PINS) / sizeof(PWM_SCAN_PINS[0])); i++) {
+        pinMode(PWM_SCAN_PINS[i], OUTPUT);
+        digitalWrite(PWM_SCAN_PINS[i], LOW);
+    }
+    pwm_scan_index = 0;
+    pwm_scan_last_switch_ms = millis();
+    digitalWrite(PWM_SCAN_PINS[pwm_scan_index], HIGH);
+    Serial.println("PIN SCAN MODE ACTIVE (PWM disabled).");
+    Serial.print("Active test pin: ");
+    Serial.println(PWM_SCAN_PINS[pwm_scan_index]);
+    #else
     // --- Configure PWM via arduino-pico core API ---
     pinMode(PWM_OUTPUT_PIN, OUTPUT);
     analogWriteFreq(PWM_FREQ_HZ);                      // Set once here — do NOT call from loop or ISR
@@ -177,6 +218,8 @@ void setup() {
     analogWrite(PWM_OUTPUT_PIN, (int)sine_table[0]);   // Initialises PWM for this pin (divider = 1)
 
     // --- Start repeating timer for sine duty cycle updates ---
+    pwm_update_pending = false;
+    pwm_duty_pending = sine_table[0];
     if (!add_repeating_timer_us(-(int64_t)SINE_UPDATE_US,
                                 sineTimerCallback, NULL, &sine_timer)) {
         Serial.println("ERROR: Failed to start sine update timer!");
@@ -185,12 +228,36 @@ void setup() {
 
     Serial.print("Sine wave output started on GPIO ");
     Serial.println(PWM_OUTPUT_PIN);
+    #endif
 }
 
 // ============================================================================
-// Main loop — nothing to do; sine update runs entirely from the timer ISR
+// Main loop — applies latest duty computed by the timer callback
 // ============================================================================
 
 void loop() {
-    delay(1000);
+    #if PWM_PIN_SCAN_MODE
+    const uint32_t now_ms = millis();
+    if ((now_ms - pwm_scan_last_switch_ms) >= 3000u) {
+        digitalWrite(PWM_SCAN_PINS[pwm_scan_index], LOW);
+        pwm_scan_index = (uint8_t)((pwm_scan_index + 1u) % (sizeof(PWM_SCAN_PINS) / sizeof(PWM_SCAN_PINS[0])));
+        digitalWrite(PWM_SCAN_PINS[pwm_scan_index], HIGH);
+        pwm_scan_last_switch_ms = now_ms;
+        Serial.print("Active test pin: ");
+        Serial.println(PWM_SCAN_PINS[pwm_scan_index]);
+    }
+    delay(10);
+    return;
+    #endif
+
+    if (pwm_update_pending) {
+        noInterrupts();
+        uint16_t duty = pwm_duty_pending;
+        pwm_update_pending = false;
+        interrupts();
+        analogWrite(PWM_OUTPUT_PIN, (int)duty);
+    }
+
+    // Keep loop responsive to apply PWM updates quickly.
+    delay(1);
 }
