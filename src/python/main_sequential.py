@@ -50,9 +50,21 @@ def cleanup_odrive(odrive_ctrl):
             except Exception:
                 pass
 
+            # Clear GPIO1 analog mapping endpoint after identification/error.
+            try:
+                odrive_ctrl.odrv.config.gpio1_analog_mapping.endpoint = None
+            except Exception:
+                pass
+
             # Ensure final mode is Position (per safety requirement).
             try:
                 odrive_ctrl.set_control_mode("Position")
+            except Exception:
+                pass
+
+            # Restore step/dir mode after run completion/error.
+            try:
+                odrive_ctrl.set_enable_step_dir(True)
             except Exception:
                 pass
     finally:
@@ -233,11 +245,21 @@ class SerialHelper:
             except Exception as e:
                 return (False, "", f"Send command failed: {e}")
     
-    def upload_csv(self, csv_path):
-        """Upload CSV file to Controllino."""
+    def upload_csv(self, csv_path, *, max_torque=None):
+        """Upload CSV file to Controllino.
+
+        If max_torque is provided, the CSV second column is treated as a normalized
+        multisine signal (clamped to ±1) and scaled to torque via:
+          torque = max_torque * clamp(signal, -1, 1)
+        The scaled torque values are streamed to the Controllino without modifying
+        the source file on disk.
+        """
         if not self.serial_port or not self.serial_port.is_open:
             return (False, "Serial port not connected")
         
+        def clamp(x, lo, hi):
+            return lo if x < lo else hi if x > hi else x
+
         try:
             # Read CSV file and count data lines
             data_lines = []
@@ -248,7 +270,31 @@ class SerialHelper:
                         continue
                     if line.startswith('#') or line.lower() == 'time_s,signal':
                         continue
-                    data_lines.append(line)
+                    # Parse data row as "time,signal"
+                    if ',' not in line:
+                        # Skip non-data lines (we expect 2 columns)
+                        continue
+
+                    time_str, signal_str = line.split(',', 1)
+                    time_str = time_str.strip()
+                    signal_str = signal_str.strip()
+                    if not time_str or not signal_str:
+                        continue
+
+                    try:
+                        time_val = float(time_str)
+                        signal_val = float(signal_str)
+                    except ValueError:
+                        continue
+
+                    if max_torque is None:
+                        # Backwards compatible: send as-is (already torque)
+                        data_lines.append(f"{time_val:.10e},{signal_val:.10e}")
+                    else:
+                        # Scale normalized multisine to torque (Nm)
+                        s = clamp(signal_val, -1.0, 1.0)
+                        torque_val = float(max_torque) * s
+                        data_lines.append(f"{time_val:.10e},{torque_val:.10e}")
             
             if len(data_lines) == 0:
                 return (False, "CSV file has no data lines")
@@ -516,14 +562,14 @@ def process_data(data_array, sample_rate, odrive_data=None):
     
     Args:
         data_array: numpy array with shape (num_samples, 5)
-                   Columns: [A0, A1, A2, A3, torque_command]
+                   Columns: [A0, A1, A2, A3, output_voltage_command]
         sample_rate: Sample rate in Hz
         odrive_data: Optional dict with ODrive variables (if ODrive connected) - not used for Controllino
     """
     num_samples = data_array.shape[0]
     num_channels = data_array.shape[1]
     
-    # Verify we have 5 channels (4 inputs + torque_command)
+    # Verify we have 5 channels (4 inputs + output_voltage_command)
     if num_channels != 5:
         raise ValueError(f"Expected 5 channels (4 inputs + torque_command), got {num_channels}")
     
@@ -531,20 +577,20 @@ def process_data(data_array, sample_rate, odrive_data=None):
     t = np.arange(num_samples) / sample_rate
     
     # Extract input channels (A0-A3) - indices 0-3
+    # Firmware reports these as scaled input voltages (e.g. 0..25.8 V full-scale),
+    # not raw ADC counts.
     A0 = data_array[:, 0]
     A1 = data_array[:, 1]
     A2 = data_array[:, 2]
     A3 = data_array[:, 3]
     
-    # Extract torque command - index 4 (sent to ODrive via CAN)
-    torque_command = data_array[:, 4]
+    # Extract commanded output voltage - index 4 (PWM->RC output into ODrive GPIO1)
+    output_voltage = data_array[:, 4]
+    # Backwards-compatible alias used by existing plotting config
+    torque_command = output_voltage
     
-    # For compatibility with existing code, also store as output_voltage
-    # (though it's actually torque command)
-    output_voltage = torque_command
-    
-    # Calculate accelerations (acc0-acc3) - these are the raw analog inputs
-    # In this system, the analog inputs ARE the accelerometer readings
+    # Backwards-compatible naming used by plotting configs:
+    # acc0-acc3 are the A0-A3 input voltages from the sensors.
     acc0 = A0
     acc1 = A1
     acc2 = A2
@@ -727,6 +773,16 @@ def main():
     print("=" * 60)
     print("Sequential Phase 1 Data Acquisition System")
     print("=" * 60)
+
+    # Runtime mode prompt: default to Position for safety.
+    while True:
+        control_mode_prompt = input("Select ODrive control mode [p/t] (default=p): ").strip().lower()
+        if control_mode_prompt in ("", "p", "t"):
+            break
+        print("Invalid input. Enter 'p' for Position, 't' for Torque, or press Enter for default.")
+
+    selected_control_mode = "Torque" if control_mode_prompt == "t" else "Position"
+    print(f"Selected ODrive control mode: {selected_control_mode}")
     
     # Initialize Qt application (needed for dialogs and matplotlib)
     app = QApplication(sys.argv)
@@ -749,10 +805,25 @@ def main():
         if odrive_ctrl.connect():
             odrive_connected = True
             print("ODrive connected successfully.")
-            # Configure ODrive for torque control via CAN
-            odrive_ctrl.set_control_mode('Torque')
-            # Enter closed-loop control state (will be done before starting torque)
-            print("ODrive configured for torque control via CAN.")
+
+            # Keep step/dir disabled while running identification so torque path works.
+            if not odrive_ctrl.set_enable_step_dir(False):
+                print("WARNING: Failed to disable ODrive step/dir mode at startup.")
+
+            # Apply user-selected control mode from startup prompt.
+            if not odrive_ctrl.set_control_mode(selected_control_mode):
+                print(f"WARNING: Failed to set control mode to {selected_control_mode}.")
+
+            # Configure ODrive for PWM->GPIO1 analog mapping (no CAN)
+            if not odrive_ctrl.configure_gpio1_analog_torque_mapping(
+                analog_min=-3.874,
+                analog_max=2.0,
+                enable_gpio_num=7,
+                control_mode=selected_control_mode,
+            ):
+                print("WARNING: Failed to configure ODrive GPIO1 analog mapping. Continuing anyway.")
+            else:
+                print("ODrive configured for PWM->GPIO1 analog torque mapping.")
         else:
             print("ODrive connection failed. Continuing without ODrive.")
         
@@ -767,6 +838,22 @@ def main():
             return 1
         
         print(f"CSV file selected: {os.path.basename(csv_path)}")
+
+        # Step 3b: Prompt for max torque scaling (Nm)
+        while True:
+            try:
+                max_torque_str = input("Enter max output torque (Nm, default=2.0): ").strip()
+                if not max_torque_str:
+                    max_torque = 2.0
+                else:
+                    max_torque = float(max_torque_str)
+                if max_torque > 0:
+                    break
+                print("Max torque must be > 0. Please try again.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+        
+        print(f"Using max output torque: {max_torque:.6g} Nm (multisine is clamped to ±1)")
         
         # Parse CSV file to extract sample rate (needed for ODrive configuration)
         # Note: Voltage values will be read from Controllino acquisition data, not from CSV
@@ -818,7 +905,7 @@ def main():
         
         # Upload CSV to Controllino
         print("Uploading CSV to Controllino...")
-        success, message = serial_helper.upload_csv(csv_path)
+        success, message = serial_helper.upload_csv(csv_path, max_torque=max_torque)
         if not success:
             print(f"CSV upload failed: {message}")
             serial_helper.disconnect()
@@ -829,7 +916,7 @@ def main():
         
         # Step 4: Optional test output
         print("\nStep 4: Optional test output")
-        test_response = input("Test torque output first? (y/n, default=n): ").strip().lower()
+        test_response = input("Test PWM output first? (y/n, default=n): ").strip().lower()
         if test_response == 'y':
             # Get test duration once
             while True:
@@ -869,7 +956,7 @@ def main():
                 print("Test output started. Waiting for completion...")
 
                 # Wait for Controllino serial message that output has finished
-                # Controllino will set torque to zero at end of duration and send "ACK: Output complete"
+                # Controllino will set output to zero at end of duration and send "ACK: Output complete"
                 output_complete = False
                 timeout = 0
                 max_timeout = int((test_duration + 5) * 10)  # Wait a bit longer than duration (0.1s increments)
@@ -880,7 +967,7 @@ def main():
                             line = serial_helper.serial_port.readline().decode().strip()
                             if line == "ACK: Output complete":
                                 output_complete = True
-                                print("Output completed. Torque commands set to zero.")
+                                print("Output completed. PWM output set to zero.")
                                 break
                             elif line.startswith("ERROR:"):
                                 print(f"Error received: {line}")
@@ -984,7 +1071,7 @@ def main():
             time.sleep(delay)
         
         # Wait for acquisition to complete
-        # Controllino will set torque to zero after acquisition and send "ACK: Acquisition complete"
+        # Controllino will set output to zero after acquisition and send "ACK: Acquisition complete"
         print(f"\nWaiting for acquisition to complete (duration: {duration} seconds)...")
         acquisition_complete = False
         timeout = 0
@@ -996,7 +1083,7 @@ def main():
                     line = serial_helper.serial_port.readline().decode().strip()
                     if line == "ACK: Acquisition complete":
                         acquisition_complete = True
-                        print("Acquisition completed. Torque commands set to zero.")
+                        print("Acquisition completed. PWM output set to zero.")
                         break
                     elif line.startswith("ERROR:"):
                         print(f"Error received: {line}")
@@ -1016,7 +1103,13 @@ def main():
         if odrive_connected:
             print("\nDisabling ODrive closed-loop control...")
             odrive_ctrl.exit_closed_loop()
+            # Restore GPIO1 analog mapping to a safe default (no endpoint)
+            try:
+                odrive_ctrl.odrv.config.gpio1_analog_mapping.endpoint = None
+            except Exception:
+                pass
             odrive_ctrl.set_control_mode('Position')
+            odrive_ctrl.set_enable_step_dir(True)
         
         # Step 7: Retrieve data
         print("\nStep 9: Retrieving data from Controllino...")

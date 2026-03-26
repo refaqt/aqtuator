@@ -3,14 +3,14 @@
 ## Goal
 This project performs synchronized data acquisition and motor control using an `ODrive S1` drive:
 - A host computer (Python) sends a torque waveform to a microcontroller.
-- The microcontroller plays the waveform (via CAN) while sampling multiple analog channels.
+- The microcontroller plays the waveform as **PWM (RC-filtered analog) into ODrive GPIO1** while sampling multiple analog channels.
 - The host retrieves the recorded data over `serial` and computes analysis (time-domain plots and frequency-domain transfer estimates).
 
 ## Main components
 ### Microcontroller firmware (Controllino Micro / RP2040, Arduino IDE)
 - Torque playback + multi-channel acquisition: [`src/controllino/main-controllino/main-controllino.ino`](src/controllino/main-controllino/main-controllino.ino)
   - Serial protocol: `UPLOAD_CSV` / `START_OUTPUT` / `START_IDENTIFICATION` / `GET_DATA` / `GET_STATUS`
-  - Timing: RP2040 repeating timer ISR drives both torque updates and ADC sampling
+  - Timing: RP2040 repeating timer ISR drives both **PWM duty updates** and ADC sampling
 - Servo system identification (ODrive feedback capture): [`src/controllino/controllino-servo-identification/controllino-servo-identification.ino`](src/controllino/controllino-servo-identification/controllino-servo-identification.ino)
   - Serial protocol: `START_ACQUISITION` / `GET_DATA` / `GET_STATUS`
   - Timing: cyclic CAN messages from ODrive are paired (torque + position) and streamed back to Python
@@ -25,6 +25,8 @@ This project performs synchronized data acquisition and motor control using an `
 ### Host-side control + analysis (Python)
 - Torque waveform + acquisition workflow (sequential phase 1): [`src/python/main_sequential.py`](src/python/main_sequential.py)
   - Uploads the waveform via serial, starts `START_IDENTIFICATION`, then calls `GET_DATA`
+  - Prompts operator for ODrive `CONTROL_MODE` at runtime (`p`/`t`, default `p`)
+  - Forces `odrv0.axis0.config.enable_step_dir = False` at startup so torque-command path can run, then restores it to `True` after identification/cleanup
   - Plots time series and a Bode-like transfer estimate via `scipy.signal.csd`/`welch`
 - ODrive frequency sweep identification: [`src/python/odrive_servo_identification.py`](src/python/odrive_servo_identification.py)
   - Sweeps frequencies, configures ODrive cyclic CAN message rates, starts `START_ACQUISITION`
@@ -41,7 +43,7 @@ This project performs synchronized data acquisition and motor control using an `
 ```mermaid
 flowchart TD
   Python["Python host (analysis + plotting)"] -->|"serial commands + waveform upload"| ControllinoFW["Controllino firmware"]
-  ControllinoFW -->|"CAN torque / cyclic feedback"| ODrive["ODrive S1"]
+  ControllinoFW -->|"PWM (RC-filtered) -> GPIO1 analog mapping"| ODrive["ODrive S1"]
   ControllinoFW -->|"serial: DATA + DATA_END (and optional sections)"| Python
 ```
 
@@ -59,7 +61,7 @@ The Controllino torque/acquisition firmware uses framed serial messages:
   - when acquisition completes, firmware emits `ACK: Acquisition complete`
 - `GET_DATA` streams:
   - header: `DATA:<sample_count>,<sample_period>,5`
-  - samples: per-line floats in this order: `A0,A1,A2,A3,torque_command`
+  - samples: per-line floats in this order: `A0,A1,A2,A3,output_voltage_command`
   - terminator: `DATA_END`
 
 ### Analysis done in Python
@@ -67,6 +69,11 @@ The Controllino torque/acquisition firmware uses framed serial messages:
 - a time vector using `sample_rate = 1.0 / sample_period`
 - geometric/derived quantities (`x`, `y`, `z`) and time-series plots
 - Bode-style transfer estimates from `scipy.signal.csd`/`welch`
+
+Runtime ODrive state machine in this workflow:
+- Startup: connect ODrive -> prompt/apply control mode (`Position` default or `Torque`) -> set `enable_step_dir=False`
+- Run: enter closed-loop for output/acquisition window
+- Completion/cleanup: exit closed-loop -> set control mode to `Position` -> set `enable_step_dir=True`
 
 ## Workflow B: Servo identification (frequency sweep)
 ### ODrive cyclic CAN capture

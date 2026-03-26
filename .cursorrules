@@ -1,0 +1,4 @@
+### Global Rules (project)
+
+- When running shell commands on Windows PowerShell, avoid bash-only idioms (`&&`, `<<EOF` heredocs, etc.). Use PowerShell-safe chaining (`;`) and `python -c` (or a temporary `.py` file) for quick scripts unless explicitly switching shells.
+

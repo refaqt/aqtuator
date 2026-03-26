@@ -1,27 +1,22 @@
 /*
- * Controllino Micro ODrive CAN Multisine Control and Data Acquisition
+ * Controllino Micro ODrive PWM Multisine Control and Data Acquisition
  * 
- * Synchronized torque command transmission via CAN and analog input acquisition.
+ * Synchronized command output via PWM (RC-filtered analog) and analog input acquisition.
  * Uses hardware timers for precise timing.
  * 
  * SETUP INSTRUCTIONS:
  * 1. Install Controllino board support in Arduino IDE
- * 2. CAN.h library is included with Controllino board support
- * 3. Connect CAN bus: CANH to CANH, CANL to CANL, common GND
- * 4. Add 120-ohm termination resistors at both ends of CAN bus
- * 5. Configure ODrive S1 node ID (default: 0) to match ODRIVE_NODE_ID constant
- * 6. Connect analog inputs A0-A3 to sensors
+ * 2. Connect Controllino PWM output (D0) through RC filter to ODrive GPIO1 (analog input)
+ * 3. Connect analog inputs A0-A3 to sensors
  * 
  * USAGE:
  * - Open Serial Monitor at 115200 baud
  * - Upload CSV file with UPLOAD_CSV command
- * - Use START_OUTPUT,<duration> for testing (torque output only)
+ * - Use START_OUTPUT,<duration> for testing (PWM output only)
  * - Use START_IDENTIFICATION,<acquisition_duration>,<acquisition_start_delay> for full operation
  * 
  * NOTE: Serial communication is blocked during torque output for maximum performance.
  */
-
-#include <CAN.h>
 
 #ifdef ARDUINO_ARCH_RP2040
   #include <hardware/timer.h>
@@ -35,19 +30,34 @@
 
 #define SERIAL_BAUD 115200
 #define MAX_CSV_SAMPLES 2000   // Maximum samples in CSV file (20 KB)
-#define MAX_ACQ_SAMPLES 4000   // Maximum acquisition samples (5 channels: 4 inputs + torque)
+#define MAX_ACQ_SAMPLES 4000   // Maximum acquisition samples (5 channels: 4 inputs + output_voltage)
                                 // Memory: 4000 × 5 × 4 bytes = 80 KB
                                 // Total: CSV (20 KB) + Acquisition (80 KB) = 100 KB (RP2040 has 264KB RAM)
-#define ODRIVE_NODE_ID 0
-#define CAN_BAUD_RATE 1000000  // 1 Mbps
 
-// ODrive CAN message IDs (CANSimple protocol)
-#define CAN_ID_SET_TORQUE 0x0E
-#define CAN_ID_SET_AXIS_STATE 0x007
+// PWM output pin (Controllino MICRO: D0 / GPIO0 header)
+#define PWM_OUTPUT_PIN D0
 
-// ODrive Axis States
-#define AXIS_STATE_IDLE 1
-#define AXIS_STATE_CLOSED_LOOP_CONTROL 8
+// PWM configuration (mirrors test-pwm-output defaults)
+#define SYS_CLOCK_HZ 125000000UL
+#define PWM_RESOLUTION_BITS 9
+#define PWM_TOP ((1u << PWM_RESOLUTION_BITS) - 1u)
+#define PWM_FREQ_HZ (SYS_CLOCK_HZ / ((uint32_t)PWM_TOP + 1u))
+
+// Clamp: never exceed 0.84 of maximum PWM value (per requirement)
+#define PWM_MAX_FRAC 0.84f
+
+// ODrive GPIO1 analog mapping (used to convert CSV "torque" sample into analog voltage)
+// Voltage mapping is assumed 0..3.3V on ODrive GPIO1.
+#define ODRIVE_GPIO1_MIN_TORQUE (-3.874f)
+#define ODRIVE_GPIO1_MAX_TORQUE (2.0f)
+#define ODRIVE_GPIO1_VREF (3.3f)
+
+// ODrive GPIO1 has a pull-up to 5V. Together with the RC series resistance,
+// this means PWM=0% does not yield 0V at the ODrive pin. We must compensate
+// when converting a desired ODrive-pin voltage to a PWM duty cycle.
+#define ODRIVE_GPIO1_PULLUP_OHMS (2700.0f)
+#define RC_SERIES_OHMS (720.0f)
+#define ODRIVE_GPIO1_PULLUP_V (5.0f)
 
 // ADC pins (Controllino Micro - check pin mapping)
 // RP2040 ADC channels: GPIO26-29 are ADC0-3
@@ -56,6 +66,12 @@
 #define ADC_PIN_A1 27
 #define ADC_PIN_A2 28
 #define ADC_PIN_A3 29
+
+// Analog input scaling (A0-A3)
+// Note: RP2040 ADC is 12-bit (0..4095). In this project we scale those counts
+// to an external full-scale of 0..25.8 V (e.g. due to front-end scaling/divider).
+#define A0A3_FULL_SCALE_V (25.8f)
+#define RP2040_ADC_MAX_COUNTS (4095.0f)
 
 // ============================================================================
 // State Machine
@@ -83,7 +99,7 @@ uint32_t csv_sample_rate_hz = 1000;
 // Acquisition Data Storage
 // ============================================================================
 
-float acq_buffer[MAX_ACQ_SAMPLES * 5];  // 5 channels: A0-A3, torque_command
+float acq_buffer[MAX_ACQ_SAMPLES * 5];  // 5 channels: A0-A3, output_voltage_command
 uint32_t acq_sample_count = 0;
 volatile uint32_t acq_index = 0;
 float acq_sample_period = 0.001;
@@ -124,19 +140,65 @@ unsigned long output_duration_ms = 0;
   uint8_t adc_channels[4] = {ADC_PIN_A0, ADC_PIN_A1, ADC_PIN_A2, ADC_PIN_A3};
 #endif
 
+// PWM update handoff (timer ISR -> loop)
+static volatile bool pwm_update_pending = false;
+static volatile uint16_t pwm_duty_pending = 0;
+static volatile float output_voltage_pending = 0.0f;
+
 // ============================================================================
 // Function Prototypes
 // ============================================================================
 
-void setupCAN();
 void setupTimer();
 void setupADC();
 bool timerCallback(struct repeating_timer *t);
 void timerISR();
-void sendTorqueSetpoint(float torque);
 bool parseCSVFromSerial(uint32_t expected_lines);
 void processCommand(String cmd);
 void printStatus();
+
+static inline float clampf(float x, float lo, float hi) {
+  if (x < lo) return lo;
+  if (x > hi) return hi;
+  return x;
+}
+
+static inline float torqueToOdriveGpio1Voltage(float torque) {
+  const float span = (ODRIVE_GPIO1_MAX_TORQUE - ODRIVE_GPIO1_MIN_TORQUE);
+  if (span == 0.0f) return 0.0f;
+  float norm = (torque - ODRIVE_GPIO1_MIN_TORQUE) / span; // 0..1 ideally
+  norm = clampf(norm, 0.0f, 1.0f);
+  return norm * ODRIVE_GPIO1_VREF;
+}
+
+static inline float odriveGpio1VoltageToPwmVoltage(float v_pin) {
+  const float Rs = RC_SERIES_OHMS;
+  const float Rp = ODRIVE_GPIO1_PULLUP_OHMS;
+  const float Vp = ODRIVE_GPIO1_PULLUP_V;
+
+  v_pin = clampf(v_pin, 0.0f, ODRIVE_GPIO1_VREF);
+
+  if (Rs <= 0.0f || Rp <= 0.0f) {
+    // Fallback: best effort without divider compensation
+    return v_pin;
+  }
+
+  const float g_sum = (1.0f / Rs) + (1.0f / Rp);
+  if (g_sum <= 0.0f) return 0.0f;
+
+  // Invert: V_pin = (V_pwm/Rs + Vp/Rp) / (1/Rs + 1/Rp)
+  float v_pwm = Rs * (v_pin * g_sum - (Vp / Rp));
+  return clampf(v_pwm, 0.0f, ODRIVE_GPIO1_VREF);
+}
+
+static inline uint16_t voltageToPwmDuty(float v) {
+  v = clampf(v, 0.0f, ODRIVE_GPIO1_VREF);
+  float duty_f = (v / ODRIVE_GPIO1_VREF) * (float)PWM_TOP;
+  float max_duty = PWM_MAX_FRAC * (float)PWM_TOP;
+  if (duty_f > max_duty) duty_f = max_duty;
+  if (duty_f < 0.0f) duty_f = 0.0f;
+  return (uint16_t)(duty_f + 0.5f);
+}
 
 // ============================================================================
 // Setup Function
@@ -151,9 +213,13 @@ void setup() {
   Serial.println("Controllino Micro ODrive Control");
   Serial.println("========================================");
   Serial.flush();
-  
-  // Initialize CAN
-  setupCAN();
+
+  // Initialize PWM output (D0 -> RC filter -> ODrive GPIO1)
+  pinMode(PWM_OUTPUT_PIN, OUTPUT);
+  analogWriteFreq(PWM_FREQ_HZ);
+  analogWriteRange(PWM_TOP);
+  analogWrite(PWM_OUTPUT_PIN, 0);
+  pwm_update_pending = false;
   
   // Initialize ADC (RP2040)
   #ifdef ARDUINO_ARCH_RP2040
@@ -177,6 +243,15 @@ void setup() {
 // ============================================================================
 
 void loop() {
+  // Always apply latest PWM update, even while serial is blocked.
+  if (pwm_update_pending) {
+    noInterrupts();
+    const uint16_t duty = pwm_duty_pending;
+    pwm_update_pending = false;
+    interrupts();
+    analogWrite(PWM_OUTPUT_PIN, (int)duty);
+  }
+
   // Skip reading Serial if parsing CSV
   if (parsing_csv) {
     delay(1);
@@ -210,31 +285,6 @@ void loop() {
     String cmd = Serial.readStringUntil('\n');
     processCommand(cmd);
   }
-}
-
-// ============================================================================
-// CAN Setup
-// ============================================================================
-
-void setupCAN() {
-  Serial.print("Initializing CAN bus at ");
-  Serial.print(CAN_BAUD_RATE);
-  Serial.println(" bps...");
-  
-  #ifdef ARDUINO_ARCH_RP2040
-    SPI1.setRX(PIN_SPI1_MISO);
-    SPI1.setTX(PIN_SPI1_MOSI);
-    SPI1.setSCK(PIN_SPI1_SCK);
-  #endif
-  
-  if (!CAN.begin(CAN_BAUD_RATE)) {
-    Serial.println("ERROR: CAN initialization failed!");
-    Serial.println("Check CAN wiring and connections.");
-    while (1) {
-      delay(1000);
-    }
-  }
-  Serial.println("CAN bus initialized successfully.");
 }
 
 // ============================================================================
@@ -310,25 +360,34 @@ void timerISR() {
   unsigned long current_time_us = micros();
   last_sample_time_us = current_time_us;
   
-  float current_torque = 0.0;
+  float current_torque = 0.0f;
+  float current_output_voltage = 0.0f;
   
   // ========================================================================
-  // Torque Command Transmission (if active)
+  // Command Output (if active): CSV torque -> ODrive GPIO1 voltage -> PWM duty
   // ========================================================================
   if (torque_output_active && csv_sample_count > 0) {
     // Get torque value from CSV (cyclic playback)
     current_torque = csv_torque_values[csv_index];
     csv_index = (csv_index + 1) % csv_sample_count;
     
-    // Send torque command via CAN
-    sendTorqueSetpoint(current_torque);
+    // Torque (Nm) -> desired ODrive GPIO1 pin voltage (0..3.3V)
+    current_output_voltage = torqueToOdriveGpio1Voltage(current_torque);
+    // Compensate for pull-up divider to get required PWM-side voltage (0..3.3V)
+    float pwm_voltage = odriveGpio1VoltageToPwmVoltage(current_output_voltage);
+    uint16_t duty = voltageToPwmDuty(pwm_voltage);
+    pwm_duty_pending = duty;
+    output_voltage_pending = current_output_voltage;
+    pwm_update_pending = true;
     
     // Check if output duration expired (for START_OUTPUT test mode)
     if (output_duration_ms > 0 && is_test_output_mode) {
       unsigned long elapsed = millis() - output_start_time;
       if (elapsed >= output_duration_ms) {
-        // Set torque to zero before stopping (send once - ISR will be called again if needed)
-        sendTorqueSetpoint(0.0f);
+        // Set output to zero before stopping
+        pwm_duty_pending = 0;
+        output_voltage_pending = 0.0f;
+        pwm_update_pending = true;
         
         torque_output_active = false;
         output_duration_ms = 0;
@@ -369,19 +428,20 @@ void timerISR() {
         // All pins are valid ADC inputs (GPIO26-29 map to ADC0-3)
         adc_select_input(gpio_pin - 26);
         uint16_t adc_raw = adc_read();
-        // Convert to voltage (0-3.3V, 12-bit ADC: 0-4095)
-        sample_ptr[ch] = (float)adc_raw * 3.3f / 4095.0f;
+        // Convert ADC counts to scaled input voltage (0..A0A3_FULL_SCALE_V)
+        sample_ptr[ch] = (float)adc_raw * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
       }
     #else
       // Fallback: use analogRead (not hardware-timed, but works)
-      sample_ptr[0] = analogRead(A0) * 3.3f / 4095.0f;
-      sample_ptr[1] = analogRead(A1) * 3.3f / 4095.0f;
-      sample_ptr[2] = analogRead(A2) * 3.3f / 4095.0f;
-      sample_ptr[3] = analogRead(A3) * 3.3f / 4095.0f;
+      sample_ptr[0] = analogRead(A0) * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
+      sample_ptr[1] = analogRead(A1) * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
+      sample_ptr[2] = analogRead(A2) * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
+      sample_ptr[3] = analogRead(A3) * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
     #endif
     
-    // Store torque command (current value being sent)
-    sample_ptr[4] = current_torque;
+    // Store commanded output voltage (what we're trying to drive into ODrive GPIO1)
+    // This is derived from the CSV "torque" sample via the ODrive analog mapping.
+    sample_ptr[4] = current_output_voltage;
     
     acq_index++;
     acq_sample_count = acq_index;
@@ -390,8 +450,10 @@ void timerISR() {
     if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
       acquisition_active = false;
       
-      // Set torque to zero after acquisition completes
-      sendTorqueSetpoint(0.0f);
+      // Set output to zero after acquisition completes
+      pwm_duty_pending = 0;
+      output_voltage_pending = 0.0f;
+      pwm_update_pending = true;
       
       torque_output_active = false;
       serial_blocked = false;  // Unblock serial to send completion message
@@ -403,8 +465,10 @@ void timerISR() {
       // Buffer limit reached
       acquisition_active = false;
       
-      // Set torque to zero
-      sendTorqueSetpoint(0.0f);
+      // Set output to zero
+      pwm_duty_pending = 0;
+      output_voltage_pending = 0.0f;
+      pwm_update_pending = true;
       
       torque_output_active = false;
       serial_blocked = false;
@@ -414,34 +478,6 @@ void timerISR() {
       current_state = STATE_IDLE;
     }
   }
-}
-
-// ============================================================================
-// CAN Communication
-// ============================================================================
-
-void sendTorqueSetpoint(float torque) {
-  // Calculate CAN ID: ODrive uses node_id in bits 5-7
-  uint32_t canId = CAN_ID_SET_TORQUE + (ODRIVE_NODE_ID << 5);
-  
-  // Begin CAN packet
-  CAN.beginPacket(canId);
-  
-  // Write torque (4 bytes, little-endian float)
-  uint8_t* torqueBytes = (uint8_t*)&torque;
-  CAN.write(torqueBytes[0]);
-  CAN.write(torqueBytes[1]);
-  CAN.write(torqueBytes[2]);
-  CAN.write(torqueBytes[3]);
-  
-  // Write reserved bytes (4 bytes, set to 0)
-  CAN.write(0);
-  CAN.write(0);
-  CAN.write(0);
-  CAN.write(0);
-  
-  // End packet and send
-  CAN.endPacket();
 }
 
 // ============================================================================
@@ -572,7 +608,7 @@ bool parseCSVFromSerial(uint32_t expected_lines) {
   }
   
   if (csv_sample_count == 0) {
-    Serial.println("ERROR: No torque samples loaded");
+    Serial.println("ERROR: No samples loaded");
     return false;
   }
   
@@ -737,7 +773,7 @@ void processCommand(String cmd) {
     Serial.print(",");
     Serial.print(acq_sample_period, 6);
     Serial.print(",");
-    Serial.print(5);  // 5 channels: A0-A3, torque_command
+  Serial.print(5);  // 5 channels: A0-A3, output_voltage_command
     Serial.println();
     
     // Send data samples (text format)
@@ -745,7 +781,7 @@ void processCommand(String cmd) {
       float *sample_ptr = &acq_buffer[i * 5];
       
       Serial.print(sample_ptr[0], 4);  // A0
-      for (int ch = 1; ch < 5; ch++) {  // A1-A3, torque_command
+      for (int ch = 1; ch < 5; ch++) {  // A1-A3, output_voltage_command
         Serial.print(",");
         Serial.print(sample_ptr[ch], 4);
       }
@@ -798,8 +834,6 @@ void printStatus() {
   Serial.println(acquisition_active ? "ACTIVE" : "INACTIVE");
   Serial.print("Serial Blocked: ");
   Serial.println(serial_blocked ? "YES" : "NO");
-  Serial.print("ODrive Node ID: ");
-  Serial.println(ODRIVE_NODE_ID);
   Serial.println("========================================\n");
 }
 

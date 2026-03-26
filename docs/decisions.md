@@ -39,4 +39,16 @@
 **Alternatives considered:** Continue using a project-local custom alias with hard-coded `2u`, or use unnamed literals without documenting source-of-truth mapping.
 **Consequences:** Pin assignments are now aligned with official docs/core headers and are easier to validate; future sketches should reference core aliases and include mapping diagnostics when hardware probing is involved.
 
+## Replace CAN torque with PWM->GPIO1 analog mapping — 2026-03-25
+**Context:** The torque command path originally used ODrive CAN torque messages. For the target setup we need to drive ODrive via an analog command generated from Controllino PWM (through an RC filter) into ODrive `GPIO1` with analog input mapping.
+**Decision:** Remove all torque CAN sending from the Controllino acquisition workflow and instead output PWM on `D0`, clamped to 0.84 of full-scale, feeding ODrive `GPIO1` analog mapping to `axis0.controller._input_torque_property` while keeping `POSITION_CONTROL` + `PASSTHROUGH` input mode.
+**Alternatives considered:** Keep CAN for torque and add PWM as a second path, or map analog input to a different endpoint (position/velocity) instead of torque.
+**Consequences:** No CAN wiring required for Workflow A; the excitation signal is now a commanded analog voltage (derived from the waveform) and the usable analog range is reduced by the 0.84 clamp.
+
+## Runtime control-mode prompt with step/dir gating — 2026-03-26
+**Context:** Operators need to quickly choose between torque and position controller modes at runtime, but the torque-command path should not start while `axis0.config.enable_step_dir` is active.
+**Decision:** In `main_sequential.py`, prompt for mode using `t`/`p` with default `p` (position). At startup force `odrv0.axis0.config.enable_step_dir = False`, and after identification/cleanup restore `enable_step_dir = True`.
+**Alternatives considered:** Keep control mode hard-coded to position; leave step/dir always enabled; move mode selection to source-code constant only.
+**Consequences:** Safer and faster operator workflow without code edits between runs; reduced risk of blocked torque-command behavior during acquisition; cleanup path now explicitly restores step/dir state.
+
 

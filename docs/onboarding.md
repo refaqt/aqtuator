@@ -7,12 +7,13 @@ Install the Python dependencies:
 pip install -r src/python/requirements.txt
 ```
 
-### Hardware (Controllino + ODrive over CAN)
+### Hardware (Controllino PWM -> ODrive GPIO1)
 You need:
 - Controllino Micro flashed with the appropriate sketch (see below)
-- `ODrive S1` configured for torque control via CAN
-- CAN wiring between Controllino and ODrive
-  - Ensure termination resistors are installed at both ends of the CAN bus (`120-ohm` each), as indicated in the sketches’ setup comments.
+- `ODrive S1` configured to map `GPIO1` analog input to torque input (configured by the Python scripts or manually)
+- Wiring:
+  - Controllino `D0` PWM output -> RC filter -> ODrive `GPIO1` (analog input)
+  - Common GND between Controllino and ODrive
 
 ### Serial connection
 The Controllino serial baud rate is `115200` (see the sketches).
@@ -28,6 +29,7 @@ Use Arduino IDE with the Controllino Micro board support installed, then upload 
   - `src/controllino/controllino-servo-identification/controllino-servo-identification.ino`
 
 Both sketches expect `ODRIVE_NODE_ID` in the firmware to match your ODrive CAN node id.
+The torque/acquisition sketch no longer uses CAN for torque commands.
 
 ## Run: Workflow A (torque playback + acquisition)
 Entry point:
@@ -40,6 +42,7 @@ python src/python/main_sequential.py
 
 What happens:
 - Connects to Controllino via serial
+- Prompts for ODrive `CONTROL_MODE`: `p` (position, default) or `t` (torque)
 - Uploads a multisine CSV waveform
 - Starts `START_IDENTIFICATION,<duration>,<start_delay>`
 - Waits for `ACK: Acquisition complete`
@@ -47,6 +50,8 @@ What happens:
 
 Notes:
 - This workflow does not attempt to retrieve ODrive position feedback during the real-time operation (per the sequential script’s logic).
+- ODrive torque is driven by the Controllino PWM output (RC-filtered) into `GPIO1` analog mapping (not CAN).
+- `odrv0.axis0.config.enable_step_dir` is forced to `False` at startup to allow torque-command operation, and set back to `True` after identification/cleanup.
 
 ## Run: Workflow B (servo identification sweep)
 Entry point:

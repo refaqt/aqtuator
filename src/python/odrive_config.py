@@ -91,6 +91,46 @@ class ODriveController:
         except Exception as e:
             print(f"ERROR: Failed to set control mode: {e}")
             return False
+
+    def set_enable_step_dir(self, enabled):
+        """
+        Set axis0 step/dir mode enable flag.
+
+        Args:
+            enabled (bool): True to enable step/dir mode, False to disable it
+
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not self.connected:
+            print("ERROR: Not connected to ODrive")
+            return False
+
+        try:
+            self.axis.config.enable_step_dir = bool(enabled)
+            state = "enabled" if enabled else "disabled"
+            print(f"ODrive step/dir mode {state}")
+            return True
+        except Exception as e:
+            print(f"ERROR: Failed to set step/dir mode: {e}")
+            return False
+
+    def get_enable_step_dir(self):
+        """
+        Read axis0 step/dir mode enable flag.
+
+        Returns:
+            bool | None: Current enable_step_dir state, or None on error
+        """
+        if not self.connected:
+            print("ERROR: Not connected to ODrive")
+            return None
+
+        try:
+            return bool(self.axis.config.enable_step_dir)
+        except Exception as e:
+            print(f"ERROR: Failed to read step/dir mode: {e}")
+            return None
     
     def set_analog_mapping(self, mapping):
         """
@@ -148,17 +188,90 @@ class ODriveController:
         if not self.connected:
             print("ERROR: Not connected to ODrive")
             return False
-        
+        # Minimal implementation: set control mode only.
+        return self.set_control_mode("Torque")
+
+    def configure_gpio1_analog_torque_mapping(self,
+                                              analog_min=-3.874,
+                                              analog_max=2.0,
+                                              enable_gpio_num=7,
+                                              control_mode='Position'):
+        """
+        Configure ODrive so GPIO1 analog input maps to controller input_torque,
+        while the axis runs in POSITION_CONTROL with INPUT_MODE_PASSTHROUGH.
+
+        This mirrors the parameters shown in the ODrive UI screenshots provided
+        for this project.
+        """
+        if not self.connected:
+            print("ERROR: Not connected to ODrive")
+            return False
+
         try:
-            # Set control mode to torque
-            self.axis.controller.config.control_mode = CONTROL_MODE_TORQUE_CONTROL
-            self.control_mode = CONTROL_MODE_TORQUE_CONTROL
-            
-            print("ODrive configured for torque control via CAN")
+            axis = self.axis
+            odrv = self.odrv
+
+            # Core controller mode (user-selectable: Position default or Torque).
+            if str(control_mode).lower() == 'torque':
+                axis.controller.config.control_mode = CONTROL_MODE_TORQUE_CONTROL
+                self.control_mode = CONTROL_MODE_TORQUE_CONTROL
+            else:
+                axis.controller.config.control_mode = CONTROL_MODE_POSITION_CONTROL
+                self.control_mode = CONTROL_MODE_POSITION_CONTROL
+
+            # Input mode: prefer typed enum if present, fallback to constant.
+            try:
+                from odrive.enums import InputMode
+                axis.controller.config.input_mode = InputMode.PASSTHROUGH
+            except Exception:
+                axis.controller.config.input_mode = INPUT_MODE_PASSTHROUGH
+
+            # Enable pin config (axis0.enable_pin.config.*)
+            try:
+                axis.enable_pin.config.enabled = True
+                axis.enable_pin.config.gpio_num = int(enable_gpio_num)
+                axis.enable_pin.config.is_active_high = False
+            except Exception as e:
+                print(f"ERROR: Failed to configure enable pin: {e}")
+                return False
+
+            # GPIO modes (odrv.config.gpio*_mode)
+            # Use direct constants from odrive.enums; these exist across ODrive fw variants.
+            try:
+                odrv.config.gpio5_mode = GPIO_MODE_DIGITAL
+                odrv.config.gpio7_mode = GPIO_MODE_DIGITAL_PULL_UP
+                odrv.config.gpio8_mode = GPIO_MODE_DIGITAL_PULL_UP
+            except Exception as e:
+                print(f"ERROR: Failed to set gpio*_mode: {e}")
+                return False
+
+            # Circular setpoints / mapping (axis0.controller + axis0.pos_vel_mapper)
+            try:
+                axis.controller.config.circular_setpoints = True
+                axis.controller.config.circular_setpoint_range = 200
+                axis.pos_vel_mapper.config.circular = True
+                axis.pos_vel_mapper.config.circular_output_range = 200
+                axis.controller.config.steps_per_circular_range = 819200
+                axis.controller.config.vel_limit = 20
+            except Exception as e:
+                print(f"ERROR: Failed to set circular/limit parameters: {e}")
+                return False
+
+            # GPIO1 analog mapping
+            try:
+                odrv.config.gpio1_analog_mapping.min = float(analog_min)
+                odrv.config.gpio1_analog_mapping.max = float(analog_max)
+                # Endpoint must be torque input property (per user instruction)
+                odrv.config.gpio1_analog_mapping.endpoint = axis.controller._input_torque_property
+            except Exception as e:
+                print(f"ERROR: Failed to configure gpio1_analog_mapping: {e}")
+                return False
+
+            print(f"ODrive configured for PWM->GPIO1 analog torque mapping ({control_mode.upper()} / PASSTHROUGH).")
             return True
-            
+
         except Exception as e:
-            print(f"ERROR: Failed to configure torque control mode: {e}")
+            print(f"ERROR: Failed to configure GPIO1 analog mapping: {e}")
             return False
     
     def enter_closed_loop(self):

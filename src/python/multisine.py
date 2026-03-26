@@ -259,7 +259,7 @@ def main():
     Example usage of the adapted multisine generator
     """
     # Example parameters
-    fmin_desired = 20.0  # Hz
+    fmin_desired = 50.0  # Hz
     fmax_desired = 800.0  # Hz
     fs = 8000.0  # Hz
     df_des = 1.0  # Hz
