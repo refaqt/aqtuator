@@ -12,6 +12,13 @@
 ## Used bash-style heredoc `<<` in PowerShell — 2026-03-25
 **What happened:** I tried to run `python - <<'PY' ... PY` in PowerShell; PowerShell parsed `<<`/`<` as redirection/operators and the command failed.\n**Root cause:** Muscle memory from bash heredoc usage; didn’t adapt the command to PowerShell.\n**Fix applied:** Re-ran the spot-check using a PowerShell-safe `python -c \"...\"` invocation.\n**Prevention rule:** On Windows PowerShell, never use bash heredocs (`<<EOF`). Use `python -c`, a `.py` temp file, or explicitly run through `cmd.exe`/Git Bash.\n**Affected files:** `docs/mistakes.md`
 
+## Double-counted integrator input in torque summing — 2026-03-26
+**What happened:** The first integrator attempt computed `torque_unclamped = y_in + (i1 + y_in)` which equals `i1 + 2*y_in` (double-counting the current sample) instead of a pure-integrated output.
+**Root cause:** Mixed two different control output conventions (PI-style `y + I` vs pure-integrated `I`) without explicitly defining what the integrator state represents.
+**Fix applied:** Switched to pure-integrated output: `i_candidate = i1 + u_in`, `torque_cmd = clamp(i_candidate)`, and freeze `i1` whenever clamped (hold-on-saturation).
+**Prevention rule:** Before implementing discrete integrators, write the exact discrete equations and define whether the integrator state is the output or is summed with a proportional path; then translate equations into code 1:1.
+**Affected files:** `src/controllino/spindle-controller/spindle-controller.ino`, `docs/mistakes.md`
+
 ## Mistake logging template
 ## [Short description] — [Date]
 **What happened:** [One or two sentences]

@@ -160,4 +160,44 @@ void setup() {
 **Gotchas:** Do not infer RP2040 GPIO from package pin numbers in the chip pinout figure; use Controllino board docs + `controllino_rp2` `pins_arduino.h` as the source of truth. `D0`/`D1` can have alternate serial/I2C functions, but remain valid GPIO/PWM pins when configured accordingly.
 **Last used:** 2026-03-23
 
+## 8 kHz ISR computes control; loop applies PWM
+**When to use:** You need a hard real-time control loop on Controllino MICRO (RP2040) and want to minimize timing jitter from Arduino core/PWM driver calls.
+**Pattern:**
+```cpp
+static volatile bool pwm_update_pending = false;
+static volatile uint16_t pwm_duty_pending = 0;
+
+static bool timerCallback(struct repeating_timer *t) {
+    // compute duty in ISR (fast, bounded)
+    pwm_duty_pending = duty;
+    pwm_update_pending = true;
+    return true;
+}
+
+void loop() {
+    if (pwm_update_pending) {
+        noInterrupts();
+        uint16_t duty = pwm_duty_pending;
+        pwm_update_pending = false;
+        interrupts();
+        analogWrite(D0, (int)duty); // apply outside ISR
+    }
+}
+```
+**Gotchas:** Avoid `Serial.print()` and heavy math inside the ISR; if you must change PWM frequency/range, do it once in `setup()` (not in `loop()` or ISR). If an enable gate exists, consider resetting filter state when disabled to avoid stale transients on re-enable.
+**Last used:** 2026-03-26
+
+## Biquad low-pass + notch filters (RBJ coefficients)
+**When to use:** You need tunable 2nd-order low-pass and notch filters in discrete time (set cutoff/center frequency in Hz and quality Q), suitable for an 8 kHz control loop.
+**Pattern:**
+```cpp
+// Configure from fs, fc (or f0) and Q; then run step() per sample.
+biquad_config_lowpass_butterworth(lpf2, fs_hz, fc_hz);
+biquad_config_notch(notch1, fs_hz, f0_hz, Q);
+u = lpf2.step(u);
+u = notch1.step(u);
+```
+**Gotchas:** Enforce `f < fs/2` and `Q > 0`, otherwise bypass the filter (identity). With high Q near Nyquist, coefficients can get sensitive; keep `f0` well below `fs/2` and validate stability on hardware.
+**Last used:** 2026-03-26
+
 

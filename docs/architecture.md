@@ -14,6 +14,10 @@ This project performs synchronized data acquisition and motor control using an `
 - Servo system identification (ODrive feedback capture): [`src/controllino/controllino-servo-identification/controllino-servo-identification.ino`](src/controllino/controllino-servo-identification/controllino-servo-identification.ino)
   - Serial protocol: `START_ACQUISITION` / `GET_DATA` / `GET_STATUS`
   - Timing: cyclic CAN messages from ODrive are paired (torque + position) and streamed back to Python
+- Standalone 8 kHz controller (A0/A1/A3 -> x_spindle -> filters -> PWM):
+  - [`src/controllino/spindle-controller/spindle-controller.ino`](src/controllino/spindle-controller/spindle-controller.ino)
+  - Timing: 8 kHz RP2040 repeating timer ISR computes the control output; `loop()` applies the pending PWM duty
+  - Enable gate: `GPIO1`/`D1` must be HIGH to run the controller; otherwise PWM is forced to 0 and filter states are reset
 
 ### Controllino MICRO pin-mapping convention (important)
 - For `controllino_rp2` Arduino sketches, treat MICRO header `GPIO0`/`GPIO1` as direct RP2040/Arduino pins `D0`/`D1`.

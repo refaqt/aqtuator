@@ -27,6 +27,9 @@ Use Arduino IDE with the Controllino Micro board support installed, then upload 
   - `src/controllino/main-controllino/main-controllino.ino`
 - Servo identification (ODrive feedback capture + timestamp sections):
   - `src/controllino/controllino-servo-identification/controllino-servo-identification.ino`
+- Standalone 8 kHz spindle controller (A0/A1/A3 -> x_spindle -> filters -> PWM on GPIO0):
+  - `src/controllino/spindle-controller/spindle-controller.ino`
+  - Enable gate: `GPIO1` / `D1` must be HIGH, otherwise output is forced to 0
 
 Both sketches expect `ODRIVE_NODE_ID` in the firmware to match your ODrive CAN node id.
 The torque/acquisition sketch no longer uses CAN for torque commands.
