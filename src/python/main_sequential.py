@@ -31,6 +31,87 @@ import matplotlib.pyplot as plt
 from odrive_config import ODriveController
 
 # ============================================================================
+# Multisine CSV helpers
+# ============================================================================
+
+def _parse_multisine_freq_band_from_csv(csv_path):
+    """Extract excited frequency band (Hz) from multisine CSV metadata.
+
+    Prefers fmin_actual/fmax_actual, then falls back to fmin_desired/fmax_desired,
+    then (as a last resort) parses filename like: multisine_<fmin>-<fmax>Hz_...
+    Returns (fmin, fmax) as floats, or None if not available/invalid.
+    """
+    def _to_float_or_none(s):
+        if s is None:
+            return None
+        s = str(s).strip()
+        if not s or s.upper() == "N/A":
+            return None
+        try:
+            return float(s)
+        except ValueError:
+            return None
+
+    fmin = None
+    fmax = None
+
+    try:
+        with open(csv_path, 'r') as f:
+            # Only the header is needed; stop when data columns start.
+            for _ in range(200):
+                line = f.readline()
+                if not line:
+                    break
+                line = line.strip()
+                if not line:
+                    continue
+                if line.lower() == 'time_s,signal':
+                    break
+                if not line.startswith('#'):
+                    continue
+
+                # Lines look like: "# fmin_actual: 52.000000 Hz"
+                content = line.lstrip('#').strip()
+                if ':' not in content:
+                    continue
+                key, rest = content.split(':', 1)
+                key = key.strip().lower()
+                rest = rest.strip()
+                if rest.lower().endswith('hz'):
+                    rest = rest[:-2].strip()
+
+                if key == 'fmin_actual':
+                    fmin = _to_float_or_none(rest)
+                elif key == 'fmax_actual':
+                    fmax = _to_float_or_none(rest)
+                elif key == 'fmin_desired' and fmin is None:
+                    fmin = _to_float_or_none(rest)
+                elif key == 'fmax_desired' and fmax is None:
+                    fmax = _to_float_or_none(rest)
+    except Exception:
+        # Fall back to filename parsing below.
+        pass
+
+    # Filename fallback: multisine_<fmin>-<fmax>Hz_...
+    if (fmin is None or fmax is None) and csv_path:
+        import re
+        base = os.path.basename(csv_path)
+        m = re.search(r"multisine_(?P<fmin>[-+]?\d+(?:\.\d+)?)\-(?P<fmax>[-+]?\d+(?:\.\d+)?)Hz", base)
+        if m:
+            if fmin is None:
+                fmin = _to_float_or_none(m.group('fmin'))
+            if fmax is None:
+                fmax = _to_float_or_none(m.group('fmax'))
+
+    if fmin is None or fmax is None:
+        return None
+    if not (np.isfinite(fmin) and np.isfinite(fmax)):
+        return None
+    if fmin <= 0 or fmax <= fmin:
+        return None
+    return (float(fmin), float(fmax))
+
+# ============================================================================
 # ODrive Cleanup Helper
 # ============================================================================
 
@@ -135,6 +216,7 @@ CONTROLLINO_PORT = 'COM3'  # Hard-coded Controllino port (change as needed)
 # ============================================================================
 
 MAX_ACQ_SAMPLES = 4000  # Maximum acquisition samples (must match Arduino firmware)
+MAX_CSV_SAMPLES = 2000  # Maximum CSV samples (must match Arduino firmware)
 
 # ============================================================================
 # Serial Communication Helper Class
@@ -298,6 +380,8 @@ class SerialHelper:
             
             if len(data_lines) == 0:
                 return (False, "CSV file has no data lines")
+            if len(data_lines) > MAX_CSV_SAMPLES:
+                return (False, f"CSV has {len(data_lines)} samples; exceeds Controllino limit MAX_CSV_SAMPLES={MAX_CSV_SAMPLES}")
             
             with self.serial_lock:
                 # Clear input buffer
@@ -676,13 +760,14 @@ def plot_time_series(data, variables_to_plot, active_figures=None):
     plt.show(block=False)
     return fig
 
-def plot_bode_plots(data, bode_configs, active_figures=None):
+def plot_bode_plots(data, bode_configs, active_figures=None, freq_band_hz=None):
     """Plot 6 Bode plots in 2x3 grid.
     
     Args:
         data: Dictionary containing time series data
         bode_configs: List of (input_var, output_var) tuples for Bode plots
         active_figures: Optional list to track active figure references
+        freq_band_hz: Optional (fmin, fmax) in Hz to limit plots to the excited band
     
     Returns:
         Figure object or None if no valid configs
@@ -708,6 +793,19 @@ def plot_bode_plots(data, bode_configs, active_figures=None):
     fig.suptitle('Bode Plots', fontsize=14)
     
     sample_rate = data['sample_rate']
+    if freq_band_hz is not None:
+        try:
+            fmin_band = float(freq_band_hz[0])
+            fmax_band = float(freq_band_hz[1])
+            if not (np.isfinite(fmin_band) and np.isfinite(fmax_band) and fmin_band > 0 and fmax_band > fmin_band):
+                fmin_band = None
+                fmax_band = None
+        except Exception:
+            fmin_band = None
+            fmax_band = None
+    else:
+        fmin_band = None
+        fmax_band = None
     
     for idx, (input_var, output_var) in enumerate(valid_configs[:num_plots]):
         if idx >= 6:
@@ -725,25 +823,43 @@ def plot_bode_plots(data, bode_configs, active_figures=None):
         
         # Calculate transfer function H = Pxy / Pxx
         H = Pxy / (Pxx + 1e-10)
+
+        # Limit to multisine excited band (if provided)
+        if fmin_band is not None and fmax_band is not None:
+            band_mask = (f >= fmin_band) & (f <= fmax_band)
+            # Keep at least a few points; otherwise skip masking but still set xlim.
+            if np.count_nonzero(band_mask) >= 3:
+                f_plot = f[band_mask]
+                H_plot = H[band_mask]
+            else:
+                f_plot = f
+                H_plot = H
+        else:
+            f_plot = f
+            H_plot = H
         
         # Magnitude and phase
-        magnitude = np.abs(H)
-        phase = np.angle(H)
+        magnitude = np.abs(H_plot)
+        phase = np.angle(H_plot)
         phase = np.unwrap(phase) * 180 / np.pi  # Unwrap and convert to degrees
         
         # Magnitude plot (top row)
         ax_mag = axes[row * 2, col]
-        ax_mag.loglog(f, magnitude)
+        ax_mag.loglog(f_plot, magnitude)
         ax_mag.set_ylabel(f'{output_var} / {input_var}')
         ax_mag.set_title(f'{output_var} / {input_var}')
         ax_mag.grid(True)
+        if fmin_band is not None and fmax_band is not None:
+            ax_mag.set_xlim(fmin_band, fmax_band)
         
         # Phase plot (bottom row)
         ax_phase = axes[row * 2 + 1, col]
-        ax_phase.semilogx(f, phase)
+        ax_phase.semilogx(f_plot, phase)
         ax_phase.set_xlabel('Frequency (Hz)')
         ax_phase.set_ylabel('Phase (degrees)')
         ax_phase.grid(True)
+        if fmin_band is not None and fmax_band is not None:
+            ax_phase.set_xlim(fmin_band, fmax_band)
     
     # Hide unused subplots
     for idx in range(num_plots, 6):
@@ -838,6 +954,11 @@ def main():
             return 1
         
         print(f"CSV file selected: {os.path.basename(csv_path)}")
+        multisine_band_hz = _parse_multisine_freq_band_from_csv(csv_path)
+        if multisine_band_hz is not None:
+            print(f"Detected multisine excited band: {multisine_band_hz[0]:.6g}–{multisine_band_hz[1]:.6g} Hz")
+        else:
+            print("Warning: Could not detect multisine frequency band from CSV metadata; Bode plots will use full frequency range.")
 
         # Step 3b: Prompt for max torque scaling (Nm)
         while True:
@@ -1149,7 +1270,7 @@ def main():
         
         # Step 10: Display Bode plots
         print("\nStep 12: Displaying Bode plots...")
-        bode_fig = plot_bode_plots(processed_data, BODE_PLOT_CONFIGS, active_figures)
+        bode_fig = plot_bode_plots(processed_data, BODE_PLOT_CONFIGS, active_figures, freq_band_hz=multisine_band_hz)
         
         print("\n" + "=" * 60)
         print("Acquisition complete!")
