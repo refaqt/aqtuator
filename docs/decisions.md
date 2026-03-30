@@ -51,6 +51,14 @@
 **Alternatives considered:** Keep control mode hard-coded to position; leave step/dir always enabled; move mode selection to source-code constant only.
 **Consequences:** Safer and faster operator workflow without code edits between runs; reduced risk of blocked torque-command behavior during acquisition; cleanup path now explicitly restores step/dir state.
 
+## Hold 0 Nm at idle and gate ODrive analog endpoint — 2026-03-30
+**Context:** ODrive `GPIO1` has a pull-up, so “0% PWM” from the Controllino does not produce 0V at the ODrive pin after the RC network. With the project’s analog torque mapping, this can yield an unintended negative torque at rest, causing motion on power-up/shutdown.
+**Decision:** Define the safe/idle state as “commanded 0 Nm” and implement it end-to-end:
+- Controllino outputs a PWM duty that corresponds to 0 Nm at boot/idle and after output/acquisition completes (instead of forcing duty=0).
+- ODrive clears `odrv.config.gpio1_analog_mapping.endpoint = None` when transitioning to `IDLE` and restores the torque endpoint right before entering closed-loop.
+**Alternatives considered:** Keep duty=0 as idle; rely on operator timing; add hardware changes (remove pull-up / different RC topology).
+**Consequences:** Power-on and shutdown become deterministic and safe w.r.t. unintended torque. The system now relies on correct calibration of the torque-to-voltage mapping used for the 0 Nm duty.
+
 ## Spindle controller: pure discrete integrator with hold anti-windup — 2026-03-26
 **Context:** The spindle vibration controller output is clamped to safe torque bounds before converting to ODrive GPIO1 voltage/PWM. Without anti-windup, an integrator can accumulate error while saturated, causing long recovery and overshoot once it desaturates.
 **Decision:** Use a raw discrete integrator \(z/(z-1)\) with **pure-integrated output** (torque command is the integrator state). Integrate the post-filter signal (after lead-lag + LPF + notches). Apply **anti-windup by holding** the integrator state constant whenever the torque command is clamped.

@@ -48,9 +48,9 @@
 #define PWM_PIN_SCAN_MODE           0
 
 // Sine wave parameters
-#define SINE_FREQ_HZ        0.2f   // [Hz] Sine frequency
+#define SINE_FREQ_HZ        2.0f   // [Hz] Sine frequency
 #define SINE_AMPLITUDE_FRAC 0.84f     // Fraction of full range (0.0–1.0); 0.9 → 0.165–3.135 V
-#define SINE_OFFSET_FRAC    SINE_AMPLITUDE_FRAC / 2     // DC center as fraction; 0.5 → 1.65 V
+#define SINE_OFFSET_FRAC    0.42f     // DC center as fraction; 0.5 → 1.65 V
 
 // PWM resolution. Lower value → higher f_pwm → lower RC-filter ripple.
 // See trade-off table above.

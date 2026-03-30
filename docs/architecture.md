@@ -64,20 +64,24 @@ The Controllino torque/acquisition firmware uses framed serial messages:
   - starts torque playback immediately; acquisition begins after the start delay
   - when acquisition completes, firmware emits `ACK: Acquisition complete`
 - `GET_DATA` streams:
-  - header: `DATA:<sample_count>,<sample_period>,5`
-  - samples: per-line floats in this order: `A0,A1,A2,A3,output_voltage_command`
+- header: `DATA:<sample_count>,<sample_period>,2`
+- samples: per-line floats in this order: `torque_command,x_spindle`
   - terminator: `DATA_END`
 
 ### Analysis done in Python
 [`src/python/main_sequential.py`](src/python/main_sequential.py) transforms the received samples into:
 - a time vector using `sample_rate = 1.0 / sample_period`
-- geometric/derived quantities (`x`, `y`, `z`) and time-series plots
-- Bode-style transfer estimates from `scipy.signal.csd`/`welch`
+- time-series plots of `torque_command` and `x_spindle`
+- a Bode-style transfer estimate (`torque_command` -> `x_spindle`) using `scipy.signal.csd`/`welch`
 
 Runtime ODrive state machine in this workflow:
 - Startup: connect ODrive -> prompt/apply control mode (`Position` default or `Torque`) -> set `enable_step_dir=False`
 - Run: enter closed-loop for output/acquisition window
 - Completion/cleanup: exit closed-loop -> set control mode to `Position` -> set `enable_step_dir=True`
+
+Safety invariants for Workflow A:
+- Controllino PWM output **must idle at 0 Nm**, not 0% duty. Reason: ODrive `GPIO1` has a pull-up; 0% PWM does not yield 0V after the RC network and can map to a non-zero (negative) torque.
+- On the ODrive side, `odrv.config.gpio1_analog_mapping.endpoint` is cleared (`None`) when the axis is set to `IDLE`, and restored to the torque endpoint right before entering closed-loop. This limits when the ODrive listens to the external analog command.
 
 ## Workflow B: Servo identification (frequency sweep)
 ### ODrive cyclic CAN capture

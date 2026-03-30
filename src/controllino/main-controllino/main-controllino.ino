@@ -24,15 +24,17 @@
   #include <hardware/adc.h>
 #endif
 
+#include <math.h>
+
 // ============================================================================
 // Configuration Constants
 // ============================================================================
 
 #define SERIAL_BAUD 115200
 #define MAX_CSV_SAMPLES 2000   // Maximum samples in CSV file (20 KB)
-#define MAX_ACQ_SAMPLES 4000   // Maximum acquisition samples (5 channels: 4 inputs + output_voltage)
-                                // Memory: 4000 × 5 × 4 bytes = 80 KB
-                                // Total: CSV (20 KB) + Acquisition (80 KB) = 100 KB (RP2040 has 264KB RAM)
+#define MAX_ACQ_SAMPLES 16000  // Maximum acquisition samples (2 channels: torque_command + x_spindle)
+                              // Memory: 16000 × 2 × 4 bytes = 128 KB
+                              // Total (approx): CSV (<= 8 KB) + Acquisition (128 KB) = 136 KB (RP2040 has 264KB RAM)
 
 // PWM output pin (Controllino MICRO: D0 / GPIO0 header)
 #define PWM_OUTPUT_PIN D0
@@ -73,6 +75,13 @@
 #define A0A3_FULL_SCALE_V (25.8f)
 #define RP2040_ADC_MAX_COUNTS (4095.0f)
 
+// Acceleration conversion (match spindle-controller.ino)
+#define SENSOR_SENSITIVITY_V_PER_G (0.2f)
+#define G_TO_MPS2 (9.81f)
+
+// Geometry for x_spindle computation (match spindle-controller.ino)
+#define ALPHA1_DEG (57.1715f)
+
 // ============================================================================
 // State Machine
 // ============================================================================
@@ -99,7 +108,7 @@ uint32_t csv_sample_rate_hz = 1000;
 // Acquisition Data Storage
 // ============================================================================
 
-float acq_buffer[MAX_ACQ_SAMPLES * 5];  // 5 channels: A0-A3, output_voltage_command
+float acq_buffer[MAX_ACQ_SAMPLES * 2];  // 2 channels: torque_command, x_spindle [m/s^2]
 uint32_t acq_sample_count = 0;
 volatile uint32_t acq_index = 0;
 float acq_sample_period = 0.001;
@@ -119,6 +128,9 @@ bool is_test_output_mode = false;  // True for START_OUTPUT, false for START_IDE
 volatile uint32_t csv_index = 0;  // Current position in CSV for cyclic playback
 volatile unsigned long sample_interval_us = 0;
 volatile unsigned long last_sample_time_us = 0;
+
+// x_spindle geometry constant (computed in setup)
+static float inv_cos_alpha1 = 1.0f;
 
 // Acquisition timing
 uint32_t required_acq_samples = 0;
@@ -200,6 +212,17 @@ static inline uint16_t voltageToPwmDuty(float v) {
   return (uint16_t)(duty_f + 0.5f);
 }
 
+static inline uint16_t torqueToPwmDuty(float torque) {
+  // Torque (Nm) -> desired ODrive GPIO1 pin voltage (0..3.3V)
+  float v_pin = torqueToOdriveGpio1Voltage(torque);
+  // Compensate pull-up divider to get required PWM-side voltage (0..3.3V)
+  float v_pwm = odriveGpio1VoltageToPwmVoltage(v_pin);
+  return voltageToPwmDuty(v_pwm);
+}
+
+static uint16_t idle_pwm_duty = 0;
+static float idle_output_voltage = 0.0f;
+
 // ============================================================================
 // Setup Function
 // ============================================================================
@@ -218,13 +241,20 @@ void setup() {
   pinMode(PWM_OUTPUT_PIN, OUTPUT);
   analogWriteFreq(PWM_FREQ_HZ);
   analogWriteRange(PWM_TOP);
-  analogWrite(PWM_OUTPUT_PIN, 0);
+  idle_pwm_duty = torqueToPwmDuty(0.0f);
+  idle_output_voltage = torqueToOdriveGpio1Voltage(0.0f);
+  analogWrite(PWM_OUTPUT_PIN, (int)idle_pwm_duty);
   pwm_update_pending = false;
   
   // Initialize ADC (RP2040)
   #ifdef ARDUINO_ARCH_RP2040
     setupADC();
   #endif
+
+  // Precompute x_spindle geometry constant (match spindle-controller.ino)
+  const float alpha1_rad = ALPHA1_DEG * (3.14159265358979323846f / 180.0f);
+  const float c = cosf(alpha1_rad);
+  inv_cos_alpha1 = (fabsf(c) > 1e-6f) ? (1.0f / c) : 0.0f;
   
   Serial.println("INFO: System initialized");
   Serial.println("INFO: Ready for commands");
@@ -250,6 +280,12 @@ void loop() {
     pwm_update_pending = false;
     interrupts();
     analogWrite(PWM_OUTPUT_PIN, (int)duty);
+  }
+  
+  // Safety invariant: when idle, hold the analog command at 0 Nm (not 0% PWM).
+  // This matters because ODrive GPIO1 has a pull-up that makes 0% PWM unsafe.
+  if (current_state == STATE_IDLE && !torque_output_active && !acquisition_active && !pwm_update_pending) {
+    analogWrite(PWM_OUTPUT_PIN, (int)idle_pwm_duty);
   }
 
   // Skip reading Serial if parsing CSV
@@ -384,9 +420,9 @@ void timerISR() {
     if (output_duration_ms > 0 && is_test_output_mode) {
       unsigned long elapsed = millis() - output_start_time;
       if (elapsed >= output_duration_ms) {
-        // Set output to zero before stopping
-        pwm_duty_pending = 0;
-        output_voltage_pending = 0.0f;
+        // Set output to 0 Nm before stopping
+        pwm_duty_pending = idle_pwm_duty;
+        output_voltage_pending = idle_output_voltage;
         pwm_update_pending = true;
         
         torque_output_active = false;
@@ -418,30 +454,42 @@ void timerISR() {
   // Acquisition (if active)
   // ========================================================================
   if (acquisition_active && acq_index < MAX_ACQ_SAMPLES) {
-    float *sample_ptr = &acq_buffer[acq_index * 5];
+    float *sample_ptr = &acq_buffer[acq_index * 2];
     
-    // Read ADC channels (hardware-timed) - only 4 channels (A0-A3)
+    // Read ADC channels needed for x_spindle computation (A0, A1, A3)
     #ifdef ARDUINO_ARCH_RP2040
-      // RP2040 has 4 ADC inputs (GPIO26-29), read A0-A3 using hardware-timed adc_read()
-      for (int ch = 0; ch < 4; ch++) {
-        uint8_t gpio_pin = adc_channels[ch];
-        // All pins are valid ADC inputs (GPIO26-29 map to ADC0-3)
-        adc_select_input(gpio_pin - 26);
-        uint16_t adc_raw = adc_read();
-        // Convert ADC counts to scaled input voltage (0..A0A3_FULL_SCALE_V)
-        sample_ptr[ch] = (float)adc_raw * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
-      }
+      // RP2040 ADC: GPIO26-29 map to ADC0-3. Use raw counts like spindle-controller.
+      adc_select_input(ADC_PIN_A0 - 26);
+      const uint16_t a0_counts = adc_read();
+      adc_select_input(ADC_PIN_A1 - 26);
+      const uint16_t a1_counts = adc_read();
+      adc_select_input(ADC_PIN_A3 - 26);
+      const uint16_t a3_counts = adc_read();
     #else
-      // Fallback: use analogRead (not hardware-timed, but works)
-      sample_ptr[0] = analogRead(A0) * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
-      sample_ptr[1] = analogRead(A1) * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
-      sample_ptr[2] = analogRead(A2) * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
-      sample_ptr[3] = analogRead(A3) * A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS;
+      // Fallback: use analogRead; treat return as 12-bit counts for scaling.
+      const uint16_t a0_counts = (uint16_t)analogRead(A0);
+      const uint16_t a1_counts = (uint16_t)analogRead(A1);
+      const uint16_t a3_counts = (uint16_t)analogRead(A3);
     #endif
     
-    // Store commanded output voltage (what we're trying to drive into ODrive GPIO1)
-    // This is derived from the CSV "torque" sample via the ODrive analog mapping.
-    sample_ptr[4] = current_output_voltage;
+    // Convert ADC counts to accelerations [m/s^2] (match spindle-controller.ino)
+    // acc = (counts/4095 * 25.8 V) / (0.2 V/g) * 9.81 m/s^2
+    const float counts_to_v = (A0A3_FULL_SCALE_V / RP2040_ADC_MAX_COUNTS);
+    const float v_to_mps2 = (G_TO_MPS2 / SENSOR_SENSITIVITY_V_PER_G);
+    const float counts_to_mps2 = counts_to_v * v_to_mps2;
+
+    const float acc_spindle_left = (float)a0_counts * counts_to_mps2;
+    const float acc_spindle_right = (float)a1_counts * counts_to_mps2;
+    const float acc_workbed_x = (float)a3_counts * counts_to_mps2;
+
+    const float x_spindle =
+        ((acc_spindle_right - acc_spindle_left) * inv_cos_alpha1) - acc_workbed_x;
+
+    // Channel mapping (2 channels):
+    //  - torque_command: the currently active CSV torque value (Nm)
+    //  - x_spindle: computed spindle acceleration (m/s^2)
+    sample_ptr[0] = current_torque;
+    sample_ptr[1] = x_spindle;
     
     acq_index++;
     acq_sample_count = acq_index;
@@ -450,9 +498,9 @@ void timerISR() {
     if (required_acq_samples > 0 && acq_index >= required_acq_samples) {
       acquisition_active = false;
       
-      // Set output to zero after acquisition completes
-      pwm_duty_pending = 0;
-      output_voltage_pending = 0.0f;
+      // Set output to 0 Nm after acquisition completes
+      pwm_duty_pending = idle_pwm_duty;
+      output_voltage_pending = idle_output_voltage;
       pwm_update_pending = true;
       
       torque_output_active = false;
@@ -465,9 +513,9 @@ void timerISR() {
       // Buffer limit reached
       acquisition_active = false;
       
-      // Set output to zero
-      pwm_duty_pending = 0;
-      output_voltage_pending = 0.0f;
+      // Set output to 0 Nm
+      pwm_duty_pending = idle_pwm_duty;
+      output_voltage_pending = idle_output_voltage;
       pwm_update_pending = true;
       
       torque_output_active = false;
@@ -759,6 +807,44 @@ void processCommand(String cmd) {
     acquisition_active = false;  // Will be activated after delay
     serial_blocked = true;  // Block serial during operation
     
+  } else if (cmd.startsWith("STOP_OUTPUT")) {
+    // Best-effort stop: force 0 Nm output and return to idle.
+    torque_output_active = false;
+    acquisition_active = false;
+    serial_blocked = false;
+    output_duration_ms = 0;
+    required_acq_samples = 0;
+    current_state = STATE_IDLE;
+    completion_sent = false;
+    is_test_output_mode = false;
+    csv_index = 0;
+    
+    pwm_duty_pending = idle_pwm_duty;
+    output_voltage_pending = idle_output_voltage;
+    pwm_update_pending = true;
+    
+    Serial.println("ACK: Output stopped");
+    Serial.flush();
+    
+  } else if (cmd.startsWith("STOP_ACQUISITION")) {
+    // Best-effort stop: stop acquisition/output and force 0 Nm output.
+    acquisition_active = false;
+    torque_output_active = false;
+    serial_blocked = false;
+    output_duration_ms = 0;
+    required_acq_samples = 0;
+    current_state = STATE_IDLE;
+    completion_sent = false;
+    is_test_output_mode = false;
+    csv_index = 0;
+    
+    pwm_duty_pending = idle_pwm_duty;
+    output_voltage_pending = idle_output_voltage;
+    pwm_update_pending = true;
+    
+    Serial.println("ACK: Acquisition stopped");
+    Serial.flush();
+    
   } else if (cmd.startsWith("GET_DATA")) {
     if (acq_sample_count == 0) {
       Serial.println("ERROR: No acquisition data available");
@@ -773,18 +859,16 @@ void processCommand(String cmd) {
     Serial.print(",");
     Serial.print(acq_sample_period, 6);
     Serial.print(",");
-  Serial.print(5);  // 5 channels: A0-A3, output_voltage_command
+    Serial.print(2);  // 2 channels: torque_command, x_spindle
     Serial.println();
     
     // Send data samples (text format)
     for (uint32_t i = 0; i < acq_sample_count; i++) {
-      float *sample_ptr = &acq_buffer[i * 5];
-      
-      Serial.print(sample_ptr[0], 4);  // A0
-      for (int ch = 1; ch < 5; ch++) {  // A1-A3, output_voltage_command
-        Serial.print(",");
-        Serial.print(sample_ptr[ch], 4);
-      }
+      float *sample_ptr = &acq_buffer[i * 2];
+
+      Serial.print(sample_ptr[0], 6);  // torque_command
+      Serial.print(",");
+      Serial.print(sample_ptr[1], 6);  // x_spindle [m/s^2]
       Serial.println();
       
       // Small delay to prevent serial buffer overflow

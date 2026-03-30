@@ -259,6 +259,7 @@ class ODriveController:
 
             # GPIO1 analog mapping
             try:
+                odrv.config.gpio1_mode = GpioMode.ANALOG_IN
                 odrv.config.gpio1_analog_mapping.min = float(analog_min)
                 odrv.config.gpio1_analog_mapping.max = float(analog_max)
                 # Endpoint must be torque input property (per user instruction)
@@ -272,6 +273,24 @@ class ODriveController:
 
         except Exception as e:
             print(f"ERROR: Failed to configure GPIO1 analog mapping: {e}")
+            return False
+
+    def _set_gpio1_analog_endpoint_none_best_effort(self):
+        if not self.connected or self.odrv is None:
+            return False
+        try:
+            self.odrv.config.gpio1_analog_mapping.endpoint = None
+            return True
+        except Exception:
+            return False
+
+    def _set_gpio1_analog_endpoint_torque_best_effort(self):
+        if not self.connected or self.odrv is None or self.axis is None:
+            return False
+        try:
+            self.odrv.config.gpio1_analog_mapping.endpoint = self.axis.controller._input_torque_property
+            return True
+        except Exception:
             return False
     
     def enter_closed_loop(self):
@@ -287,6 +306,9 @@ class ODriveController:
             return False
         
         try:
+            # Safety: only listen to analog command when entering closed-loop.
+            self._set_gpio1_analog_endpoint_torque_best_effort()
+
             # Request closed-loop control state
             self.axis.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
             
@@ -337,12 +359,16 @@ class ODriveController:
             while time.time() - start_time < timeout:
                 if self.axis.current_state == AXIS_STATE_IDLE:
                     print("ODrive returned to IDLE state")
+                    # Safety: stop listening to analog command while idle.
+                    self._set_gpio1_analog_endpoint_none_best_effort()
                     return True
                 time.sleep(0.1)
             
             # Check final state
             if self.axis.current_state == AXIS_STATE_IDLE:
                 print("ODrive returned to IDLE state")
+                # Safety: stop listening to analog command while idle.
+                self._set_gpio1_analog_endpoint_none_best_effort()
                 return True
             else:
                 print(f"WARNING: ODrive state is {self.axis.current_state}, expected {AXIS_STATE_IDLE}")
