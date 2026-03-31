@@ -160,32 +160,76 @@ void setup() {
 **Gotchas:** Do not infer RP2040 GPIO from package pin numbers in the chip pinout figure; use Controllino board docs + `controllino_rp2` `pins_arduino.h` as the source of truth. `D0`/`D1` can have alternate serial/I2C functions, but remain valid GPIO/PWM pins when configured accordingly.
 **Last used:** 2026-03-23
 
-## 8 kHz ISR computes control; loop applies PWM
-**When to use:** You need a hard real-time control loop on Controllino MICRO (RP2040) and want to minimize timing jitter from Arduino core/PWM driver calls.
+## RP2040 timer ISR updates PWM compare directly
+**When to use:** You need the PWM command on Controllino MICRO (RP2040) to change on the same sample tick as the timer ISR, without loop-latency or skipped pending duty values.
 **Pattern:**
 ```cpp
-static volatile bool pwm_update_pending = false;
-static volatile uint16_t pwm_duty_pending = 0;
+#include <hardware/pwm.h>
+
+static uint pwm_output_slice_num = 0;
+static uint pwm_output_channel = 0;
+
+static inline void writePwmDutyRealtime(uint16_t duty) {
+    pwm_set_chan_level(pwm_output_slice_num, pwm_output_channel, duty);
+}
+
+void setup() {
+    pinMode(D0, OUTPUT);
+    analogWriteFreq(PWM_FREQ_HZ);
+    analogWriteRange(PWM_TOP);
+    analogWrite(D0, (int)initial_duty);  // one-time setup only
+
+    pwm_output_slice_num = pwm_gpio_to_slice_num(D0);
+    pwm_output_channel = pwm_gpio_to_channel(D0);
+}
 
 static bool timerCallback(struct repeating_timer *t) {
-    // compute duty in ISR (fast, bounded)
-    pwm_duty_pending = duty;
-    pwm_update_pending = true;
+    writePwmDutyRealtime(duty);
     return true;
 }
+```
+**Gotchas:** Do not assume the low-level path is wrong just because the motor behavior looks wrong. First verify the RC output and inspect runtime PWM state. In this codebase, use `GET_STATUS` to check slice/channel, GPIO function, compare values, `TOP`, `CSR`, and write counters. If the mixed setup (`analogWriteFreq`/`analogWriteRange` + low-level ISR writes) is suspect, compare against the alternate runtime modes before concluding that `pwm_set_chan_level()` is at fault.
+**Last used:** 2026-03-31
 
-void loop() {
-    if (pwm_update_pending) {
-        noInterrupts();
-        uint16_t duty = pwm_duty_pending;
-        pwm_update_pending = false;
-        interrupts();
-        analogWrite(D0, (int)duty); // apply outside ISR
-    }
+## Compare PWM runtime modes on Controllino MICRO
+**When to use:** The PWM output does not match the expected RC-filter voltage and you need to isolate whether the issue is low-level compare writes, mixed Arduino/Pico PWM setup, or `analogWrite()` behavior inside the ISR.
+**Pattern:**
+```cpp
+// 0 = Arduino setup + low-level ISR compare writes
+// 1 = Fully low-level PWM setup + low-level ISR compare writes
+// 2 = analogWrite() directly inside timerISR() (fallback experiment)
+#define PWM_RUNTIME_MODE 1
+
+void printStatus() {
+    Serial.print("PWM Runtime Mode: ");
+    Serial.println(pwmRuntimeModeName());
+    Serial.print("PWM Slice: ");
+    Serial.println((unsigned int)pwm_output_slice_num);
+    Serial.print("PWM Channel: ");
+    Serial.println((unsigned int)pwm_output_channel);
+    Serial.print("PWM GPIO Function: ");
+    Serial.println((unsigned int)pwm_debug_last_gpio_func);
 }
 ```
-**Gotchas:** Avoid `Serial.print()` and heavy math inside the ISR; if you must change PWM frequency/range, do it once in `setup()` (not in `loop()` or ISR). If an enable gate exists, consider resetting filter state when disabled to avoid stale transients on re-enable.
-**Last used:** 2026-03-26
+**Gotchas:** Validate in two stages: first with only the Controllino + RC output, then with ODrive connected. Motor motion/noise alone is not enough to prove the PWM path is wrong. If you compare modes, keep the CSV, timer rate, RC filter, and ODrive setup unchanged between runs.
+**Last used:** 2026-03-31
+
+## Verify ODrive GPIO1 analog state around closed-loop transitions
+**When to use:** The Controllino RC output looks correct, but Python-controlled runs still produce wrong torque behavior and you need to prove whether ODrive `GPIO1` stayed in `ANALOG_IN`.
+**Pattern:**
+```python
+if odrive_ctrl.configure_gpio1_analog_torque_mapping(...):
+    odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after configuration")
+
+odrive_ctrl.print_gpio1_state("ODrive GPIO1 state before closed-loop")
+if odrive_ctrl.enter_closed_loop():
+    odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after closed-loop")
+
+odrive_ctrl.exit_closed_loop()
+odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after cleanup")
+```
+**Gotchas:** Do not only watch `gpio1_analog_mapping.endpoint`; also inspect `gpio1_mode`, mapping min/max, controller mode, and input mode. On the normal path, avoid redundant `STOP_OUTPUT` commands after the firmware already emitted completion, or you make the ODrive/Controllino lifecycle harder to reason about. If manual ODrive GUI setup works while Python does not, treat that as strong evidence to compare ODrive run-state logs before touching the PWM firmware again.
+**Last used:** 2026-03-31
 
 ## Biquad low-pass + notch filters (RBJ coefficients)
 **When to use:** You need tunable 2nd-order low-pass and notch filters in discrete time (set cutoff/center frequency in Hz and quality Q), suitable for an 8 kHz control loop.

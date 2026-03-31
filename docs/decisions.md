@@ -59,6 +59,27 @@
 **Alternatives considered:** Keep duty=0 as idle; rely on operator timing; add hardware changes (remove pull-up / different RC topology).
 **Consequences:** Power-on and shutdown become deterministic and safe w.r.t. unintended torque. The system now relies on correct calibration of the torque-to-voltage mapping used for the 0 Nm duty.
 
+## Update RP2040 PWM compare from timer ISR — 2026-03-31
+**Context:** The Controllino identification sketch logged the commanded CSV torque in the timer ISR, but deferred the actual PWM hardware write to `loop()`. That introduced timing skew and possible skipped intermediate duty values whenever the main loop lagged behind the sample timer.
+**Decision:** Keep PWM configuration as a one-time `setup()` step, but move the real-time duty application into the timer ISR using the RP2040 low-level PWM API (`pwm_set_chan_level` / `pwm_set_gpio_level`) instead of calling high-level Arduino `analogWrite()` from the interrupt.
+**Alternatives considered:** Keep the `loop()` handoff and relabel the input channel as the applied command; call `analogWrite()` directly from the ISR.
+**Consequences:** The commanded CSV torque remains the transfer-function input while the physical PWM compare update occurs on the same sample tick as acquisition. Future firmware must avoid re-running `analogWriteFreq()`, `analogWriteRange()`, slice init, or `gpio_set_function()` from ISR context.
+
+## Add runtime-selectable PWM debug strategies — 2026-03-31
+**Context:** After moving PWM compare writes into the ISR, hardware symptoms still suggested the physical RC output might not be following the requested duty. We needed a way to distinguish a broken low-level PWM path from a mixed configuration issue or ODrive-side behavior.
+**Decision:** Add a compile-time `PWM_RUNTIME_MODE` to the Controllino identification sketch, plus `GET_STATUS` diagnostics that expose the active PWM runtime mode, slice/channel mapping, GPIO function, compare-register snapshots, and write counters.
+**Alternatives considered:** Keep only one PWM implementation and debug externally with manual probing; immediately revert to `analogWrite()` in ISR without instrumenting the low-level path.
+**Consequences:** Hardware debugging becomes much faster and more reproducible. The project now supports controlled comparison between:
+- Arduino setup + low-level ISR compare writes
+- fully low-level PWM setup + low-level ISR compare writes
+- `analogWrite()` directly in the ISR as a fallback experiment
+
+## Treat ODrive GPIO1 mode as a runtime invariant — 2026-03-31
+**Context:** Hardware checks showed the Controllino PWM/RC output is working, while the bad motor behavior appears only during Python-controlled runs. The ODrive analog torque endpoint was already being toggled, but Python never verified that `odrv.config.gpio1_mode` itself stayed in `ANALOG_IN`.
+**Decision:** In the Python ODrive workflow, explicitly read, log, and if necessary reassert `gpio1_mode == ANALOG_IN` before closed-loop entry and after cleanup. Keep the existing design where GPIO1 feeds `input_torque` in either `Position` or `Torque` control mode, and narrow cleanup to clearing the endpoint instead of treating analog mode as disposable.
+**Alternatives considered:** Assume the initial `configure_gpio1_analog_torque_mapping()` write is enough; broaden the fix immediately to other controller settings without proving the GPIO mode; disable `input_torque` feedforward in `Position` mode.
+**Consequences:** Python runs now produce direct evidence about whether GPIO1 analog mode is being lost. Normal completion paths are simpler because they stop sending redundant `STOP_OUTPUT` commands after firmware has already reported completion. This investigation also established that the preferred interpretation for Workflow A remains “Controllino drives ODrive `input_torque` feedforward regardless of whether the outer controller mode is `Position` or `Torque`.”
+
 ## Spindle controller: pure discrete integrator with hold anti-windup — 2026-03-26
 **Context:** The spindle vibration controller output is clamped to safe torque bounds before converting to ODrive GPIO1 voltage/PWM. Without anti-windup, an integrator can accumulate error while saturated, causing long recovery and overshoot once it desaturates.
 **Decision:** Use a raw discrete integrator \(z/(z-1)\) with **pure-integrated output** (torque command is the integrator state). Integrate the post-filter signal (after lead-lag + LPF + notches). Apply **anti-windup by holding** the integrator state constant whenever the torque command is clamped.

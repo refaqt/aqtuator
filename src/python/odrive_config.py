@@ -20,6 +20,87 @@ class ODriveController:
         self.control_mode = None
         self.analog_mapping = None
         self.capture_rate = 1000  # Default 1kHz
+
+    def _gpio1_mode_is_analog_in(self):
+        if not self.connected or self.odrv is None:
+            return False
+        try:
+            gpio1_mode = self.odrv.config.gpio1_mode
+            try:
+                return int(gpio1_mode) == int(GpioMode.ANALOG_IN)
+            except Exception:
+                return str(gpio1_mode) == str(GpioMode.ANALOG_IN)
+        except Exception:
+            return False
+
+    def ensure_gpio1_analog_in(self):
+        """
+        Ensure ODrive GPIO1 remains configured as ANALOG_IN.
+
+        Returns:
+            bool: True if GPIO1 is confirmed ANALOG_IN, False otherwise.
+        """
+        if not self.connected or self.odrv is None:
+            print("ERROR: Not connected to ODrive")
+            return False
+        try:
+            if not self._gpio1_mode_is_analog_in():
+                self.odrv.config.gpio1_mode = GpioMode.ANALOG_IN
+            return self._gpio1_mode_is_analog_in()
+        except Exception as e:
+            print(f"ERROR: Failed to ensure GPIO1 ANALOG_IN mode: {e}")
+            return False
+
+    def get_gpio1_state(self):
+        """
+        Read the ODrive GPIO1 analog-input state used by this workflow.
+
+        Returns:
+            dict: Best-effort snapshot of GPIO1-related configuration.
+        """
+        state = {
+            'gpio1_mode': None,
+            'gpio1_mode_is_analog_in': False,
+            'gpio1_mapping_min': None,
+            'gpio1_mapping_max': None,
+            'gpio1_mapping_endpoint': None,
+            'control_mode': None,
+            'input_mode': None,
+        }
+        if not self.connected or self.odrv is None or self.axis is None:
+            return state
+
+        try:
+            state['gpio1_mode'] = self.odrv.config.gpio1_mode
+            state['gpio1_mode_is_analog_in'] = self._gpio1_mode_is_analog_in()
+        except Exception:
+            pass
+        try:
+            state['gpio1_mapping_min'] = self.odrv.config.gpio1_analog_mapping.min
+            state['gpio1_mapping_max'] = self.odrv.config.gpio1_analog_mapping.max
+            state['gpio1_mapping_endpoint'] = self.odrv.config.gpio1_analog_mapping.endpoint
+        except Exception:
+            pass
+        try:
+            state['control_mode'] = self.axis.controller.config.control_mode
+            state['input_mode'] = self.axis.controller.config.input_mode
+        except Exception:
+            pass
+        return state
+
+    def print_gpio1_state(self, label="GPIO1 state"):
+        """
+        Print a concise GPIO1/analog-mapping status snapshot.
+        """
+        state = self.get_gpio1_state()
+        print(f"{label}:")
+        print(f"  gpio1_mode={state['gpio1_mode']}")
+        print(f"  gpio1_mode_is_analog_in={state['gpio1_mode_is_analog_in']}")
+        print(f"  gpio1_mapping_min={state['gpio1_mapping_min']}")
+        print(f"  gpio1_mapping_max={state['gpio1_mapping_max']}")
+        print(f"  gpio1_mapping_endpoint={state['gpio1_mapping_endpoint']}")
+        print(f"  control_mode={state['control_mode']}")
+        print(f"  input_mode={state['input_mode']}")
         
     def connect(self):
         """
@@ -268,6 +349,10 @@ class ODriveController:
                 print(f"ERROR: Failed to configure gpio1_analog_mapping: {e}")
                 return False
 
+            if not self.ensure_gpio1_analog_in():
+                print("ERROR: GPIO1 failed to remain in ANALOG_IN mode after configuration")
+                return False
+
             print(f"ODrive configured for PWM->GPIO1 analog torque mapping ({control_mode.upper()} / PASSTHROUGH).")
             return True
 
@@ -306,8 +391,14 @@ class ODriveController:
             return False
         
         try:
+            if not self.ensure_gpio1_analog_in():
+                print("ERROR: GPIO1 is not in ANALOG_IN mode before entering closed-loop")
+                return False
             # Safety: only listen to analog command when entering closed-loop.
             self._set_gpio1_analog_endpoint_torque_best_effort()
+            if not self.ensure_gpio1_analog_in():
+                print("ERROR: GPIO1 is not in ANALOG_IN mode after restoring analog endpoint")
+                return False
 
             # Request closed-loop control state
             self.axis.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
@@ -319,12 +410,14 @@ class ODriveController:
             
             while time.time() - start_time < timeout:
                 if self.axis.current_state == AXIS_STATE_CLOSED_LOOP_CONTROL:
+                    self.ensure_gpio1_analog_in()
                     print("ODrive entered closed-loop control state")
                     return True
                 time.sleep(0.1)
             
             # Check final state
             if self.axis.current_state == AXIS_STATE_CLOSED_LOOP_CONTROL:
+                self.ensure_gpio1_analog_in()
                 print("ODrive entered closed-loop control state")
                 return True
             else:
@@ -361,6 +454,7 @@ class ODriveController:
                     print("ODrive returned to IDLE state")
                     # Safety: stop listening to analog command while idle.
                     self._set_gpio1_analog_endpoint_none_best_effort()
+                    self.ensure_gpio1_analog_in()
                     return True
                 time.sleep(0.1)
             
@@ -369,6 +463,7 @@ class ODriveController:
                 print("ODrive returned to IDLE state")
                 # Safety: stop listening to analog command while idle.
                 self._set_gpio1_analog_endpoint_none_best_effort()
+                self.ensure_gpio1_analog_in()
                 return True
             else:
                 print(f"WARNING: ODrive state is {self.axis.current_state}, expected {AXIS_STATE_IDLE}")
@@ -497,6 +592,10 @@ class ODriveController:
                 status['encoder_pos'] = self.axis.encoder.pos_estimate
                 status['motor_vel'] = self.axis.motor.vel_estimate
             except:
+                pass
+            try:
+                status.update(self.get_gpio1_state())
+            except Exception:
                 pass
         
         return status

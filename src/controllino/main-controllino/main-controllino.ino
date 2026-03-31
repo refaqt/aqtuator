@@ -22,6 +22,8 @@
   #include <hardware/timer.h>
   #include <hardware/irq.h>
   #include <hardware/adc.h>
+  #include <hardware/pwm.h>
+  #include <hardware/gpio.h>
 #endif
 
 #include <math.h>
@@ -47,6 +49,12 @@
 
 // Clamp: never exceed 0.84 of maximum PWM value (per requirement)
 #define PWM_MAX_FRAC 0.84f
+
+// PWM debug/runtime strategy:
+//   0 = Arduino setup + low-level ISR compare writes
+//   1 = Fully low-level PWM setup + low-level ISR compare writes
+//   2 = analogWrite() directly inside timerISR() (fallback experiment)
+#define PWM_RUNTIME_MODE 1
 
 // ODrive GPIO1 analog mapping (used to convert CSV "torque" sample into analog voltage)
 // Voltage mapping is assumed 0..3.3V on ODrive GPIO1.
@@ -152,10 +160,20 @@ unsigned long output_duration_ms = 0;
   uint8_t adc_channels[4] = {ADC_PIN_A0, ADC_PIN_A1, ADC_PIN_A2, ADC_PIN_A3};
 #endif
 
-// PWM update handoff (timer ISR -> loop)
-static volatile bool pwm_update_pending = false;
-static volatile uint16_t pwm_duty_pending = 0;
-static volatile float output_voltage_pending = 0.0f;
+#ifdef ARDUINO_ARCH_RP2040
+static uint pwm_output_slice_num = 0;
+static uint pwm_output_channel = 0;
+static volatile uint16_t pwm_debug_last_requested_duty = 0;
+static volatile uint16_t pwm_debug_last_written_duty = 0;
+static volatile uint16_t pwm_debug_last_cc_a = 0;
+static volatile uint16_t pwm_debug_last_cc_b = 0;
+static volatile uint32_t pwm_debug_write_count = 0;
+static volatile uint32_t pwm_debug_idle_write_count = 0;
+static volatile uint32_t pwm_debug_active_write_count = 0;
+static volatile uint32_t pwm_debug_last_gpio_func = GPIO_FUNC_NULL;
+static volatile uint16_t pwm_debug_last_top = 0;
+static volatile uint32_t pwm_debug_last_csr = 0;
+#endif
 
 // ============================================================================
 // Function Prototypes
@@ -168,6 +186,38 @@ void timerISR();
 bool parseCSVFromSerial(uint32_t expected_lines);
 void processCommand(String cmd);
 void printStatus();
+
+#ifdef ARDUINO_ARCH_RP2040
+static void configurePwmOutputHardware(uint16_t initial_duty);
+static const char *pwmRuntimeModeName();
+#endif
+
+static inline void writePwmDutyRealtime(uint16_t duty) {
+  #ifdef ARDUINO_ARCH_RP2040
+    pwm_debug_last_requested_duty = duty;
+
+    #if PWM_RUNTIME_MODE == 2
+      analogWrite(PWM_OUTPUT_PIN, (int)duty);
+    #else
+      pwm_set_chan_level(pwm_output_slice_num, pwm_output_channel, duty);
+    #endif
+
+    pwm_debug_last_written_duty = duty;
+    pwm_debug_last_cc_a = (uint16_t)((pwm_hw->slice[pwm_output_slice_num].cc & PWM_CH0_CC_A_BITS) >> PWM_CH0_CC_A_LSB);
+    pwm_debug_last_cc_b = (uint16_t)((pwm_hw->slice[pwm_output_slice_num].cc & PWM_CH0_CC_B_BITS) >> PWM_CH0_CC_B_LSB);
+    pwm_debug_last_top = pwm_hw->slice[pwm_output_slice_num].top;
+    pwm_debug_last_csr = pwm_hw->slice[pwm_output_slice_num].csr;
+    pwm_debug_last_gpio_func = (uint32_t)gpio_get_function(PWM_OUTPUT_PIN);
+    pwm_debug_write_count++;
+    if (torque_output_active) {
+      pwm_debug_active_write_count++;
+    } else {
+      pwm_debug_idle_write_count++;
+    }
+  #else
+    analogWrite(PWM_OUTPUT_PIN, (int)duty);
+  #endif
+}
 
 static inline float clampf(float x, float lo, float hi) {
   if (x < lo) return lo;
@@ -221,7 +271,45 @@ static inline uint16_t torqueToPwmDuty(float torque) {
 }
 
 static uint16_t idle_pwm_duty = 0;
-static float idle_output_voltage = 0.0f;
+
+#ifdef ARDUINO_ARCH_RP2040
+static void configurePwmOutputHardware(uint16_t initial_duty) {
+  pwm_output_slice_num = pwm_gpio_to_slice_num(PWM_OUTPUT_PIN);
+  pwm_output_channel = pwm_gpio_to_channel(PWM_OUTPUT_PIN);
+
+  #if PWM_RUNTIME_MODE == 1
+    gpio_set_function(PWM_OUTPUT_PIN, GPIO_FUNC_PWM);
+    pwm_set_wrap(pwm_output_slice_num, PWM_TOP);
+    pwm_set_clkdiv(pwm_output_slice_num, 1.0f);
+    pwm_set_enabled(pwm_output_slice_num, true);
+    pwm_set_chan_level(pwm_output_slice_num, pwm_output_channel, initial_duty);
+  #else
+    analogWriteFreq(PWM_FREQ_HZ);
+    analogWriteRange(PWM_TOP);
+    analogWrite(PWM_OUTPUT_PIN, (int)initial_duty);
+  #endif
+
+  pwm_debug_last_requested_duty = initial_duty;
+  pwm_debug_last_written_duty = initial_duty;
+  pwm_debug_last_cc_a = (uint16_t)((pwm_hw->slice[pwm_output_slice_num].cc & PWM_CH0_CC_A_BITS) >> PWM_CH0_CC_A_LSB);
+  pwm_debug_last_cc_b = (uint16_t)((pwm_hw->slice[pwm_output_slice_num].cc & PWM_CH0_CC_B_BITS) >> PWM_CH0_CC_B_LSB);
+  pwm_debug_last_top = pwm_hw->slice[pwm_output_slice_num].top;
+  pwm_debug_last_csr = pwm_hw->slice[pwm_output_slice_num].csr;
+  pwm_debug_last_gpio_func = (uint32_t)gpio_get_function(PWM_OUTPUT_PIN);
+}
+
+static const char *pwmRuntimeModeName() {
+  #if PWM_RUNTIME_MODE == 0
+    return "arduino_setup+low_level_isr";
+  #elif PWM_RUNTIME_MODE == 1
+    return "fully_low_level_pwm";
+  #elif PWM_RUNTIME_MODE == 2
+    return "analogWrite_in_isr";
+  #else
+    return "unknown";
+  #endif
+}
+#endif
 
 // ============================================================================
 // Setup Function
@@ -239,12 +327,12 @@ void setup() {
 
   // Initialize PWM output (D0 -> RC filter -> ODrive GPIO1)
   pinMode(PWM_OUTPUT_PIN, OUTPUT);
-  analogWriteFreq(PWM_FREQ_HZ);
-  analogWriteRange(PWM_TOP);
   idle_pwm_duty = torqueToPwmDuty(0.0f);
-  idle_output_voltage = torqueToOdriveGpio1Voltage(0.0f);
-  analogWrite(PWM_OUTPUT_PIN, (int)idle_pwm_duty);
-  pwm_update_pending = false;
+  #ifdef ARDUINO_ARCH_RP2040
+    configurePwmOutputHardware(idle_pwm_duty);
+    Serial.print("INFO: PWM runtime mode: ");
+    Serial.println(pwmRuntimeModeName());
+  #endif
   
   // Initialize ADC (RP2040)
   #ifdef ARDUINO_ARCH_RP2040
@@ -273,19 +361,12 @@ void setup() {
 // ============================================================================
 
 void loop() {
-  // Always apply latest PWM update, even while serial is blocked.
-  if (pwm_update_pending) {
-    noInterrupts();
-    const uint16_t duty = pwm_duty_pending;
-    pwm_update_pending = false;
-    interrupts();
-    analogWrite(PWM_OUTPUT_PIN, (int)duty);
-  }
-  
   // Safety invariant: when idle, hold the analog command at 0 Nm (not 0% PWM).
   // This matters because ODrive GPIO1 has a pull-up that makes 0% PWM unsafe.
-  if (current_state == STATE_IDLE && !torque_output_active && !acquisition_active && !pwm_update_pending) {
-    analogWrite(PWM_OUTPUT_PIN, (int)idle_pwm_duty);
+  if (current_state == STATE_IDLE && !torque_output_active && !acquisition_active) {
+    noInterrupts();
+    writePwmDutyRealtime(idle_pwm_duty);
+    interrupts();
   }
 
   // Skip reading Serial if parsing CSV
@@ -412,18 +493,14 @@ void timerISR() {
     // Compensate for pull-up divider to get required PWM-side voltage (0..3.3V)
     float pwm_voltage = odriveGpio1VoltageToPwmVoltage(current_output_voltage);
     uint16_t duty = voltageToPwmDuty(pwm_voltage);
-    pwm_duty_pending = duty;
-    output_voltage_pending = current_output_voltage;
-    pwm_update_pending = true;
+    writePwmDutyRealtime(duty);
     
     // Check if output duration expired (for START_OUTPUT test mode)
     if (output_duration_ms > 0 && is_test_output_mode) {
       unsigned long elapsed = millis() - output_start_time;
       if (elapsed >= output_duration_ms) {
         // Set output to 0 Nm before stopping
-        pwm_duty_pending = idle_pwm_duty;
-        output_voltage_pending = idle_output_voltage;
-        pwm_update_pending = true;
+        writePwmDutyRealtime(idle_pwm_duty);
         
         torque_output_active = false;
         output_duration_ms = 0;
@@ -482,8 +559,10 @@ void timerISR() {
     const float acc_spindle_right = (float)a1_counts * counts_to_mps2;
     const float acc_workbed_x = (float)a3_counts * counts_to_mps2;
 
-    const float x_spindle =
-        ((acc_spindle_right - acc_spindle_left) * inv_cos_alpha1) - acc_workbed_x;
+    const float x_spindle = acc_workbed_x;
+    
+    // const float x_spindle =
+    //    ((acc_spindle_right - acc_spindle_left) * inv_cos_alpha1) - acc_workbed_x;
 
     // Channel mapping (2 channels):
     //  - torque_command: the currently active CSV torque value (Nm)
@@ -499,9 +578,7 @@ void timerISR() {
       acquisition_active = false;
       
       // Set output to 0 Nm after acquisition completes
-      pwm_duty_pending = idle_pwm_duty;
-      output_voltage_pending = idle_output_voltage;
-      pwm_update_pending = true;
+      writePwmDutyRealtime(idle_pwm_duty);
       
       torque_output_active = false;
       serial_blocked = false;  // Unblock serial to send completion message
@@ -514,9 +591,7 @@ void timerISR() {
       acquisition_active = false;
       
       // Set output to 0 Nm
-      pwm_duty_pending = idle_pwm_duty;
-      output_voltage_pending = idle_output_voltage;
-      pwm_update_pending = true;
+      writePwmDutyRealtime(idle_pwm_duty);
       
       torque_output_active = false;
       serial_blocked = false;
@@ -819,9 +894,9 @@ void processCommand(String cmd) {
     is_test_output_mode = false;
     csv_index = 0;
     
-    pwm_duty_pending = idle_pwm_duty;
-    output_voltage_pending = idle_output_voltage;
-    pwm_update_pending = true;
+    noInterrupts();
+    writePwmDutyRealtime(idle_pwm_duty);
+    interrupts();
     
     Serial.println("ACK: Output stopped");
     Serial.flush();
@@ -838,9 +913,9 @@ void processCommand(String cmd) {
     is_test_output_mode = false;
     csv_index = 0;
     
-    pwm_duty_pending = idle_pwm_duty;
-    output_voltage_pending = idle_output_voltage;
-    pwm_update_pending = true;
+    noInterrupts();
+    writePwmDutyRealtime(idle_pwm_duty);
+    interrupts();
     
     Serial.println("ACK: Acquisition stopped");
     Serial.flush();
@@ -918,6 +993,34 @@ void printStatus() {
   Serial.println(acquisition_active ? "ACTIVE" : "INACTIVE");
   Serial.print("Serial Blocked: ");
   Serial.println(serial_blocked ? "YES" : "NO");
+  #ifdef ARDUINO_ARCH_RP2040
+    Serial.print("PWM Runtime Mode: ");
+    Serial.println(pwmRuntimeModeName());
+    Serial.print("PWM Slice: ");
+    Serial.println((unsigned int)pwm_output_slice_num);
+    Serial.print("PWM Channel: ");
+    Serial.println((unsigned int)pwm_output_channel);
+    Serial.print("PWM GPIO Function: ");
+    Serial.println((unsigned int)pwm_debug_last_gpio_func);
+    Serial.print("PWM Requested Duty: ");
+    Serial.println((unsigned int)pwm_debug_last_requested_duty);
+    Serial.print("PWM Written Duty: ");
+    Serial.println((unsigned int)pwm_debug_last_written_duty);
+    Serial.print("PWM CC A: ");
+    Serial.println((unsigned int)pwm_debug_last_cc_a);
+    Serial.print("PWM CC B: ");
+    Serial.println((unsigned int)pwm_debug_last_cc_b);
+    Serial.print("PWM TOP: ");
+    Serial.println((unsigned int)pwm_debug_last_top);
+    Serial.print("PWM CSR: ");
+    Serial.println((unsigned int)pwm_debug_last_csr, HEX);
+    Serial.print("PWM Write Count: ");
+    Serial.println((unsigned long)pwm_debug_write_count);
+    Serial.print("PWM Idle Write Count: ");
+    Serial.println((unsigned long)pwm_debug_idle_write_count);
+    Serial.print("PWM Active Write Count: ");
+    Serial.println((unsigned long)pwm_debug_active_write_count);
+  #endif
   Serial.println("========================================\n");
 }
 

@@ -125,6 +125,10 @@ def cleanup_odrive(odrive_ctrl):
 
     try:
         if getattr(odrive_ctrl, "connected", False):
+            try:
+                odrive_ctrl.print_gpio1_state("ODrive GPIO1 state before cleanup")
+            except Exception:
+                pass
             # Ensure we leave closed-loop (safe even if already idle).
             try:
                 odrive_ctrl.exit_closed_loop()
@@ -134,6 +138,12 @@ def cleanup_odrive(odrive_ctrl):
             # Clear GPIO1 analog mapping endpoint after identification/error.
             try:
                 odrive_ctrl.odrv.config.gpio1_analog_mapping.endpoint = None
+            except Exception:
+                pass
+
+            try:
+                odrive_ctrl.ensure_gpio1_analog_in()
+                odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after cleanup")
             except Exception:
                 pass
 
@@ -896,6 +906,7 @@ def main():
                 print("WARNING: Failed to configure ODrive GPIO1 analog mapping. Continuing anyway.")
             else:
                 print("ODrive configured for PWM->GPIO1 analog torque mapping.")
+                odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after configuration")
         else:
             print("ODrive connection failed. Continuing without ODrive.")
         
@@ -1012,10 +1023,12 @@ def main():
                 # Enable ODrive closed-loop control
                 if odrive_connected:
                     print("Enabling ODrive closed-loop control...")
+                    odrive_ctrl.print_gpio1_state("ODrive GPIO1 state before closed-loop (test output)")
                     if not odrive_ctrl.enter_closed_loop():
                         print("Warning: Failed to enter closed-loop control. Continuing anyway.")
                     else:
                         print("ODrive entered closed-loop control state.")
+                        odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after closed-loop (test output)")
 
                 # Wait 0.5s to ensure ODrive is ready before torque commands start
                 time.sleep(0.5)
@@ -1045,10 +1058,6 @@ def main():
                             if line == "ACK: Output complete":
                                 output_complete = True
                                 print("Output completed. PWM output set to zero.")
-                                # Best-effort safety: force Controllino back to 0 Nm idle duty.
-                                # (Firmware implements STOP_OUTPUT; this is safe even if already idle.)
-                                serial_helper.send_command("STOP_OUTPUT")
-                                time.sleep(0.05)
                                 break
                             elif line.startswith("ERROR:"):
                                 print(f"Error received: {line}")
@@ -1070,6 +1079,7 @@ def main():
                 if odrive_connected:
                     print("Disabling ODrive closed-loop control...")
                     odrive_ctrl.exit_closed_loop()
+                    odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after cleanup (test output)")
 
                     # Always ask if test should be repeated
                     while True:
@@ -1127,10 +1137,12 @@ def main():
         # Enable ODrive closed-loop control
         if odrive_connected:
             print("Enabling ODrive closed-loop control...")
+            odrive_ctrl.print_gpio1_state("ODrive GPIO1 state before closed-loop (identification)")
             if not odrive_ctrl.enter_closed_loop():
                 print("Warning: Failed to enter closed-loop control. Continuing anyway.")
             else:
                 print("ODrive entered closed-loop control state.")
+                odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after closed-loop (identification)")
         
         # Wait 0.5s to ensure ODrive is ready before starting identification
         time.sleep(0.5)
@@ -1168,9 +1180,6 @@ def main():
                     if line == "ACK: Acquisition complete":
                         acquisition_complete = True
                         print("Acquisition completed. PWM output set to zero.")
-                        # Best-effort safety: force Controllino back to 0 Nm idle duty.
-                        serial_helper.send_command("STOP_OUTPUT")
-                        time.sleep(0.05)
                         break
                     elif line.startswith("ERROR:"):
                         print(f"Error received: {line}")
@@ -1193,11 +1202,7 @@ def main():
         if odrive_connected:
             print("\nDisabling ODrive closed-loop control...")
             odrive_ctrl.exit_closed_loop()
-            # Restore GPIO1 analog mapping to a safe default (no endpoint)
-            try:
-                odrive_ctrl.odrv.config.gpio1_analog_mapping.endpoint = None
-            except Exception:
-                pass
+            odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after cleanup (identification)")
             odrive_ctrl.set_control_mode('Position')
             odrive_ctrl.set_enable_step_dir(True)
         
@@ -1252,9 +1257,6 @@ def main():
         print("=" * 60)
         
         # Cleanup serial and ODrive connections
-        # Best-effort safety: force Controllino back to 0 Nm idle duty before disconnect.
-        serial_helper.send_command("STOP_OUTPUT")
-        time.sleep(0.05)
         serial_helper.disconnect()
         if odrive_connected:
             odrive_ctrl.disconnect()
