@@ -31,6 +31,87 @@ import matplotlib.pyplot as plt
 from odrive_config import ODriveController
 
 # ============================================================================
+# Multisine CSV helpers
+# ============================================================================
+
+def _parse_multisine_freq_band_from_csv(csv_path):
+    """Extract excited frequency band (Hz) from multisine CSV metadata.
+
+    Prefers fmin_actual/fmax_actual, then falls back to fmin_desired/fmax_desired,
+    then (as a last resort) parses filename like: multisine_<fmin>-<fmax>Hz_...
+    Returns (fmin, fmax) as floats, or None if not available/invalid.
+    """
+    def _to_float_or_none(s):
+        if s is None:
+            return None
+        s = str(s).strip()
+        if not s or s.upper() == "N/A":
+            return None
+        try:
+            return float(s)
+        except ValueError:
+            return None
+
+    fmin = None
+    fmax = None
+
+    try:
+        with open(csv_path, 'r') as f:
+            # Only the header is needed; stop when data columns start.
+            for _ in range(200):
+                line = f.readline()
+                if not line:
+                    break
+                line = line.strip()
+                if not line:
+                    continue
+                if line.lower() == 'time_s,signal':
+                    break
+                if not line.startswith('#'):
+                    continue
+
+                # Lines look like: "# fmin_actual: 52.000000 Hz"
+                content = line.lstrip('#').strip()
+                if ':' not in content:
+                    continue
+                key, rest = content.split(':', 1)
+                key = key.strip().lower()
+                rest = rest.strip()
+                if rest.lower().endswith('hz'):
+                    rest = rest[:-2].strip()
+
+                if key == 'fmin_actual':
+                    fmin = _to_float_or_none(rest)
+                elif key == 'fmax_actual':
+                    fmax = _to_float_or_none(rest)
+                elif key == 'fmin_desired' and fmin is None:
+                    fmin = _to_float_or_none(rest)
+                elif key == 'fmax_desired' and fmax is None:
+                    fmax = _to_float_or_none(rest)
+    except Exception:
+        # Fall back to filename parsing below.
+        pass
+
+    # Filename fallback: multisine_<fmin>-<fmax>Hz_...
+    if (fmin is None or fmax is None) and csv_path:
+        import re
+        base = os.path.basename(csv_path)
+        m = re.search(r"multisine_(?P<fmin>[-+]?\d+(?:\.\d+)?)\-(?P<fmax>[-+]?\d+(?:\.\d+)?)Hz", base)
+        if m:
+            if fmin is None:
+                fmin = _to_float_or_none(m.group('fmin'))
+            if fmax is None:
+                fmax = _to_float_or_none(m.group('fmax'))
+
+    if fmin is None or fmax is None:
+        return None
+    if not (np.isfinite(fmin) and np.isfinite(fmax)):
+        return None
+    if fmin <= 0 or fmax <= fmin:
+        return None
+    return (float(fmin), float(fmax))
+
+# ============================================================================
 # ODrive Cleanup Helper
 # ============================================================================
 
@@ -44,15 +125,37 @@ def cleanup_odrive(odrive_ctrl):
 
     try:
         if getattr(odrive_ctrl, "connected", False):
+            try:
+                odrive_ctrl.print_gpio1_state("ODrive GPIO1 state before cleanup")
+            except Exception:
+                pass
             # Ensure we leave closed-loop (safe even if already idle).
             try:
                 odrive_ctrl.exit_closed_loop()
             except Exception:
                 pass
 
+            # Clear GPIO1 analog mapping endpoint after identification/error.
+            try:
+                odrive_ctrl.odrv.config.gpio1_analog_mapping.endpoint = None
+            except Exception:
+                pass
+
+            try:
+                odrive_ctrl.ensure_gpio1_analog_in()
+                odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after cleanup")
+            except Exception:
+                pass
+
             # Ensure final mode is Position (per safety requirement).
             try:
                 odrive_ctrl.set_control_mode("Position")
+            except Exception:
+                pass
+
+            # Restore step/dir mode after run completion/error.
+            try:
+                odrive_ctrl.set_enable_step_dir(True)
             except Exception:
                 pass
     finally:
@@ -67,24 +170,8 @@ def cleanup_odrive(odrive_ctrl):
 
 # Time series variables to plot (all in one window, synced x-axes)
 TIME_SERIES_VARIABLES = [
-    'output_voltage',  # Voltage output (multisine) as output by Controllino
-    'A0', 'A1', 'A2', 'A3',  # Analog input voltages
-    'acc0', 'acc1', 'acc2', 'acc3',  # Accelerations (calculated)
-    'x', 'y', 'z',  # Geometric calculations
-    # ODrive variables (will be added if ODrive is connected)
-    'odrive_Axis_pos_estimate',
-    'odrive_Axis_vel_estimate',
-    'odrive_Motor_torque_estimate',
-    'odrive_Rs485Encoder_raw32',
-    'odrive_EncoderEstimator_pos_estimate',
-    'odrive_EncoderEstimator_vel_estimate',
-    'odrive_Controller_input_pos',
-    'odrive_Controller_input_vel',
-    'odrive_Controller_input_torque',
-    'odrive_Controller_pos_setpoint',
-    'odrive_Controller_vel_setpoint',
-    'odrive_Controller_torque_setpoint',
-    'odrive_Controller_vel_integrator_torque',
+    'torque_command',  # Active CSV torque value (Nm) used by firmware for PWM output
+    'x_spindle',       # Computed spindle acceleration (m/s^2)
 ]
 
 # ============================================================================
@@ -96,20 +183,15 @@ TIME_SERIES_VARIABLES = [
 # Format: (input_variable_name, output_variable_name)
 # 
 # Available variables for inputs/outputs:
-#   - output_voltage: Voltage output (multisine) as recorded by Controllino
-#   - torque_command: Torque command sent to ODrive (same as output_voltage)
-#   - A0, A1, A2, A3: Analog input voltages
-#   - acc0, acc1, acc2, acc3: Accelerations (calculated)
-#   - x, y, z: Geometric calculations (x = A0 - A3, y = A1, z = A3)
+#   - torque_command: Active CSV torque value (Nm)
+#   - x_spindle: Computed spindle acceleration (m/s^2)
 #   - ODrive variables (if ODrive is connected): odrive_* variables
 #
 # To modify Bode plots, edit the list below:
 # ============================================================================
 
 BODE_PLOT_CONFIGS = [
-    ('torque_command', 'x'),
-    ('torque_command', 'y'),
-    ('torque_command', 'z'),
+    ('torque_command', 'x_spindle'),
 ]
 
 # ============================================================================
@@ -122,7 +204,8 @@ CONTROLLINO_PORT = 'COM3'  # Hard-coded Controllino port (change as needed)
 # Configuration: Acquisition limits
 # ============================================================================
 
-MAX_ACQ_SAMPLES = 4000  # Maximum acquisition samples (must match Arduino firmware)
+MAX_ACQ_SAMPLES = 16000  # Maximum acquisition samples (must match Arduino firmware)
+MAX_CSV_SAMPLES = 2000  # Maximum CSV samples (must match Arduino firmware)
 
 # ============================================================================
 # Serial Communication Helper Class
@@ -233,11 +316,21 @@ class SerialHelper:
             except Exception as e:
                 return (False, "", f"Send command failed: {e}")
     
-    def upload_csv(self, csv_path):
-        """Upload CSV file to Controllino."""
+    def upload_csv(self, csv_path, *, max_torque=None):
+        """Upload CSV file to Controllino.
+
+        If max_torque is provided, the CSV second column is treated as a normalized
+        multisine signal (clamped to ±1) and scaled to torque via:
+          torque = max_torque * clamp(signal, -1, 1)
+        The scaled torque values are streamed to the Controllino without modifying
+        the source file on disk.
+        """
         if not self.serial_port or not self.serial_port.is_open:
             return (False, "Serial port not connected")
         
+        def clamp(x, lo, hi):
+            return lo if x < lo else hi if x > hi else x
+
         try:
             # Read CSV file and count data lines
             data_lines = []
@@ -248,10 +341,36 @@ class SerialHelper:
                         continue
                     if line.startswith('#') or line.lower() == 'time_s,signal':
                         continue
-                    data_lines.append(line)
+                    # Parse data row as "time,signal"
+                    if ',' not in line:
+                        # Skip non-data lines (we expect 2 columns)
+                        continue
+
+                    time_str, signal_str = line.split(',', 1)
+                    time_str = time_str.strip()
+                    signal_str = signal_str.strip()
+                    if not time_str or not signal_str:
+                        continue
+
+                    try:
+                        time_val = float(time_str)
+                        signal_val = float(signal_str)
+                    except ValueError:
+                        continue
+
+                    if max_torque is None:
+                        # Backwards compatible: send as-is (already torque)
+                        data_lines.append(f"{time_val:.10e},{signal_val:.10e}")
+                    else:
+                        # Scale normalized multisine to torque (Nm)
+                        s = clamp(signal_val, -1.0, 1.0)
+                        torque_val = float(max_torque) * s
+                        data_lines.append(f"{time_val:.10e},{torque_val:.10e}")
             
             if len(data_lines) == 0:
                 return (False, "CSV file has no data lines")
+            if len(data_lines) > MAX_CSV_SAMPLES:
+                return (False, f"CSV has {len(data_lines)} samples; exceeds Controllino limit MAX_CSV_SAMPLES={MAX_CSV_SAMPLES}")
             
             with self.serial_lock:
                 # Clear input buffer
@@ -515,62 +634,37 @@ def process_data(data_array, sample_rate, odrive_data=None):
     """Process acquired data including geometric calculations.
     
     Args:
-        data_array: numpy array with shape (num_samples, 5)
-                   Columns: [A0, A1, A2, A3, torque_command]
+        data_array: numpy array with shape (num_samples, 2)
+                   Columns: [torque_command, x_spindle]
         sample_rate: Sample rate in Hz
         odrive_data: Optional dict with ODrive variables (if ODrive connected) - not used for Controllino
     """
     num_samples = data_array.shape[0]
     num_channels = data_array.shape[1]
     
-    # Verify we have 5 channels (4 inputs + torque_command)
-    if num_channels != 5:
-        raise ValueError(f"Expected 5 channels (4 inputs + torque_command), got {num_channels}")
+    # Verify we have 2 channels: torque_command + x_spindle
+    if num_channels != 2:
+        raise ValueError(f"Expected 2 channels (torque_command, x_spindle), got {num_channels}")
     
     # Create time vector
     t = np.arange(num_samples) / sample_rate
     
-    # Extract input channels (A0-A3) - indices 0-3
-    A0 = data_array[:, 0]
-    A1 = data_array[:, 1]
-    A2 = data_array[:, 2]
-    A3 = data_array[:, 3]
-    
-    # Extract torque command - index 4 (sent to ODrive via CAN)
-    torque_command = data_array[:, 4]
-    
-    # For compatibility with existing code, also store as output_voltage
-    # (though it's actually torque command)
-    output_voltage = torque_command
-    
-    # Calculate accelerations (acc0-acc3) - these are the raw analog inputs
-    # In this system, the analog inputs ARE the accelerometer readings
-    acc0 = A0
-    acc1 = A1
-    acc2 = A2
-    acc3 = A3
-    
-    # Calculate x, y, z
-    x = A0 - A3
-    y = A1
-    z = A3
+    torque_command = data_array[:, 0]
+    x_spindle = data_array[:, 1]
+
+    # Remove DC component from x_spindle before any downstream plotting/calculation.
+    x_spindle_dc = float(np.mean(x_spindle)) if num_samples > 0 else float("nan")
+    if np.isfinite(x_spindle_dc):
+        x_spindle = x_spindle - x_spindle_dc
+    else:
+        print("Warning: x_spindle DC offset is non-finite; skipping DC removal.")
     
     # Store processed data
     data = {
         'time': t,
-        'output_voltage': output_voltage,  # For compatibility (actually torque command)
         'torque_command': torque_command,
-        'A0': A0,
-        'A1': A1,
-        'A2': A2,
-        'A3': A3,
-        'acc0': acc0,
-        'acc1': acc1,
-        'acc2': acc2,
-        'acc3': acc3,
-        'x': x,
-        'y': y,
-        'z': z,
+        'x_spindle': x_spindle,
+        'x_spindle_dc': x_spindle_dc,
         'sample_rate': sample_rate
     }
     
@@ -630,13 +724,14 @@ def plot_time_series(data, variables_to_plot, active_figures=None):
     plt.show(block=False)
     return fig
 
-def plot_bode_plots(data, bode_configs, active_figures=None):
+def plot_bode_plots(data, bode_configs, active_figures=None, freq_band_hz=None):
     """Plot 6 Bode plots in 2x3 grid.
     
     Args:
         data: Dictionary containing time series data
         bode_configs: List of (input_var, output_var) tuples for Bode plots
         active_figures: Optional list to track active figure references
+        freq_band_hz: Optional (fmin, fmax) in Hz to limit plots to the excited band
     
     Returns:
         Figure object or None if no valid configs
@@ -653,20 +748,35 @@ def plot_bode_plots(data, bode_configs, active_figures=None):
         print("No valid Bode plot configurations")
         return None
     
-    # Create 2x3 grid (or adjust if fewer than 6)
+    # Create grid sized to number of requested plots (max 6).
     num_plots = min(len(valid_configs), 6)
-    rows = 2
-    cols = 3
-    
-    fig, axes = plt.subplots(rows * 2, cols, figsize=(15, 10))  # 2 rows per plot (magnitude + phase)
+    cols = min(3, num_plots)
+    rows = int(np.ceil(num_plots / cols))
+
+    # Two sub-rows per plot (magnitude + phase).
+    col_width = 5.0
+    row_pair_height = 3.2
+    fig_w = max(8.0, col_width * cols)
+    fig_h = max(5.0, row_pair_height * rows * 2)
+    fig, axes = plt.subplots(rows * 2, cols, figsize=(fig_w, fig_h), squeeze=False)
     fig.suptitle('Bode Plots', fontsize=14)
     
     sample_rate = data['sample_rate']
+    if freq_band_hz is not None:
+        try:
+            fmin_band = float(freq_band_hz[0])
+            fmax_band = float(freq_band_hz[1])
+            if not (np.isfinite(fmin_band) and np.isfinite(fmax_band) and fmin_band > 0 and fmax_band > fmin_band):
+                fmin_band = None
+                fmax_band = None
+        except Exception:
+            fmin_band = None
+            fmax_band = None
+    else:
+        fmin_band = None
+        fmax_band = None
     
     for idx, (input_var, output_var) in enumerate(valid_configs[:num_plots]):
-        if idx >= 6:
-            break
-        
         row = idx // cols
         col = idx % cols
         
@@ -679,28 +789,46 @@ def plot_bode_plots(data, bode_configs, active_figures=None):
         
         # Calculate transfer function H = Pxy / Pxx
         H = Pxy / (Pxx + 1e-10)
+
+        # Limit to multisine excited band (if provided)
+        if fmin_band is not None and fmax_band is not None:
+            band_mask = (f >= fmin_band) & (f <= fmax_band)
+            # Keep at least a few points; otherwise skip masking but still set xlim.
+            if np.count_nonzero(band_mask) >= 3:
+                f_plot = f[band_mask]
+                H_plot = H[band_mask]
+            else:
+                f_plot = f
+                H_plot = H
+        else:
+            f_plot = f
+            H_plot = H
         
         # Magnitude and phase
-        magnitude = np.abs(H)
-        phase = np.angle(H)
+        magnitude = np.abs(H_plot)
+        phase = np.angle(H_plot)
         phase = np.unwrap(phase) * 180 / np.pi  # Unwrap and convert to degrees
         
         # Magnitude plot (top row)
         ax_mag = axes[row * 2, col]
-        ax_mag.loglog(f, magnitude)
+        ax_mag.loglog(f_plot, magnitude)
         ax_mag.set_ylabel(f'{output_var} / {input_var}')
         ax_mag.set_title(f'{output_var} / {input_var}')
         ax_mag.grid(True)
+        if fmin_band is not None and fmax_band is not None:
+            ax_mag.set_xlim(fmin_band, fmax_band)
         
         # Phase plot (bottom row)
         ax_phase = axes[row * 2 + 1, col]
-        ax_phase.semilogx(f, phase)
+        ax_phase.semilogx(f_plot, phase)
         ax_phase.set_xlabel('Frequency (Hz)')
         ax_phase.set_ylabel('Phase (degrees)')
         ax_phase.grid(True)
+        if fmin_band is not None and fmax_band is not None:
+            ax_phase.set_xlim(fmin_band, fmax_band)
     
     # Hide unused subplots
-    for idx in range(num_plots, 6):
+    for idx in range(num_plots, rows * cols):
         row = idx // cols
         col = idx % cols
         axes[row * 2, col].set_visible(False)
@@ -727,6 +855,16 @@ def main():
     print("=" * 60)
     print("Sequential Phase 1 Data Acquisition System")
     print("=" * 60)
+
+    # Runtime mode prompt: default to Position for safety.
+    while True:
+        control_mode_prompt = input("Select ODrive control mode [p/t] (default=p): ").strip().lower()
+        if control_mode_prompt in ("", "p", "t"):
+            break
+        print("Invalid input. Enter 'p' for Position, 't' for Torque, or press Enter for default.")
+
+    selected_control_mode = "Torque" if control_mode_prompt == "t" else "Position"
+    print(f"Selected ODrive control mode: {selected_control_mode}")
     
     # Initialize Qt application (needed for dialogs and matplotlib)
     app = QApplication(sys.argv)
@@ -749,10 +887,26 @@ def main():
         if odrive_ctrl.connect():
             odrive_connected = True
             print("ODrive connected successfully.")
-            # Configure ODrive for torque control via CAN
-            odrive_ctrl.set_control_mode('Torque')
-            # Enter closed-loop control state (will be done before starting torque)
-            print("ODrive configured for torque control via CAN.")
+
+            # Keep step/dir disabled while running identification so torque path works.
+            if not odrive_ctrl.set_enable_step_dir(False):
+                print("WARNING: Failed to disable ODrive step/dir mode at startup.")
+
+            # Apply user-selected control mode from startup prompt.
+            if not odrive_ctrl.set_control_mode(selected_control_mode):
+                print(f"WARNING: Failed to set control mode to {selected_control_mode}.")
+
+            # Configure ODrive for PWM->GPIO1 analog mapping (no CAN)
+            if not odrive_ctrl.configure_gpio1_analog_torque_mapping(
+                analog_min=-3.874,
+                analog_max=2.0,
+                enable_gpio_num=7,
+                control_mode=selected_control_mode,
+            ):
+                print("WARNING: Failed to configure ODrive GPIO1 analog mapping. Continuing anyway.")
+            else:
+                print("ODrive configured for PWM->GPIO1 analog torque mapping.")
+                odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after configuration")
         else:
             print("ODrive connection failed. Continuing without ODrive.")
         
@@ -767,6 +921,27 @@ def main():
             return 1
         
         print(f"CSV file selected: {os.path.basename(csv_path)}")
+        multisine_band_hz = _parse_multisine_freq_band_from_csv(csv_path)
+        if multisine_band_hz is not None:
+            print(f"Detected multisine excited band: {multisine_band_hz[0]:.6g}–{multisine_band_hz[1]:.6g} Hz")
+        else:
+            print("Warning: Could not detect multisine frequency band from CSV metadata; Bode plots will use full frequency range.")
+
+        # Step 3b: Prompt for max torque scaling (Nm)
+        while True:
+            try:
+                max_torque_str = input("Enter max output torque (Nm, default=2.0): ").strip()
+                if not max_torque_str:
+                    max_torque = 2.0
+                else:
+                    max_torque = float(max_torque_str)
+                if max_torque > 0:
+                    break
+                print("Max torque must be > 0. Please try again.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+        
+        print(f"Using max output torque: {max_torque:.6g} Nm (multisine is clamped to ±1)")
         
         # Parse CSV file to extract sample rate (needed for ODrive configuration)
         # Note: Voltage values will be read from Controllino acquisition data, not from CSV
@@ -818,7 +993,7 @@ def main():
         
         # Upload CSV to Controllino
         print("Uploading CSV to Controllino...")
-        success, message = serial_helper.upload_csv(csv_path)
+        success, message = serial_helper.upload_csv(csv_path, max_torque=max_torque)
         if not success:
             print(f"CSV upload failed: {message}")
             serial_helper.disconnect()
@@ -829,7 +1004,7 @@ def main():
         
         # Step 4: Optional test output
         print("\nStep 4: Optional test output")
-        test_response = input("Test torque output first? (y/n, default=n): ").strip().lower()
+        test_response = input("Test PWM output first? (y/n, default=n): ").strip().lower()
         if test_response == 'y':
             # Get test duration once
             while True:
@@ -848,10 +1023,12 @@ def main():
                 # Enable ODrive closed-loop control
                 if odrive_connected:
                     print("Enabling ODrive closed-loop control...")
+                    odrive_ctrl.print_gpio1_state("ODrive GPIO1 state before closed-loop (test output)")
                     if not odrive_ctrl.enter_closed_loop():
                         print("Warning: Failed to enter closed-loop control. Continuing anyway.")
                     else:
                         print("ODrive entered closed-loop control state.")
+                        odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after closed-loop (test output)")
 
                 # Wait 0.5s to ensure ODrive is ready before torque commands start
                 time.sleep(0.5)
@@ -869,7 +1046,7 @@ def main():
                 print("Test output started. Waiting for completion...")
 
                 # Wait for Controllino serial message that output has finished
-                # Controllino will set torque to zero at end of duration and send "ACK: Output complete"
+                # Controllino will set output to zero at end of duration and send "ACK: Output complete"
                 output_complete = False
                 timeout = 0
                 max_timeout = int((test_duration + 5) * 10)  # Wait a bit longer than duration (0.1s increments)
@@ -880,7 +1057,7 @@ def main():
                             line = serial_helper.serial_port.readline().decode().strip()
                             if line == "ACK: Output complete":
                                 output_complete = True
-                                print("Output completed. Torque commands set to zero.")
+                                print("Output completed. PWM output set to zero.")
                                 break
                             elif line.startswith("ERROR:"):
                                 print(f"Error received: {line}")
@@ -894,11 +1071,15 @@ def main():
 
                 if not output_complete:
                     print("Warning: Output completion not confirmed. Continuing anyway...")
+                    # Best-effort safety: request output stop anyway.
+                    serial_helper.send_command("STOP_OUTPUT")
+                    time.sleep(0.05)
 
                 # Disable ODrive closed-loop control
                 if odrive_connected:
                     print("Disabling ODrive closed-loop control...")
                     odrive_ctrl.exit_closed_loop()
+                    odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after cleanup (test output)")
 
                     # Always ask if test should be repeated
                     while True:
@@ -956,10 +1137,12 @@ def main():
         # Enable ODrive closed-loop control
         if odrive_connected:
             print("Enabling ODrive closed-loop control...")
+            odrive_ctrl.print_gpio1_state("ODrive GPIO1 state before closed-loop (identification)")
             if not odrive_ctrl.enter_closed_loop():
                 print("Warning: Failed to enter closed-loop control. Continuing anyway.")
             else:
                 print("ODrive entered closed-loop control state.")
+                odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after closed-loop (identification)")
         
         # Wait 0.5s to ensure ODrive is ready before starting identification
         time.sleep(0.5)
@@ -984,7 +1167,7 @@ def main():
             time.sleep(delay)
         
         # Wait for acquisition to complete
-        # Controllino will set torque to zero after acquisition and send "ACK: Acquisition complete"
+        # Controllino will set output to zero after acquisition and send "ACK: Acquisition complete"
         print(f"\nWaiting for acquisition to complete (duration: {duration} seconds)...")
         acquisition_complete = False
         timeout = 0
@@ -996,7 +1179,7 @@ def main():
                     line = serial_helper.serial_port.readline().decode().strip()
                     if line == "ACK: Acquisition complete":
                         acquisition_complete = True
-                        print("Acquisition completed. Torque commands set to zero.")
+                        print("Acquisition completed. PWM output set to zero.")
                         break
                     elif line.startswith("ERROR:"):
                         print(f"Error received: {line}")
@@ -1011,12 +1194,17 @@ def main():
         
         if not acquisition_complete:
             print("Warning: Acquisition completion not confirmed. Continuing anyway...")
+            # Best-effort safety: request output stop anyway.
+            serial_helper.send_command("STOP_OUTPUT")
+            time.sleep(0.05)
         
         # Stop ODrive closed-loop control
         if odrive_connected:
             print("\nDisabling ODrive closed-loop control...")
             odrive_ctrl.exit_closed_loop()
+            odrive_ctrl.print_gpio1_state("ODrive GPIO1 state after cleanup (identification)")
             odrive_ctrl.set_control_mode('Position')
+            odrive_ctrl.set_enable_step_dir(True)
         
         # Step 7: Retrieve data
         print("\nStep 9: Retrieving data from Controllino...")
@@ -1030,11 +1218,11 @@ def main():
         
         print(f"Retrieved {len(data_result['samples'])} samples at {data_result['sample_rate']:.1f} Hz")
         
-        # Verify data format (should be 5 channels: A0-A3, torque_command)
+        # Verify data format (should be 2 channels: torque_command, x_spindle)
         if len(data_result['samples']) > 0:
             num_channels = len(data_result['samples'][0])
-            if num_channels != 5:
-                print(f"Warning: Expected 5 channels, got {num_channels}")
+            if num_channels != 2:
+                print(f"Warning: Expected 2 channels, got {num_channels}")
         
         # Note: ODrive data is not retrieved during operation to avoid interrupting torque signals
         
@@ -1045,6 +1233,12 @@ def main():
             data_result['sample_rate'],
             odrive_data=None  # No ODrive data retrieved
         )
+
+        x_spindle_dc = processed_data.get('x_spindle_dc', None)
+        if x_spindle_dc is not None and np.isfinite(x_spindle_dc):
+            print(f"Removed DC from x_spindle: {x_spindle_dc:.6g} m/s^2")
+        else:
+            print("Warning: x_spindle DC value unavailable; no DC value printed.")
         
         # Step 9: Display time series plots
         print("\nStep 11: Displaying time series plots...")
@@ -1056,7 +1250,7 @@ def main():
         
         # Step 10: Display Bode plots
         print("\nStep 12: Displaying Bode plots...")
-        bode_fig = plot_bode_plots(processed_data, BODE_PLOT_CONFIGS, active_figures)
+        bode_fig = plot_bode_plots(processed_data, BODE_PLOT_CONFIGS, active_figures, freq_band_hz=multisine_band_hz)
         
         print("\n" + "=" * 60)
         print("Acquisition complete!")
