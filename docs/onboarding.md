@@ -19,19 +19,15 @@ You need:
 The Controllino serial baud rate is `115200` (see the sketches).
 Most Python scripts hard-code the serial port; update the `CONTROLLINO_PORT` constant in:
 - `src/python/main_sequential.py`
-- `src/python/odrive_servo_identification.py`
 
 ## Firmware upload (Arduino IDE)
 Use Arduino IDE with the Controllino Micro board support installed, then upload one of the sketches:
 - Torque playback + multi-channel acquisition:
   - `src/controllino/main-controllino/main-controllino.ino`
-- Servo identification (ODrive feedback capture + timestamp sections):
-  - `src/controllino/controllino-servo-identification/controllino-servo-identification.ino`
 - Standalone 8 kHz spindle controller (A0/A1/A3 -> x_spindle -> filters -> PWM on GPIO0):
   - `src/controllino/spindle-controller/spindle-controller.ino`
   - Enable gate: `GPIO1` / `D1` must be HIGH, otherwise output is forced to 0
 
-Both sketches expect `ODRIVE_NODE_ID` in the firmware to match your ODrive CAN node id.
 The torque/acquisition sketch no longer uses CAN for torque commands.
 
 ## Run: Workflow A (torque playback + acquisition)
@@ -65,14 +61,17 @@ Typical run:
 python src/python/odrive_servo_identification.py
 ```
 
+Prerequisites:
+- ODrive firmware **0.6.12+** (high-rate capture)
+- USB connection only (no Controllino or CAN adapter required)
+
 What happens:
 - Connects to ODrive via USB (through `src/python/odrive_config.py`)
-- Configures ODrive cyclic CAN emissions
 - Iterates over the excitation frequency sweep (`fmin`, `fmax`, `df`)
 - For each frequency:
-  - commands Controllino to start `START_ACQUISITION` (with cyclic CAN capture)
-  - waits for acquisition completion
-  - downloads `GET_DATA` (including optional `LOOP_TIMESTAMPS`)
+  - sets autotuning frequency and amplitude
+  - waits for settling (`t_delay`)
+  - records `torque_setpoint` and `pos_estimate` via on-device high-rate capture
   - estimates transfer gain/phase at the excitation frequency
 
 Interactive controls:

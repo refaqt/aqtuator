@@ -128,8 +128,35 @@ def configure_cyclic_can_messages(axis, interval_ms, enable=True):
 **Gotchas:** ODrive uses interval units in milliseconds; align your firmware `cycle_time`/sampling period to the interval you configure here.
 **Last used:** 2026-03-23
 
-## Robust cyclic CAN capture: store only fresh torque+position updates
-**When to use:** You receive cyclic ODrive CANSimple frames (e.g. `GET_TORQUES` + `GET_ENCODER_ESTIMATES`) but they are not back-to-back within a tiny window; you want stable sampling without resetting acquisition on timing gaps.
+## Servo identification via ODrive high-rate capture
+**When to use:** Workflow B frequency sweep — capture `torque_setpoint` and `pos_estimate` at control-loop rate without Controllino/CAN.
+**Pattern:**
+```python
+from odrive.utils import high_rate_capture_start, TimestampFmt
+
+CAPTURE_PROPERTIES = [
+    "axis0.controller.torque_setpoint",
+    "axis0.pos_estimate",
+]
+
+def acquire_window(odrv, duration_s):
+    capturer = high_rate_capture_start(odrv, CAPTURE_PROPERTIES)
+    time.sleep(duration_s)
+    data = capturer.trigger_and_download_sync(
+        trigger_point=1.0,
+        trigger_timeout=duration_s + 2.0,
+        return_as=np.recarray,
+        t_fmt=TimestampFmt.NANOSECONDS,
+    )
+    t_ns = data["timestamps"]
+    mask = (t_ns >= -duration_s * 1e9) & (t_ns <= 0)
+    return data["axis0.controller.torque_setpoint"][mask], data["axis0.pos_estimate"][mask]
+```
+**Gotchas:** Requires ODrive firmware 0.6.12+ and Python package `odrive>=0.6.11.post0`. Settle before starting capture. With 2 variables the buffer window is 1024 ms max. Only one `HighRateCapturer` per ODrive at a time.
+**Last used:** 2026-05-29
+
+## Robust cyclic CAN capture: store only fresh torque+position updates (legacy)
+**When to use:** Legacy Controllino servo-identification firmware (removed). You receive cyclic ODrive CANSimple frames (e.g. `GET_TORQUES` + `GET_ENCODER_ESTIMATES`) but they are not back-to-back within a tiny window; you want stable sampling without resetting acquisition on timing gaps.
 **Pattern:**
 ```cpp
 // Keep "latest" values + timestamps updated as frames arrive, and only store a sample

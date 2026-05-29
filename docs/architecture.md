@@ -12,9 +12,6 @@ This project performs synchronized data acquisition and motor control using an `
   - Serial protocol: `UPLOAD_CSV` / `START_OUTPUT` / `START_IDENTIFICATION` / `GET_DATA` / `GET_STATUS`
   - Timing: RP2040 repeating timer ISR drives both **PWM compare updates** and ADC sampling on the same sample tick
   - PWM debug/runtime modes: compile-time `PWM_RUNTIME_MODE` selects between mixed Arduino setup + low-level ISR updates, fully low-level PWM setup, or `analogWrite()` directly inside the ISR as a fallback experiment
-- Servo system identification (ODrive feedback capture): [`src/controllino/controllino-servo-identification/controllino-servo-identification.ino`](src/controllino/controllino-servo-identification/controllino-servo-identification.ino)
-  - Serial protocol: `START_ACQUISITION` / `GET_DATA` / `GET_STATUS`
-  - Timing: cyclic CAN messages from ODrive are paired (torque + position) and streamed back to Python
 - Standalone 8 kHz controller (A0/A1/A3 -> x_spindle -> filters -> PWM):
   - [`src/controllino/spindle-controller/spindle-controller.ino`](src/controllino/spindle-controller/spindle-controller.ino)
   - Timing: 8 kHz RP2040 repeating timer ISR computes the control output; `loop()` applies the pending PWM duty
@@ -35,8 +32,9 @@ This project performs synchronized data acquisition and motor control using an `
   - Logs ODrive `GPIO1` analog-input state after configuration, before closed-loop, after closed-loop, and after cleanup so Python-side runs can be compared against the working manual GUI setup
   - Plots time series and a Bode-like transfer estimate via `scipy.signal.csd`/`welch`
 - ODrive frequency sweep identification: [`src/python/odrive_servo_identification.py`](src/python/odrive_servo_identification.py)
-  - Sweeps frequencies, configures ODrive cyclic CAN message rates, starts `START_ACQUISITION`
-  - Estimates gain/phase from the recorded torque setpoint and position estimate
+  - Sweeps frequencies via ODrive autotuning (torque mode, `TUNING` input mode)
+  - Captures `torque_setpoint` and `pos_estimate` at control-loop rate using `odrive.utils.high_rate_capture` (USB, firmware 0.6.12+)
+  - Estimates gain/phase from the recorded signals via Welch/CSD
 - ODrive configuration wrapper: [`src/python/odrive_config.py`](src/python/odrive_config.py)
   - Connects to ODrive over USB and sets control mode / input mode / closed-loop state
   - Reasserts and verifies `odrv.config.gpio1_mode == ANALOG_IN` before the analog torque endpoint is used
@@ -105,23 +103,15 @@ Safety invariants for Workflow A:
   - Stage B: ODrive connected, after the RC output is already proven correct
 
 ## Workflow B: Servo identification (frequency sweep)
-### ODrive cyclic CAN capture
-In [`src/python/odrive_servo_identification.py`](src/python/odrive_servo_identification.py), ODrive is configured to emit cyclic CAN messages:
-- message interval is set from the sweep parameter `ts`
-- torque setpoints and encoder estimates arrive cyclically at the requested rates
-
-### Serial frames (servo-identification firmware)
-The Controllino servo-identification sketch streams:
-- `START_ACQUISITION,<duration>,<cycle_time>,cyclic` -> `ACK: Acquisition started (cyclic mode)`
-- `GET_DATA` streams:
-  - header: `DATA:<sample_count>,<sample_period>,4`
-  - samples per line:
-    - `torque_setpoint, pos_estimate, torque_timestamp_us, pos_timestamp_us`
-  - terminator: `DATA_END`
-  - additional timestamp section:
-    - `LOOP_TIMESTAMPS:<N>` ... `LOOP_TIMESTAMPS_END`
+### ODrive high-rate capture (USB)
+In [`src/python/odrive_servo_identification.py`](src/python/odrive_servo_identification.py):
+- Requires ODrive firmware **0.6.12+** and `odrive` Python package **0.6.11.post0+** (high-rate capture API)
+- No Controllino or CAN bus is used for this workflow
+- Per frequency: set autotuning → settle (`t_delay`) → `high_rate_capture_start()` → record for `duration` → `trigger_and_download_sync(trigger_point=1.0)`
+- Captured properties: `axis0.controller.torque_setpoint`, `axis0.pos_estimate` at native control-loop rate (~8 kHz)
+- With 2 variables, the on-device buffer spans up to **1024 ms**; keep `duration` ≤ 1 s
 
 ### Analysis done in Python
-The sweep code computes transfer gain and phase at each excitation frequency from torque setpoint vs position estimate using `scipy.signal.csd`/`welch`-based estimation (`calculate_transfer_function()`).
+The sweep code slices the last `duration` seconds before the trigger, then computes transfer gain and phase at each excitation frequency using `scipy.signal.csd`/`welch` (`calculate_transfer_function()`).
 
 
