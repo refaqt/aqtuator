@@ -19,6 +19,13 @@
 **Prevention rule:** In this repo on Windows, assume PowerShell unless proven otherwise; avoid bash heredocs and `&&` entirely for git commands.
 **Affected files:** `docs/mistakes.md`
 
+## Used `&&` and `cd /d` in PowerShell again — 2026-04-17
+**What happened:** I ran a PowerShell command using bash/cmd idioms (`&&` chaining and `cd /d`), causing a parser error / invalid parameter error before the intended commands executed in the correct directory.
+**Root cause:** Muscle memory from bash/cmd command patterns; didn’t adapt to PowerShell syntax (`;` chaining and `Set-Location`/`cd` without `/d`).
+**Fix applied:** Re-ran with PowerShell-safe separators and directory changes using `Set-Location`.
+**Prevention rule:** When running shell commands on Windows PowerShell, never use `&&` or `cd /d`; use `;` and `Set-Location` (or `cd` without flags).
+**Affected files:** `docs/mistakes.md`
+
 ## Double-counted integrator input in torque summing — 2026-03-26
 **What happened:** The first integrator attempt computed `torque_unclamped = y_in + (i1 + y_in)` which equals `i1 + 2*y_in` (double-counting the current sample) instead of a pure-integrated output.
 **Root cause:** Mixed two different control output conventions (PI-style `y + I` vs pure-integrated `I`) without explicitly defining what the integrator state represents.

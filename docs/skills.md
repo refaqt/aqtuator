@@ -128,6 +128,40 @@ def configure_cyclic_can_messages(axis, interval_ms, enable=True):
 **Gotchas:** ODrive uses interval units in milliseconds; align your firmware `cycle_time`/sampling period to the interval you configure here.
 **Last used:** 2026-03-23
 
+## Robust cyclic CAN capture: store only fresh torque+position updates
+**When to use:** You receive cyclic ODrive CANSimple frames (e.g. `GET_TORQUES` + `GET_ENCODER_ESTIMATES`) but they are not back-to-back within a tiny window; you want stable sampling without resetting acquisition on timing gaps.
+**Pattern:**
+```cpp
+// Keep "latest" values + timestamps updated as frames arrive, and only store a sample
+// when BOTH signals have updated since the last stored sample.
+static uint32_t lastStoredTorqueTs = 0;
+static uint32_t lastStoredPosTs = 0;
+
+void processCANMessages() {
+    // ... parse frames and update:
+    // latest_torque_setpoint, latest_pos_estimate, torque_timestamp_us, pos_timestamp_us
+
+    const uint32_t tts = (uint32_t)torque_timestamp_us;
+    const uint32_t pts = (uint32_t)pos_timestamp_us;
+
+    if (tts == 0 || pts == 0) return;
+    if (tts == lastStoredTorqueTs) return;
+    if (pts == lastStoredPosTs) return;
+
+    float *sample = &acq_buffer[acq_index * 4];
+    sample[0] = latest_torque_setpoint;
+    sample[1] = latest_pos_estimate;
+    sample[2] = (float)tts;
+    sample[3] = (float)pts;
+
+    lastStoredTorqueTs = tts;
+    lastStoredPosTs = pts;
+    acq_index++;
+}
+```
+**Gotchas:** Don’t “restart acquisition” when one message is missing—just wait for the missing frame. Also ensure CANSimple node-id decode uses a 6-bit mask (\(0x3F\)) so you don’t accept/reject the wrong node’s frames.
+**Last used:** 2026-04-17
+
 ## Export multisine CSV with metadata header lines
 **When to use:** You want the host/firmware to parse multisine files with enough metadata to infer sample rate and columns.
 **Pattern:**

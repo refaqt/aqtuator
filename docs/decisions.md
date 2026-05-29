@@ -21,6 +21,9 @@
 **Alternatives considered:** Polling CAN at high frequency from the microcontroller (less deterministic), or using ODrive logging features that require post-processing.
 **Consequences:** The firmware can assume cyclic message arrival and focus on pairing/overflow detection; sweep timing directly maps to `sample_period` in the firmware.
 
+## Fix CANSimple node-id decode and store fresh torque+position pairs — 2026-04-17
+**Context:** The servo-identification firmware filtered incoming CAN frames using an incorrect node-id mask (3 bits), and required torque+position frames to arrive within a 100 µs window. With normal cyclic intervals (e.g. 1–2 ms), this caused frequent acquisition restarts/clears and could yield “position always 0” at the host.\n**Decision:** Decode CANSimple node-id as a 6-bit field (\(0..63\)) and switch capture logic from “tight timing pair” to “store a sample only once both torque and position have updated since the last stored sample.”\n**Alternatives considered:** Increasing the 100 µs window, restarting acquisition on missing frames, or explicitly requesting frames from the microcontroller instead of relying on ODrive cyclic emissions.\n**Consequences:** Acquisition becomes robust to message spacing/jitter and no longer clears buffers on timing gaps; host serial protocol and 4-channel data format remain unchanged.
+
 ## Defensive ODrive cleanup on exit — 2026-03-23
 **Context:** During experiments, users may stop early or encounter serial/CAN errors. Leaving ODrive in an unsafe state can require manual recovery.
 **Decision:** Implement a best-effort cleanup path that exits closed-loop control and forces a safe configuration (e.g., `Position` control mode) before disconnecting, while ensuring cleanup does not raise.
