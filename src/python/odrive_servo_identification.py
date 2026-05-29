@@ -33,16 +33,16 @@ from odrive_config import ODriveController
 # Configuration Parameters
 # ============================================================================
 
-fmin = 40.0  # Minimum frequency in Hz
+fmin = 100.0  # Minimum frequency in Hz
 fmax = 200.0  # Maximum frequency in Hz
-ts = 0.001  # Cycle time in seconds (primary parameter)
+ts = 0.002  # Cycle time in seconds (primary parameter)
 fs = 1.0 / ts  # Sampling rate in Hz (calculated from cycle time, used for transfer function calculation)
-df = 1.0  # Frequency step in Hz
+df = 10.0  # Frequency step in Hz
 duration = 0.25  # Measurement duration in seconds
 t_delay = 1.0  # Settling time before acquisition in seconds
 # control_mode is set via ODriveController.set_control_mode()
-torque_amplitude = 0.1  # Torque amplitude in Nm
-show_measurements = False  # Show time-domain plots of each measurement
+torque_amplitude = 1  # Torque amplitude in Nm
+show_measurements = False    # Show time-domain plots of each measurement
 message_order_debug = False  # Enable message order debugging (sets cycle time to 1000 ms when enabled)
 
 # Controllino serial port (hardcoded, can be changed)
@@ -383,7 +383,7 @@ def calculate_transfer_function(input_signal, output_signal, sample_rate, excita
     
     Args:
         input_signal: Input signal (torque_setpoint)
-        output_signal: Output signal (pos_estimate)
+        output_signal: Output signal (pos_estimate, turns)
         sample_rate: Sampling rate in Hz
         excitation_freq: Excitation frequency in Hz
     
@@ -857,7 +857,7 @@ def main():
                 # Right: Position time-domain
                 ax[0, 1].plot(time_array, pos_estimate, 'r-', linewidth=1)
                 ax[0, 1].set_xlabel('Time (s)')
-                ax[0, 1].set_ylabel('Position Estimate (rad)')
+                ax[0, 1].set_ylabel('Position Estimate (turns)')
                 ax[0, 1].set_title(f'Position Time-Domain at {freq:.1f} Hz')
                 ax[0, 1].grid(True, alpha=0.3)
                 
@@ -992,8 +992,8 @@ def main():
     # Gain plot (log-log)
     ax1.loglog(frequencies_result, gains, 'b-', linewidth=2)
     ax1.set_xlabel('Frequency (Hz)')
-    ax1.set_ylabel('Gain')
-    ax1.set_title('Bode Plot: Torque to Position Transfer Function')
+    ax1.set_ylabel('Gain (turns/Nm)')
+    ax1.set_title('Bode Plot: Torque to Position (turns) Transfer Function')
     ax1.grid(True, which='both', alpha=0.3)
     
     # Phase plot (semilogx)
