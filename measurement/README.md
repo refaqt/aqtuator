@@ -8,7 +8,7 @@ and servo identification runs. See [`doqs/docs/architecture.md`](../doqs/docs/ar
 
 ## Where the data lives
 
-Raw measurement data is **not in Git**. 1.88 GB across 1 659 files today, growing with every
+Raw measurement data is **not in Git**. 1.9 GB across 1 700 files today, growing with every
 campaign — too large for the repository and well past the GitHub LFS free tier, which bills
 bandwidth as well as storage.
 
@@ -29,7 +29,7 @@ path = data_root() / relpath          # quote it: the real path contains spaces
 
 ## The manifest
 
-[`data-index.csv`](data-index.csv) has one row per file — 1 659 rows describing 1.88 GB.
+[`data-index.csv`](data-index.csv) has one row per file — 1 700 rows describing 1.9 GB.
 It is what makes the archive usable without downloading it: you can answer *"which tap tests ran on
 aluminium above 20 000 rpm?"* from a committed CSV, and the checksums let you verify any file you
 do fetch.
@@ -43,17 +43,24 @@ Columns are the seven doqs-standard ones (`campaign`, `relpath`, `tier`, `bytes`
 
 | Tier | What | Count |
 | --- | --- | --: |
-| `raw` | DATAQ WinDaq HiRes `.WDH` — the instrument original | 167 |
+| `raw` | DATAQ WinDaq HiRes `.WDH` — the instrument original | 174 |
 | `export` | Uppercase `.CSV` — a windowed selection exported from a `.WDH` | 158 |
-| `derived` | Lowercase `.csv`, `.png` — analysis output (FRF curves, figures, tables) | 1 324 |
+| `derived` | Lowercase `.csv`  `.png` — analysis output (FRF curves  figures  tables) | 1 340 |
+| `other` | Notes  parameter files  configuration | 28 |
 
 ## Campaigns
 
-| Campaign | Runs | What |
-| --- | --- | --- |
-| [`tap-tests`](cases/tap-tests/) | 6 | Impact hammer FRF at tool and spindle, various suspensions |
-| [`stability-tests`](cases/stability-tests/) | 3 | Cutting trials in aluminium and S235JR steel, stepper vs servo |
-| `old-tests` | — | Pre-2026 captures kept for reference; superseded by the campaigns above |
+| Campaign | Files | What |
+| --- | --: | --- |
+| [`tap-tests`](cases/tap-tests/) | 1 444 | Impact hammer FRF at tool and spindle, six runs across suspensions and drives |
+| [`old-tests`](cases/) | 171 | Pre-2026 captures kept for reference; superseded by the campaigns above |
+| [`stability-tests`](cases/stability-tests/) | 42 | Cutting trials in aluminium and S235JR steel, stepper vs servo |
+| `system-identification` | 22 | ODrive servo sweep captures |
+| `cam-toolbits` | 12 | FreeCAD CAM tool definitions |
+| `high-speed-circular-motion` | 4 | Circular interpolation trials |
+| `odrive-setup` | 2 | ODrive configuration notes and motor-noise capture |
+| `servo-configurations` | 2 | Controller gains for the two feedback configurations |
+| `controllino` | 1 | Controllino notes |
 
 ## Rebuilding the manifest
 

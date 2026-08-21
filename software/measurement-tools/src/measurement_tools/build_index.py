@@ -31,11 +31,18 @@ COLUMNS = [
 ]
 
 # Folder name -> doqs campaign slug (kebab-case, names the study not the conditions).
+# Matched against every path component, so a nested campaign folder is found
+# regardless of which top-level area it sits under.
 CAMPAIGN_SLUGS = {
     "tap tests": "tap-tests",
     "stability tests": "stability-tests",
     "old tests": "old-tests",
     "servo configurations": "servo-configurations",
+    "system identification": "system-identification",
+    "high-speed circular motion": "high-speed-circular-motion",
+    "odrive setup": "odrive-setup",
+    "controllino": "controllino",
+    "freecad cam toolbits": "cam-toolbits",
 }
 
 # 2026-05-07_09-28-00_X315_Y315_Z60_x_<descriptor>_fs_20000[_tap10]
