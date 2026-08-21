@@ -83,3 +83,4 @@ the template is [`doqs/templates/dev-log-entry.md`](../../doqs/templates/dev-log
 | 2026-05-07 | [FRF and compliance measurements](2026-05-07_frf-and-compliance-measurements.md) | 9 |
 | 2026-05-20 | [Results so far](2026-05-20_results-so-far.md) |  |
 | 2026-08-21 | [New ideas](2026-08-21_new-ideas.md) |  |
+| 2026-08-21 | [doqs restructure](2026-08-21_doqs-restructure.md) |  |
