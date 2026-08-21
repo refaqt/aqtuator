@@ -8,8 +8,7 @@ pip install -e software/measurement-tools
 
 # Rebuild the manifest after adding a campaign
 python -m measurement_tools.build_index \
-  --source "$AQTUATOR_DATA_ROOT/Machine FRF and stability" \
-  --relative-to "$AQTUATOR_DATA_ROOT" \
+  --source "$AQTUATOR_DATA_ROOT" \
   --out measurement/data-index.csv
 
 # Check a copy against the manifest
