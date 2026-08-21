@@ -37,7 +37,7 @@ except ImportError:
     )
     sys.exit(1)
 
-from odrive_config import ODriveController
+from .odrive_config import ODriveController
 
 # ============================================================================
 # Configuration Parameters

@@ -28,7 +28,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
-from odrive_config import ODriveController
+from .odrive_config import ODriveController
 
 # ============================================================================
 # Multisine CSV helpers
