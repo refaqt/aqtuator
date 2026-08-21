@@ -1,85 +1,110 @@
 # Onboarding
 
-## Prerequisites
-### Python
-Install the Python dependencies:
+Getting from a fresh clone to a running identification measurement.
+
+## 1. Clone
+
 ```bash
-pip install -r src/python/requirements.txt
+git clone --recurse-submodules https://github.com/nielsbosmans87/aqtuator.git
+cd aqtuator
 ```
 
-### Hardware (Controllino PWM -> ODrive GPIO1)
-You need:
-- Controllino Micro flashed with the appropriate sketch (see below)
-- `ODrive S1` configured to map `GPIO1` analog input to torque input (configured by the Python scripts or manually)
-- Wiring:
-  - Controllino `D0` PWM output -> RC filter -> ODrive `GPIO1` (analog input)
-  - Common GND between Controllino and ODrive
+Already cloned without submodules? `git submodule update --init --recursive`. Without `doqs/` the
+layout conventions and validators are unavailable.
 
-### Serial connection
-The Controllino serial baud rate is `115200` (see the sketches).
-Most Python scripts hard-code the serial port; update the `CONTROLLINO_PORT` constant in:
-- `src/python/main_sequential.py`
+## 2. Python
 
-## Firmware upload (Arduino IDE)
-Use Arduino IDE with the Controllino Micro board support installed, then upload one of the sketches:
-- Torque playback + multi-channel acquisition:
-  - `src/controllino/main-controllino/main-controllino.ino`
-- Standalone 8 kHz spindle controller (A0/A1/A3 -> x_spindle -> filters -> PWM on GPIO0):
-  - `src/controllino/spindle-controller/spindle-controller.ino`
-  - Enable gate: `GPIO1` / `D1` must be HIGH, otherwise output is forced to 0
-
-The torque/acquisition sketch no longer uses CAN for torque commands.
-
-## Run: Workflow A (torque playback + acquisition)
-Entry point:
-- `src/python/main_sequential.py`
-
-Typical run:
 ```bash
-python src/python/main_sequential.py
+pip install -e software/identification
+pip install -e software/measurement-tools
 ```
 
-What happens:
-- Connects to Controllino via serial
-- Prompts for ODrive `CONTROL_MODE`: `p` (position, default) or `t` (torque)
-- Uploads a multisine CSV waveform
-- Starts `START_IDENTIFICATION,<duration>,<start_delay>`
-- Waits for `ACK: Acquisition complete`
-- Retrieves data via `GET_DATA` and plots time series + Bode-style estimates
+Python 3.10+. Installs `pyserial`, `odrive`, `numpy`, `scipy`, `pandas`, `matplotlib`, `PyQt5`.
 
-Notes:
-- This workflow does not attempt to retrieve ODrive position feedback during the real-time operation (per the sequential script’s logic).
-- ODrive torque is driven by the Controllino PWM output (RC-filtered) into `GPIO1` analog mapping (not CAN).
-- `odrv0.axis0.config.enable_step_dir` is forced to `False` at startup to allow torque-command operation, and set back to `True` after identification/cleanup.
+## 3. Measurement data (optional)
 
-## Run: Workflow B (servo identification sweep)
-Entry point:
-- `src/python/odrive_servo_identification.py`
+Only needed if you are analysing recorded captures. The archive lives on the `3 - Projects` Google
+Drive shared drive; install Google Drive for Desktop, or set `AQTUATOR_DATA_ROOT` to a local copy.
+Check what you have:
 
-Typical run:
 ```bash
-python src/python/odrive_servo_identification.py
+python -m measurement_tools.verify_index --quick
 ```
 
-Prerequisites:
-- ODrive firmware **0.6.12+** (high-rate capture)
-- USB connection only (no Controllino or CAN adapter required)
+See [`measurement/README.md`](../measurement/README.md).
 
-What happens:
-- Connects to ODrive via USB (through `src/python/odrive_config.py`)
-- Iterates over the excitation frequency sweep (`fmin`, `fmax`, `df`)
-- For each frequency:
-  - sets autotuning frequency and amplitude
-  - waits for settling (`t_delay`)
-  - records `torque_setpoint` and `pos_estimate` via on-device high-rate capture
-  - estimates transfer gain/phase at the excitation frequency
+## 4. Hardware
 
-Interactive controls:
-- The script prompts before starting identification and lets you stop early by typing `q`.
+For **Workflow A** (torque playback and acquisition):
 
-## Optional: PyQt GUI (alternate/legacy)
-- `src/python/main_controller.py`
+- Controllino MICRO flashed with [`firmware/torque-excitation`](../firmware/torque-excitation/)
+- ODrive S1 with `GPIO1` mapped to torque input — the Python side configures and verifies this
+- Wiring: Controllino `D0` PWM output → RC filter → ODrive `GPIO1`, with a common ground
 
-If you use it, confirm the serial command set and channel mapping match the firmware you flashed, since the Controllino sketches use `START_IDENTIFICATION` (and stream 5 channels) while the GUI code expects a different set of commands/channel counts.
+For **Workflow B** (servo identification sweep): ODrive on USB only. No Controllino, no CAN.
 
+> **Idle at 0 Nm, not 0 % duty.** ODrive `GPIO1` has a pull-up, so 0 % duty does not give 0 V after
+> the RC network and maps to a negative torque. The firmware handles this; do not defeat it.
 
+## 5. Flash the firmware
+
+Arduino IDE with the `controllino_rp2` board support installed. Open the target's `.ino` and upload:
+
+| Target | Purpose |
+| --- | --- |
+| [`firmware/torque-excitation`](../firmware/torque-excitation/) | Torque playback + multi-channel acquisition |
+| [`firmware/spindle-controller`](../firmware/spindle-controller/) | Standalone 8 kHz spindle controller (`GPIO1`/`D1` must be HIGH to run) |
+| [`firmware/pwm-output-test`](../firmware/pwm-output-test/) | Validate the RC output stage without an ODrive |
+
+Serial is `115200`. The serial port is currently hardcoded — update `CONTROLLINO_PORT` in
+`software/identification/src/aqtuator_id/sequential_run.py`.
+
+## 6. Run
+
+### Workflow A — torque playback and acquisition
+
+```bash
+aqtuator-sequential
+```
+
+Connects over serial, prompts for the ODrive control mode (`p` position, default, or `t` torque),
+uploads a multisine waveform, runs `START_IDENTIFICATION`, waits for `ACK: Acquisition complete`,
+then retrieves samples with `GET_DATA` and plots time series plus a Bode-style estimate.
+
+### Workflow B — servo identification sweep
+
+```bash
+aqtuator-servo-id
+```
+
+Needs ODrive firmware **0.6.12+** and the `odrive` package **0.6.11.post0+**. Sweeps `fmin`→`fmax`
+in steps of `df`, recording `torque_setpoint` and `pos_estimate` by on-device high-rate capture at
+the control-loop rate. Prompts before starting; type `q` to stop early.
+
+Keep `duration` ≤ 1 s — with two captured variables the on-device buffer spans at most 1024 ms.
+
+### Generate a waveform
+
+```bash
+aqtuator-multisine
+```
+
+`MAX_CSV_SAMPLES = 2000` must stay in sync with the firmware buffer.
+
+## Debugging
+
+When PWM output looks wrong, validate in two stages — do not skip to stage B:
+
+- **Stage A:** Controllino plus RC output only. Use `GET_STATUS` and measure the voltage directly.
+- **Stage B:** only once stage A is proven, connect the ODrive.
+
+The 2026-03-31 investigation found the PWM path had been working all along; the fault was in the
+host-side ODrive lifecycle being insufficiently observable. If a run misbehaves, compare the printed
+`gpio1_mode`, endpoint, min/max, control mode and input mode against a working manual GUI session
+before changing firmware.
+
+## Working on Windows
+
+This is a Windows machine and the shell is PowerShell. Four of the six entries in
+[`docs/mistakes/`](mistakes/) are bash syntax used in PowerShell — no `&&`, no bash heredocs, no
+`cd /d`.

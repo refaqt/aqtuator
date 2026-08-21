@@ -1,0 +1,7 @@
+Load encoder: rotary encoder
+Velocity encoder: rotary encoder
+Position gain: 20 (rev/s) / rev
+Velocity gain: 0.4 Nm / (rev/S)
+Velocity integrator gain: 5 (Nm/s) / (rev/s)
+Encoder bandwidth: 1000
+Current controller bandwidth: 1000

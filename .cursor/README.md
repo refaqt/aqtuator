@@ -20,9 +20,9 @@ Copy this tree into another repository to reuse the same agent workflow without 
 ## Required `docs/` files
 
 - `docs/architecture.md`
-- `docs/decisions.md`
-- `docs/mistakes.md`
-- `docs/skills.md`
+- `docs/decisions/`
+- `docs/mistakes/`
+- `.claude/skills/project-patterns/SKILL.md`
 - `docs/onboarding.md`
 
 If any are missing, the agent should create them from `.cursor/bootstrap/docs/` with a brief initial entry.
@@ -31,14 +31,14 @@ If any are missing, the agent should create them from `.cursor/bootstrap/docs/` 
 
 - `.cursor/_backup*` (local backups only)
 - `~/.cursor/skills-cursor/` (Cursor built-in skills)
-- This repo's domain content from `docs/skills.md` unless it applies to the target repo
+- This repo's domain content from `.claude/skills/project-patterns/SKILL.md` unless it applies to the target repo
 
 ## After copying
 
 1. Open the target repo root in Cursor.
 2. Clear **Settings → Rules → User Rules** and user-level skills once project rules load.
 3. Confirm **Settings → Rules** lists the imported project rules and skills.
-4. Start a new Agent chat and confirm the agent reads `docs/mistakes.md` and bootstraps missing `docs/` files when needed.
+4. Start a new Agent chat and confirm the agent reads `docs/mistakes/` and bootstraps missing `docs/` files when needed.
 
 ## Context design
 

@@ -1,7 +1,7 @@
 ---
 name: mistake-log
 description: >-
-  Logs incidents to docs/mistakes.md, escalates repeated failures, and promotes
+  Logs incidents to docs/mistakes/, escalates repeated failures, and promotes
   prevention rules. Use at task start, after bugs, failed approaches, rejected
   output, or convention misunderstandings in this repository.
 ---
@@ -18,20 +18,20 @@ description: >-
 
 ## Before starting work
 
-1. Read `docs/mistakes.md`.
+1. Read `docs/mistakes/`.
 2. State which prevention rules apply to the current task.
 
 ## After a mistake
 
-1. Append an entry to `docs/mistakes.md` using the format in that file.
+1. Append an entry to `docs/mistakes/` using the format in that file.
 2. If the same mistake happens twice, add a bold warning on the relevant section and promote the prevention rule into scoped `.cursor/rules/`.
 3. Treat every mistake as a process gap, not a one-off.
 
 ## Continuous improvement
 
-- After a long session or several tasks, review `docs/mistakes.md` and `docs/skills.md` for rules or patterns to promote into standing project guidance.
-- Prefer making `docs/mistakes.md` shorter over time by preventing repeat categories.
+- After a long session or several tasks, review `docs/mistakes/` and `.claude/skills/project-patterns/SKILL.md` for rules or patterns to promote into standing project guidance.
+- Prefer making `docs/mistakes/` shorter over time by preventing repeat categories.
 
 ## Entry format
 
-Use the template at the top of `docs/mistakes.md`.
+Use the template at the top of `docs/mistakes/`.

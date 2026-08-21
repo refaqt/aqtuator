@@ -1,47 +1,60 @@
+# ---------------------------------------------------------------------------
+# Measurement data - NEVER commit.
+# Lives in Google Drive, indexed by measurement/data-index.csv.
+# See measurement/README.md for how to fetch it.
+# ---------------------------------------------------------------------------
+data/
+*.WDH
+*.wdh
+*.WDQ
+*.wdq
+
+# ---------------------------------------------------------------------------
 # Python
+# ---------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-env/
-venv/
-ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+*.egg
 *.egg-info/
 .installed.cfg
-*.egg
+.Python
+.venv/
+/env/
+/venv/
+/ENV/
+/build/
+/dist/
+/sdist/
+/downloads/
+/eggs/
+/.eggs/
+/develop-eggs/
+/wheels/
+/parts/
+/var/
+/lib/
+/lib64/
 
-# PyQt
-*.ui
+# ---------------------------------------------------------------------------
+# FreeCAD
+# ---------------------------------------------------------------------------
+*.FCBak
+*.FCStd1
 
-# Data and plots
-data/*.csv
-plots/*.png
+# ---------------------------------------------------------------------------
+# doqs generated outputs
+# ---------------------------------------------------------------------------
+**/bom/bom_output.md
+/bom/bom.csv
+**/cad/params.csv
+**/simulation/results/**/exports/
+/graph/usage-graph.json.tmp
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Arduino
+# ---------------------------------------------------------------------------
+# Arduino / PlatformIO build artifacts
+# ---------------------------------------------------------------------------
 *.hex
 *.elf
 *.o
@@ -50,6 +63,37 @@ Thumbs.db
 *.lss
 *.sym
 *.map
+.pio/
 
-*.csv
-*.png
+# ---------------------------------------------------------------------------
+# Legacy generated run artifacts (removed in the doqs restructure)
+# ---------------------------------------------------------------------------
+/src/python/tf_torque_pos_*.csv
+/src/python/tf_torque_pos_*.png
+
+# ---------------------------------------------------------------------------
+# Editors / IDE
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.ui
+
+# ---------------------------------------------------------------------------
+# OS
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+
+# ---------------------------------------------------------------------------
+# Agent runtime artifacts
+# ---------------------------------------------------------------------------
+.cursor/debug.log
+
+# ---------------------------------------------------------------------------
+# Source-of-record Word log. Converted to docs/dev-log/*.md; the .docx itself
+# is archived to Drive rather than committed (11.5 MB, 99% embedded images).
+# ---------------------------------------------------------------------------
+docs/log.docx

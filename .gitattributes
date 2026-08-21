@@ -1,2 +1,45 @@
-# Auto detect text files and perform LF normalization
+# Default: let git normalise line endings for text files.
 * text=auto
+
+# ---------------------------------------------------------------------------
+# Git LFS - CAD binaries only.
+#
+# Measurement data does NOT go through LFS; it lives in Google Drive (see
+# measurement/README.md). Keeping LFS scoped to CAD keeps usage inside the
+# GitHub free tier (1 GB storage / 1 GB bandwidth per month).
+# ---------------------------------------------------------------------------
+*.FCStd  filter=lfs diff=lfs merge=lfs -text
+*.step   filter=lfs diff=lfs merge=lfs -text
+*.stp    filter=lfs diff=lfs merge=lfs -text
+*.stl    filter=lfs diff=lfs merge=lfs -text
+*.3mf    filter=lfs diff=lfs merge=lfs -text
+
+# ---------------------------------------------------------------------------
+# Binary - never apply CRLF heuristics.
+# These stay as ordinary git blobs (small enough not to need LFS).
+# ---------------------------------------------------------------------------
+*.pdf    -text
+*.png    -text
+*.jpg    -text
+*.jpeg   -text
+*.gif    -text
+*.ico    -text
+*.ttf    -text
+*.woff   -text
+*.woff2  -text
+*.zip    -text
+*.docx   -text
+*.WDH    -text
+*.wdh    -text
+
+# ---------------------------------------------------------------------------
+# Text with fixed line endings
+# ---------------------------------------------------------------------------
+*.sh     text eol=lf
+*.ps1    text eol=crlf
+
+# ---------------------------------------------------------------------------
+# Generated - collapse in PR diffs
+# ---------------------------------------------------------------------------
+measurement/data-index.csv linguist-generated=true
+graph/usage-graph.json     linguist-generated=true
