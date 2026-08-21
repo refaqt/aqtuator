@@ -1,0 +1,3 @@
+[submodule "doqs"]
+	path = doqs
+	url = https://github.com/refaqt/doqs.git
