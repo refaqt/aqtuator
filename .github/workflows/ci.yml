@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: doqs validation
+        run: python doqs/scripts/validate_all.py
+
+      - name: Install host software
+        run: |
+          pip install -e software/measurement-tools
+
+      - name: Manifest is well-formed
+        run: |
+          python - <<'PY'
+          import csv
+          rows = list(csv.DictReader(open("measurement/data-index.csv", encoding="utf-8")))
+          assert rows, "manifest is empty"
+          required = ["campaign", "relpath", "tier", "bytes", "sha256", "recorded_utc", "notes"]
+          missing = [c for c in required if c not in rows[0]]
+          assert not missing, f"manifest missing doqs columns: {missing}"
+          bad = [r["relpath"] for r in rows if len(r["sha256"]) != 64]
+          assert not bad, f"{len(bad)} rows have a malformed sha256"
+          print(f"manifest ok: {len(rows)} rows")
+          PY
+
+      - name: No measurement data committed
+        run: |
+          if git ls-files | grep -iE '\.(wdh|wdq)$'; then
+            echo "::error::measurement data must not be committed - see measurement/README.md"
+            exit 1
+          fi
+          echo "ok: no WinDaq captures tracked"

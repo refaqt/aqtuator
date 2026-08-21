@@ -1,0 +1,3 @@
+# 2026-03-25 — Used bash-style heredoc `<<` in PowerShell
+
+**What happened:** I tried to run `python - <<'PY' ... PY` in PowerShell; PowerShell parsed `<<`/`<` as redirection/operators and the command failed.\n**Root cause:** Muscle memory from bash heredoc usage; didn’t adapt the command to PowerShell.\n**Fix applied:** Re-ran the spot-check using a PowerShell-safe `python -c \"...\"` invocation.\n**Prevention rule:** On Windows PowerShell, never use bash heredocs (`<<EOF`). Use `python -c`, a `.py` temp file, or explicitly run through `cmd.exe`/Git Bash.\n**Affected files:** `docs/mistakes.md`

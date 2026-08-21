@@ -1,4 +1,8 @@
-# Skills
+---
+name: project-patterns
+description: Reusable implementation patterns proven in this project - serial ACK handshakes, framed CSV upload, DATA/DATA_END streaming, CSD/Welch transfer estimation, ODrive high-rate capture and CAN rates, multisine CSV export, Controllino GPIO-to-Arduino pin mapping, RP2040 timer-ISR PWM, GPIO1 analog verification, and RBJ biquad filters. Load before writing new code for serial protocols, ODrive control, RP2040 PWM/ADC, or transfer-function estimation.
+---
+
 
 ## Serial command handshake with ACK/ERROR prefix matching
 **When to use:** You need deterministic serial command/response behavior where responses may include extra lines (`DEBUG:`/`INFO:`) or where the ACK line includes extra context.
