@@ -1,0 +1,14 @@
+Files in this directory are documentation and media (text, images, drawings),
+licensed under Creative Commons Attribution-ShareAlike 4.0 International
+(CC BY-SA 4.0).
+
+Full text: [`/LICENSES/CC-BY-SA-4.0.txt`](../LICENSES/CC-BY-SA-4.0.txt)
+
+**Excluded**: the vendor datasheets in [`documentation/`](documentation/)
+(`CONTROLLINO_MICRO_block_diagram_01P07.pdf`, `Controllino-MICRO-Datasheet.pdf`)
+and the reference paper in `papers/` are third-party material, not authored
+by this project. They remain under their original copyright and are not
+covered by this licence.
+
+See the repository root [`LICENSE`](../LICENSE) for the full licensing
+overview, and [`TRADEMARKS.md`](../TRADEMARKS.md) for reserved marks.
