@@ -2,6 +2,8 @@ okhv = "OKH-LOSHv1.0"
 name = "AQTUATOR"
 repo = "https://github.com/nielsbosmans87/aqtuator"
 version = "0.1.0"
-license = "GPL-3.0-or-later"
+# Hardware licence (this manifest describes the hardware project).
+# Firmware/software is GPL-3.0; docs/media is CC BY-SA 4.0. See README.md / LICENSE.
+license = "CERN-OHL-S-2.0"
 licensor = "Niels Bosmans"
 function = "Active chatter suppression for a Mekanika Pro milling machine: characterise the machine's frequency response and stability limits, then drive an actuator that raises the achievable depth of cut."
