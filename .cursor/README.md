@@ -1,47 +1,20 @@
-# Portable agent kit
+# Portable agent kit (Cursor adapters)
 
-Copy this tree into another repository to reuse the same agent workflow without Cursor User Rules or User Skills.
+Shared rules and skills live in [`.agents/`](../.agents/) (content from
+[refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents)).
 
-## Copy into the target repo
+This `.cursor/` tree holds **thin adapters** so Cursor loads them:
 
-| Path                      | Notes                                                                                |
-| ------------------------- | ------------------------------------------------------------------------------------ |
-| `.cursor/rules/`          | All `.mdc` files except `repo-profile.mdc` unless you copy and customize it.         |
-| `.cursor/skills/`         | All skill folders with `SKILL.md`.                                                   |
-| `.cursor/bootstrap/docs/` | Starter stubs for the required `docs/` files.                                        |
-| `docs/`                   | Copy stubs from `.cursor/bootstrap/docs/` on first use, or merge with existing docs. |
+| Path | Role |
+| --- | --- |
+| `.cursor/rules/*.mdc` | Pointers (and aqtuator-only `repo-profile`, `powershell`) |
+| `.agents/rules/*.md` | Canonical portable rules |
+| `.agents/skills/*/SKILL.md` | Canonical portable skills |
+| `.agents-local/skills/` | Aqtuator-only skills (e.g. measurement-data) |
 
-### Customize per repository
+## After cloning
 
-1. Copy `repo-profile.example.mdc` to `repo-profile.mdc` and edit the stack and execution assumptions.
-2. Remove or replace `repo-profile.mdc` in this repo if you are not using the example file.
-3. Keep `core.mdc`, `living-docs.mdc`, `planning-and-testing.mdc`, `subagents.mdc`, and scoped rules portable.
-
-## Required `docs/` files
-
-- `docs/architecture.md`
-- `docs/decisions/`
-- `docs/mistakes/`
-- `.claude/skills/project-patterns/SKILL.md`
-- `docs/onboarding.md`
-
-If any are missing, the agent should create them from `.cursor/bootstrap/docs/` with a brief initial entry.
-
-## Do not copy
-
-- `.cursor/_backup*` (local backups only)
-- `~/.cursor/skills-cursor/` (Cursor built-in skills)
-- This repo's domain content from `.claude/skills/project-patterns/SKILL.md` unless it applies to the target repo
-
-## After copying
-
-1. Open the target repo root in Cursor.
-2. Clear **Settings → Rules → User Rules** and user-level skills once project rules load.
-3. Confirm **Settings → Rules** lists the imported project rules and skills.
-4. Start a new Agent chat and confirm the agent reads `docs/mistakes/` and bootstraps missing `docs/` files when needed.
-
-## Context design
-
-- Always-on rules: `core.mdc` and `repo-profile.mdc` only.
-- Detailed documentation, planning, subagent, PowerShell, and Python guidance loads when relevant or when matching files are in context.
-- Long formats live in `docs/` and `.cursor/skills/`, not in always-on rules.
+1. Ensure `.agents/` is present (submodule init once the kit is published as a submodule, or a
+   vendored copy of refaqt-agents).
+2. Prefer project rules over duplicate User Rules in Settings.
+3. Confirm agents read `docs/mistakes/` and follow root `AGENTS.md`.

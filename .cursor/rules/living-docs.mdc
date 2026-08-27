@@ -5,18 +5,14 @@ alwaysApply: true
 
 # Living documentation
 
-Per-entry files, per the doqs convention — not single accumulating documents.
+Follow [`.agents/rules/living-docs.md`](../../.agents/rules/living-docs.md).
 
 | Location | Purpose | Update trigger |
 | --- | --- | --- |
-| `docs/dev-log/YYYY-MM-DD_topic.md` | What was done, chronologically | A working session worth recording |
+| `docs/log/YYYY-MM-DD_topic.md` | What was done (any role) | A working session worth recording |
 | `docs/decisions/YYYY-MM-DD_topic.md` | ADRs | A non-trivial technical choice |
 | `docs/mistakes/YYYY-MM-DD_topic.md` | Errors and prevention rules | After a mistake or failed approach |
-| `docs/prompts-log/YYYY-MM.md` | AI interaction log | Ongoing |
-| `.claude/skills/project-patterns/SKILL.md` | Reusable project patterns | A pattern proves out or changes |
+| `docs/patterns/SKILL.md` | Reusable project patterns | A pattern proves out or changes |
 
-Templates are in `doqs/templates/`. Each folder has a `README.md` index — **update it when adding a
-file**, or the entry becomes invisible.
-
-`docs/architecture.md` is a short overview and pointer to `doqs/docs/architecture.md`. Component
-detail belongs next to its code, in that module's `README.md`.
+Templates are in `doqs/templates/` when the submodule is present, and in `.agents/bootstrap/docs/`.
+Each folder has a `README.md` index — **update it when adding a file**.

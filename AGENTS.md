@@ -1,18 +1,25 @@
 # Agent guide
 
-Entry point for Claude Code and other agents working in this repository.
+Entry point for Cursor, Claude Code, and other agents working in this repository.
 
-## Before you start
+## Shared kit
 
-1. Read [`docs/mistakes/`](docs/mistakes/). Four of the six logged incidents are the same class of
+This repo vendors [refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents) at [`.agents/`](.agents/)
+(portable rules and skills). Prefer that tree over duplicated guidance elsewhere.
+
+1. Read [`.agents/rules/core.md`](.agents/rules/core.md) and
+   [`.agents/rules/living-docs.md`](.agents/rules/living-docs.md).
+2. Read [`docs/mistakes/`](docs/mistakes/). Four of the six logged incidents are the same class of
    error: **using bash syntax in PowerShell**. This is a Windows machine — no `&&`, no bash
    heredocs, no `cd /d`. Use `;` and `if ($?) { }`.
-2. Read [`docs/architecture.md`](docs/architecture.md) before non-trivial work.
-3. Check [`.claude/skills/project-patterns/SKILL.md`](.claude/skills/project-patterns/SKILL.md)
-   before writing new code for serial protocols, ODrive control, RP2040 PWM/ADC, or transfer-function
-   estimation. Thirteen patterns are already proven here.
+3. Read [`docs/architecture.md`](docs/architecture.md) before non-trivial work.
+4. Before writing new code for serial protocols, ODrive control, RP2040 PWM/ADC, or
+   transfer-function estimation, check [`docs/patterns/SKILL.md`](docs/patterns/SKILL.md).
 
-## Layout
+If `.agents/` is empty or incomplete, restore it from the refaqt-agents kit (submodule init once
+published, or copy from that repository).
+
+## Layout (doqs)
 
 This repo follows [doqs](https://github.com/refaqt/doqs), a submodule at [`doqs/`](doqs/).
 **Do not guess the layout from memory** — read the spec. If `doqs/` is empty, run
@@ -26,7 +33,7 @@ This repo follows [doqs](https://github.com/refaqt/doqs), a submodule at [`doqs/
 | `doqs/docs/architecture.md` (Simulation) | Design-time analysis cases |
 | `doqs/docs/naming.md` | Naming modules, parts, campaigns, repos |
 | `doqs/skills/freecad/SKILL.md` | FreeCAD debugging, assemblies, master sketches |
-| `doqs/templates/` | Creating dev-log, ADR, mistake or OKH entries |
+| `doqs/templates/` | Creating log, ADR, mistake or OKH entries |
 
 `docs/architecture.md` in this repo is a short overview and pointer, not a second copy of the spec.
 
@@ -38,9 +45,10 @@ This repo follows [doqs](https://github.com/refaqt/doqs), a submodule at [`doqs/
 | Code that runs on a PC | `software/<project>/src/<package>/` |
 | A model that predicts behaviour | `simulation/cases/<slug>/` |
 | A physical test campaign | `measurement/cases/<slug>/` |
-| A day's work write-up | `docs/dev-log/YYYY-MM-DD_topic.md` |
+| A day's work write-up | `docs/log/YYYY-MM-DD_topic.md` |
 | Why a choice was made | `docs/decisions/YYYY-MM-DD_topic.md` |
 | Something that went wrong | `docs/mistakes/YYYY-MM-DD_topic.md` |
+| A reusable coding pattern | `docs/patterns/SKILL.md` |
 
 ## Measurement data
 
@@ -60,13 +68,16 @@ from measurement_tools.data_root import resolve
 path = resolve(row["relpath"])
 ```
 
-See [`.claude/skills/measurement-data/SKILL.md`](.claude/skills/measurement-data/SKILL.md).
+See [`.agents-local/skills/measurement-data/SKILL.md`](.agents-local/skills/measurement-data/SKILL.md).
 
-## Adding a log entry
+## Skills
 
-The most common task from mobile. See
-[`.claude/skills/dev-log/SKILL.md`](.claude/skills/dev-log/SKILL.md) — it fixes the filename, the
-template, where attached photos go, and the commit convention.
+| Skill | Path |
+| --- | --- |
+| Activity log | [`.agents/skills/log/SKILL.md`](.agents/skills/log/SKILL.md) |
+| Mistake log | [`.agents/skills/mistake-log/SKILL.md`](.agents/skills/mistake-log/SKILL.md) |
+| Maintain patterns | [`.agents/skills/maintain-patterns/SKILL.md`](.agents/skills/maintain-patterns/SKILL.md) |
+| Measurement archive | [`.agents-local/skills/measurement-data/SKILL.md`](.agents-local/skills/measurement-data/SKILL.md) |
 
 ## Conventions
 

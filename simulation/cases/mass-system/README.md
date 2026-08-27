@@ -10,4 +10,4 @@ octave mass_system.m
 ```
 
 Background in the dev-log entry
-[2025-09-22 — Actuator power requirement](../../../docs/dev-log/2025-09-22_actuator-power-requirement.md).
+[2025-09-22 — Actuator power requirement](../../../docs/log/2025-09-22_actuator-power-requirement.md).

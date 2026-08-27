@@ -23,7 +23,7 @@ measured it, and the firmware and host software built to run those campaigns.
 | [`measurement/`](../measurement/) | Physical campaigns — tap tests, stability tests — and the manifest indexing 1.88 GB of data held on Google Drive |
 | [`firmware/`](../firmware/) | Controllino MICRO (RP2040) targets |
 | [`software/`](../software/) | Host-side Python: identification stack, measurement tooling |
-| [`docs/dev-log/`](dev-log/) | Chronological record of the work, 71 entries |
+| [`docs/log/`](log/) | Chronological record of the work (activity log) |
 | [`docs/decisions/`](decisions/) | Why things are the way they are |
 | [`docs/mistakes/`](mistakes/) | What not to repeat |
 

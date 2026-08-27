@@ -24,10 +24,10 @@ This repository follows [doqs](https://github.com/refaqt/doqs), included as a su
 | [`measurement/`](measurement/) | Test campaigns and the manifest indexing 1.88 GB of data on Google Drive |
 | [`firmware/`](firmware/) | Controllino MICRO (RP2040) targets |
 | [`software/`](software/) | Host-side Python — identification stack, measurement tooling |
-| [`docs/`](docs/) | Dev-log, decisions, mistakes |
+| [`docs/`](docs/) | Activity log, decisions, mistakes, patterns |
 
 Start with [`docs/architecture.md`](docs/architecture.md) for the technical overview, or
-[`docs/dev-log/`](docs/dev-log/) for the chronological story — 71 entries from June 2025 onward.
+[`docs/log/`](docs/log/) for the chronological story — 71 entries from June 2025 onward.
 
 ## Clone
 

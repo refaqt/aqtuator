@@ -93,7 +93,10 @@ Thumbs.db
 .cursor/debug.log
 
 # ---------------------------------------------------------------------------
-# Source-of-record Word log. Converted to docs/dev-log/*.md; the .docx itself
+# Source-of-record Word log. Converted to docs/log/*.md; the .docx itself
 # is archived to Drive rather than committed (11.5 MB, 99% embedded images).
 # ---------------------------------------------------------------------------
 docs/log.docx
+
+# Claude Code machine-local permissions
+.claude/settings.local.json
