@@ -14,4 +14,4 @@ python pwm_filter_optimizer.py
 ```
 
 No hardware required. The hardware measurements this informs are in the dev-log entry
-[2026-03-25 — ODrive analog torque input](../../../docs/dev-log/2026-03-25_odrive-analog-torque-input.md).
+[2026-03-25 — ODrive analog torque input](../../../docs/log/2026-03-25_odrive-analog-torque-input.md).

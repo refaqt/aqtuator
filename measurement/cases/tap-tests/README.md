@@ -52,7 +52,7 @@ the axis under test is recorded in the `axis` column of the manifest.
 | `2026-05-07_003_tap_tests_servo_linear` | Servo, linear encoder feedback |
 
 Findings for the 2026-05-07 set are written up in
-[`docs/dev-log/2026-05-07_frf-and-compliance-measurements.md`](../../../docs/dev-log/2026-05-07_frf-and-compliance-measurements.md).
+[`docs/log/2026-05-07_frf-and-compliance-measurements.md`](../../../docs/log/2026-05-07_frf-and-compliance-measurements.md).
 
 ## Analysis
 

@@ -108,3 +108,11 @@ before changing firmware.
 This is a Windows machine and the shell is PowerShell. Four of the six entries in
 [`docs/mistakes/`](mistakes/) are bash syntax used in PowerShell — no `&&`, no bash heredocs, no
 `cd /d`.
+
+## Agent guidance
+
+Root [`AGENTS.md`](../AGENTS.md) is the entry point for Cursor and Claude Code. Shared rules and
+skills live in [`.agents/`](../.agents/). Repo-specific skills are under
+[`.agents-local/skills/`](../.agents-local/skills/). Coding patterns:
+[`.agents-local/skills/patterns/SKILL.md`](../.agents-local/skills/patterns/SKILL.md).
+

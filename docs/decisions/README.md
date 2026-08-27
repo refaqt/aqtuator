@@ -22,3 +22,4 @@ Template: [`doqs/templates/adr.md`](../../doqs/templates/adr.md).
 | 2026-03-31 | [Update RP2040 PWM compare from timer ISR](2026-03-31_update-rp2040-pwm-compare-from-timer-isr.md) |
 | 2026-04-17 | [Fix CANSimple node-id decode and store fresh torque+position pairs](2026-04-17_cansimple-node-id-decode-fix.md) |
 | 2026-05-29 | [Workflow B acquisition via on-device high-rate capture](2026-05-29_workflow-b-acquisition-via-on-device-high-rate-capture.md) |
+| 2026-08-27 | [Unify agent kit via refaqt-agents](2026-08-27_unify-agent-kit-via-refaqt-agents.md) |

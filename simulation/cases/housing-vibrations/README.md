@@ -13,5 +13,5 @@ octave housing_vibrations.m
 ```
 
 Model parameters are set at the top of the script. Related reasoning is in the dev-log entries
-[2025-06-26](../../../docs/dev-log/2025-06-26_chatter-mass-spring-damper-model.md) and
-[2025-09-09](../../../docs/dev-log/2025-09-09_xcos-coselica-mass-spring-damper.md).
+[2025-06-26](../../../docs/log/2025-06-26_chatter-mass-spring-damper-model.md) and
+[2025-09-09](../../../docs/log/2025-09-09_xcos-coselica-mass-spring-damper.md).

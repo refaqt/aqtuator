@@ -1,14 +1,18 @@
 ---
 name: log
-description: Add or edit an entry in the business activity log (docs/log/). Use whenever the user wants to record what they did, note an outreach attempt, log a research pass, write up a call or meeting, or capture a decision — for any of business-dev, marketing, sales, finance, or purchasing. Triggers on "log this", "add a log entry", "note that", "record today's work".
+description: >-
+  Add or edit an entry in the unified activity log (docs/log/). Use whenever the
+  user wants to record work — engineering, hardware, software, outreach, research,
+  a call or meeting, or a business decision. Triggers on "log this", "add a log
+  entry", "note that", "record today's work", or a photo sent with a description
+  of work done.
 ---
 
 # Adding an activity log entry
 
-The log is the chronological record of business-side work on AQTUATOR, across all roles. It is one
-flat directory — there is no per-role subfolder, because work often blurs across roles (a pricing
-pass touches both `finance` and `sales`; a competitor writeup feeds `marketing`). Instead, every
-entry is labeled with the role(s) it belongs to right under the heading.
+`docs/log/` is the chronological record of work on the project across **all** roles.
+One flat directory — no per-role subfolder. Every entry is labeled with the role(s)
+it belongs to under the heading.
 
 ## File
 
@@ -16,21 +20,16 @@ entry is labeled with the role(s) it belongs to right under the heading.
 docs/log/YYYY-MM-DD_topic-slug.md
 ```
 
-- `YYYY-MM-DD` — the date the work happened, not necessarily today. Resolve relative dates ("yesterday",
-  "on Tuesday").
-- `topic-slug` — kebab-case, naming what the entry is *about*. Look at
-  [`docs/log/README.md`](../../../docs/log/README.md) for the established style.
-- If an entry for that date already exists and the new content belongs with it, **append to it**
-  rather than creating a second file. Two entries for one date need distinct slugs.
+- `YYYY-MM-DD` — the date the work happened, not necessarily today. Resolve relative dates ("yesterday", "on Tuesday").
+- `topic-slug` — kebab-case, naming what the entry is *about*. Follow style in `docs/log/README.md`.
+- If an entry for that date already exists and the new content belongs with it, **append to it** rather than creating a second file. Two entries for one date need distinct slugs.
 
 ## Content
-
-Start with the H1, then a role label line, then the entry:
 
 ```markdown
 # YYYY-MM-DD — Topic Title
 
-**Role(s):** business-dev
+**Role(s):** engineering
 
 ## What happened
 
@@ -41,33 +40,31 @@ Start with the H1, then a role label line, then the entry:
 ## Next Steps
 ```
 
-**Role(s)** is mandatory on every entry. List every role the work touches — a single role most of
-the time, more than one when the work is genuinely blurry (e.g. `business-dev, finance` for a
-partnership term sheet with pricing implications, or `purchasing, finance` for a sourced BOM
-that feeds a cost model). Use the slugs from `.claude/agents/`:
-`business-dev`, `marketing`, `sales`, `finance`, `purchasing`.
+**Role(s)** is mandatory. Use one or more of:
 
-**Use the sections that carry content; drop the empty ones.** A short entry that's three bullets
-under `## What happened` is perfectly normal — do not pad an entry to fill the template.
+- Engineering: `engineering`, `hardware`, `software`, `firmware`, `cad`, `simulation`, `measurement`
+- Business: `business-dev`, `marketing`, `sales`, `finance`, `purchasing`
 
-## Supporting files vs. deliverables
+List every role the work touches. Prefer the sections that carry content; drop empty ones.
+Write in the user's voice; keep numbers, units, and terminology exact.
 
-`docs/log/` is narrative only. A file belongs alongside the entry in `docs/log/` only if it's
-genuinely scoped to that one entry and has no life beyond it — e.g. a quick one-off note backing
-up a single claim made in the entry.
+For engineering lab-notebook style, these alternate section names are fine when they fit better:
+`## Goal`, `## Work Done`, `## Decisions Made`, `## Open Questions`, `## Next Steps`.
 
-Anything meant to be read, cited, or built on again later independent of the log entry — a
-dataset, a competitor landscape doc, a pricing model, a pitch draft — is a **deliverable**, not a
-supporting file. Deliverables belong in `docs/<role>/YYYY-MM-DD_topic.*` instead (`docs/business-dev/`,
-`docs/marketing/`, `docs/sales/`, `docs/finance/`, `docs/purchasing/` — each role's subagent already
-saves its own work there). Reference the deliverable from the log entry with a relative link rather
-than embedding or duplicating it in `docs/log/`, and add a row to that role folder's own `README.md`
-alongside the `docs/log/README.md` row.
+## Photos and figures
+
+Images go in `docs/log/images/` named `YYYY-MM-DD-NN.ext`, numbered in order of appearance.
+Reference them relatively (`![](images/2026-08-21-01.png)`) and add a short caption line.
+
+## Related content
+
+- Lasting technical choices → also `docs/decisions/YYYY-MM-DD_topic.md` (link from the log entry).
+- Failures / prevention → also `docs/mistakes/YYYY-MM-DD_topic.md`.
+- Repo-specific deliverables (datasets, pitch drafts, etc.) live outside `docs/log/`; link them from the entry.
 
 ## Finish
 
-1. Update the table in [`docs/log/README.md`](../../../docs/log/README.md) — add a row with the
-   date, linked topic, and role(s). Keep it in date order.
+1. Update the table in `docs/log/README.md` (date, linked topic, role(s), image count if used). Keep date order.
 2. Commit as `docs(log): <short description>`.
 3. Push per the repo's normal branch/PR flow.
 
