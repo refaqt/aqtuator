@@ -4,8 +4,9 @@ Entry point for Cursor, Claude Code, and other agents working in this repository
 
 ## Shared kit
 
-This repo vendors [refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents) at [`.agents/`](.agents/)
-(portable rules and skills). Prefer that tree over duplicated guidance elsewhere.
+This repo mounts [refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents) as a git submodule at
+[`.agents/`](.agents/) (portable rules and skills). Prefer that tree over duplicated guidance
+elsewhere.
 
 1. Read [`.agents/rules/core.md`](.agents/rules/core.md) and
    [`.agents/rules/living-docs.md`](.agents/rules/living-docs.md).
@@ -16,8 +17,7 @@ This repo vendors [refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents
 4. Before writing new code for serial protocols, ODrive control, RP2040 PWM/ADC, or
    transfer-function estimation, check [`.agents-local/skills/patterns/SKILL.md`](.agents-local/skills/patterns/SKILL.md).
 
-If `.agents/` is empty or incomplete, restore it from the refaqt-agents kit (submodule init once
-published, or copy from that repository).
+If `.agents/` is empty: `git submodule update --init --recursive`.
 
 ## Layout (doqs)
 

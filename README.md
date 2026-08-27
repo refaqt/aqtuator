@@ -38,7 +38,7 @@ pip install -e software/identification -e software/measurement-tools
 ```
 
 If you already cloned without submodules: `git submodule update --init --recursive`. Without
-`doqs/`, the validators and templates are unavailable and the layout conventions cannot be inferred.
+`doqs/` and `.agents/`, layout validators and shared agent rules/skills are unavailable.
 
 ## Measurement data
 

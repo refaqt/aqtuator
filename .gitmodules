@@ -1,3 +1,6 @@
 [submodule "doqs"]
 	path = doqs
 	url = https://github.com/refaqt/doqs.git
+[submodule ".agents"]
+	path = .agents
+	url = https://github.com/refaqt/refaqt-agents.git
