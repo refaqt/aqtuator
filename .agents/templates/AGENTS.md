@@ -9,7 +9,7 @@ This repo mounts [refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents)
 1. Read [`.agents/rules/core.md`](.agents/rules/core.md) and [`.agents/rules/living-docs.md`](.agents/rules/living-docs.md).
 2. Read [`docs/mistakes/`](docs/mistakes/) and state which prevention rules apply.
 3. Read [`docs/architecture.md`](docs/architecture.md) before non-trivial work.
-4. Before new coding solutions, check [`docs/patterns/SKILL.md`](docs/patterns/SKILL.md) if present.
+4. Before new coding solutions, check [`.agents-local/skills/patterns/SKILL.md`](.agents-local/skills/patterns/SKILL.md) if present.
 
 If `.agents/` is empty: `git submodule update --init --recursive`.
 

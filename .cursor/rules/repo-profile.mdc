@@ -19,4 +19,4 @@ included as a submodule at `doqs/`. Shared agent kit lives in [`.agents/`](../..
   `measurement/data-index.csv`. Git LFS here is scoped to CAD binaries only.
 - Windows / PowerShell: no `&&`, no bash heredocs, no `cd /d`. See `docs/mistakes/`.
 - Repo-specific skills: [`.agents-local/skills/`](../../.agents-local/skills/).
-- Coding patterns: [`docs/patterns/SKILL.md`](../../docs/patterns/SKILL.md).
+- Coding patterns: [`.agents-local/skills/patterns/SKILL.md`](../../.agents-local/skills/patterns/SKILL.md).

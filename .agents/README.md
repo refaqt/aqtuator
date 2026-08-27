@@ -27,7 +27,7 @@ Then:
 2. Keep root `CLAUDE.md` as a one-liner pointing at `AGENTS.md`.
 3. Add thin Cursor adapters under `.cursor/rules/*.mdc` that point at `.agents/rules/*.md` (see consumer examples in aqtuator).
 4. Put **repo-specific** skills under `.agents-local/skills/` (not inside the submodule).
-5. Put **repo-specific** coding patterns in `docs/patterns/SKILL.md` and point agents at them from `AGENTS.md`.
+5. Put **repo-specific** coding patterns in `.agents-local/skills/patterns/SKILL.md` and point agents at them from `AGENTS.md`.
 
 Windows note: do not symlink root `AGENTS.md` into the submodule — use a thin stub file.
 
@@ -37,7 +37,7 @@ Windows note: do not symlink root `AGENTS.md` into the submodule — use a thin 
 | --- | --- |
 | `log` | Add or edit `docs/log/` activity entries (any role) |
 | `mistake-log` | Read/write `docs/mistakes/`; promote prevention rules |
-| `maintain-patterns` | Update the consumer's `docs/patterns/SKILL.md` |
+| `maintain-patterns` | Update the consumer's `.agents-local/skills/patterns/SKILL.md` |
 
 ## License
 

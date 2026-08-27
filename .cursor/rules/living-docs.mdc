@@ -12,7 +12,7 @@ Follow [`.agents/rules/living-docs.md`](../../.agents/rules/living-docs.md).
 | `docs/log/YYYY-MM-DD_topic.md` | What was done (any role) | A working session worth recording |
 | `docs/decisions/YYYY-MM-DD_topic.md` | ADRs | A non-trivial technical choice |
 | `docs/mistakes/YYYY-MM-DD_topic.md` | Errors and prevention rules | After a mistake or failed approach |
-| `docs/patterns/SKILL.md` | Reusable project patterns | A pattern proves out or changes |
+| `.agents-local/skills/patterns/SKILL.md` | Reusable project patterns | A pattern proves out or changes |
 
 Templates are in `doqs/templates/` when the submodule is present, and in `.agents/bootstrap/docs/`.
 Each folder has a `README.md` index — **update it when adding a file**.

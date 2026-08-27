@@ -114,5 +114,5 @@ This is a Windows machine and the shell is PowerShell. Four of the six entries i
 Root [`AGENTS.md`](../AGENTS.md) is the entry point for Cursor and Claude Code. Shared rules and
 skills live in [`.agents/`](../.agents/). Repo-specific skills are under
 [`.agents-local/skills/`](../.agents-local/skills/). Coding patterns:
-[`docs/patterns/SKILL.md`](patterns/SKILL.md).
+[`.agents-local/skills/patterns/SKILL.md`](../.agents-local/skills/patterns/SKILL.md).
 

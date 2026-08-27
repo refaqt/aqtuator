@@ -14,7 +14,7 @@ This repo vendors [refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents
    heredocs, no `cd /d`. Use `;` and `if ($?) { }`.
 3. Read [`docs/architecture.md`](docs/architecture.md) before non-trivial work.
 4. Before writing new code for serial protocols, ODrive control, RP2040 PWM/ADC, or
-   transfer-function estimation, check [`docs/patterns/SKILL.md`](docs/patterns/SKILL.md).
+   transfer-function estimation, check [`.agents-local/skills/patterns/SKILL.md`](.agents-local/skills/patterns/SKILL.md).
 
 If `.agents/` is empty or incomplete, restore it from the refaqt-agents kit (submodule init once
 published, or copy from that repository).
@@ -48,7 +48,7 @@ This repo follows [doqs](https://github.com/refaqt/doqs), a submodule at [`doqs/
 | A day's work write-up | `docs/log/YYYY-MM-DD_topic.md` |
 | Why a choice was made | `docs/decisions/YYYY-MM-DD_topic.md` |
 | Something that went wrong | `docs/mistakes/YYYY-MM-DD_topic.md` |
-| A reusable coding pattern | `docs/patterns/SKILL.md` |
+| A reusable coding pattern | `.agents-local/skills/patterns/SKILL.md` |
 
 ## Measurement data
 
@@ -77,6 +77,7 @@ See [`.agents-local/skills/measurement-data/SKILL.md`](.agents-local/skills/meas
 | Activity log | [`.agents/skills/log/SKILL.md`](.agents/skills/log/SKILL.md) |
 | Mistake log | [`.agents/skills/mistake-log/SKILL.md`](.agents/skills/mistake-log/SKILL.md) |
 | Maintain patterns | [`.agents/skills/maintain-patterns/SKILL.md`](.agents/skills/maintain-patterns/SKILL.md) |
+| Coding patterns | [`.agents-local/skills/patterns/SKILL.md`](.agents-local/skills/patterns/SKILL.md) |
 | Measurement archive | [`.agents-local/skills/measurement-data/SKILL.md`](.agents-local/skills/measurement-data/SKILL.md) |
 
 ## Conventions

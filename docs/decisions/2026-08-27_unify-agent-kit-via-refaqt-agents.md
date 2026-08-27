@@ -15,7 +15,7 @@ A portable kit is needed for all Refaqt repos with Cursor and Claude Code.
 3. Cursor `.cursor/rules/*.mdc` files are thin adapters pointing at `.agents/rules/*.md`, plus
    aqtuator-only `repo-profile` and `powershell`.
 4. Repo-specific skills live in `.agents-local/skills/` (measurement-data).
-5. The thirteen ODrive/serial/PWM coding patterns live in `docs/patterns/SKILL.md` (skill-shaped,
+5. The thirteen ODrive/serial/PWM coding patterns live in `.agents-local/skills/patterns/SKILL.md` (skill-shaped,
    not in the portable kit).
 6. One activity log at `docs/log/` (formerly `docs/dev-log/`); `docs/prompts-log/` is removed.
 7. Target mounting: git submodule at `.agents/` once Cloud write access to refaqt-agents is

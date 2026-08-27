@@ -7,7 +7,7 @@
 - Restructured agent guidance around a portable kit (refaqt-agents content under `.agents/`).
 - Migrated `docs/dev-log/` → `docs/log/` with mandatory **Role(s)** (historical entries tagged
   `engineering`).
-- Moved the thirteen coding patterns to `docs/patterns/SKILL.md`.
+- Moved the thirteen coding patterns to `.agents-local/skills/patterns/SKILL.md`.
 - Moved measurement archive skill to `.agents-local/skills/measurement-data/`.
 - Replaced Cursor rules with thin adapters; removed `.cursorrules`, `docs/prompts-log/`, and
   duplicate `.cursor/skills` / `.claude/skills` bodies.

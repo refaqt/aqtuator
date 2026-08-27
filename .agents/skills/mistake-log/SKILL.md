@@ -29,7 +29,7 @@ description: >-
 
 ## Continuous improvement
 
-- After a long session, review `docs/mistakes/` and `docs/patterns/SKILL.md` (if present) for rules or patterns to promote.
+- After a long session, review `docs/mistakes/` and `.agents-local/skills/patterns/SKILL.md` (if present) for rules or patterns to promote.
 - Prefer making `docs/mistakes/` shorter over time by preventing repeat categories.
 
 ## Entry format
