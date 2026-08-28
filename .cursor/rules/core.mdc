@@ -7,8 +7,4 @@ alwaysApply: true
 
 Follow [`.agents/rules/core.md`](../../.agents/rules/core.md).
 
-Aqtuator extras:
-
-- Before new solutions for serial / ODrive / RP2040 PWM/ADC / transfer estimation, read
-  [`.agents-local/skills/patterns/SKILL.md`](../../.agents-local/skills/patterns/SKILL.md) and use the `maintain-patterns` skill.
-- If living docs are missing, create them from [`.agents/bootstrap/docs/`](../../.agents/bootstrap/docs/).
+Repo-specific workflow: [`.agents-local/rules/repo.md`](../../.agents-local/rules/repo.md).
