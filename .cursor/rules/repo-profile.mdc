@@ -5,18 +5,4 @@ alwaysApply: true
 
 # Repository profile
 
-AQTUATOR — an open-hardware machine repository following [doqs](https://github.com/refaqt/doqs),
-included as a submodule at `doqs/`. Shared agent kit lives in [`.agents/`](../../.agents/)
-([refaqt-agents](https://github.com/refaqt/refaqt-agents)). Read `AGENTS.md` first.
-
-- **Layout is specified, not improvised.** Read `doqs/docs/architecture.md` before adding folders.
-  If `doqs/` is empty, run `git submodule update --init --recursive`.
-- **Mixed stack:** Python (host software, `software/*`), Arduino/C++ (RP2040 firmware,
-  `firmware/*`), Octave (`simulation/cases/*`), FreeCAD (`cad/`).
-- Run commands from the repository root. `software/*` are installable packages
-  (`pip install -e software/identification`); import them rather than manipulating `sys.path`.
-- **Never commit measurement data.** It lives on Google Drive and is indexed by
-  `measurement/data-index.csv`. Git LFS here is scoped to CAD binaries only.
-- Windows / PowerShell: no `&&`, no bash heredocs, no `cd /d`. See `docs/mistakes/`.
-- Repo-specific skills: [`.agents-local/skills/`](../../.agents-local/skills/).
-- Coding patterns: [`.agents-local/skills/patterns/SKILL.md`](../../.agents-local/skills/patterns/SKILL.md).
+Follow [`.agents-local/rules/repo.md`](../../.agents-local/rules/repo.md).

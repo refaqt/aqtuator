@@ -48,6 +48,11 @@ them with a checksum and parsed metadata, so the archive can be queried without 
 
 See [`measurement/README.md`](measurement/README.md) for access and the reasoning.
 
+## Agents
+
+Cursor, Claude Code, and cloud agents: start at [`AGENTS.md`](AGENTS.md). Shared kit is in
+[`.agents/`](.agents/); repo-specific rules and skills in [`.agents-local/`](.agents-local/).
+
 ## Hardware
 
 - Mekanika Pro milling machine with PlanetCNC control

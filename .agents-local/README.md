@@ -1,6 +1,16 @@
-# Aqtuator-local agent skills
+# Aqtuator-local agent kit
 
-Skills that belong only in this repository (not in [refaqt-agents](https://github.com/refaqt/refaqt-agents)).
+Repo-specific rules and skills (not in [refaqt-agents](https://github.com/refaqt/refaqt-agents)).
+
+## Rules
+
+| Rule | Path |
+| --- | --- |
+| Repository profile | [`rules/repo.md`](rules/repo.md) |
+
+Shared rules live under [`.agents/rules/`](../.agents/rules/).
+
+## Skills
 
 | Skill | Path |
 | --- | --- |
