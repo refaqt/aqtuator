@@ -86,3 +86,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-08-24 | [Reluctance actuator investigation](2026-08-24_reluctance-actuator-investigation.md) | engineering |  |
 | 2026-08-27 | [Unify agent skills and rules](2026-08-27_unify-agent-skills-and-rules.md) | engineering |  |
 | 2026-08-28 | [Slim AGENTS.md to thin stub](2026-08-28_slim-agents-md.md) | engineering |  |
+| 2026-08-31 | [Hiwin linear axis idle torque](2026-08-31_hiwin-linear-axis-idle-torque.md) | engineering |  |
+| 2026-08-31 | [Linear-stage variant documentation](2026-08-31_stage-variant-documentation.md) | engineering, cad |  |

@@ -27,6 +27,17 @@ measured it, and the firmware and host software built to run those campaigns.
 | [`docs/decisions/`](decisions/) | Why things are the way they are |
 | [`docs/mistakes/`](mistakes/) | What not to repeat |
 
+## Linear-stage family (proposed)
+
+When the stage CAD starts, do not fork a repo per length or motor, and do not turn motors
+and encoders on and off from a FreeCAD spreadsheet. Length is a parametric `[[model]]` of a
+shared core; motor and feedback families are thin composition modules; a downstream machine
+vendors the **family** as one submodule and pins composition + model in `builds/`.
+
+Proposed ADR:
+[`docs/decisions/2026-08-31_linear-stage-variant-structure.md`](decisions/2026-08-31_linear-stage-variant-structure.md).
+The module tree itself is not created until that ADR is accepted.
+
 ## The identification signal chain
 
 The central technical arrangement: a torque command generated on the host reaches the ODrive as an
