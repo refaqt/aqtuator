@@ -15,6 +15,11 @@ before starting top-down design, and
 | `exports/` | STEP/STL of this module's assembly |
 | `params/` | Parameter sets — `default.csv` plus override files |
 
+Length variants of a module belong in `params/` (`300mm.csv`, `500mm.csv`, …) on shared
+`.FCStd` files. Different motors or feedback systems are separate modules / compositions,
+not spreadsheet suppression — see
+[`docs/decisions/2026-08-31_linear-stage-variant-structure.md`](../docs/decisions/2026-08-31_linear-stage-variant-structure.md).
+
 `.FCStd`, `.step`, `.stp`, `.stl` and `.3mf` are tracked with Git LFS (see `.gitattributes`).
 Measurement data is **not** — it lives on Google Drive, which is what keeps LFS usage inside the
 free tier.
