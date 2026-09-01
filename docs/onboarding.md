@@ -9,7 +9,8 @@ git clone --recurse-submodules https://github.com/nielsbosmans87/aqtuator.git
 cd aqtuator
 ```
 
-Already cloned without submodules? `git submodule update --init --recursive`. Without `doqs/` the
+Already cloned without submodules, or `doqs/` is empty? From the repo root, agents run
+`bash setup-tooling.sh`. Humans on Windows may double-click `setup-tooling.bat`. Without `doqs/` the
 layout conventions and validators are unavailable.
 
 ## 2. Python

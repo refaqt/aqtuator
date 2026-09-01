@@ -37,7 +37,8 @@ cd aqtuator
 pip install -e software/identification -e software/measurement-tools
 ```
 
-If you already cloned without submodules: `git submodule update --init --recursive`. Without
+If you already cloned without submodules, or `doqs/` / `.agents/` is empty: `bash setup-tooling.sh`
+from the repo root (agents, any OS). Humans on Windows may double-click `setup-tooling.bat`. Without
 `doqs/` and `.agents/`, layout validators and shared agent rules/skills are unavailable.
 
 ## Measurement data

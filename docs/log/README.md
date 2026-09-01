@@ -86,3 +86,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-08-24 | [Reluctance actuator investigation](2026-08-24_reluctance-actuator-investigation.md) | engineering |  |
 | 2026-08-27 | [Unify agent skills and rules](2026-08-27_unify-agent-skills-and-rules.md) | engineering |  |
 | 2026-08-28 | [Slim AGENTS.md to thin stub](2026-08-28_slim-agents-md.md) | engineering |  |
+| 2026-09-01 | [Always-latest tooling submodules](2026-09-01_always-latest-tooling-submodules.md) | engineering |  |

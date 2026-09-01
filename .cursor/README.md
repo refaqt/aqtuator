@@ -14,6 +14,6 @@ This `.cursor/` tree holds **thin adapters** so Cursor loads them:
 
 ## After cloning
 
-1. `git submodule update --init --recursive` (fills `.agents/` and `doqs/`).
+1. `bash setup-tooling.sh` from the repo root (fills `.agents/` and `doqs/` to latest `main`). Humans on Windows may double-click `setup-tooling.bat`. Agents must not run the `.bat`.
 2. Prefer project rules over duplicate User Rules in Settings.
 3. Confirm agents read `docs/mistakes/` and follow root `AGENTS.md`.

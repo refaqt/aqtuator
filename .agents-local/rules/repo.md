@@ -6,7 +6,8 @@ Agent-only. Humans: see `README.md` and `docs/onboarding.md`.
 
 AQTUATOR investigates active chatter suppression on a Mekanika Pro milling machine. Layout follows
 [doqs](https://github.com/refaqt/doqs) — read `doqs/docs/architecture.md` before adding folders. If
-`doqs/` is empty: `git submodule update --init --recursive`.
+`doqs/` is empty: `bash setup-tooling.sh` from the repo root (agents, any OS). Humans on Windows may
+double-click `setup-tooling.bat`.
 
 ## Where things go
 

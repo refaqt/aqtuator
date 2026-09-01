@@ -2,6 +2,13 @@
 
 Entry point for Cursor, Claude Code, and other agents working in this repository.
 
+## First step (required)
+
+Before reading `.agents/` rules or skills, update tooling submodules to latest `main`:
+
+- **All agents, any OS:** `bash setup-tooling.sh`
+- **Humans on Windows** may double-click `setup-tooling.bat` (`pause` is OK there only). Agents must not run the `.bat`.
+
 ## Shared kit
 
 This repo mounts [refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents) at [`.agents/`](.agents/).
@@ -10,8 +17,6 @@ This repo mounts [refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents)
 2. Read [`docs/mistakes/`](docs/mistakes/) and state which prevention rules apply.
 3. Read [`docs/architecture.md`](docs/architecture.md) before non-trivial work.
 4. Before new coding solutions, check [`.agents-local/skills/patterns/SKILL.md`](.agents-local/skills/patterns/SKILL.md) if present.
-
-If `.agents/` is empty: `git submodule update --init --recursive`.
 
 ## This repository
 
