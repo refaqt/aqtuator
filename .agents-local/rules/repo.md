@@ -49,6 +49,10 @@ double-click `setup-tooling.bat`.
 **Never commit measurement data.** Use `.agents-local/skills/measurement-data/SKILL.md` for archive
 queries and file access.
 
+## Branching
+
+Every task that changes the repo must start on a **new git branch** off `main`, unless the user explicitly says otherwise. Do not land task work as commits directly on `main`.
+
 ## Conventions
 
 - **Commits:** `<type>(<scope>): <description>` — `feat`, `fix`, `docs`, `cad`, `arch`, `okh`,
