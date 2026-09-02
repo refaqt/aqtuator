@@ -86,6 +86,10 @@ def concept_reluctance(req: Requirements) -> Concept:
     a coil. Net force is linear in b to first order:
 
         F = 2 * B0 * b * A / mu0
+
+    That F is unsaturated Maxwell force on the assumed pole face — not a
+    packaged continuous rating. See format_catalog_report() and
+    docs/log/2026-09-02_fluxthor-reluctance-force-density.md.
     """
     pole_a = 20e-3 * 20e-3  # m^2, one gap
     b0 = 0.80  # T, PM bias in the gap
@@ -96,7 +100,10 @@ def concept_reluctance(req: Requirements) -> Concept:
 
     force = 2.0 * b0 * b_ctrl * pole_a / MU0
     stroke = 2.0 * (g0 - 0.10e-3)  # leave 0.10 mm residual per side
-    mmf_needed = b_ctrl * g0 / MU0
+    # Control flux crosses both gaps in series. The original one-gap MMF
+    # (b*g/mu0 ≈ 96 At) under-counted Ampère's law by 2×.
+    mmf_needed_one_gap = b_ctrl * g0 / MU0
+    mmf_needed = 2.0 * mmf_needed_one_gap
     mmf_have = n_turns * i_peak
 
     # Inductance of one gap winding, current-control voltage at 10 Hz and 100 Hz.
@@ -118,15 +125,23 @@ def concept_reluctance(req: Requirements) -> Concept:
     m_arm = 0.08
     f_mech = (1.0 / (2.0 * PI)) * math.sqrt(k_machine / m_arm)
 
+    # Pure-reluctance negative stiffness scale: k ≈ 2 F / g. PM bias can reduce
+    # this, but not below the same order. Open-loop snap-in unless k_flex +
+    # k_machine > |k_mag|.
+    k_mag = 2.0 * force / g0
+    k_flex_min = max(0.0, k_mag - k_machine)
+    force_after_flexure = force / (1.0 + k_flex_min / k_machine) if k_machine else 0.0
+
     height_stack = 3.0e-3 + 8.0e-3 + g0 + 4.0e-3 + 2.5e-3  # backiron, window, gap, I-bar, flexure
     bom = 55.0
+    envelope_cm3 = req.width_m * req.depth_m * req.height_m * 1e6
 
     checks = [
-        _check("force", force, req.force_n, "N", note="differential Maxwell stress"),
+        _check("force (pole-face Maxwell)", force, req.force_n, "N", note="unsaturated, assumed 20x20 mm pole"),
         _check("stroke", stroke, req.stroke_m, "m", note="two-sided gap, 0.10 mm residual"),
         _check("mech resonance", f_mech, req.bandwidth_hz * req.bandwidth_margin, "Hz"),
         _check("envelope height", height_stack, req.height_m, "m", ge=False),
-        _check("coil MMF", mmf_have, mmf_needed, "At"),
+        _check("coil MMF (two gaps)", mmf_have, mmf_needed, "At", note=f"one-gap figure was {mmf_needed_one_gap:.0f} At"),
         _check("BOM", bom, req.bom_eur, "EUR", ge=False),
     ]
     return Concept(
@@ -143,6 +158,10 @@ def concept_reluctance(req: Requirements) -> Concept:
             "V_L at 10 Hz": _fmt(v_l_10, "V"),
             "V_L at 100 Hz": _fmt(v_l_100, "V"),
             "k_machine (measured)": _fmt(k_machine / 1e6, "N/um"),
+            "k_mag (≈2F/g)": _fmt(k_mag / 1e6, "N/um"),
+            "k_flex to avoid snap-in": _fmt(k_flex_min / 1e6, "N/um"),
+            "F to machine after that flexure": _fmt(force_after_flexure, "N"),
+            "envelope force density": _fmt(force / envelope_cm3, "N/cm^3"),
             "6-DOF stretch": "3-sector puck: z + rx + ry at ~200 N; x/y/rz at much lower force",
         },
     )
@@ -271,6 +290,91 @@ def concept_lorentz_lever(req: Requirements) -> Concept:
     )
 
 
+# Fluxthor catalog, 2026-09-02, https://www.fluxthor.com/products/reluctance-actuator
+# and https://www.fluxthor.com/products/hybrid-reluctance-actuator
+# Hercules (reluctance-tuning) shares the Rhino force / Km table.
+FLUXTHOR_ATLAS = (
+    # name, w_mm, d_mm, h_mm, F_N, Km_N_per_A, stroke_um, m_g
+    ("Atlas-RA30", 30, 30, 40, 9.0, 29.0, 100, 33),
+    ("Atlas-RA40", 40, 40, 50, 32.0, 73.0, 200, 52),
+    ("Atlas-RA60", 60, 60, 60, 75.0, 56.0, 500, 89),
+    ("Atlas-RA100", 100, 100, 70, 286.0, 35.0, 1000, 235),
+)
+FLUXTHOR_RHINO = (
+    ("Rhino-HRA30", 30, 30, 40, 7.0, 245.0, 100, 36),
+    ("Rhino-HRA40", 40, 40, 50, 21.0, 468.0, 200, 51),
+    ("Rhino-HRA60", 60, 60, 60, 24.0, 224.0, 500, 99),
+    ("Rhino-HRA100", 100, 100, 70, 57.0, 131.0, 1000, 210),
+)
+
+
+def _catalog_row(name: str, w: float, d: float, h: float, force: float, km: float, stroke_um: float, mass_g: float) -> dict[str, float | str]:
+    vol_cm3 = (w * d * h) / 1000.0
+    i_cont = force / km if km else 0.0
+    return {
+        "name": name,
+        "envelope": f"{w:.0f}x{d:.0f}x{h:.0f} mm",
+        "vol_cm3": vol_cm3,
+        "force": force,
+        "n_per_cm3": force / vol_cm3,
+        "km": km,
+        "i_cont": i_cont,
+        "stroke_um": stroke_um,
+        "mass_g": mass_g,
+    }
+
+
+def format_catalog_report(req: Requirements) -> str:
+    """Compare pole-face Maxwell sizing with Fluxthor packaged continuous ratings."""
+    envelope_cm3 = req.width_m * req.depth_m * req.height_m * 1e6
+    pole_a = 20e-3 * 20e-3
+    b0, b_ctrl = 0.80, 0.40
+    our_force = 2.0 * b0 * b_ctrl * pole_a / MU0
+    our_density = our_force / envelope_cm3
+    pressure_12t = (1.2**2) / (2.0 * MU0)  # Pa
+
+    lines = [
+        "Fluxthor catalog check (packaged continuous force)",
+        "-------------------------------------------------",
+        "Source: fluxthor.com Atlas (pure reluctance) and Rhino (PM-biased hybrid),",
+        "2026-09-02. Same envelope family as Hercules (reluctance tuning).",
+        "",
+        f"  our envelope                 {envelope_cm3:.0f} cm^3",
+        f"  our pole-face Maxwell force  {our_force:.0f} N  ({our_density:.2f} N/cm^3)",
+        f"  magnetic pressure at 1.2 T   {pressure_12t/1e6:.2f} MPa  ({pressure_12t/1e4:.0f} N/cm^2 of pole)",
+        "",
+        "  model          envelope         vol    F_cont   N/cm^3    Km     I_cont  stroke",
+        "  -------------- ---------------- ------ -------- --------- ------ ------- ------",
+    ]
+    for row_src in (*FLUXTHOR_ATLAS, *FLUXTHOR_RHINO):
+        r = _catalog_row(*row_src)
+        lines.append(
+            f"  {r['name']:<14} {r['envelope']:<16} {r['vol_cm3']:5.0f} "
+            f"{r['force']:7.0f} N {r['n_per_cm3']:7.2f}  {r['km']:5.0f} "
+            f"{r['i_cont']:6.3f} A {r['stroke_um']:5.0f} um"
+        )
+
+    atlas_density = max(float(_catalog_row(*row)["n_per_cm3"]) for row in FLUXTHOR_ATLAS)
+    rhino40 = _catalog_row(*FLUXTHOR_RHINO[1])
+    scaled_atlas = atlas_density * envelope_cm3
+    lines.extend(
+        [
+            "",
+            f"  Atlas peak catalog density     {atlas_density:.2f} N/cm^3  (~{our_density/atlas_density:.0f} x below our Maxwell figure)",
+            f"  that density in our 50 cm^3    {scaled_atlas:.0f} N continuous",
+            f"  Rhino-HRA40 Km / I_cont        {rhino40['km']:.0f} N/A / {rhino40['i_cont']:.3f} A  (precision thermal, not saturation)",
+            "  20 mm height vs their 40-70 mm  they spend the extra length on coil + compliant guide",
+            "",
+            "  The Maxwell number is an upper bound on pole-face pressure. A packaged, thermally",
+            "  rated, flexure-guided device lands near 0.3-0.4 N/cm^3. 200 N continuous in this",
+            "  box is not supported by the catalog. A mill can run hotter than a lithography",
+            "  stage, so we can beat Fluxthor's *rating*, not their physics.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def format_report(req: Requirements, concepts: list[Concept]) -> str:
     steel = envelope_steel_mass_kg(req)
     lines = [
@@ -306,6 +410,7 @@ def format_report(req: Requirements, concepts: list[Concept]) -> str:
             for key, val in concept.extras.items():
                 lines.append(f"    {key}: {val}")
         lines.append("")
+    lines.append(format_catalog_report(req))
     return "\n".join(lines)
 
 

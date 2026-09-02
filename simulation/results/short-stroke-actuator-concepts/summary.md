@@ -30,18 +30,22 @@ actuators between two structures.
 
 ## Concept results
 
-### PM-biased differential reluctance — PASS
+### PM-biased differential reluctance — FAIL (coil MMF)
 
 | Check | Value | Need |
 | --- | ---: | ---: |
-| Force | 204 N | ≥ 200 N |
+| Force (pole-face Maxwell) | 204 N | ≥ 200 N |
 | Stroke | 0.40 mm | ≥ 0.10 mm |
 | Mech. resonance vs machine | 476 Hz | ≥ 30 Hz |
 | Envelope height | 17.8 mm | ≤ 20 mm |
-| Coil MMF | 140 At | ≥ 96 At |
+| Coil MMF (two gaps) | 140 At | ≥ 191 At **not met** (one-gap figure was 96 At) |
 | BOM | ~55 EUR | ≤ 100 EUR |
 
 Coil ~1.4 Ω, 17 mH, 2.7 W at 1.4 A peak. `V_L` 1.5 V at 10 Hz, 15 V at 100 Hz.
+
+Negative stiffness `k_mag ≈ 2F/g = 1.36 N/µm` exceeds `k_machine = 0.71 N/µm`. A
+flexure that stops snap-in (`k_flex ≳ 0.64 N/µm`) leaves **~107 N** at the machine.
+Envelope force density of the Maxwell figure: **4.07 N/cm³**.
 
 ### Flextensional multilayer piezo — PASS
 
@@ -55,7 +59,8 @@ Coil ~1.4 Ω, 17 mH, 2.7 W at 1.4 A peak. `V_L` 1.5 V at 10 Hz, 15 V at 100 Hz.
 | BOM | ~90 EUR | ≤ 100 EUR |
 
 Catalogue analogue: Cedrat APA40SM (54 µm, 260 N, 15 × 27 × 12 mm) proves force and
-envelope; stroke is short of 0.1 mm. Driver cost is the BOM risk.
+envelope; stroke is short of 0.1 mm. Driver cost is the BOM risk. This is the only
+concept with a commercial part already near 200 N in this box.
 
 ### Lorentz voice coil + 7:1 flexure lever — PASS (peak duty)
 
@@ -71,8 +76,34 @@ envelope; stroke is short of 0.1 mm. Driver cost is the BOM risk.
 Rotary 50 µm eccentric alternative: 10 mNm torque but **600 kg** reflected mass and
 **5.5 Hz** resonance — fail bandwidth.
 
+## Fluxthor catalog check
+
+Packaged continuous ratings from [Atlas](https://www.fluxthor.com/products/reluctance-actuator)
+and [Rhino](https://www.fluxthor.com/products/hybrid-reluctance-actuator), 2026-09-02.
+Our Maxwell figure is **4.07 N/cm³**; Atlas peaks at **0.41 N/cm³** (~10× lower). That
+density in our 50 cm³ is **~20 N** continuous.
+
+| Model | Envelope | vol cm³ | F_cont | N/cm³ | Km | I_cont | Stroke |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Atlas-RA30 | 30×30×40 mm | 36 | 9 N | 0.25 | 29 N/A | 0.31 A | 100 µm |
+| Atlas-RA40 | 40×40×50 mm | 80 | 32 N | 0.40 | 73 N/A | 0.44 A | 200 µm |
+| Atlas-RA60 | 60×60×60 mm | 216 | 75 N | 0.35 | 56 N/A | 1.34 A | 500 µm |
+| Atlas-RA100 | 100×100×70 mm | 700 | 286 N | 0.41 | 35 N/A | 8.17 A | 1000 µm |
+| Rhino-HRA30 | 30×30×40 mm | 36 | ±7 N | 0.19 | 245 N/A | 29 mA | ±100 µm |
+| Rhino-HRA40 | 40×40×50 mm | 80 | ±21 N | 0.26 | 468 N/A | 45 mA | ±200 µm |
+| Rhino-HRA60 | 60×60×60 mm | 216 | ±24 N | 0.11 | 224 N/A | 0.11 A | ±500 µm |
+| Rhino-HRA100 | 100×100×70 mm | 700 | ±57 N | 0.08 | 131 N/A | 0.44 A | ±1000 µm |
+
+Rhino-HRA40's 468 N/A at 45 mA is a precision thermal rating, not saturation. A mill
+can beat that *rating*; 200 N continuous in this box is still not catalog-supported.
+
+Reasoning: [`docs/log/2026-09-02_fluxthor-reluctance-force-density.md`](../../../docs/log/2026-09-02_fluxthor-reluctance-force-density.md).
+Mistake: [`docs/mistakes/2026-09-02_maxwell-stress-as-device-force-density.md`](../../../docs/mistakes/2026-09-02_maxwell-stress-as-device-force-density.md).
+
 ## Verdict
 
-All three 1-DOF coupling concepts are physically plausible in the box. Reluctance is
-the only one that holds 200 N without a thermal or high-voltage-driver exception.
+The 204 N reluctance number is an unsaturated pole-face upper bound, not a prototype
+spec. After two-gap MMF, snap-in flexure, and a commercial catalog check, expect tens
+of newtons continuous in this box and ~100 N as a hot / short-duty stretch. If 200 N
+must hold, concept 2 (flextensional piezo) is the only idea with a catalog analogue.
 Full write-up: [`cases/short-stroke-actuator-concepts/README.md`](../../cases/short-stroke-actuator-concepts/README.md).

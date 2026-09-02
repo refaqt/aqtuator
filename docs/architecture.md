@@ -12,8 +12,10 @@ numbers rather than assumptions.
 
 The repository holds the machine: its CAD, the models that predict its behaviour, the campaigns that
 measured it, and the firmware and host software built to run those campaigns. Actuator concept
-sizing (50 × 50 × 20 mm, 200 N, 0.1 mm, > 10 Hz) lives in
+sizing (50 × 50 × 20 mm, 0.1 mm, > 10 Hz) lives in
 [`simulation/cases/short-stroke-actuator-concepts`](../simulation/cases/short-stroke-actuator-concepts/).
+The 200 N reluctance figure is pole-face Maxwell stress, not packaged continuous force
+([Fluxthor catalog check](../simulation/cases/short-stroke-actuator-concepts/README.md#fluxthor-catalog-vs-our-maxwell-number)).
 
 ## Module map
 

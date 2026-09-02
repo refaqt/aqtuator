@@ -47,8 +47,9 @@ axial**, with much weaker x / y / rz.
 
 ### 1. PM-biased differential reluctance + flexure guide
 
-Solves the two problems left open on 2026-08-24: reluctance force of a few hundred
-newtons is available, but a single gap only attracts.
+Solves the two problems left open on 2026-08-24: lumped Maxwell stress of a few hundred
+newtons is available on a 20 × 20 mm pole, but a single gap only attracts. Packaged
+continuous force is a different (much smaller) number — see the catalog check below.
 
 ```mermaid
 flowchart TB
@@ -70,14 +71,20 @@ A permanent magnet sets a bias field **B0 ≈ 0.8 T** in two opposing gaps. The 
 F = 2 B0 b A / μ0
 ```
 
-With **A = 20 × 20 mm** that is **204 N**, linear in current to first order, and
-**two-sided**. Nominal gap 0.3 mm leaves **0.4 mm** of two-sided travel before a 0.10 mm
-residual. Coil MMF is only ~100 At (100 turns at 1.4 A, about 3 W copper). Current-mode
+With **A = 20 × 20 mm** that is **204 N** of *unsaturated pole-face Maxwell force*,
+linear in current to first order, and **two-sided**. That is not a packaged continuous
+rating — see [Fluxthor catalog check](#fluxthor-catalog-vs-our-maxwell-number). Nominal
+gap 0.3 mm leaves **0.4 mm** of two-sided travel before a 0.10 mm residual.
+
+Control flux crosses **both** gaps, so Ampère's law needs **~191 At**, not the original
+one-gap 96 At. 100 turns at 1.4 A is only 140 At (about 3 W copper) — short. Current-mode
 drive at 24 V still has headroom at 100 Hz (`V_L ≈ 15 V`).
 
-The flexure takes lateral loads and sets a well-defined gap; it must be much softer than
-the machine so the 200 N goes into the structure. Against 0.71 N/µm and an 80 g armature
-the mechanical resonance is **~480 Hz**.
+The flexure takes lateral loads and sets a well-defined gap. Magnetic negative stiffness
+is **~1.4 N/µm** (`2F/g`), larger than the measured machine stiffness of **0.71 N/µm**.
+A flexure stiff enough to stop snap-in (`k_flex ≳ 0.64 N/µm`) is no longer "much softer
+than the machine": only **~107 N** of the 204 N then reaches the structure. Against
+0.71 N/µm and an 80 g armature the mechanical resonance is **~480 Hz**.
 
 **BOM (order-of-magnitude):** EI laminations or water-jet SiFe €10, magnet wire €5, N42
 magnets €10, laser-cut spring-steel flexure €20, H-bridge €10, housing/fasteners €10.
@@ -89,9 +96,10 @@ mostly work.
 **z, rx, ry**. Rim poles for x/y/rz are possible but starve for area in 20 mm height —
 expect tens of newtons, not 200 N.
 
-**Main risks:** force ~ 1/gap² if the PM bias is uneven; eddy currents in solid iron;
-the 20 mm stack-up (back iron + window + gap + armature + flexure) has only ~2 mm of
-spare.
+**Main risks:** the 204 N figure is pole-face pressure, not device force (Fluxthor Atlas
+is ~0.4 N/cm³ packaged, ~10× lower); negative stiffness vs flexure tax; two-gap MMF
+shortfall; force ~ 1/gap² if the PM bias is uneven; eddy currents in solid iron; the
+20 mm stack-up (back iron + window + gap + armature + flexure) has only ~2 mm of spare.
 
 ### 2. Flextensional multilayer piezo
 
@@ -169,12 +177,12 @@ Lorentz channels have even less copper. Same 6-DOF budget problem as the others.
 | | Reluctance | Flextensional piezo | Lorentz + lever |
 | --- | --- | --- | --- |
 | Two-sided | yes, with PM bias + two gaps | yes, with preload + bias voltage | native |
-| Force | 204 N (magnetic, continuous-ish) | ~250 N (preloaded) | 250 N peak / 100 N cont. |
+| Force | 204 N pole-face Maxwell; ~107 N after snap-in flexure; catalog-like continuous ~20 N | ~250 N (preloaded); Cedrat APA40SM is a real 260 N part | 250 N peak / 100 N cont. |
 | Travel | 0.4 mm in a 0.3 mm gap stack-up | 0.12 mm at 6× | 0.1 mm (coil 0.7 mm) |
 | Plant resonance vs machine | ~480 Hz | ~390 Hz | ~84 Hz |
 | BOM | ~€55 | ~€90, driver-sensitive | ~€70 |
 | 6-DOF in-box | best path: 3-sector z/rx/ry | three shells do not fit | 3 coils for z/rx/ry |
-| Why pick it | force density, cost, 6-DOF puck | bandwidth headroom, no magnetics | linearity, reuse of current-loop hardware |
+| Why pick it | still the magnetic-pressure ceiling; not a 200 N continuous spec | only concept with a catalog analogue at ~200 N | linearity, reuse of current-loop hardware |
 
 ## Rejected at this envelope
 
@@ -188,11 +196,62 @@ Lorentz channels have even less copper. Same 6-DOF budget problem as the others.
 - **Off-the-shelf linear motors:** the [2026-04-21 supplier look](../../../docs/log/2026-04-21_linear-motor-suppliers.md)
   is a different size and cost class.
 
+## Fluxthor catalog vs our Maxwell number
+
+Fluxthor (TU Delft spin-out) sells packaged reluctance actuators with a compliant
+guide: [Atlas](https://www.fluxthor.com/products/reluctance-actuator) (pure reluctance,
+their high-force line), [Rhino](https://www.fluxthor.com/products/hybrid-reluctance-actuator)
+(PM-biased hybrid, same topology as concept 1), and Hercules (reluctance tuning; same
+force table as Rhino). Numbers captured 2026-09-02.
+
+| Model | Envelope | Volume | Continuous force | N/cm³ | Km | I at F_cont | Stroke |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Atlas-RA30 | 30 × 30 × 40 mm | 36 cm³ | 9 N | 0.25 | 29 N/A | 0.31 A | 100 µm |
+| Atlas-RA40 | 40 × 40 × 50 mm | 80 cm³ | 32 N | 0.40 | 73 N/A | 0.44 A | 200 µm |
+| Atlas-RA60 | 60 × 60 × 60 mm | 216 cm³ | 75 N | 0.35 | 56 N/A | 1.34 A | 500 µm |
+| Atlas-RA100 | 100 × 100 × 70 mm | 700 cm³ | 286 N | 0.41 | 35 N/A | 8.2 A | 1000 µm |
+| Rhino-HRA40 | 40 × 40 × 50 mm | 80 cm³ | ±21 N | 0.26 | 468 N/A | 45 mA | ±200 µm |
+| **Our Maxwell sizing** | **50 × 50 × 20 mm** | **50 cm³** | **204 N** | **4.1** | ~150 N/A at 1.4 A | **1.4 A** | 400 µm |
+
+Atlas, their "highest force density" product, sits at **0.25–0.41 N/cm³**. Scaled to our
+50 cm³ that is **~20 N** continuous. We were **10×** high because we compared different
+quantities:
+
+1. **Pole-face Maxwell stress vs packaged continuous force.** 1.2 T is 0.57 MPa =
+   57 N/cm² of *pole*. A 20 × 20 mm pole in a 50 × 50 × 20 mm box already uses only 16 %
+   of the face; the rest is return iron, coil, magnet, flexure, housing. Catalog density
+   divides force by the *whole* module, thermally derated, after the compliant mechanism.
+2. **Thermal class.** Rhino has a *better* motor constant than Atlas (468 vs 73 N/A) and
+   *lower* continuous force, because I_cont is 45 mA. They sell nanometer-stable stages
+   (semiconductor, optics). Atlas-RA40 at 0.44 A is still a precision rating, not
+   saturation. A mill can dump a few watts; they cannot. We can beat their *rating*.
+   We do not beat Maxwell's equations.
+3. **Negative stiffness / flexure tax.** Reluctance force grows as the gap closes
+   (`k_mag ≈ 2F/g ≈ 1.4 N/µm`). That is stiffer than the machine (0.71 N/µm), so the
+   armature snaps in unless the flexure (or a closed loop) stabilises it. Fluxthor's
+   product *is* that compliant mechanism plus "reluctance tuning." A flexure that
+   cancels snap-in is not << k_machine, so a large fraction of F never reaches the
+   spindle. Delivered force ~107 N even before leakage and heat.
+4. **Lumped circuit was optimistic.** Control MMF was counted across one gap (96 At)
+   instead of two (191 At). Leakage, fringing, return-path saturation, and PM operating
+   point are the usual next factor of two in MEC vs FEA (Cigarini 2019, Swank 2023).
+5. **20 mm is the hard dimension.** Their shortest pack is 40 mm. The extra length is
+   coil window and flexure. A 20 mm puck starves copper or pole, or both.
+
+**What to believe for this mill:** 204 N remains a useful *upper bound* on pole-face
+pressure. A custom coupling puck that runs hotter and at a shorter gap than Atlas can
+beat 20 N — perhaps tens of newtons continuous, around 100 N as a hot / short-duty
+stretch after the flexure tax. **200 N continuous in 50 × 50 × 20 mm is not a
+catalog-supported spec.** Concept 2 (flextensional piezo) is the only idea with a
+commercial analogue already at ~200 N in a similar box (APA40SM: 260 N, 54 µm).
+
+Write-up of the check: [`docs/log/2026-09-02_fluxthor-reluctance-force-density.md`](../../../docs/log/2026-09-02_fluxthor-reluctance-force-density.md).
+
 ## Suggested first prototype
 
-Build **concept 1** as a single-axis E-I puck with a flexure-guided armature, because it
-is the only concept that offers 200 N without a thermal or HV-driver exception, and the
-same iron can later be split into three sectors. Use the provided sensor from day one;
-reluctance force is gap-dependent. Keep concept 2 as the high-bandwidth alternative if
-the first plant pole has to sit well above 100 Hz. Keep concept 3 only if linearity and
-existing ODrive current hardware outweigh the peak-duty thermal limit.
+Do not take 200 N reluctance as a spec. If the force target stays at 200 N, **concept 2**
+is the only path with a catalog analogue in this envelope (stroke still short of 0.1 mm).
+Build **concept 1** only as a magnetic-circuit experiment: an E-I puck to measure real
+force, negative stiffness, and heat in 20 mm — expect tens of newtons continuous, not
+204 N. Use the provided sensor from day one. Keep concept 3 as the linear / ODrive-reuse
+peak-duty option.
