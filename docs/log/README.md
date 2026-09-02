@@ -89,3 +89,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-01 | [Always-latest tooling submodules](2026-09-01_always-latest-tooling-submodules.md) | engineering |  |
 | 2026-09-01 | [Root launchers from setup-tooling](2026-09-01_root-launcher-install.md) | engineering |  |
 | 2026-09-02 | [Short-stroke actuator concepts](2026-09-02_short-stroke-actuator-concepts.md) | engineering, hardware, simulation |  |
+| 2026-09-02 | [Fluxthor reluctance force density](2026-09-02_fluxthor-reluctance-force-density.md) | engineering, simulation |  |

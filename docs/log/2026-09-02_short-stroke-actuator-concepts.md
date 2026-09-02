@@ -96,6 +96,11 @@ Bare voice coil (no lever), SMA, pneumatics, Terfenol-D, off-the-shelf linear mo
   keep idea 1 laminated, or idea 2.
 - Aim for a piston / tip-tilt puck, not a hexapod in this box.
 
+Later the same day the Fluxthor catalog check
+([2026-09-02](2026-09-02_fluxthor-reluctance-force-density.md)) showed the 204 N figure
+is pole-face Maxwell stress, not packaged continuous force. Reluctance is no longer
+treated as a 200 N spec.
+
 ## Open Questions
 
 - Is 10 Hz the real operating band, or only a minimum, with the 700 Hz spindle mode as
