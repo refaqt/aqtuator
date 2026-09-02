@@ -88,3 +88,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-08-28 | [Slim AGENTS.md to thin stub](2026-08-28_slim-agents-md.md) | engineering |  |
 | 2026-09-01 | [Always-latest tooling submodules](2026-09-01_always-latest-tooling-submodules.md) | engineering |  |
 | 2026-09-01 | [Root launchers from setup-tooling](2026-09-01_root-launcher-install.md) | engineering |  |
+| 2026-09-02 | [Short-stroke actuator concepts](2026-09-02_short-stroke-actuator-concepts.md) | engineering, hardware, simulation |  |

@@ -11,7 +11,9 @@ stability limits under stepper and servo drives — so that an actuator can be d
 numbers rather than assumptions.
 
 The repository holds the machine: its CAD, the models that predict its behaviour, the campaigns that
-measured it, and the firmware and host software built to run those campaigns.
+measured it, and the firmware and host software built to run those campaigns. Actuator concept
+sizing (50 × 50 × 20 mm, 200 N, 0.1 mm, > 10 Hz) lives in
+[`simulation/cases/short-stroke-actuator-concepts`](../simulation/cases/short-stroke-actuator-concepts/).
 
 ## Module map
 
