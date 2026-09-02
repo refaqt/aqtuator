@@ -1,7 +1,9 @@
 # CAD
 
 FreeCAD models of the machine and the actuator. Nothing here yet — the project has so far been
-measurement and control; mechanical design of the actuator is the next phase.
+measurement and control; mechanical design of the actuator is the next phase. First-order concept
+sizing is in
+[`simulation/cases/short-stroke-actuator-concepts`](../simulation/cases/short-stroke-actuator-concepts/).
 
 **FreeCAD v1.1**, built-in Assembly workbench. Read
 [`doqs/docs/decisions/2026-06-24_freecad-master-sketches-body.md`](../doqs/docs/decisions/2026-06-24_freecad-master-sketches-body.md)
