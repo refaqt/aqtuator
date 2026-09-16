@@ -3,7 +3,7 @@
 Architecture decision records, one file per decision, per the doqs convention
 `docs/decisions/YYYY-MM-DD_topic.md`.
 
-Template: [`doqs/templates/adr.md`](../../doqs/templates/adr.md).
+Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 
 | Date | Entry |
 | ---- | ----- |

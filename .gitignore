@@ -100,3 +100,9 @@ docs/log.docx
 
 # Claude Code machine-local permissions
 .claude/settings.local.json
+
+# FreeCAD MCP server registration. doqs/scripts/install_root_tools.py writes
+# this file once per clone, and it stays local: the server runs uvx freecad-mcp,
+# which needs a desktop FreeCAD. See
+# docs/decisions/2026-09-16_cloud-session-submodule-hook.md.
+.mcp.json

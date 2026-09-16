@@ -114,7 +114,9 @@ in one file: `hooks` for the session start, `permissions.deny` for the guard.
   `bash setup-tooling.sh` run writes it as an untracked file, because
   `install_root_tools.py` installs it copy-once. It registers the FreeCAD MCP
   server (`uvx freecad-mcp`), which a cloud container cannot run. Keep it locally
-  if you use FreeCAD through an agent; delete it otherwise.
+  if you use FreeCAD through an agent; delete it otherwise. Since 2026-09-16 the
+  file is also listed in `.gitignore`, so it no longer shows up as an untracked
+  change in every session.
 - `bash setup-tooling.sh` stays the fuller step: it also runs
   `install_root_tools.py`, which the hook does not, so the hook never writes into
   the working tree beyond the two submodules.

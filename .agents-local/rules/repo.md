@@ -28,8 +28,10 @@ double-click `setup-tooling.bat`.
 | --- | --- |
 | `doqs/docs/architecture.md` | New modules, versioning, interfaces, builds |
 | `doqs/docs/naming.md` | Naming modules, parts, campaigns |
-| `doqs/skills/freecad/SKILL.md` | FreeCAD debugging, assemblies, master sketches |
-| `doqs/templates/` | Creating log, ADR, mistake entries |
+| `doqs/docs/agent-cad.md` | Any CAD work by an agent; seeding a module's `build_model.py` |
+| `doqs/templates/` | Machine structure: CAD build script, measurement case, OKH, variants |
+| `.agents/skills/freecad/SKILL.md` | FreeCAD debugging, assemblies, master sketches |
+| `.agents/templates/adr.md` | Writing a decision record |
 
 `docs/architecture.md` in this repo is a short overview — not a second copy of the spec.
 
@@ -59,8 +61,9 @@ Every task that changes the repo must start on a **new git branch** off `main`, 
   `firmware`, `sim`, `chore`, `refactor`, `interface`, `model`, `build`
 - **Slugs:** kebab-case, name the function not the shape (`x-axis`, not `aluminium-plate`). Never
   encode dimensions or materials in folder names.
-- **Never edit `.FCStd` files directly.** Use FreeCAD, and run `cad/sync_params.py` inside it after
-  changing parameters.
+- **Never edit `.FCStd` files directly.** Use FreeCAD, and run
+  `exec(open("doqs/scripts/cad_sync_params.py").read())` then `sync_active()` in its Python console
+  after changing parameters. A module never keeps its own copy of a doqs tool.
 
 ## Validate
 
