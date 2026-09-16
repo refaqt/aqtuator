@@ -9,6 +9,12 @@ Before reading `.agents/` rules or skills, update tooling submodules to latest `
 - **All agents, any OS:** `bash setup-tooling.sh`
 - **Humans on Windows** may double-click `setup-tooling.bat` (`pause` is OK there only). Agents must not run the `.bat`.
 
+A `SessionStart` hook ([`.claude/hooks/session-start.sh`](.claude/hooks/session-start.sh)) already
+checks `.agents/` and `doqs/` out at the start of every session, so both folders are usually filled
+before you read this. Run `setup-tooling.sh` anyway when you need the root launchers it installs, or
+when the hook reported that it could not reach the network. Both leave the `doqs` and `.agents`
+gitlinks modified on purpose — leave them uncommitted unless you mean to set a new pin.
+
 ## Shared kit
 
 This repo mounts [refaqt/refaqt-agents](https://github.com/refaqt/refaqt-agents) at [`.agents/`](.agents/).
