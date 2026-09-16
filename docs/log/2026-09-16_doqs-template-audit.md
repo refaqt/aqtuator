@@ -59,6 +59,15 @@ into `doqs/scripts/`:
   `.agents/templates/`. They were missing.
 - `.gitignore` — added `.mcp.json`, so the file the installer writes stops
   showing up as an untracked change in every session.
+- `.claude/hooks/session-start.sh` — the hook now also names the language rule:
+  "Write every reply and every file in B2 English:
+  `.agents/rules/communication.md`." The rule already existed, but an agent had
+  to open the file and then remember it. In this session that failed, and a
+  person had to ask for plain English by hand. The hook output reaches the
+  agent before it writes anything. doqs got the same line in
+  [refaqt/doqs#17](https://github.com/refaqt/doqs/pull/17); each repository
+  keeps its own copy of this hook, so there is no single place to change it
+  today.
 
 Every markdown link in the repository now resolves, and
 `python doqs/scripts/validate_all.py` passes.

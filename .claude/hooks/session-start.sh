@@ -76,6 +76,7 @@ if [ -z "$missing" ]; then
     echo "Run 'bash setup-tooling.sh' once you have a network again."
   fi
   echo "Read .agents/rules/core.md first, then AGENTS.md."
+  echo "Write every reply and every file in B2 English: .agents/rules/communication.md."
   exit 0
 fi
 
@@ -90,6 +91,7 @@ if [ -n "$reason" ]; then
   printf '%s\n' "$reason" | sed 's/^/  /'
 fi
 echo "The session continues, but rules, skills and the doqs validators are missing."
+echo "Write every reply and every file in B2 English anyway: short sentences, common words."
 echo "Once you have a network again, run:"
 echo "  bash setup-tooling.sh"
 exit 0
