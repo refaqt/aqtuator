@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "mcp__freecad__execute_code_headless",
+      "mcp__freecad__reload_document"
+    ]
+  }
+}
