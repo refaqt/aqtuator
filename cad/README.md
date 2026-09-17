@@ -37,8 +37,11 @@ copy of a doqs tool.
 ```bash
 python doqs/scripts/resolve_params.py --module modules/<module> --model default
 FreeCADCmd modules/<module>/cad/build_model.py
-python doqs/scripts/validate_cad.py
+bash doqs.sh check --only cad
 ```
+
+`FreeCADCmd` stays as it is: it runs the build script inside FreeCAD, which
+`doqs.sh` cannot reach. The same is true of the parameter sync below.
 
 **Never edit `.FCStd` files directly.** After changing parameters, run the doqs sync script from the
 module root — in the FreeCAD Python console:

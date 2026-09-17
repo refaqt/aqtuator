@@ -46,11 +46,16 @@ __pycache__/
 # ---------------------------------------------------------------------------
 # doqs generated outputs
 # ---------------------------------------------------------------------------
-**/bom/bom_output.md
 /bom/bom.csv
 **/cad/params.csv
 **/simulation/results/**/exports/
 /graph/usage-graph.json.tmp
+
+# The reverse-usage graph answers "if I change this module, who is affected?".
+# This repository has no modules yet, so `doqs generate` writes a single node with
+# empty lists. Committing that is noise. Track it once `modules/` has entries, and
+# gate it with `resolve_graph.py --check`.
+/graph/usage-graph.json
 
 # ---------------------------------------------------------------------------
 # Arduino / PlatformIO build artifacts

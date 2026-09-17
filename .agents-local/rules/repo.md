@@ -26,6 +26,7 @@ double-click `setup-tooling.bat`.
 
 | Read | When |
 | --- | --- |
+| `doqs/docs/using-doqs.md` | **Start here.** What to run, what doqs installs, what each gate checks |
 | `doqs/docs/architecture.md` | New modules, versioning, interfaces, builds |
 | `doqs/docs/naming.md` | Naming modules, parts, campaigns |
 | `doqs/docs/agent-cad.md` | Any CAD work by an agent; seeding a module's `build_model.py` |
@@ -64,9 +65,20 @@ Every task that changes the repo must start on a **new git branch** off `main`, 
 - **Never edit `.FCStd` files directly.** Use FreeCAD, and run
   `exec(open("doqs/scripts/cad_sync_params.py").read())` then `sync_active()` in its Python console
   after changing parameters. A module never keeps its own copy of a doqs tool.
+  That script stays a manual step, and `doqs.sh` has no subcommand for it: it runs
+  **inside** the FreeCAD interpreter, which `doqs.sh` cannot reach. `doqs.sh list`
+  says so too.
 
 ## Validate
 
 ```bash
-python doqs/scripts/validate_all.py
+bash doqs.sh generate    # only after changing parameters, a BOM or a licence folder
+bash doqs.sh check       # every gate, before every commit
 ```
+
+`doqs.sh list` prints every command. `python doqs/doqs.py check` is the same thing
+without the launcher, and is what CI runs.
+
+`doqs check` runs the seven gates **plus** three checks that the committed generated
+files are current. `python doqs/scripts/validate_all.py` still works and still runs
+only the seven.

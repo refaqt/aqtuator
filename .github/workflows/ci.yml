@@ -18,7 +18,7 @@ jobs:
           python-version: "3.12"
 
       - name: doqs validation
-        run: python doqs/scripts/validate_all.py
+        run: python doqs/doqs.py check
 
       - name: Install host software
         run: |
