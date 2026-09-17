@@ -106,9 +106,44 @@ before changing firmware.
 
 ## Working on Windows
 
-This is a Windows machine and the shell is PowerShell. Four of the six entries in
+This is a Windows machine and the shell is PowerShell. Four of the eight entries in
 [`docs/mistakes/`](mistakes/) are bash syntax used in PowerShell — no `&&`, no bash heredocs, no
 `cd /d`.
+
+## FreeCAD for agents (optional)
+
+Only needed if you want an agent to help you build a CAD model. An agent then works inside the
+FreeCAD window you have open, on the same model you are looking at. It can measure and change the
+geometry. It can never save the file — that stays your keystroke. The reasoning is in
+[`doqs/docs/agent-cad.md`](../doqs/docs/agent-cad.md).
+
+**Install the add-on once.** FreeCAD needs a small add-on, which is not in the FreeCAD add-on list,
+so you copy it in by hand. Close FreeCAD first, then in PowerShell:
+
+```powershell
+git clone https://github.com/neka-nat/freecad-mcp.git
+Copy-Item -Recurse freecad-mcp\addon\FreeCADMCP "$env:APPDATA\FreeCAD\v1-1\Mod\"
+```
+
+FreeCAD 1.1 for Windows keeps a folder per version. `%APPDATA%\FreeCAD\v1-1\Mod` is the right
+one; `%APPDATA%\FreeCAD\Mod`, which several guides still name, is not read at all. Check the
+version folder against your own FreeCAD if you run something other than 1.1.
+
+**Install the bridge program once.**
+
+```powershell
+uv tool install --system-certs freecad-mcp
+```
+
+`--system-certs` is needed on this network. Without it every download fails with a certificate
+error — see [`docs/mistakes/2026-09-17_uv-download-certificate.md`](mistakes/2026-09-17_uv-download-certificate.md).
+
+**Switch it on when you want help.** Start FreeCAD, open the workbench list in the top toolbar and
+choose **MCP Addon**. In the **FreeCAD MCP** toolbar that appears, click **Start RPC Server**. Do
+this before you start the agent session, because the connection is made once, at the start.
+
+The add-on can run any command inside FreeCAD, so leave it off when you are not using it, and leave
+**Remote Connections** off. It listens on this computer only, on port 9875.
 
 ## Agent guidance
 

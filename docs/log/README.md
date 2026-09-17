@@ -93,3 +93,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-16 | [Cloud agents can read the tooling submodules](2026-09-16_cloud-agent-tooling-refresh.md) | engineering, software |  |
 | 2026-09-16 | [Checked every doqs template against this repository](2026-09-16_doqs-template-audit.md) | engineering, software |  |
 | 2026-09-17 | [aqtuator moved to the one doqs command](2026-09-17_adopt-the-doqs-command.md) | engineering, software |  |
+| 2026-09-17 | [An agent can now work in the open FreeCAD window](2026-09-17_freecad-mcp-bridge.md) | engineering, software, cad |  |

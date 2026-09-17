@@ -1,7 +1,7 @@
 # Mistakes
 
 Incidents worth not repeating, one file per incident, per the doqs convention
-`docs/mistakes/YYYY-MM-DD_topic.md`. **Read these before starting work** — four of the six
+`docs/mistakes/YYYY-MM-DD_topic.md`. **Read these before starting work** — four of the eight
 are the same class of error: using bash syntax in PowerShell.
 
 Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mistake-log/SKILL.md).
@@ -15,3 +15,4 @@ Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mista
 | 2026-03-31 | [Treated `analogWrite()` ISR unsafety as settled too early](2026-03-31_analogwrite-isr-conclusion-premature.md) |
 | 2026-04-17 | [Used `&&` and `cd /d` in PowerShell again](2026-04-17_powershell-ampersand-and-cd-again.md) |
 | 2026-09-02 | [Treated pole-face Maxwell stress as packaged force density](2026-09-02_maxwell-stress-as-device-force-density.md) |
+| 2026-09-17 | [Downloads with `uv` fail on this network, and the error hides it](2026-09-17_uv-download-certificate.md) |
