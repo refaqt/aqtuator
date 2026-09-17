@@ -4,16 +4,16 @@ Entry point for Cursor, Claude Code, and other agents working in this repository
 
 ## First step (required)
 
-Before reading `.agents/` rules or skills, update tooling submodules to latest `main`:
+Before you read `.agents/` rules or skills, update the tooling submodules to the latest `main`:
 
-- **All agents, any OS:** `bash setup-tooling.sh`
-- **Humans on Windows** may double-click `setup-tooling.bat` (`pause` is OK there only). Agents must not run the `.bat`.
+- **All agents, any OS:** `bash setup-tooling.sh`, or `bash setup-agents.sh` in a repo that has no `doqs` submodule. Run the file this repo actually has.
+- **People on Windows** may double-click `setup-tooling.bat` (`pause` is OK there only). Agents must not run the `.bat`.
 
-A `SessionStart` hook ([`.claude/hooks/session-start.sh`](.claude/hooks/session-start.sh)) already
-checks `.agents/` and `doqs/` out at the start of every session, so both folders are usually filled
-before you read this. Run `setup-tooling.sh` anyway when you need the root launchers it installs, or
-when the hook reported that it could not reach the network. Both leave the `doqs` and `.agents`
-gitlinks modified on purpose — leave them uncommitted unless you mean to set a new pin.
+A `SessionStart` hook at [`.claude/hooks/session-start.sh`](.claude/hooks/session-start.sh) usually
+fills those folders before you read this. Run the setup file anyway when you need the launchers it
+installs, or when the hook said it could not reach the network. Both leave the submodule gitlinks
+modified on purpose — leave them uncommitted unless you mean to set a new pin. Installing the kit in
+a new repo: [`.agents/INSTALL.md`](.agents/INSTALL.md).
 
 ## Shared kit
 
