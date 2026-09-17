@@ -1,0 +1,9 @@
+---
+description: Follow the FreeCAD debug steps and cite official sources when working on .FCStd designs.
+globs:
+  - "**/*.FCStd"
+  - "**/freecad/**"
+  - "**/cad/**"
+---
+
+When you debug FreeCAD designs, workbench issues, or `.FCStd` failures, read `.agents/skills/freecad/SKILL.md` and search the wiki, forum, and GitHub before you answer. Cite specific online references in every response.

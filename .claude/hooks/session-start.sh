@@ -21,7 +21,7 @@
 # to override "update = none", which doqs sets on its own nested .agents. This
 # repository sets it on neither tooling submodule, and git already honours the
 # nested flag while recursing, so doqs/.agents stays unmounted and the kit is
-# not mounted twice. See docs/decisions/2026-09-16_cloud-session-submodule-hook.md.
+# not mounted twice. See doqs/docs/using-doqs.md, section 3.
 #
 # --remote leaves the two gitlinks modified on purpose. See AGENTS.md, section
 # "First step (required)": leave them uncommitted unless you mean to set a pin.
@@ -76,6 +76,7 @@ if [ -z "$missing" ]; then
     echo "Run 'bash setup-tooling.sh' once you have a network again."
   fi
   echo "Read .agents/rules/core.md first, then AGENTS.md."
+  echo "Write every reply and every file in B2 English: .agents/rules/communication.md."
   exit 0
 fi
 
@@ -90,6 +91,7 @@ if [ -n "$reason" ]; then
   printf '%s\n' "$reason" | sed 's/^/  /'
 fi
 echo "The session continues, but rules, skills and the doqs validators are missing."
+echo "Write every reply and every file in B2 English anyway: short sentences, common words."
 echo "Once you have a network again, run:"
 echo "  bash setup-tooling.sh"
 exit 0

@@ -4,7 +4,7 @@ Incidents worth not repeating, one file per incident, per the doqs convention
 `docs/mistakes/YYYY-MM-DD_topic.md`. **Read these before starting work** — four of the six
 are the same class of error: using bash syntax in PowerShell.
 
-Template: [`doqs/templates/mistake-entry.md`](../../doqs/templates/mistake-entry.md).
+Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mistake-log/SKILL.md).
 
 | Date | Entry |
 | ---- | ----- |

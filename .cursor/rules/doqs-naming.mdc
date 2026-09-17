@@ -1,0 +1,9 @@
+---
+description: Apply DOQS naming rules and run checks after module path, okh.toml, or BOM changes.
+globs:
+  - "**/okh.toml"
+  - "**/bom/*.csv"
+  - "**/modules/**"
+---
+
+After you change module paths, `okh.toml`, or BOM files, read `.agents/skills/doqs-naming/SKILL.md` and run `python doqs/scripts/validate_all.py` from the machine repository root.

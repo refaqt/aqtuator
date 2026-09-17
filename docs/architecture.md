@@ -68,6 +68,6 @@ history and the `dev-nucleo` / `dev-gui` branches.
 
 | Generation | Outcome |
 | --- | --- |
-| Arduino Opta | Analog output could not exceed ~20 Hz — [dev-log 2025-11-14](dev-log/2025-11-14_opta-analog-bandwidth-limit.md) |
-| NUCLEO-G474RE + CAN | CAN torque commands too slow and awkward — [dev-log 2025-12-10](dev-log/2025-12-10_nucleo-odrive-can-connection.md) |
+| Arduino Opta | Analog output could not exceed ~20 Hz — [log 2025-11-14](log/2025-11-14_opta-analog-bandwidth-limit.md) |
+| NUCLEO-G474RE + CAN | CAN torque commands too slow and awkward — [log 2025-12-10](log/2025-12-10_nucleo-odrive-can-connection.md) |
 | **Controllino MICRO + PWM→GPIO1** | Current — [decision record](decisions/2026-03-25_replace-can-torque-with-pwm-to-gpio1-analog-mapping.md) |

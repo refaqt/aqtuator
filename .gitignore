@@ -46,11 +46,16 @@ __pycache__/
 # ---------------------------------------------------------------------------
 # doqs generated outputs
 # ---------------------------------------------------------------------------
-**/bom/bom_output.md
 /bom/bom.csv
 **/cad/params.csv
 **/simulation/results/**/exports/
 /graph/usage-graph.json.tmp
+
+# The reverse-usage graph answers "if I change this module, who is affected?".
+# This repository has no modules yet, so `doqs generate` writes a single node with
+# empty lists. Committing that is noise. Track it once `modules/` has entries, and
+# gate it with `resolve_graph.py --check`.
+/graph/usage-graph.json
 
 # ---------------------------------------------------------------------------
 # Arduino / PlatformIO build artifacts
@@ -100,3 +105,9 @@ docs/log.docx
 
 # Claude Code machine-local permissions
 .claude/settings.local.json
+
+# FreeCAD MCP server registration. doqs/scripts/install_root_tools.py writes
+# this file once per clone, and it stays local: the server runs uvx freecad-mcp,
+# which needs a desktop FreeCAD. See
+# docs/decisions/2026-09-16_cloud-session-submodule-hook.md.
+.mcp.json
