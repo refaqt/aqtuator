@@ -5,8 +5,9 @@ measurement and control; mechanical design of the actuator is the next phase. Fi
 sizing is in
 [`simulation/cases/short-stroke-actuator-concepts`](../simulation/cases/short-stroke-actuator-concepts/).
 
-**FreeCAD v1.1**, built-in Assembly workbench. Read
-[`doqs/docs/agent-cad.md`](../doqs/docs/agent-cad.md) before letting an agent touch a model,
+**FreeCAD v1.1**, built-in Assembly workbench. To let an agent work in your open FreeCAD window,
+set the connection up once: [`docs/onboarding.md`](../docs/onboarding.md#freecad-for-agents-optional).
+Read [`doqs/docs/agent-cad.md`](../doqs/docs/agent-cad.md) before letting an agent touch a model,
 [`doqs/docs/decisions/2026-06-24_freecad-master-sketches-body.md`](../doqs/docs/decisions/2026-06-24_freecad-master-sketches-body.md)
 before starting top-down design, and
 [`.agents/skills/freecad/SKILL.md`](../.agents/skills/freecad/SKILL.md) when something misbehaves.
