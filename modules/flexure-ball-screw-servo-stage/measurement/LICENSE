@@ -1,0 +1,12 @@
+Files in this directory are documentation and media (text, images, drawings),
+licensed under Creative Commons Attribution-ShareAlike 4.0 International
+(CC BY-SA 4.0).
+
+This stub overrides the CERN-OHL-S stub in `modules/LICENSE`, which covers
+hardware design files. Measurement records keep their own licence at any
+module depth.
+
+Full text: [`/LICENSES/CC-BY-SA-4.0.txt`](../../../LICENSES/CC-BY-SA-4.0.txt)
+
+See the repository root [`LICENSE`](../../../LICENSE) for the full licensing
+overview, and [`TRADEMARKS.md`](../../../TRADEMARKS.md) for reserved marks.

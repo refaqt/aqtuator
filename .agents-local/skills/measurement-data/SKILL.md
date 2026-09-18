@@ -8,7 +8,7 @@ description: Answer questions about the AQTUATOR measurement archive - which tes
 1 659 files, 1.88 GB, on the `3 - Projects` Google Drive shared drive. **None of it is in git.**
 
 The whole point of the manifest is that you can answer most questions **without downloading
-anything**. Read [`measurement/data-index.csv`](../../../measurement/data-index.csv) first; only fetch
+anything**. Read [`modules/flexure-ball-screw-servo-stage/measurement/data-index.csv`](../../../modules/flexure-ball-screw-servo-stage/measurement/data-index.csv) first; only fetch
 an actual file if the question genuinely needs the samples.
 
 ## The manifest
@@ -34,7 +34,7 @@ rows are analysis outputs with generic names and little metadata.
 
 ```python
 import csv
-rows = list(csv.DictReader(open("measurement/data-index.csv", encoding="utf-8")))
+rows = list(csv.DictReader(open("modules/flexure-ball-screw-servo-stage/measurement/data-index.csv", encoding="utf-8")))
 
 # Which tap tests ran on aluminium above 20 000 rpm?
 [r for r in rows if r["material"] == "aluminium" and r["spindle_rpm"] and int(r["spindle_rpm"]) > 20000]
@@ -72,7 +72,7 @@ python -m measurement_tools.verify_index            # full re-hash
 
 1. Record to the shared drive under `Machine FRF and stability/<Campaign>/<run>/`, following the
    existing run-folder convention `YYYY-MM-DD_NNN[_variant]`.
-2. Write `measurement/cases/<slug>/README.md` — protocol, channel map, configuration.
-3. Rebuild the manifest (see [`software/measurement-tools/README.md`](../../../software/measurement-tools/README.md)).
+2. Write `modules/flexure-ball-screw-servo-stage/measurement/cases/<slug>/README.md` — protocol, channel map, configuration.
+3. Rebuild the manifest (see [`modules/flexure-ball-screw-servo-stage/software/measurement-tools/README.md`](../../../modules/flexure-ball-screw-servo-stage/software/measurement-tools/README.md)).
 4. If a new filename convention appears, extend the patterns in `build_index.py` rather than letting
    fields silently go blank.

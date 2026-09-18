@@ -1,7 +1,7 @@
 # pwm-rc-filter
 
 Numerical trade-off between PWM resolution and RC low-pass corner frequency for the torque-command
-path: `firmware/torque-excitation` emits PWM, an RC network smooths it, and the result drives ODrive
+path: `modules/flexure-ball-screw-servo-stage/firmware/torque-excitation` emits PWM, an RC network smooths it, and the result drives ODrive
 `GPIO1` as an analog torque setpoint.
 
 Higher PWM resolution costs carrier frequency, which raises ripple; a lower RC corner suppresses

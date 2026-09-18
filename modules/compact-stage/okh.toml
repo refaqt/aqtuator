@@ -1,0 +1,9 @@
+okhv = "OKH-LOSHv1.0"
+name = "Compact Stage"
+repo = "https://github.com/refaqt/aqtuator/tree/main/modules/compact-stage"
+version = "0.1.0"
+# Hardware licence (this manifest describes the hardware module).
+# Firmware/software is GPL-3.0; docs/media is CC BY-SA 4.0. See the root README.md / LICENSE.
+license = "CERN-OHL-S-2.0"
+licensor = "Niels Bosmans"
+function = "Compact linear stage. Requirements and architecture are not written yet, so this manifest only reserves the module."

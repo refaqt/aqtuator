@@ -1,15 +1,23 @@
 # AQTUATOR
 
-Active chatter suppression for a Mekanika Pro milling machine.
+A product line of linear stages.
 
-Chatter — self-excited vibration between tool and workpiece — sets the maximum depth of cut a machine
-can take. This project characterises where that limit sits on a real machine, and develops an
-actuator to raise it.
+Each stage family is a module of this repository. A Mekanika Pro milling machine is the test bench
+the stages are measured on.
 
-The work so far has been measurement: frequency response functions at the tool and spindle, and
-cutting stability limits, across three drive configurations (stepper, servo with rotary encoder
-feedback, servo with linear encoder feedback). Those measurements are what an actuator design can be
-held against.
+Folder names say what a stage is, not what it is called on a price list. A commercial name belongs
+in a family's `catalog.toml` when there is one.
+
+| Family | What |
+| --- | --- |
+| [`modules/flexure-ball-screw-servo-stage/`](modules/flexure-ball-screw-servo-stage/) | Linear stage with active chatter suppression: flexure guidance, ball screw, servo drive |
+| [`modules/compact-stage/`](modules/compact-stage/) | Compact linear stage. Name reserved, nothing designed yet |
+
+The flexure ball-screw servo stage is the work that started this project. Chatter — self-excited
+vibration between tool and workpiece — sets the maximum depth of cut a machine can take. The work so far has been measurement:
+frequency response functions at the tool and spindle, and cutting stability limits, across three
+drive configurations (stepper, servo with rotary encoder feedback, servo with linear encoder
+feedback). Those measurements are what an actuator design can be held against.
 
 ## Layout
 
@@ -18,13 +26,15 @@ This repository follows [doqs](https://github.com/refaqt/doqs), included as a su
 
 | Folder | What |
 | --- | --- |
+| [`modules/`](modules/) | The stage families, each a module of its own |
 | [`cad/`](cad/) | FreeCAD models |
 | [`architecture/`](architecture/) | SysML requirements and block definitions |
 | [`simulation/`](simulation/) | Design-time models — structural dynamics, PWM/RC trade-off |
-| [`measurement/`](measurement/) | Test campaigns and the manifest indexing 1.88 GB of data on Google Drive |
-| [`firmware/`](firmware/) | Controllino MICRO (RP2040) targets |
-| [`software/`](software/) | Host-side Python — identification stack, measurement tooling |
 | [`docs/`](docs/) | Activity log, decisions, mistakes, patterns |
+
+The measurement campaigns, the firmware and the host software sit inside the family they belong to,
+at [`modules/flexure-ball-screw-servo-stage/`](modules/flexure-ball-screw-servo-stage/). They move with that family if it ever becomes its own
+repository.
 
 Start with [`docs/architecture.md`](docs/architecture.md) for the technical overview, or
 [`docs/log/`](docs/log/) for the chronological story — 71 entries from June 2025 onward.
@@ -32,9 +42,9 @@ Start with [`docs/architecture.md`](docs/architecture.md) for the technical over
 ## Clone
 
 ```bash
-git clone --recurse-submodules https://github.com/nielsbosmans87/aqtuator.git
+git clone --recurse-submodules https://github.com/refaqt/aqtuator.git
 cd aqtuator
-pip install -e software/identification -e software/measurement-tools
+pip install -e modules/flexure-ball-screw-servo-stage/software/identification -e modules/flexure-ball-screw-servo-stage/software/measurement-tools
 ```
 
 If you already cloned without submodules, or `doqs/` / `.agents/` is empty: `bash setup-tooling.sh`
@@ -44,10 +54,13 @@ from the repo root (agents, any OS). Humans on Windows may double-click `setup-t
 ## Measurement data
 
 Raw data is **not in this repository**. 1 659 files and 1.88 GB live on the `3 - Projects` Google
-Drive shared drive; [`measurement/data-index.csv`](measurement/data-index.csv) describes every one of
-them with a checksum and parsed metadata, so the archive can be queried without downloading it.
+Drive shared drive;
+[`modules/flexure-ball-screw-servo-stage/measurement/data-index.csv`](modules/flexure-ball-screw-servo-stage/measurement/data-index.csv)
+describes every one of them with a checksum and parsed metadata, so the archive can be queried
+without downloading it.
 
-See [`measurement/README.md`](measurement/README.md) for access and the reasoning.
+See [`modules/flexure-ball-screw-servo-stage/measurement/README.md`](modules/flexure-ball-screw-servo-stage/measurement/README.md) for access and
+the reasoning.
 
 ## Agents
 
@@ -67,10 +80,13 @@ This repository uses different licences for different kinds of content:
 
 - **Hardware** (`cad/`, `architecture/`, `manufacturing/`, `bom/`, `builds/`, `modules/`) —
   [CERN-OHL-S v2.0](LICENSES/CERN-OHL-S-2.0.txt)
-- **Firmware & software** (`firmware/`, `software/`, `simulation/`) —
-  [GPL-3.0](LICENSES/GPL-3.0.txt)
-- **Media & documentation** (`docs/`, `measurement/`) —
+- **Firmware & software** (`simulation/`, and the `firmware/` and `software/` folders inside a
+  module) — [GPL-3.0](LICENSES/GPL-3.0.txt)
+- **Media & documentation** (`docs/`, and the `measurement/` folder inside a module) —
   [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt)
+
+A module carries its own `LICENSE` stub wherever its content type differs from the CERN-OHL-S that
+covers `modules/`.
 
 The REFAQT name and logo, and the AQTUATOR name and logo, are trademarks and
 are not covered by the above — see [TRADEMARKS.md](TRADEMARKS.md).
