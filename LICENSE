@@ -16,15 +16,19 @@ Full text: [`LICENSES/CERN-OHL-S-2.0.txt`](LICENSES/CERN-OHL-S-2.0.txt)
 
 ## Firmware & software — GPL-3.0
 
-Applies to: [`firmware/`](firmware/), [`software/`](software/),
-[`simulation/`](simulation/), and any other source code in this repository.
+Applies to: [`simulation/`](simulation/), the `firmware/` and `software/`
+folders inside a module — for example
+[`modules/flexure-ball-screw-servo-stage/firmware/`](modules/flexure-ball-screw-servo-stage/firmware/) and
+[`modules/flexure-ball-screw-servo-stage/software/`](modules/flexure-ball-screw-servo-stage/software/) — and any other
+source code in this repository.
 
 Full text: [`LICENSES/GPL-3.0.txt`](LICENSES/GPL-3.0.txt)
 
 ## Media & documentation — CC BY-SA 4.0
 
-Applies to: [`docs/`](docs/), [`measurement/`](measurement/), this file, and
-other project-authored text, images, drawings, and documentation.
+Applies to: [`docs/`](docs/), the `measurement/` folder inside a module — for
+example [`modules/flexure-ball-screw-servo-stage/measurement/`](modules/flexure-ball-screw-servo-stage/measurement/) — this
+file, and other project-authored text, images, drawings, and documentation.
 
 Excluded: third-party material that is not authored by this project, such as
 the vendor datasheets in `docs/documentation/` and the reference paper in
@@ -36,7 +40,9 @@ Full text: [`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt)
 ## Directory-level pointers
 
 Each top-level directory listed above also contains its own short `LICENSE`
-file restating which of the above applies to that directory.
+file restating which of the above applies to that directory. A directory inside
+a module carries the same kind of stub whenever its content type differs from
+the hardware licence that covers [`modules/`](modules/).
 
 ## Trademarks
 

@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Measurement data - NEVER commit.
-# Lives in Google Drive, indexed by measurement/data-index.csv.
-# See measurement/README.md for how to fetch it.
+# Lives in Google Drive, indexed by modules/flexure-ball-screw-servo-stage/measurement/data-index.csv.
+# See modules/flexure-ball-screw-servo-stage/measurement/README.md for how to fetch it.
 # ---------------------------------------------------------------------------
 data/
 *.WDH

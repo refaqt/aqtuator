@@ -25,3 +25,4 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-08-27 | [Unify agent kit via refaqt-agents](2026-08-27_unify-agent-kit-via-refaqt-agents.md) |
 | 2026-09-16 | [A session hook checks out the tooling submodules](2026-09-16_cloud-session-submodule-hook.md) |
 | 2026-09-17 | [One doqs command, and the hook stays committed](2026-09-17_adopt-the-doqs-command.md) |
+| 2026-09-18 | [Stage families are modules of AQTUATOR, not separate repositories](2026-09-18_stage-families-as-modules.md) |

@@ -4,7 +4,10 @@ Agent-only. Humans: see `README.md` and `docs/onboarding.md`.
 
 ## What this repository is
 
-AQTUATOR investigates active chatter suppression on a Mekanika Pro milling machine. Layout follows
+AQTUATOR is a product line of linear stages. Each stage family is a module under `modules/`:
+`flexure-ball-screw-servo-stage` (active chatter suppression, the family that started the project)
+and `compact-stage` (compact
+stage, name reserved only). A Mekanika Pro milling machine is the test bench. Layout follows
 [doqs](https://github.com/refaqt/doqs) — read `doqs/docs/architecture.md` before adding folders. If
 `doqs/` is empty: `bash setup-tooling.sh` from the repo root (agents, any OS). Humans on Windows may
 double-click `setup-tooling.bat`.
@@ -13,10 +16,11 @@ double-click `setup-tooling.bat`.
 
 | You are adding | It goes in |
 | --- | --- |
-| Code that runs on the Controllino | `firmware/<target>/` |
-| Code that runs on a PC | `software/<project>/src/<package>/` |
+| Code that runs on the Controllino | `modules/flexure-ball-screw-servo-stage/firmware/<target>/` |
+| Code that runs on a PC | `modules/<family>/software/<project>/src/<package>/` |
 | A model that predicts behaviour | `simulation/cases/<slug>/` |
-| A physical test campaign | `measurement/cases/<slug>/` |
+| A new stage family | `modules/<family>/` — read `doqs/docs/variants.md` first |
+| A physical test campaign | `modules/<family>/measurement/cases/<slug>/` |
 | A day's work write-up | `docs/log/YYYY-MM-DD_topic.md` |
 | Why a choice was made | `docs/decisions/YYYY-MM-DD_topic.md` |
 | Something that went wrong | `docs/mistakes/YYYY-MM-DD_topic.md` |
@@ -38,10 +42,11 @@ double-click `setup-tooling.bat`.
 
 ## Stack and execution
 
-- **Mixed stack:** Python (`software/*`), Arduino/C++ (`firmware/*`), Octave (`simulation/cases/*`),
-  FreeCAD (`cad/`).
-- Run commands from the repository root. `software/*` are installable packages
-  (`pip install -e software/identification`); import them rather than manipulating `sys.path`.
+- **Mixed stack:** Python (`modules/*/software/*`), Arduino/C++ (`modules/*/firmware/*`),
+  Octave (`simulation/cases/*`), FreeCAD (`cad/`).
+- Run commands from the repository root. The `software/*` folders are installable packages
+  (`pip install -e modules/flexure-ball-screw-servo-stage/software/identification`); import them rather than manipulating
+  `sys.path`.
 - **Windows / PowerShell:** no `&&`, no bash heredocs, no `cd /d`. See `docs/mistakes/`.
 - Before new solutions for serial / ODrive / RP2040 PWM/ADC / transfer estimation, read
   `.agents-local/skills/patterns/SKILL.md` and use the `maintain-patterns` skill.

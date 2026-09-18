@@ -5,7 +5,7 @@
 # Git LFS - CAD binaries only.
 #
 # Measurement data does NOT go through LFS; it lives in Google Drive (see
-# measurement/README.md). Keeping LFS scoped to CAD keeps usage inside the
+# modules/flexure-ball-screw-servo-stage/measurement/README.md). Keeping LFS scoped to CAD keeps usage inside the
 # GitHub free tier (1 GB storage / 1 GB bandwidth per month).
 # ---------------------------------------------------------------------------
 *.FCStd  filter=lfs diff=lfs merge=lfs -text
@@ -41,5 +41,5 @@
 # ---------------------------------------------------------------------------
 # Generated - collapse in PR diffs
 # ---------------------------------------------------------------------------
-measurement/data-index.csv linguist-generated=true
+modules/flexure-ball-screw-servo-stage/measurement/data-index.csv linguist-generated=true
 graph/usage-graph.json     linguist-generated=true

@@ -1,7 +1,7 @@
 # Simulation
 
 Design-time analysis: models that predict behaviour before or instead of measuring it. The measured
-counterpart lives in [`measurement/`](../measurement/) — see
+counterpart lives in [`modules/flexure-ball-screw-servo-stage/measurement/`](../modules/flexure-ball-screw-servo-stage/measurement/) — see
 [`doqs/docs/architecture.md`](../doqs/docs/architecture.md) for the distinction.
 
 | Case | Tool | Question |

@@ -5,7 +5,7 @@ Getting from a fresh clone to a running identification measurement.
 ## 1. Clone
 
 ```bash
-git clone --recurse-submodules https://github.com/nielsbosmans87/aqtuator.git
+git clone --recurse-submodules https://github.com/refaqt/aqtuator.git
 cd aqtuator
 ```
 
@@ -16,8 +16,8 @@ layout conventions and validators are unavailable.
 ## 2. Python
 
 ```bash
-pip install -e software/identification
-pip install -e software/measurement-tools
+pip install -e modules/flexure-ball-screw-servo-stage/software/identification
+pip install -e modules/flexure-ball-screw-servo-stage/software/measurement-tools
 ```
 
 Python 3.10+. Installs `pyserial`, `odrive`, `numpy`, `scipy`, `pandas`, `matplotlib`, `PyQt5`.
@@ -32,13 +32,15 @@ Check what you have:
 python -m measurement_tools.verify_index --quick
 ```
 
-See [`measurement/README.md`](../measurement/README.md).
+See [`modules/flexure-ball-screw-servo-stage/measurement/README.md`](../modules/flexure-ball-screw-servo-stage/measurement/README.md).
 
 ## 4. Hardware
 
 For **Workflow A** (torque playback and acquisition):
 
-- Controllino MICRO flashed with [`firmware/torque-excitation`](../firmware/torque-excitation/)
+- Controllino MICRO flashed with
+  [`firmware/torque-excitation`](../modules/flexure-ball-screw-servo-stage/firmware/torque-excitation/)
+  in the stage module
 - ODrive S1 with `GPIO1` mapped to torque input — the Python side configures and verifies this
 - Wiring: Controllino `D0` PWM output → RC filter → ODrive `GPIO1`, with a common ground
 
@@ -49,16 +51,18 @@ For **Workflow B** (servo identification sweep): ODrive on USB only. No Controll
 
 ## 5. Flash the firmware
 
-Arduino IDE with the `controllino_rp2` board support installed. Open the target's `.ino` and upload:
+Arduino IDE with the `controllino_rp2` board support installed. The targets live in
+[`modules/flexure-ball-screw-servo-stage/firmware/`](../modules/flexure-ball-screw-servo-stage/firmware/).
+Open the target's `.ino` and upload:
 
 | Target | Purpose |
 | --- | --- |
-| [`firmware/torque-excitation`](../firmware/torque-excitation/) | Torque playback + multi-channel acquisition |
-| [`firmware/spindle-controller`](../firmware/spindle-controller/) | Standalone 8 kHz spindle controller (`GPIO1`/`D1` must be HIGH to run) |
-| [`firmware/pwm-output-test`](../firmware/pwm-output-test/) | Validate the RC output stage without an ODrive |
+| [`firmware/torque-excitation`](../modules/flexure-ball-screw-servo-stage/firmware/torque-excitation/) | Torque playback + multi-channel acquisition |
+| [`firmware/spindle-controller`](../modules/flexure-ball-screw-servo-stage/firmware/spindle-controller/) | Standalone 8 kHz spindle controller (`GPIO1`/`D1` must be HIGH to run) |
+| [`firmware/pwm-output-test`](../modules/flexure-ball-screw-servo-stage/firmware/pwm-output-test/) | Validate the RC output stage without an ODrive |
 
 Serial is `115200`. The serial port is currently hardcoded — update `CONTROLLINO_PORT` in
-`software/identification/src/aqtuator_id/sequential_run.py`.
+`modules/flexure-ball-screw-servo-stage/software/identification/src/aqtuator_id/sequential_run.py`.
 
 ## 6. Run
 

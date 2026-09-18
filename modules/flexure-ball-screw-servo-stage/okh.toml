@@ -1,0 +1,9 @@
+okhv = "OKH-LOSHv1.0"
+name = "Flexure Ball-Screw Servo Stage"
+repo = "https://github.com/refaqt/aqtuator/tree/main/modules/flexure-ball-screw-servo-stage"
+version = "0.1.0"
+# Hardware licence (this manifest describes the hardware module).
+# Firmware/software is GPL-3.0; docs/media is CC BY-SA 4.0. See the root README.md / LICENSE.
+license = "CERN-OHL-S-2.0"
+licensor = "Niels Bosmans"
+function = "Linear stage that suppresses chatter actively: it measures the vibration between tool and workpiece and drives a short-stroke actuator against it, so the machine can take a deeper cut. The stage is guided by flexures, driven by a ball screw and a servo motor. This module holds the measurement campaigns on the test machine, the excitation firmware, and the host software that identifies the machine response."

@@ -22,13 +22,13 @@ jobs:
 
       - name: Install host software
         run: |
-          pip install -e software/measurement-tools
+          pip install -e modules/flexure-ball-screw-servo-stage/software/measurement-tools
 
       - name: Manifest is well-formed
         run: |
           python - <<'PY'
           import csv
-          rows = list(csv.DictReader(open("measurement/data-index.csv", encoding="utf-8")))
+          rows = list(csv.DictReader(open("modules/flexure-ball-screw-servo-stage/measurement/data-index.csv", encoding="utf-8")))
           assert rows, "manifest is empty"
           required = ["campaign", "relpath", "tier", "bytes", "sha256", "recorded_utc", "notes"]
           missing = [c for c in required if c not in rows[0]]
@@ -41,7 +41,7 @@ jobs:
       - name: No measurement data committed
         run: |
           if git ls-files | grep -iE '\.(wdh|wdq)$'; then
-            echo "::error::measurement data must not be committed - see measurement/README.md"
+            echo "::error::measurement data must not be committed - see modules/flexure-ball-screw-servo-stage/measurement/README.md"
             exit 1
           fi
           echo "ok: no WinDaq captures tracked"
