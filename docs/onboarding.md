@@ -121,7 +121,8 @@ geometry. It can never save the file — that stays your keystroke. The reasonin
 so you copy it in by hand. Close FreeCAD first, then in PowerShell:
 
 ```powershell
-git clone https://github.com/neka-nat/freecad-mcp.git
+git clone --branch v0.1.24 https://github.com/neka-nat/freecad-mcp.git
+New-Item -ItemType Directory -Force "$env:APPDATA\FreeCAD\v1-1\Mod"
 Copy-Item -Recurse freecad-mcp\addon\FreeCADMCP "$env:APPDATA\FreeCAD\v1-1\Mod\"
 ```
 
@@ -129,14 +130,25 @@ FreeCAD 1.1 for Windows keeps a folder per version. `%APPDATA%\FreeCAD\v1-1\Mod`
 one; `%APPDATA%\FreeCAD\Mod`, which several guides still name, is not read at all. Check the
 version folder against your own FreeCAD if you run something other than 1.1.
 
+The middle line matters. FreeCAD creates that folder only when you install your first add-on
+through its own Addon Manager. On a computer that never did, the copy makes a folder named `Mod`
+out of the add-on itself, the files land one level too high, and FreeCAD never loads them.
+
 **Install the bridge program once.**
 
 ```powershell
-uv tool install --system-certs freecad-mcp
+winget install astral-sh.uv --source winget
+uv tool install --system-certs freecad-mcp==0.1.24
 ```
+
+Skip the first line if you already have `uv`. Keep `--source winget`: without it the command
+stops, because the Microsoft Store source fails on this network.
 
 `--system-certs` is needed on this network. Without it every download fails with a certificate
 error — see [`docs/mistakes/2026-09-17_uv-download-certificate.md`](mistakes/2026-09-17_uv-download-certificate.md).
+
+Use the same version number in both steps. The add-on and the bridge program talk to each other
+over their own private protocol, so they have to match.
 
 **Switch it on when you want help.** Start FreeCAD, open the workbench list in the top toolbar and
 choose **MCP Addon**. In the **FreeCAD MCP** toolbar that appears, click **Start RPC Server**. Do
