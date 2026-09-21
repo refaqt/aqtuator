@@ -12,6 +12,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          lfs: true
+
+      # actions/checkout fetches LFS files for this repository only, never for a
+      # submodule. The parts library stores its supplier CAD through LFS, and the
+      # checks compare each of those files against a recorded checksum, so
+      # without this step they compare placeholders and fail.
+      - name: Fetch the parts library's CAD files
+        run: git -C modules/stoq lfs pull
 
       - uses: actions/setup-python@v5
         with:

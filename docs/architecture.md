@@ -37,6 +37,7 @@ The 200 N reluctance figure is pole-face Maxwell stress, not packaged continuous
 | --- | --- |
 | [`modules/flexure-ball-screw-servo-stage/`](../modules/flexure-ball-screw-servo-stage/) | The chatter-suppression stage family: its measurement campaigns, firmware and host software |
 | [`modules/compact-stage/`](../modules/compact-stage/) | The compact stage family. Name reserved, nothing designed yet |
+| [`modules/stoq/`](../modules/stoq/) | Submodule: the shared parts library. Bought parts are read from here, never copied into this repository |
 | [`cad/`](../cad/) | FreeCAD models of the machine and the actuator |
 | [`architecture/`](../architecture/) | SysML requirements and block definitions |
 | [`simulation/`](../simulation/) | Design-time models: structural dynamics, PWM/RC trade-off |

@@ -96,3 +96,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-17 | [An agent can now work in the open FreeCAD window](2026-09-17_freecad-mcp-bridge.md) | engineering, software, cad |  |
 | 2026-09-18 | [AQTUATOR becomes a product line of linear stages](2026-09-18_stage-families-as-modules.md) | engineering |  |
 | 2026-09-18 | [The FreeCAD bridge on the second computer](2026-09-18_freecad-bridge-second-computer.md) | engineering, software, cad |  |
+| 2026-09-21 | [Bought parts move out of this repository](2026-09-21_bought-parts-move-to-the-parts-library.md) | engineering |  |

@@ -1,0 +1,124 @@
+{
+  "document": "linear_guide_x",
+  "errors": [],
+  "objects": {
+    "Assembly": {
+      "area": 48042.7,
+      "bbox": [
+        -17.0,
+        0.0,
+        0.0,
+        17.0,
+        418.0,
+        24.0
+      ],
+      "closed": true,
+      "com": [
+        0.0377074,
+        201.349,
+        10.8018
+      ],
+      "counts": {
+        "edges": 2009,
+        "faces": 770,
+        "shells": 11,
+        "solids": 3,
+        "verts": 1310
+      },
+      "label": "linear-guide-x",
+      "type": "Assembly::AssemblyObject",
+      "valid": true,
+      "volume": 141022.0
+    },
+    "guide_block": {
+      "area": 9939.18,
+      "bbox": [
+        -17.0,
+        103.51,
+        4.3,
+        17.0,
+        173.072,
+        24.0
+      ],
+      "closed": true,
+      "com": [
+        0.0827837,
+        140.554,
+        15.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "guide-block",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
+    },
+    "guide_block001": {
+      "area": 9939.18,
+      "bbox": [
+        -17.0,
+        206.81,
+        4.3,
+        17.0,
+        276.372,
+        24.0
+      ],
+      "closed": true,
+      "com": [
+        0.0827837,
+        243.854,
+        15.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "guide-block001",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
+    },
+    "guide_rail_x": {
+      "area": 28164.4,
+      "bbox": [
+        -7.5,
+        0.0,
+        0.0,
+        7.5,
+        418.0,
+        15.0
+      ],
+      "closed": true,
+      "com": [
+        8.53358e-08,
+        209.0,
+        7.20691
+      ],
+      "counts": {
+        "edges": 453,
+        "faces": 178,
+        "shells": 1,
+        "solids": 1,
+        "verts": 302
+      },
+      "label": "guide-rail-x",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 76787.8
+    }
+  },
+  "params": {},
+  "saved": true,
+  "schema": 1,
+  "sources": {
+    "linear-guide-x.FCStd": "a54f816b61f31bb599c4bbfb41c49942c5d381bfe7a8e8d39f0674e99d305f56"
+  }
+}
