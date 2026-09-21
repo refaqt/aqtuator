@@ -45,6 +45,11 @@ working.
       tooling cannot measure them: it asks every shape for its centre of mass,
       and a shape made of several pieces does not have one in FreeCAD 1.1. This
       needs a fix in the shared toolkit, not here.
+- [ ] Raise a second point against the shared toolkit. A machine is supposed to
+      skip the parts library's own checks, and the model check does. The parts
+      check does not: it walks into `modules/stoq/` and compares every supplier
+      checksum again. The build server now fetches those files so the checks
+      pass, but the work should not be repeated here at all.
 - [ ] Consider making the X linear guide a role module, so that changing rail
       brand is one line of text and one re-placement.
 - [ ] Confirm the MK24 mover mass with MAXWELL. Their catalogue prints 1.9 kg
@@ -71,6 +76,11 @@ documents that were failing. The cause is a defect in
 object. In FreeCAD 1.1.1 a `Part.Compound`, which is what an `App::Part` and a
 PartDesign `Body` expose, raises `AttributeError` for that property, so the
 fingerprint is written with zero objects and five recorded errors.
+
+The build server needs two extra lines to see the real CAD files. It fetches
+large files for this repository only, never for a submodule, so the parts
+library arrived as placeholders and every checksum comparison failed. The
+workflow now fetches them for the library as well.
 
 One further failure appears only on a local machine and not on the build
 server: a leftover `software/` folder at the repository root, holding nothing
