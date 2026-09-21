@@ -6,3 +6,7 @@
 	path = .agents
 	url = https://github.com/refaqt/refaqt-agents.git
 	branch = main
+[submodule "modules/stoq"]
+	path = modules/stoq
+	url = https://github.com/refaqt/stoq.git
+	branch = main
