@@ -26,6 +26,11 @@ working.
   library document is no longer called after the job it happens to do in this
   machine. `guide-rail-x` became `HGR15R418H`.
 - Updated the CAD guide, the module list and the architecture overview.
+- Fixed the geometry check in the shared toolkit and updated to it, then
+  measured all five models for the first time. The check asked every shape for
+  its centre of mass using a property that FreeCAD does not offer on a shape
+  made of several pieces, which is what almost every object in a real model is.
+  See [refaqt/doqs#32](https://github.com/refaqt/doqs/pull/32).
 
 ## Decisions Made
 
@@ -41,10 +46,6 @@ working.
 
 ## Next Steps
 
-- [ ] The geometry check still fails on all five remaining models. The shared
-      tooling cannot measure them: it asks every shape for its centre of mass,
-      and a shape made of several pieces does not have one in FreeCAD 1.1. This
-      needs a fix in the shared toolkit, not here.
 - [ ] Raise a second point against the shared toolkit. A machine is supposed to
       skip the parts library's own checks, and the model check does. The parts
       check does not: it walks into `modules/stoq/` and compares every supplier
@@ -68,14 +69,10 @@ Geometry was compared against the version before the move, for all 17 solids in
 the two assemblies. Volume, centre of mass and bounding box are identical to
 five decimal places. Nothing moved.
 
-`bash doqs.sh check`: the CAD geometry gate still fails on the five models that
-have no fingerprint. That failure came in with the previous commit on this
-branch and is not caused by this change — this change removes five of the ten
-documents that were failing. The cause is a defect in
-`doqs/scripts/cad_fingerprint.py`, which reads `Shape.CenterOfMass` on every
-object. In FreeCAD 1.1.1 a `Part.Compound`, which is what an `App::Part` and a
-PartDesign `Body` expose, raises `AttributeError` for that property, so the
-fingerprint is written with zero objects and five recorded errors.
+`bash doqs.sh check`: every gate passes on the build server. The geometry gate
+was failing on ten documents before this work and now measures the five that
+remain, with 48 objects between them and no errors. That needed a fix in the
+shared toolkit, which this branch also updates to.
 
 The build server needs two extra lines to see the real CAD files. It fetches
 large files for this repository only, never for a submodule, so the parts

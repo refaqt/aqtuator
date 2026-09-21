@@ -1,0 +1,376 @@
+{
+  "document": "x_axis",
+  "errors": [],
+  "objects": {
+    "Assembly": {
+      "area": 382113.0,
+      "bbox": [
+        -220.0,
+        -97.5,
+        0.0,
+        220.0,
+        97.5,
+        37.0
+      ],
+      "closed": true,
+      "com": [
+        -1.46294,
+        -1.03315,
+        10.2147
+      ],
+      "counts": {
+        "edges": 4868,
+        "faces": 1868,
+        "shells": 26,
+        "solids": 10,
+        "verts": 3169
+      },
+      "label": "x-axis",
+      "type": "Assembly::AssemblyObject",
+      "valid": true,
+      "volume": 1367820.0
+    },
+    "guide_block": {
+      "area": 9939.18,
+      "bbox": [
+        -17.0,
+        103.51,
+        4.3,
+        17.0,
+        173.072,
+        24.0
+      ],
+      "closed": true,
+      "com": [
+        0.0827837,
+        140.554,
+        15.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "guide-block",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
+    },
+    "guide_block001": {
+      "area": 9939.18,
+      "bbox": [
+        -17.0,
+        206.81,
+        4.3,
+        17.0,
+        276.372,
+        24.0
+      ],
+      "closed": true,
+      "com": [
+        0.0827837,
+        243.854,
+        15.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "guide-block001",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
+    },
+    "guide_block002": {
+      "area": 9939.18,
+      "bbox": [
+        -17.0,
+        103.51,
+        4.3,
+        17.0,
+        173.072,
+        24.0
+      ],
+      "closed": true,
+      "com": [
+        0.0827837,
+        140.554,
+        15.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "guide-block002",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
+    },
+    "guide_block003": {
+      "area": 9939.18,
+      "bbox": [
+        -17.0,
+        206.81,
+        4.3,
+        17.0,
+        276.372,
+        24.0
+      ],
+      "closed": true,
+      "com": [
+        0.0827837,
+        243.854,
+        15.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "guide-block003",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
+    },
+    "guide_rail_x": {
+      "area": 28164.4,
+      "bbox": [
+        -7.5,
+        0.0,
+        0.0,
+        7.5,
+        418.0,
+        15.0
+      ],
+      "closed": true,
+      "com": [
+        8.53358e-08,
+        209.0,
+        7.20691
+      ],
+      "counts": {
+        "edges": 453,
+        "faces": 178,
+        "shells": 1,
+        "solids": 1,
+        "verts": 302
+      },
+      "label": "guide-rail-x",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 76787.8
+    },
+    "guide_rail_x001": {
+      "area": 28164.4,
+      "bbox": [
+        -7.5,
+        0.0,
+        0.0,
+        7.5,
+        418.0,
+        15.0
+      ],
+      "closed": true,
+      "com": [
+        8.53358e-08,
+        209.0,
+        7.20691
+      ],
+      "counts": {
+        "edges": 453,
+        "faces": 178,
+        "shells": 1,
+        "solids": 1,
+        "verts": 302
+      },
+      "label": "guide-rail-x001",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 76787.8
+    },
+    "linear_guide_x": {
+      "area": 48042.7,
+      "bbox": [
+        -209.0,
+        49.0,
+        10.0,
+        209.0,
+        83.0,
+        34.0
+      ],
+      "closed": true,
+      "com": [
+        -7.6505,
+        65.9623,
+        20.8018
+      ],
+      "counts": {
+        "edges": 2009,
+        "faces": 770,
+        "shells": 11,
+        "solids": 3,
+        "verts": 1310
+      },
+      "label": "linear-guide-x",
+      "type": "Assembly::AssemblyLink",
+      "valid": true,
+      "volume": 141022.0
+    },
+    "linear_guide_x001": {
+      "area": 48042.7,
+      "bbox": [
+        -209.0,
+        -83.0,
+        10.0,
+        209.0,
+        -49.0,
+        34.0
+      ],
+      "closed": true,
+      "com": [
+        -7.6505,
+        -66.0377,
+        20.8018
+      ],
+      "counts": {
+        "edges": 2009,
+        "faces": 770,
+        "shells": 11,
+        "solids": 3,
+        "verts": 1310
+      },
+      "label": "linear-guide-x",
+      "type": "Assembly::AssemblyLink",
+      "valid": true,
+      "volume": 141022.0
+    },
+    "linear_motor_magnet_001": {
+      "area": 35938.6,
+      "bbox": [
+        -0.57,
+        -43.0,
+        10.0,
+        182.13,
+        43.0,
+        19.6
+      ],
+      "closed": true,
+      "com": [
+        90.7842,
+        0.00190162,
+        14.4145
+      ],
+      "counts": {
+        "edges": 144,
+        "faces": 52,
+        "shells": 1,
+        "solids": 1,
+        "verts": 96
+      },
+      "label": "linear-motor-magnet-001",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 123436.0
+    },
+    "linear_motor_magnet_2": {
+      "area": 35938.6,
+      "bbox": [
+        -180.57,
+        -43.0,
+        10.0,
+        2.13,
+        43.0,
+        19.6
+      ],
+      "closed": true,
+      "com": [
+        -89.2158,
+        0.00190162,
+        14.4145
+      ],
+      "counts": {
+        "edges": 144,
+        "faces": 52,
+        "shells": 1,
+        "solids": 1,
+        "verts": 96
+      },
+      "label": "linear-motor-magnet-2",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 123436.0
+    },
+    "linear_scale_mount": {
+      "area": 21287.0,
+      "bbox": [
+        -125.0,
+        -58.5,
+        10.0,
+        125.0,
+        -43.5,
+        37.0
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        -47.2773,
+        19.876
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 13,
+        "shells": 1,
+        "solids": 1,
+        "verts": 22
+      },
+      "label": "linear-scale-mount",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 29011.4
+    },
+    "x_axis_base": {
+      "area": 192863.0,
+      "bbox": [
+        -220.0,
+        -97.5,
+        0.0,
+        220.0,
+        97.5,
+        10.0
+      ],
+      "closed": true,
+      "com": [
+        -0.0455114,
+        -0.0387803,
+        4.90154
+      ],
+      "counts": {
+        "edges": 529,
+        "faces": 211,
+        "shells": 1,
+        "solids": 1,
+        "verts": 335
+      },
+      "label": "x-axis-base",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 809889.0
+    }
+  },
+  "params": {},
+  "saved": true,
+  "schema": 1,
+  "sources": {
+    "x-axis.FCStd": "7b542459865dab6b58c427a02ecf1d635d0fd0a4f976e93c93f5ce0c480db7b0"
+  }
+}

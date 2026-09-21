@@ -1,0 +1,180 @@
+{
+  "document": "linear_scale_mount",
+  "errors": [],
+  "objects": {
+    "Body": {
+      "area": 21287.0,
+      "bbox": [
+        0.0,
+        -125.0,
+        0.0,
+        15.0,
+        125.0,
+        27.0
+      ],
+      "closed": true,
+      "com": [
+        3.77733,
+        0.0,
+        9.87601
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 13,
+        "shells": 1,
+        "solids": 1,
+        "verts": 22
+      },
+      "label": "Body",
+      "type": "PartDesign::Body",
+      "valid": true,
+      "volume": 29011.4
+    },
+    "Hole": {
+      "area": 21244.6,
+      "bbox": [
+        0.0,
+        -125.0,
+        0.0,
+        15.0,
+        125.0,
+        27.0
+      ],
+      "closed": true,
+      "com": [
+        3.80166,
+        0.0,
+        9.82127
+      ],
+      "counts": {
+        "edges": 21,
+        "faces": 9,
+        "shells": 1,
+        "solids": 1,
+        "verts": 14
+      },
+      "label": "Hole",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 29202.3
+    },
+    "Pad": {
+      "area": 21234.0,
+      "bbox": [
+        0.0,
+        -125.0,
+        0.0,
+        15.0,
+        125.0,
+        27.0
+      ],
+      "closed": true,
+      "com": [
+        3.80769,
+        0.0,
+        9.80769
+      ],
+      "counts": {
+        "edges": 18,
+        "faces": 8,
+        "shells": 1,
+        "solids": 1,
+        "verts": 12
+      },
+      "label": "Pad",
+      "type": "PartDesign::Pad",
+      "valid": true,
+      "volume": 29250.0
+    },
+    "Part": {
+      "area": 21287.0,
+      "bbox": [
+        0.0,
+        -125.0,
+        0.0,
+        15.0,
+        125.0,
+        27.0
+      ],
+      "closed": true,
+      "com": [
+        3.77733,
+        0.0,
+        9.87601
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 13,
+        "shells": 1,
+        "solids": 1,
+        "verts": 22
+      },
+      "label": "linear-scale-mount",
+      "type": "App::Part",
+      "valid": true,
+      "volume": 29011.4
+    },
+    "Sketch": {
+      "area": 0.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        15.0,
+        0.0,
+        27.0
+      ],
+      "closed": true,
+      "com": [
+        4.07143,
+        0.0,
+        10.0714
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 6
+      },
+      "label": "Sketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch001": {
+      "area": 0.0,
+      "bbox": [
+        5.25,
+        -2.25,
+        0.0,
+        9.75,
+        2.25,
+        0.0
+      ],
+      "closed": true,
+      "com": [
+        7.5,
+        0.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 1,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 1
+      },
+      "label": "Sketch001",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    }
+  },
+  "params": {},
+  "saved": true,
+  "schema": 1,
+  "sources": {
+    "linear-scale-mount.FCStd": "bd8392afa13ddf7b8b4bc87eb9ae51a96190dc512ee4de0e96f0e68c59daec2d"
+  }
+}
