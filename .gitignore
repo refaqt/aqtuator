@@ -106,6 +106,11 @@ docs/log.docx
 # Claude Code machine-local permissions
 .claude/settings.local.json
 
+# Claude Code worktrees. `git worktree add .claude/worktrees/<name>` is where
+# Claude Code puts a side checkout of another branch. Each one is a working
+# copy, not repository content.
+.claude/worktrees/
+
 # FreeCAD MCP server registration. doqs/scripts/install_root_tools.py writes
 # this file once per clone, and it stays local: the server runs uvx freecad-mcp,
 # which needs a desktop FreeCAD. See
