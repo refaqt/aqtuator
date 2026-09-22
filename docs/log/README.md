@@ -98,3 +98,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-18 | [The FreeCAD bridge on the second computer](2026-09-18_freecad-bridge-second-computer.md) | engineering, software, cad |  |
 | 2026-09-21 | [Bought parts move out of this repository](2026-09-21_bought-parts-move-to-the-parts-library.md) | engineering |  |
 | 2026-09-22 | [How long the seal strip lasts, and how to say it](2026-09-22_strip-seal-fatigue.md) | engineering, simulation |  |
+| 2026-09-22 | [The first step always runs now](2026-09-22_the-first-step-always-runs.md) | engineering, software |  |
