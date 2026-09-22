@@ -2,10 +2,16 @@
 	path = doqs
 	url = https://github.com/refaqt/doqs.git
 	branch = main
+	# Tracks main, so every session moves it ahead of the recorded pin.
+	# "ignore = all" keeps that expected move out of "git status", so nobody
+	# puts the folder back on the pin to get a clean tree. See AGENTS.md.
+	ignore = all
 [submodule ".agents"]
 	path = .agents
 	url = https://github.com/refaqt/refaqt-agents.git
 	branch = main
+	# Same as doqs above: tracks main, and the expected move stays hidden.
+	ignore = all
 [submodule "modules/stoq"]
 	path = modules/stoq
 	url = https://github.com/refaqt/stoq.git

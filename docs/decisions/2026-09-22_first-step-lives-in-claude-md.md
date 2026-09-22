@@ -63,8 +63,9 @@ the FreeCAD guard is off. Only the one-repository layout switches it back on.
 Work on doqs or refaqt-agents from a one-repository session still works. A submodule work
 tree is a full repository, but `HEAD` is detached after `git submodule update`, so branch
 first: `git -C doqs switch -c <branch> origin/main`, commit, then
-`git -C doqs push -u origin <branch>`. Leave this repository's gitlinks uncommitted unless
-you mean to set a new pin.
+`git -C doqs push -u origin <branch>`. This repository's own record of the tooling version
+stays where it is, and `git status` no longer mentions it. See
+[Hide the tooling gitlinks from `git status`](2026-09-22_hide-the-tooling-gitlinks.md).
 
 The other layout stays possible. Keep several sources, and put `bash aqtuator/setup-tooling.sh`
 in the cloud environment's own setup script. The cost is two checkouts of doqs and of the kit

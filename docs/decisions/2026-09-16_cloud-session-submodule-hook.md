@@ -129,3 +129,8 @@ that attaches several repositories opens the folder above them and never
 registers the hook. It then prints nothing, and an empty `.agents/` looks exactly
 like a working one. See
 [The first step lives in CLAUDE.md](2026-09-22_first-step-lives-in-claude-md.md).
+
+This record also said to leave the two moved gitlinks uncommitted. Agents read that
+as permission to put the folders back to the recorded commit, which threw away the
+update. `git status` no longer mentions either folder. See
+[Hide the tooling gitlinks from `git status`](2026-09-22_hide-the-tooling-gitlinks.md).

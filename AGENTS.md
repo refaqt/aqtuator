@@ -24,9 +24,28 @@ that works in every session. See
 [the decision record](docs/decisions/2026-09-22_first-step-lives-in-claude-md.md).
 
 Run the setup file anyway when you need the launchers it installs, or when the hook said it could not
-reach the network. Both leave the submodule gitlinks modified on purpose — leave them uncommitted
-unless you mean to set a new pin. Installing the kit in a new repo:
-[`.agents/INSTALL.md`](.agents/INSTALL.md).
+reach the network. Installing the kit in a new repo: [`.agents/INSTALL.md`](.agents/INSTALL.md).
+
+### The two tooling folders are meant to sit ahead of the recorded pin
+
+`.agents/` and `doqs/` follow the `main` branch of their own repositories, so the setup file and the
+hook both move them past the commit this repository records. That is the point of the update. It is
+not a change you made, and it is not something to clean up.
+
+`git status` stays quiet about it, because [`.gitmodules`](.gitmodules) sets `ignore = all` on both.
+**Never put either folder back on the recorded commit to make the working tree look clean.** That
+throws away the update the session just fetched, and the next session fetches it again.
+
+Setting a new pin on purpose is still possible, and it takes one extra word:
+
+```bash
+git add --force .agents doqs
+```
+
+Use it only when you mean to freeze the tooling at today's version, for example when you also commit
+a file that the current template wrote. `git submodule status` always shows the true state, with a
+leading `+` when a folder sits ahead of its pin. See
+[the decision record](docs/decisions/2026-09-22_hide-the-tooling-gitlinks.md).
 
 ## Shared kit
 
