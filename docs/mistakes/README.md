@@ -1,8 +1,8 @@
 # Mistakes
 
 Incidents worth not repeating, one file per incident, per the doqs convention
-`docs/mistakes/YYYY-MM-DD_topic.md`. **Read these before starting work** — the ten entries
-hold only three classes of error, and each one has repeated.
+`docs/mistakes/YYYY-MM-DD_topic.md`. **Read these before starting work** — the eleven entries
+hold three repeated classes of error.
 
 - **Four** are bash syntax used in PowerShell.
 - **Three** are a number or a conclusion reported before the source was opened: the
@@ -10,10 +10,11 @@ hold only three classes of error, and each one has repeated.
   the force density entry was written too narrowly to catch the next one. It now reads:
   open a supplier data sheet or a standard for the actual material, in the actual size,
   before quoting any number that describes how a real part behaves.
-- **One** is a rule that was followed and broken at the same time. Agents undid the
-  tooling update in nearly every session to get a clean working tree, while quoting the
-  rule that told them to leave it. A rule that says "do not commit this" does not say
-  "do not undo this".
+- **Two** are the shared tooling going wrong without a word. Once the start-up check never
+  ran and printed nothing, so the folders stayed empty. Once agents undid the tooling
+  update at the end of almost every task, while quoting the rule that told them to leave
+  it. Both left work running against rules that were missing or out of date. Check the
+  tooling folders yourself at the start; never put them back to an older version.
 
 Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mistake-log/SKILL.md).
 
@@ -28,4 +29,5 @@ Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mista
 | 2026-09-02 | [Treated pole-face Maxwell stress as packaged force density](2026-09-02_maxwell-stress-as-device-force-density.md) |
 | 2026-09-17 | [Downloads fail on this network, and the error hides it](2026-09-17_uv-download-certificate.md) |
 | 2026-09-22 | [Gave a fatigue life from textbook constants, and got it wrong twice](2026-09-22_fatigue-estimate-without-a-datasheet.md) |
+| 2026-09-22 | [The start-up hook never ran, and said nothing](2026-09-22_the-hook-never-ran-and-said-nothing.md) |
 | 2026-09-22 | [Put back the tooling update to get a clean working tree](2026-09-22_reverted-the-tooling-update.md) |

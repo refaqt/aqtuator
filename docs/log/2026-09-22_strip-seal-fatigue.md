@@ -2,6 +2,10 @@
 
 **Role(s):** engineering, simulation
 
+> Superseded later the same day. The roller sizes below are too large, because the model
+> treated the roller diameter as the bending radius. See
+> [The seal strip rollers were never the problem](2026-09-22_strip-seal-bending-radius.md).
+
 ## Goal
 
 Decide the material and the roller size for the spring steel strip that seals the linear

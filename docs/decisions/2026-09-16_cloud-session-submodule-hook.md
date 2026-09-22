@@ -120,3 +120,17 @@ in one file: `hooks` for the session start, `permissions.deny` for the guard.
 - `bash setup-tooling.sh` stays the fuller step: it also runs
   `install_root_tools.py`, which the hook does not, so the hook never writes into
   the working tree beyond the two submodules.
+
+## Update — 2026-09-22
+
+This record assumed the hook always starts. It does not. Claude Code reads
+`.claude/settings.json` from the session's own project folder only, so a session
+that attaches several repositories opens the folder above them and never
+registers the hook. It then prints nothing, and an empty `.agents/` looks exactly
+like a working one. See
+[The first step lives in CLAUDE.md](2026-09-22_first-step-lives-in-claude-md.md).
+
+This record also said to leave the two moved gitlinks uncommitted. Agents read that
+as permission to put the folders back to the recorded commit, which threw away the
+update. `git status` no longer mentions either folder. See
+[Hide the tooling gitlinks from `git status`](2026-09-22_hide-the-tooling-gitlinks.md).
