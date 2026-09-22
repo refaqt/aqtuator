@@ -1,9 +1,9 @@
-# 2026-09-22 — Gave a fatigue life from textbook constants, and got it wrong twice
+# 2026-09-22 — Gave a fatigue life from textbook constants, and got it wrong three times
 
 ## What happened
 
 The question was how long a 0.1 mm spring steel sealing strip lasts when the carriage
-rollers bend it. Two answers were given before the right one.
+rollers bend it. Three answers were given before the right one.
 
 **First answer, too pessimistic by about forty times.** It used generic steel constants
 from a textbook: a tensile strength of 1800 MPa, a modulus of 195 GPa and an assumed
@@ -19,6 +19,19 @@ direction only. The carriage has four rollers and bends the strip up, down, down
 the stress swing is twice as large as assumed. The recommendation moved from 17 mm rollers
 to 24 mm once the real layout was counted.
 
+**Third answer, too pessimistic again, and this time it nearly changed the machine.** It
+treated the roller diameter as the bending radius, so a 14 mm roller was reported at
+1312 MPa and 19,000 crossings, and the design was told to fit 60 mm rollers above the
+carriage. A strip only takes the roller radius if something presses it there. In the
+carriage as drawn the strip turns about twelve degrees at each roller, and forcing a 0.1 mm
+strip onto a 14 mm roller at that angle would need about 1,050 N of pull on a 40 mm strip.
+The strip bridges the roller, the real stress is 57 to 362 MPa, and the 14 mm rollers were
+never a problem.
+
+The same answer also read the fatigue limit at 0.25 mm and applied it to a 0.1 mm strip,
+although the maker publishes two thicknesses and their own trend gives about 1019 MPa at
+0.1 mm instead of 775 MPa.
+
 ## Why it went wrong
 
 The first error is the same one as
@@ -30,6 +43,13 @@ fire for a fatigue question. The rule was too narrow.
 The second error came from answering before the arrangement was known. The load case was
 assumed rather than asked about. A sentence asking how the strip is routed would have
 caught it, and the user had to catch it instead.
+
+The third error is the second one again, one level deeper. The arrangement was asked about
+and the roller count was right, but the geometry that makes the strip take a radius was
+still assumed. A drawing of the carriage settled it in one look, and the user had to supply
+that drawing too. The lesson is not about rollers. It is that a formula input which names a
+part, such as "the roller diameter", quietly smuggles in a physical claim about what that
+part does to the material.
 
 ## Prevention rule
 
@@ -47,6 +67,15 @@ grade table is not a figure for the size being bought.
 **Before calculating a load, state the load case back and ask if it is right.** How many
 times per pass, in which direction, and with what mean value. Getting the material right
 does not help if the loading is wrong.
+
+**A contact radius is not a bending radius.** Before putting any radius into a stress
+formula, say what makes the part take that radius, and check that the force to do so
+exists. A roller, a pin, a former or a fold line sets a lower limit on the radius. It sets
+the actual radius only when something presses the material onto it hard enough. Work out
+that force and compare it with the force the design really has.
+
+**Ask for the drawing before the third answer, not after.** Two wrong answers in a row on
+the same question mean the geometry is not understood. Ask to see it.
 
 ## Related
 
