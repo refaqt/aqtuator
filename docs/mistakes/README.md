@@ -24,3 +24,4 @@ Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mista
 | 2026-09-02 | [Treated pole-face Maxwell stress as packaged force density](2026-09-02_maxwell-stress-as-device-force-density.md) |
 | 2026-09-17 | [Downloads fail on this network, and the error hides it](2026-09-17_uv-download-certificate.md) |
 | 2026-09-22 | [Gave a fatigue life from textbook constants, and got it wrong twice](2026-09-22_fatigue-estimate-without-a-datasheet.md) |
+| 2026-09-22 | [The start-up hook never ran, and said nothing](2026-09-22_the-hook-never-ran-and-said-nothing.md) |
