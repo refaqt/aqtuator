@@ -6,6 +6,7 @@ counterpart lives in [`modules/flexure-ball-screw-servo-stage/measurement/`](../
 
 | Case | Tool | Question |
 | --- | --- | --- |
+| [`encoder-stray-field`](cases/encoder-stray-field/) | Python (`magpylib`) | How strong is the linear motor field at the encoder read head, and how much does a steel plate lower it? (Magnet sizes are a worst-case guess; measure before ordering.) |
 | [`housing-vibrations`](cases/housing-vibrations/) | Octave (`control`) | How do stage, housing, base and reaction masses respond to feed-driven acceleration? |
 | [`mass-system`](cases/mass-system/) | Octave (`symbolic`) | Symbolic equivalent mass of the coupled two-mass system |
 | [`pwm-rc-filter`](cases/pwm-rc-filter/) | Python | What PWM resolution and RC corner give the best torque-command ENOB? |
@@ -21,6 +22,7 @@ Results summaries belong in `results/<case-slug>/summary.md`. Heavy outputs
 octave simulation/cases/housing-vibrations/housing_vibrations.m
 python simulation/cases/pwm-rc-filter/pwm_filter_optimizer.py
 python3 simulation/cases/short-stroke-actuator-concepts/size_concepts.py
+python3 simulation/cases/encoder-stray-field/stray_field.py
 ```
 
 Octave cases need `pkg load control` and `pkg load symbolic`.
