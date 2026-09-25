@@ -11,7 +11,24 @@ Also answer whether LinuxCNC can be the motion controller and the EtherCAT maste
 
 ## Work Done
 
-### Short answer
+### Short answer, after the requirements changed
+
+Later the same day the requirements changed. The peak force of 512 N is needed at
+10 000 mm/min, and the drive position loop only needs 4 kHz. The stages use an optical linear
+encoder. This changes the answer:
+
+- **A drive fed from 230 VAC is needed.** The peak force at full speed needs about 160 V on the
+  drive's internal DC bus. A 230 VAC drive has about 325 V.
+- **The best fit is now the Elmo Gold Oboe 6/230.** The Servotronix CDHD2-003 is the second
+  choice, and now meets the 4 kHz loop requirement.
+- **A small DIN rail PC can run LinuxCNC at 4 kHz,** if it has an Intel network chip and a tuned
+  real-time kernel. Measured worst case delays on such PCs are 22 to 70 µs.
+- **The user interface can run in a browser on a laptop.** A small server on the LinuxCNC PC
+  connects the browser to LinuxCNC.
+
+The sections below the first survey give the details. The first survey is kept as it was.
+
+### First short answer
 
 - **48 VDC is too low for full force at 10 000 mm/min.** At that speed a 48 V drive gives about
   120 to 170 N, depending on coil temperature. The continuous force is 181 N. Pick a drive
@@ -156,36 +173,112 @@ Other masters for the fast loop:
 | Beckhoff TwinCAT 3 with the Simulink target | 50 µs | Paid licences, no public price | Simulink, C++ or PLC code on Windows |
 | Speedgoat with Simulink Real-Time | Below 1 ms, no firm number | Paid, no public price | Simulink |
 
+### Update: peak force at full speed needs a 230 VAC drive
+
+**What "mains voltage" means.** The drive plugs into 230 VAC, single phase. Inside, it
+rectifies this to a DC bus of about 325 V (230 V × 1.414). The drive then switches that bus
+into three phase outputs for the motor coils. The output voltage can go from 0 V up to about the
+input voltage, so up to about 220 to 230 Vrms line to line. The output frequency follows the
+motor speed. The drive only uses as much voltage as the motor needs.
+
+The MK21 allows up to 600 VDC, so 325 V is safe for the motor. A bus of 170 V or more already
+gives the full peak force at 10 000 mm/min, even with a hot coil. At 325 V there is a large
+margin.
+
+| Drive | Supply | Current, continuous / peak | 1 Vpp input | Position loop | Result |
+| --- | --- | --- | --- | --- | --- |
+| Elmo Gold Oboe 6/230 | 1 or 3 phase, 50 to 270 VAC | 4.2 / 8.5 Arms | Yes | 10 kHz | **First choice** |
+| Elmo Gold Solo Whistle 6/200, Gold Twitter 6/200 | 12 to 195 VDC | 4.2 / 8.4 Arms | Yes | 10 kHz | Good, but needs a 170 to 195 VDC supply |
+| Servotronix CDHD2-003 | 1 phase, 120 to 240 VAC | 3 / 9 Arms for 2 s | Yes, up to ×16 384 | 4 kHz | **Second choice.** Has a 1000 point error table in the drive. Bode tool not confirmed |
+| Beckhoff AX8620 supply + AX8108 with the 1 Vpp option | 1 phase 230 VAC gives only 5 to 7 A DC | 8 A / 20 A | Yes | Not checked | Premium choice, with up to 128 samples per EtherCAT cycle |
+| ACS UDMpm-005 | 1 phase, 85 to 265 VAC | 3.6 / 7.1 Arms | Yes, up to ×4096 | 20 kHz | Needs an ACS master, so it does not fit with LinuxCNC |
+| HIWIN D2T-LM | 1 or 3 phase, 200 to 240 VAC | 2.5 / 7.5 Arms | **No**, only digital A/B signals | 16 kHz | Rejected |
+
+The 3 A models of Elmo and the 1.5 A model of Servotronix have too little peak current.
+
+### Update: can a small DIN rail PC run LinuxCNC with low jitter?
+
+Yes, if it has the right network chip and is tuned. Jitter here means how late the real-time
+thread starts in the worst case. Published worst case values on small industrial PCs with a
+real-time kernel:
+
+| CPU | Worst case delay | Source |
+| --- | ---: | --- |
+| Intel Atom x6425RE | 29 to 31 µs | OSADL test farm |
+| Intel Atom x6425E | 66 µs | OSADL test farm |
+| Intel Core i3-8145UE | 31 µs | OSADL test farm |
+| Intel Core i3-12100E | 22 µs | OSADL test farm |
+| Intel N100 | 34 µs after BIOS tuning, 43 µs without | LinuxCNC forum |
+
+At 4 kHz the cycle is 250 µs. The EtherCAT drives keep their own clocks in step with each other
+to well below 1 µs (distributed clocks). The PC jitter does not reach the motor directly. It only
+has to stay small enough that each frame reaches the drives before their next sync moment. A
+worst case of 30 µs uses about 12 % of a 250 µs cycle. That should work, but it is our estimate
+and must be measured on the chosen PC.
+
+What the PC needs:
+
+- An Intel network chip that the EtherCAT master drives directly: i210 or i211, or i225 or i226.
+  Use one port only for EtherCAT, and a second port for the laptop.
+- A real-time Linux kernel (PREEMPT_RT). LinuxCNC ships one.
+- BIOS settings: turn off sleep states (C-states), turbo, hyperthreading and power saving. On
+  newer Intel Atom CPUs, turn on Intel TCC mode.
+- Examples with an Intel i210 or i226 port: OnLogic Karbon 410 (Atom x6000, i210) and NEXCOM
+  NISE110 (N97, i226). The chip of the NEXCOM was seen only on a shop listing. No prices were
+  checked.
+
+### Update: a user interface in a browser on a laptop
+
+Yes, this is possible. LinuxCNC has two Python interfaces: one to send commands and read the
+machine state, and one to read and set any signal inside LinuxCNC (HAL pins). Both only work on
+the LinuxCNC PC itself. So the setup has two parts:
+
+1. **A small server on the LinuxCNC PC.** It uses the Python interfaces and offers them over the
+   network as a web page and a live data stream (WebSocket).
+2. **A browser on the laptop.** It connects over a normal Ethernet cable to the PC's second
+   network port. Nothing needs to be installed on the laptop.
+
+To watch fast signals, a LinuxCNC block (`sampler`) stores the chosen signals every cycle in a
+buffer. The server reads the buffer and sends the samples to the browser in batches. At 4 kHz
+this is a small data stream.
+
+Two open source projects already do part of this and could be a starting point:
+[linuxcnc-ctrl](https://github.com/b0czek/linuxcnc-ctrl) (web streams of signals and a scope)
+and [linuxcnc-grpc](https://github.com/dougcalobrisi/linuxcnc-grpc). Older web interfaces such as
+Rockhopper have not been updated since 2018.
+
+The emergency stop must stay a hardware circuit. The browser can show its state, but it must
+never be the only way to stop the machine.
+
 ## Decisions Made
 
 No purchase decision yet. The survey points to this setup:
 
-1. A drive that accepts 80 to 95 VDC, with an 80 V supply. The first choice is the Elmo Gold
-   Solo Whistle 5/100 or a Gold Twitter of the same rating.
-2. A PC with an Intel network card and a real-time Linux kernel, as the EtherCAT master.
-3. LinuxCNC for the machine functions and the path, and a fast real-time thread or a separate
-   program for our own control laws.
+1. One Elmo Gold Oboe 6/230 per axis, fed from 230 VAC. The second choice is the Servotronix
+   CDHD2-003.
+2. A separate DIN rail PC with LinuxCNC, a real-time kernel and an Intel i210 or i226 network
+   chip, as the EtherCAT master. The drive position loop needs at least 4 kHz.
+3. A web interface: a small server on the LinuxCNC PC, used from a browser on a laptop. This is
+   future work.
+
+The stages use an optical linear encoder, so the motor field limit from the
+[encoder stray field study](2026-09-23_encoder-stray-field-shield.md) does not apply to them.
 
 ## Open Questions
 
-- Is 181 N at 10 000 mm/min enough, or is the peak force of 512 N needed at that speed? The
-  peak force needs a mains voltage drive such as the Beckhoff AX8000.
-- Does current Elmo Gold firmware accept a 100 µs or 125 µs EtherCAT cycle? The 2013 guide
-  says 250 µs.
+- Does current Elmo Gold firmware accept a 250 µs EtherCAT cycle with LinuxCNC? Newer Elmo
+  pages say cycles down to 100 µs.
 - Does the Elmo drive have current feedforward and dedicated limit switch inputs?
-- What do an Elmo Gold drive, an ACS UDMnt with its master, and a Servotronix CDHD2-LV cost?
-- Magnet period: the data sheet gives 2τ = 30 mm. The
-  [encoder stray field study](2026-09-23_encoder-stray-field-shield.md) assumes that the
-  magnets alternate every 30 mm, which is a 60 mm period. One of the two must be checked on a
-  real magnet track. It hardly changes the voltage result above.
+- Does Servotronix ServoStudio 2 show a closed loop Bode plot?
+- What do an Elmo Gold Oboe 6/230 and a Servotronix CDHD2-003 cost?
+- Does the DIN rail PC keep the EtherCAT frame on time at 4 kHz? This needs a measurement.
 
 ## Next Steps
 
-1. Decide which force is needed at 10 000 mm/min.
-2. Ask Elmo, ACS and Servotronix for quotes, the shortest EtherCAT cycle, and the open
-   questions above.
-3. Test LinuxCNC with the EtherCAT driver on the target PC. Measure the timing jitter at 4 and
-   8 kHz before any drive is bought.
+1. Ask Elmo and Servotronix for quotes and for answers to the open questions.
+2. Buy one DIN rail PC. Install LinuxCNC and the EtherCAT driver. Run the latency test and watch
+   the EtherCAT timing error at 4 kHz for several hours before any drive is bought.
+3. Later: build the web interface, starting from one of the existing open source projects.
 
 <details>
 <summary>Calculation and sources</summary>
@@ -213,6 +306,24 @@ Drive sources:
 - Beckhoff AX8000 oversampling: <https://www.beckhoff.com/en-us/company/press/the-high-performance-ethercat-servo-drives-now-boast-multiple-samples-per-communication-cycle-on-top-of-rapid-control-cycles-2020-09.html>
 - HIWIN D2 manual: <https://www.hiwin.it/images/download/documenti/azionamenti-serie-D2-manuale-assemblaggio.pdf>
 - HIWIN E1 brochure: <https://www.hiwin.com/wp-content/uploads/E1-Servo-Drive_brochureEN1.pdf>
+
+- Elmo Gold Oboe: <https://www.elmomc.com/product/gold-oboe/>
+- Elmo Gold Solo Whistle guide, v1.509: <https://www.imajteknik.com.tr/uploads/man-g-solwhiig-ec.pdf>
+- Elmo loop rates: <https://www.elmomc.com/capabilities/servo-technology/servo-tools/111-122-servo-control-topology/>
+- Beckhoff AX8620: <https://www.beckhoff.com/en-us/products/motion/servo-drives/ax8000-multi-axis-servo-system/ax8620.html>
+- ACS UDMpm: <https://acsmotioncontrol.com/products/udmpm>
+- HIWIN LMSSA catalogue, D2T-LM encoder: <https://hiwin.sg/wp-content/uploads/2020/08/LMSSA-Catalogue.pdf>
+
+PC and interface sources:
+
+- OSADL latency plots: <https://www.osadl.org/Latency-plot-of-system-in-rack-e-slot.qa-latencyplot-res3.0.html?latencies=Show&showno=10>
+- N100 on the LinuxCNC forum: <https://forum.linuxcnc.org/18-computer/51678-linuxcnc-2-9-2-live-on-the-intel-n100-cpu>
+- LinuxCNC latency test and tuning: <https://linuxcnc.org/docs/stable/html/install/latency-test.html>
+- Intel TCC mode: <https://ubuntu.com/real-time/docs/en/latest/tutorial/intel-tcc/tcc-mode/>
+- OnLogic Karbon 410: <https://static.onlogic.com/resources/spec-sheets/OnLogic-K410-Spec-Sheet-V1.pdf>
+- Beckhoff distributed clocks: <https://infosys.beckhoff.com/content/1033/ethercatsystem/2469118347.html>
+- LinuxCNC Python interface: <https://linuxcnc.org/docs/stable/html/config/python-interface.html>
+- LinuxCNC sampler: <https://linuxcnc.org/docs/stable/html/man/man9/sampler.9.html>
 
 Master sources:
 
