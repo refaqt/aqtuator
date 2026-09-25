@@ -102,3 +102,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-22 | [The first step always runs now](2026-09-22_the-first-step-always-runs.md) | engineering, software |  |
 | 2026-09-23 | [The motor field at the encoder, and a steel shield](2026-09-23_encoder-stray-field-shield.md) | engineering, simulation |  |
 | 2026-09-25 | [A measured seal strip, and a way to preload ours](2026-09-25_strip-seal-thickness-and-preload.md) | engineering, measurement, hardware |  |
+| 2026-09-25 | [The 0.25 mm seal strip: radius, pull, and 304 instead of 301](2026-09-25_strip-seal-radius-pull-and-304.md) | engineering, simulation |  |
