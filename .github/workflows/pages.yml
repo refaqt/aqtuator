@@ -52,6 +52,14 @@ jobs:
              simulation/cases/strip-seal-designer/strip_model.js _site/strip-seal/
           cp simulation/cases/cutting-force-rejection/index.html \
              simulation/cases/cutting-force-rejection/control_model.js _site/cutting-force/
+          # Add the commit to the model address. A browser that still holds the
+          # old model file in its cache then fetches the new one, instead of
+          # running the new page against the old model.
+          v="${GITHUB_SHA:0:12}"
+          sed -i "s#from \"./strip_model.js\"#from \"./strip_model.js?v=$v\"#" _site/strip-seal/index.html
+          sed -i "s#from \"./control_model.js\"#from \"./control_model.js?v=$v\"#" _site/cutting-force/index.html
+          grep -q "strip_model.js?v=$v" _site/strip-seal/index.html
+          grep -q "control_model.js?v=$v" _site/cutting-force/index.html
           cat > _site/index.html <<'HTML'
           <!doctype html>
           <meta charset="utf-8">

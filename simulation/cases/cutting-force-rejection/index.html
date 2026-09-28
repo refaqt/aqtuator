@@ -280,6 +280,7 @@ svg text { font-family: var(--mono); fill: var(--ink); }
           The mean force does no work in the steady state, because the stage does not move on average. This is the
           mechanical power at the stage only. The motor heat comes from the current, which follows the force
           (mean force included), and it is not in this chart.</p>
+      </section>
 
       <section class="panel note" aria-labelledby="h-model">
         <h2 id="h-model">How this is calculated</h2>
@@ -634,7 +635,18 @@ let timer = 0;
 function schedule() { clearTimeout(timer); timer = setTimeout(update, 120); }
 
 const um = 1e6;
+// Any error must reach the status line. Otherwise the page keeps saying
+// "Calculating…" and shows nothing, with no hint of what went wrong.
 function update() {
+  try { run(); } catch (e) {
+    console.error(e);
+    const status = $("status");
+    status.textContent = `The calculation stopped: ${e.message}. Reload the page. If that does not help, clear the browser cache.`;
+    status.className = "status bad";
+  }
+}
+
+function run() {
   const p = params();
   const status = $("status");
   if (!valid(p)) { status.textContent = "Check the inputs: all must be positive."; status.className = "status bad"; return; }

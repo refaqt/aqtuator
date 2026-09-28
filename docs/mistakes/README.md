@@ -1,7 +1,7 @@
 # Mistakes
 
 Incidents worth not repeating, one file per incident, per the doqs convention
-`docs/mistakes/YYYY-MM-DD_topic.md`. **Read these before starting work** — the eleven entries
+`docs/mistakes/YYYY-MM-DD_topic.md`. **Read these before starting work** — the twelve entries
 hold three repeated classes of error.
 
 - **Four** are bash syntax used in PowerShell.
@@ -31,3 +31,4 @@ Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mista
 | 2026-09-22 | [Gave a fatigue life from textbook constants, and got it wrong twice](2026-09-22_fatigue-estimate-without-a-datasheet.md) |
 | 2026-09-22 | [The start-up hook never ran, and said nothing](2026-09-22_the-hook-never-ran-and-said-nothing.md) |
 | 2026-09-22 | [Put back the tooling update to get a clean working tree](2026-09-22_reverted-the-tooling-update.md) |
+| 2026-09-28 | [The web page ran against an old, cached model file](2026-09-28_page-ran-against-a-cached-model.md) |
