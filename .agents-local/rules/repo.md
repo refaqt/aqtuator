@@ -52,6 +52,22 @@ double-click `setup-tooling.bat`.
   `.agents-local/skills/patterns/SKILL.md` and use the `maintain-patterns` skill.
 - If living docs are missing, create them from `.agents/bootstrap/docs/`.
 
+## GitHub Actions workflows
+
+- **Use actions that run on Node 24.** GitHub has deprecated Node 20 for actions, and every run
+  that still uses one shows a warning. Before you add or change a `uses:` line, find the newest
+  major tag (`git ls-remote --tags https://github.com/actions/<name>.git`) and check `runs.using`
+  in its `action.yml`. It must say `node24`, or `composite` with only Node 24 actions inside.
+  Read the breaking changes of each major version you skip.
+- In use now: `checkout@v7`, `setup-python@v7`, `setup-node@v7`, `configure-pages@v6`,
+  `upload-pages-artifact@v5`, `deploy-pages@v5`.
+- `setup-node@v5` and newer cache by default. Set `package-manager-cache: false` in a job that
+  can deploy or holds secrets.
+- After a workflow change, open the first run and read its annotations, not only its result. A
+  green run can still carry a deprecation warning.
+- `ubuntu-latest` moves to Ubuntu 26 from 2026-10-19. Our jobs only need Python and Node, so
+  keep `ubuntu-latest`. If a job breaks after that date, check the runner image change first.
+
 ## Measurement data
 
 **Never commit measurement data.** Use `.agents-local/skills/measurement-data/SKILL.md` for archive
