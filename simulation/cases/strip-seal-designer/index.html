@@ -231,7 +231,7 @@ td { font: 13px var(--mono); }
         <h2 id="h-curves">What the screw does <span>for this layout and strip length</span></h2>
         <div class="two">
           <div><p class="chart-title">Pull against screw travel</p><svg id="cPull" class="chart" viewBox="0 0 420 250"></svg></div>
-          <div><p class="chart-title">Arch height against pull: the gauge for fitting</p><svg id="cArch" class="chart" viewBox="0 0 420 250"></svg></div>
+          <div><p class="chart-title">Arch height above rollers 2 and 3 against pull: the gauge for fitting</p><svg id="cArch" class="chart" viewBox="0 0 420 250"></svg></div>
         </div>
         <div class="field" style="grid-template-columns: auto 110px auto; justify-content: start; margin-top: 12px">
           <label for="target">Target pull, N</label>
@@ -256,7 +256,9 @@ td { font: 13px var(--mono); }
         <p><b>Screw preload.</b> The strip is fitted with loose screws and lies over the rollers with no pull. A screw
           travel <i>u</i> must then be taken up by a flatter arch and by stretching the steel:
           <i>u</i> = extra(0) − extra(T) + L·T / (E·t). The arch is a soft spring, so at low pull most of the travel
-          goes into the arch. That is why the arch height is a good gauge for the pull.</p>
+          goes into the arch. That is why the arch height is a good gauge for the pull. The arch height is
+          measured from a straight edge on the tops of rollers 2 and 3 to the underside of the strip, at its
+          highest point. It is zero when the strip runs flat over the two rollers.</p>
         <p><b>Fatigue.</b> One crossing of the carriage over a point of the strip gives that point the whole stress
           profile above once. The history is cut into cycles by rainflow counting, the pull adds to the mean,
           Goodman corrects for the mean, and a Basquin line through 0.9 Rm at 10³ and the fatigue limit at 2·10⁶
@@ -413,12 +415,15 @@ function drawLayout(p, s) {
   }
   svg.append(el("path", { d, fill: "none", stroke: "var(--steel)", "stroke-width": Math.max(2, p.t * scale * ve), "stroke-linejoin": "round" }));
 
-  // Arch height dimension.
+  // Arch height: from the line over the tops of rollers 2 and 3 to the strip underside.
   const ax = s.archAt;
-  svg.append(el("line", { x1: X(ax), x2: X(ax), y1: Y(0), y2: Y(s.archTop), stroke: "var(--accent)", "stroke-width": 1.5,
+  const yRollTop = lift - p.t / 2, yUnder = s.archTop - p.t / 2;
+  svg.append(el("line", { x1: X(rollers[1] - R), x2: X(rollers[2] + R), y1: Y(yRollTop), y2: Y(yRollTop),
+    stroke: "var(--accent)", "stroke-dasharray": "3 3", "stroke-width": 1 }));
+  svg.append(el("line", { x1: X(ax), x2: X(ax), y1: Y(yRollTop), y2: Y(yUnder), stroke: "var(--accent)", "stroke-width": 1.5,
     "marker-start": "url(#tickA)", "marker-end": "url(#tickA)" }));
-  svg.append(el("text", { x: X(ax) + 6, y: (Y(0) + Y(s.archTop)) / 2 + 4, "font-size": 12, fill: "var(--accent)" },
-    `arch ${fmt(s.archTop, 2)} mm`));
+  svg.append(el("text", { x: X(ax) + 6, y: (Y(yRollTop) + Y(yUnder)) / 2 + 4, "font-size": 12, fill: "var(--accent)" },
+    `arch ${fmt(s.archHeight, 2)} mm`));
 
   // Force arrows on the rollers.
   const defs = el("defs");
@@ -499,9 +504,10 @@ function update() {
 function render(p, mat, s, st, T) {
   const N = T * p.width;
   tile("tPull", `${fmtN(N)} N`, `${fmt(T, 3)} N/mm · ${fmt(st.membrane, 1)} MPa`);
-  const hit = s.archTop + p.t / 2 >= p.clear;
-  tile("tArch", `${fmt(s.archTop, 2)} mm`,
-    `above the profile · ${fmt(s.archTop - M.layout(p).lift, 2)} mm above 2/3`, hit ? "bad" : null);
+  const room = p.clear - s.archTop - p.t / 2;
+  tile("tArch", `${fmt(s.archHeight, 2)} mm`,
+    `above the tops of rollers 2 and 3 · ${fmt(room, 2)} mm free under the carriage`,
+    room <= 0 ? "bad" : null);
   tile("tRadius", `${fmt(s.rMin, 1)} mm`, `near roller ${s.at}`);
   const ratio = st.peak / mat.Rp02;
   tile("tStress", `${fmt(st.peak, 0)} MPa`, `bending ${fmt(st.bendMax, 0)} + pull ${fmt(st.membrane, 1)} · ${(ratio * 100).toFixed(0)} % of Rp0.2`,
@@ -530,10 +536,10 @@ function render(p, mat, s, st, T) {
   const next = curve[cut.length];
   if (next) cut.push(next);
   lineChart($("cArch"), { W: 420, H: 250, xs: cut.map((c) => c.T * p.width), xMax: nMax,
-    series: [{ ys: cut.map((c) => c.archTop), color: "var(--accent)" }],
-    xLabel: "pull, N", yLabel: "arch height, mm", yMin: M.layout(p).lift,
-    hlines: [{ y: p.clear, label: "carriage underside", color: "var(--bad)" }],
-    marker: { x: N, y: s.archTop, label: `${fmt(s.archTop, 2)} mm` } });
+    series: [{ ys: cut.map((c) => c.archHeight), color: "var(--accent)" }],
+    xLabel: "pull, N", yLabel: "arch height, mm", yMin: 0,
+    hlines: [{ y: p.clear - M.layout(p).lift - p.t / 2, label: "carriage underside", color: "var(--bad)" }],
+    marker: { x: N, y: s.archHeight, label: `${fmt(s.archHeight, 2)} mm` } });
 
   // Target pull.
   const Tt = (parseFloat($("target").value) || 0) / p.width;
@@ -542,12 +548,12 @@ function render(p, mat, s, st, T) {
   for (let i = 1; i < curve.length; i++) {
     if (Tt <= curve[i].T) {
       const f = (Tt - curve[i - 1].T) / (curve[i].T - curve[i - 1].T);
-      archT = curve[i - 1].archTop + f * (curve[i].archTop - curve[i - 1].archTop);
+      archT = curve[i - 1].archHeight + f * (curve[i].archHeight - curve[i - 1].archHeight);
       break;
     }
   }
   const i1 = curve.findIndex((c) => c.T >= Tt);
-  const slope = i1 > 0 ? (curve[i1].archTop - curve[i1 - 1].archTop) / ((curve[i1].T - curve[i1 - 1].T) * p.width) : NaN;
+  const slope = i1 > 0 ? (curve[i1].archHeight - curve[i1 - 1].archHeight) / ((curve[i1].T - curve[i1 - 1].T) * p.width) : NaN;
   $("targetText").textContent = `needs ${fmt(ut, 2)} mm screw travel, arch ${fmt(archT, 2)} mm` +
     (Number.isFinite(slope) ? `, arch changes ${fmt(Math.abs(slope) * 10, 3)} mm per 10 N` : "");
 

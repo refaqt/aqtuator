@@ -54,8 +54,11 @@ check(Math.abs(coarse.sumFy) < 1e-4 * big,
 const curve = screwCurve(DEFAULTS);
 check(curve[0].u === 0 && curve.every((c, i) => i === 0 || c.u > curve[i - 1].u),
   "screw travel starts at zero and rises with the pull");
-check(curve.every((c, i) => i === 0 || c.archTop < curve[i - 1].archTop),
+check(curve.every((c, i) => i === 0 || c.archHeight < curve[i - 1].archHeight),
   "the arch between rollers 2 and 3 gets lower as the pull rises");
+check(curve.every((c) => c.archHeight > 0) && curve[curve.length - 1].archHeight < 0.1 * curve[0].archHeight,
+  `the arch above the roller tops stays positive and goes towards zero: ` +
+  `${curve[0].archHeight.toFixed(2)} mm with no pull, ${curve[curve.length - 1].archHeight.toFixed(2)} mm at the highest pull`);
 
 if (failed) {
   console.log(`\n${failed} check(s) failed`);

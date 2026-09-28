@@ -77,14 +77,17 @@ as in `strip-seal-fatigue`.
 
 301, 0.25 mm, 150 mm wide, 1000 mm between the clamps, magnet stiffness 20 N/mm³:
 
-| Screw travel | Pull | Arch height | Tightest radius | Highest stress | Roller 1 | Roller 2 |
+| Screw travel | Pull | Arch height ¹ | Tightest radius | Highest stress | Roller 1 | Roller 2 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0 mm | 0 N | 14.85 mm | 39.7 mm | 583 MPa | 371 N | 46 N |
-| 0.5 mm | 17 N | 13.30 mm | 37.8 mm | 612 MPa | 397 N | 55 N |
-| 1.0 mm | 51 N | 11.42 mm | 35.3 mm | 657 MPa | 437 N | 70 N |
-| 1.25 mm | 87 N | 10.30 mm | 33.5 mm | 692 MPa | 470 N | 83 N |
-| 1.5 mm | 169 N | 8.99 mm | 31.0 mm | 750 MPa | 529 N | 110 N |
-| 1.75 mm | 439 N | 7.58 mm | 26.7 mm | 877 MPa | 656 N | 190 N |
+| 0 mm | 0 N | 8.85 mm | 39.7 mm | 583 MPa | 371 N | 46 N |
+| 0.5 mm | 17 N | 7.30 mm | 37.8 mm | 612 MPa | 397 N | 55 N |
+| 1.0 mm | 51 N | 5.42 mm | 35.3 mm | 657 MPa | 437 N | 70 N |
+| 1.25 mm | 87 N | 4.30 mm | 33.5 mm | 692 MPa | 470 N | 83 N |
+| 1.5 mm | 169 N | 2.99 mm | 31.0 mm | 750 MPa | 529 N | 110 N |
+| 1.75 mm | 439 N | 1.58 mm | 26.7 mm | 877 MPa | 656 N | 190 N |
+
+¹ From a straight edge on the tops of rollers 2 and 3 to the underside of the strip, at its
+highest point. Zero when the strip runs flat over the two rollers.
 
 - **About 1 mm of screw travel gives the 54 N target.** The strip length hardly matters: 1.03 mm
   at 500 mm and 1.04 mm at 2000 mm. The arch takes almost all the travel, the steel stretch very
@@ -92,7 +95,7 @@ as in `strip-seal-fatigue`.
 - **Past about 1.3 mm the pull rises fast,** because the arch is nearly flat and the steel has to
   stretch. The screw travel must stop well before that.
 - **The arch height is a good gauge.** Near 54 N it drops about 0.4 mm per 10 N. A depth gauge
-  from the profile top between rollers 2 and 3 can read that.
+  on a straight edge across the tops of rollers 2 and 3 can read that.
 - **The arch comes close to the carriage.** At zero pull its top is 14.98 mm above the profile,
   0.77 mm under the carriage underside.
 - **Rollers 1 and 4 carry the most force, and it comes from the pinch, not the pull.** At 54 N it

@@ -33,7 +33,8 @@ Results at the defaults (301, 0.25 mm, 150 mm wide, magnet stiffness 20 N/mm³):
   takes almost all the travel.
 - **Past about 1.3 mm the pull rises fast**: 87 N at 1.25 mm, 169 N at 1.5 mm, 439 N at 1.75 mm.
 - **The arch drops about 0.4 mm per 10 N near 54 N.** That is easy to measure, so the arch height
-  can be the check during fitting.
+  can be the check during fitting. It is measured from a straight edge on the tops of rollers 2
+  and 3 to the underside of the strip: 8.85 mm with no pull, about 5.3 mm at 54 N.
 - **Rollers 1 and 4 carry about 440 N each, rollers 2 and 3 about 70 N.** The large force comes
   from the pinch on the magnets, not from the pull. It depends on the magnet stiffness: 310 N at
   5 N/mm³, 1140 N at 1000 N/mm³.

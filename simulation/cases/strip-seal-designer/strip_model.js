@@ -397,7 +397,10 @@ export function shape(p, pull, opts = {}) {
     at: 1 + rollers.reduce((best, xc, k) =>
       Math.abs(x[iAbs] - xc) < Math.abs(x[iAbs] - rollers[best]) ? k : best, 0),
     kMax, kMin, top, extra, gapOut,
-    archTop, archAt, archMid: y[iMid],
+    // Arch height: from the line through the tops of rollers 2 and 3 to the
+    // underside of the strip. Roller top = lift - t/2, strip underside at the
+    // arch top = archTop - t/2, so the t/2 cancels.
+    archTop, archAt, archMid: y[iMid], archHeight: archTop - lift,
     // Force ON THE ROLLER is minus the force on the strip.
     rollerForces: supports.map((s) => ({ fx: -s.fx, fy: -s.fy })),
     profileForces: profileF.map((f) => -f),
@@ -531,7 +534,7 @@ export function screwCurve(p, grid = PULL_GRID) {
   for (const T of grid) {
     const s = shape(p, T, { start });
     start = s.y;
-    out.push({ T, extra: s.extra, archTop: s.archTop, archMid: s.archMid,
+    out.push({ T, extra: s.extra, archTop: s.archTop, archHeight: s.archHeight, archMid: s.archMid,
       rMin: s.rMin, peak: stressAndLife(p, s).peak });
   }
   const e0 = out[0].extra;
