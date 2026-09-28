@@ -5,6 +5,9 @@ Python 3 with numpy and scipy:
     pip install numpy scipy
     python3 simulation/cases/strip-seal-preload/strip_seal_preload.py
 
+With --reference PATH it writes the shape for a few cases to a JSON file
+instead. The web page in ../strip-seal-designer/ is checked against it.
+
 The layout comes from a sketch of the carriage. The strip lies flat on the
 profile. Roller 1 sits above the strip and holds it down. Roller 2 sits below
 it in the slot and lifts it by RISE. The strip runs flat across the carriage to
@@ -37,7 +40,9 @@ two point supports with no profile under it, and stops if they differ by more
 than five percent.
 """
 
+import json
 import math
+import sys
 
 import numpy as np
 import scipy.sparse as sp
@@ -244,6 +249,39 @@ def check_solver():
     return True
 
 
+REFERENCE_CASES = (
+    # label, keyword arguments for shape(), pulls in N/mm
+    ("as drawn", {}, (0.1, 0.36, 2.0, 10.0)),
+    ("304, 0.1 mm, 12 mm rollers, rise 4 mm, ramp 40 mm",
+     {"m": S304, "t": 0.1, "d": 12.0, "rise": 4.0, "ramp": 40.0}, (0.2, 5.0)),
+)
+
+
+def write_reference(path):
+    """Write shape results that the web page model must match.
+
+    The page in ../strip-seal-designer/ ports shape() to JavaScript. Its check
+    script reads this file. Profile rigid, no magnet pull, as in shape().
+    """
+    out = []
+    for label, kw, pulls in REFERENCE_CASES:
+        m = kw.get("m", S301)
+        for pull in pulls:
+            r = shape(pull, **kw)
+            out.append({
+                "label": label,
+                "material": "304" if m is S304 else "301",
+                "t": kw.get("t", T_STRIP), "D": kw.get("d", ROLLER_D),
+                "a": kw.get("ramp", RAMP), "b": TOP_SPAN,
+                "lift": kw.get("rise", RISE), "pull": pull,
+                "r_min": r["r_min"], "top": r["top"], "extra": r["extra"],
+            })
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(out, fh, indent=1)
+        fh.write("\n")
+    print(f"Wrote {len(out)} reference results to {path}")
+
+
 # --------------------------------------------------------------------------
 # Report
 # --------------------------------------------------------------------------
@@ -362,4 +400,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--reference" in sys.argv:
+        write_reference(sys.argv[sys.argv.index("--reference") + 1])
+    else:
+        main()

@@ -1,0 +1,53 @@
+name: Pages
+
+# Publishes the strip seal designer as a static page on GitHub Pages.
+# One-time setup: Settings -> Pages -> Build and deployment -> Source: GitHub Actions.
+# The page is then at https://refaqt.github.io/aqtuator/strip-seal/
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "simulation/cases/strip-seal-designer/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # No submodules: only this one folder is published.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check the model before publishing
+        run: node simulation/cases/strip-seal-designer/check_model.mjs
+
+      - name: Collect the site
+        run: |
+          mkdir -p _site/strip-seal
+          cp simulation/cases/strip-seal-designer/index.html \
+             simulation/cases/strip-seal-designer/strip_model.js _site/strip-seal/
+          printf '<!doctype html><meta http-equiv="refresh" content="0; url=strip-seal/"><a href="strip-seal/">Strip Seal Designer</a>\n' > _site/index.html
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
