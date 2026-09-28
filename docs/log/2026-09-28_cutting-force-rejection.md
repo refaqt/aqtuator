@@ -25,6 +25,14 @@ function in discrete time.
   the cut and in the steady state. Two new charts against spindle speed show the controller force
   per newton of cutting force (N/N) and the controller power (W). The check script tests both.
 
+- Later again: after the force and power update, the published page said "Calculating…" and
+  showed nothing. The browser still held the old model file in its cache, and the new page
+  called a function that the old file does not have. The Pages workflow now adds the commit to
+  the address of the model file, for both web pages, so the browser always fetches the matching
+  file. The page now also shows any error in its status line. A missing section end, which put
+  "How this is calculated" inside the sweep panel, is fixed too. See
+  [the mistake note](../mistakes/2026-09-28_page-ran-against-a-cached-model.md).
+
 Results at the defaults (2 kg, 10 kHz, 2 teeth at 12000 rev/min, 50 N mean and 50 N amplitude):
 
 - **The loop rate sets the bandwidth, not the mass.** The bandwidth is the loop rate divided by 23:
