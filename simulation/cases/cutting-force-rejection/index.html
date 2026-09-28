@@ -90,14 +90,6 @@ main { display: grid; gap: 20px; min-width: 0; }
 }
 .panel h2 span { font: 400 12px var(--sans); color: var(--muted); }
 
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-.tile { border-left: 3px solid var(--line); padding: 2px 0 2px 10px; display: grid; gap: 2px; }
-.tile[data-state="ok"] { border-color: var(--ok); }
-.tile[data-state="warn"] { border-color: var(--warn); }
-.tile[data-state="bad"] { border-color: var(--bad); }
-.tile .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
-.tile .v { font: 500 22px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
-.tile .s { font: 12px var(--mono); color: var(--muted); }
 .warning { margin: 12px 0 0; padding: 8px 10px; border-left: 3px solid var(--warn); color: var(--ink); font-size: 13px; }
 .warning[hidden] { display: none; }
 
@@ -136,20 +128,48 @@ svg text { font-family: var(--mono); fill: var(--ink); }
 .note code { font: 12px var(--mono); }
 .status { font: 12px var(--mono); color: var(--muted); }
 .status.bad { color: var(--bad); }
+.cases { display: grid; gap: 7px; }
+.key { display: inline-block; width: 16px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 6px; }
+.res-wrap { overflow-x: auto; }
+table.res { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
+table.res th, table.res td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+table.res th:first-child, table.res td:first-child { text-align: left; color: var(--muted); font-weight: 400; }
+table.res thead th { font: 600 12.5px/1.3 var(--sans); border-bottom: 3px solid var(--line); }
+table.res thead th small { display: block; font-weight: 400; color: var(--muted); }
+table.res td .v { display: block; font: 500 15px/1.3 var(--mono); font-variant-numeric: tabular-nums; }
+table.res td .s { display: block; font: 11.5px/1.35 var(--mono); color: var(--muted); }
+table.res td.ok .v { color: var(--ok); }
+table.res td.warn .v { color: var(--warn); }
+table.res td.bad .v { color: var(--bad); }
+#mech { width: 100%; min-width: 660px; height: auto; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>Cutting Force Rejection</h1>
-    <p>A stage mass held in place by a digital position controller, while a milling cutter pushes on it.
-      Set the cutting force, the cutter and the controller loop rate. The page tunes the controller for a
-      30° phase margin, and shows how much the stage moves. All transfer functions are in discrete time,
-      at the loop rate.</p>
+    <p>A stage held in place by a digital position controller, while a milling cutter pushes on it. Three drives
+      are compared: a linear motor, and a BLDC motor with a coupling and a ball screw, read at the motor or at the
+      stage. The page tunes the controller of each case for a 30° phase margin, and shows how much the stage moves.
+      All transfer functions are in discrete time, at the loop rate.</p>
   </header>
 
   <div class="layout">
     <aside>
+      <fieldset>
+        <legend>Cases to show</legend>
+        <div class="cases">
+          <label class="check"><input id="case-linear" type="checkbox" checked>
+            <span><i class="key" style="border-color:var(--s1)"></i>Linear motor
+              <small>The stage mass only.</small></span></label>
+          <label class="check"><input id="case-colloc" type="checkbox" checked>
+            <span><i class="key" style="border-color:var(--s2)"></i>Ball-screw servo, collocated
+              <small>Feedback from the rotary encoder on the motor.</small></span></label>
+          <label class="check"><input id="case-noncolloc" type="checkbox" checked>
+            <span><i class="key" style="border-color:var(--s3)"></i>Ball-screw servo, non-collocated
+              <small>Feedback from a linear encoder on the stage.</small></span></label>
+        </div>
+      </fieldset>
       <fieldset>
         <legend>Cutting force</legend>
         <div class="field"><label for="Famp">Force amplitude <small>N, peak of the sine</small></label>
@@ -164,45 +184,52 @@ svg text { font-family: var(--mono); fill: var(--ink); }
       </fieldset>
       <fieldset>
         <legend>Stage and controller</legend>
-        <div class="field"><label for="m">Stage mass <small>kg</small></label>
+        <div class="field"><label for="m">Stage mass <small>kg, all cases</small></label>
           <input id="m" type="number" step="0.1" min="0.01" value="2"></div>
         <div class="field"><label for="fs">Loop rate <small>Hz</small></label>
           <input id="fs" type="number" step="1000" min="100" value="10000"></div>
-        <label class="check"><input id="delay" type="checkbox">
-          <span>One sample computation delay
-            <small>Force from sample k is applied at sample k+1. The hold lag is already in the plant, so this is extra.</small></span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Ball-screw servo</legend>
+        <div class="field"><label for="pitch">Ball-screw pitch <small>mm per revolution</small></label>
+          <input id="pitch" type="number" step="1" min="0.1" value="5"></div>
+        <div class="field"><label for="kc">Coupling stiffness <small>N·m/rad</small></label>
+          <input id="kc" type="number" step="50" min="1" value="450"></div>
+        <div class="field"><label for="d">Ball-screw diameter <small>mm, steel</small></label>
+          <input id="d" type="number" step="1" min="1" value="16"></div>
+        <div class="field"><label for="L">Ball-screw length <small>mm</small></label>
+          <input id="L" type="number" step="50" min="10" value="400"></div>
+        <div class="field"><label for="Jr">BLDC rotor inertia <small>g·cm²</small></label>
+          <input id="Jr" type="number" step="10" min="0.1" value="119"></div>
+        <div class="field"><label for="zeta">Damping ratio <small>of the motor, coupling and screw mode</small></label>
+          <input id="zeta" type="number" step="0.01" min="0" value="0.1"></div>
+        <div class="derived" id="mechText"></div>
       </fieldset>
       <div class="status" id="status">Calculating…</div>
     </aside>
 
     <main>
       <section class="panel" aria-labelledby="h-res">
-        <h2 id="h-res">Results <span>controller tuned for 30° phase margin</span></h2>
-        <div class="tiles">
-          <div class="tile" id="tFb"><span class="k">Bandwidth f_b</span><span class="v">–</span><span class="s">–</span></div>
-          <div class="tile" id="tK"><span class="k">Gain K</span><span class="v">–</span><span class="s">–</span></div>
-          <div class="tile" id="tPm"><span class="k">Phase margin</span><span class="v">–</span><span class="s">–</span></div>
-          <div class="tile" id="tGm"><span class="k">Gain margin</span><span class="v">–</span><span class="s">–</span></div>
-          <div class="tile" id="tFt"><span class="k">Tooth frequency</span><span class="v">–</span><span class="s">–</span></div>
-          <div class="tile" id="tAmp"><span class="k">Vibration amplitude</span><span class="v">–</span><span class="s">–</span></div>
-          <div class="tile" id="tPeak"><span class="k">Peak when the cut starts</span><span class="v">–</span><span class="s">–</span></div>
-          <div class="tile" id="tU"><span class="k">Controller force amplitude</span><span class="v">–</span><span class="s">–</span></div>
-          <div class="tile" id="tUpeak"><span class="k">Peak controller force</span><span class="v">–</span><span class="s">–</span></div>
-          <div class="tile" id="tP"><span class="k">Controller power</span><span class="v">–</span><span class="s">–</span></div>
-        </div>
+        <h2 id="h-res">Results <span>each controller tuned for 30° phase margin</span></h2>
+        <p class="chart-sub" id="resHead"></p>
+        <div class="res-wrap"><table class="res" id="resTable"></table></div>
+        <p class="warning" id="unstableWarn" hidden></p>
         <p class="warning" id="nyqWarn" hidden></p>
       </section>
 
       <section class="panel" aria-labelledby="h-diag">
         <h2 id="h-diag">Block diagram <span>the shaded part runs in the controller, once per sample</span></h2>
         <div class="scroll"><svg id="diagram" viewBox="0 0 900 250" role="img"
-          aria-label="Control loop: controller, hold, cutting force added to the controller force, stage mass, position sampled back to the controller"></svg></div>
+          aria-label="Control loop: controller, hold, motor force into the stage plant, cutting force on the stage, measured position sampled back to the controller"></svg></div>
+        <div class="scroll"><svg id="mech" viewBox="0 0 900 200" role="img"
+          aria-label="Ball-screw servo: BLDC motor with rotary encoder, coupling spring and damper, ball screw, stage with the cutting force and a linear encoder"></svg></div>
       </section>
 
       <section class="panel" aria-labelledby="h-ol">
         <h2 id="h-ol">Open loop <span>plant G, controller C and loop C·G, up to half the loop rate</span></h2>
+        <div class="legend" data-legend="cases"></div>
         <div class="three">
-          <div class="chart-box"><p class="chart-title">Plant G (mass with hold), µm/N</p>
+          <div class="chart-box"><p class="chart-title">Plant G, motor force to measured position, µm/N</p>
             <svg id="cGm" class="chart" viewBox="0 0 420 210"></svg>
             <svg id="cGp" class="chart" viewBox="0 0 420 150"></svg></div>
           <div class="chart-box"><p class="chart-title">Controller C, N/µm</p>
@@ -213,43 +240,42 @@ svg text { font-family: var(--mono); fill: var(--ink); }
             <svg id="cLp" class="chart" viewBox="0 0 420 150"></svg>
             <p class="chart-sub" id="marginText"></p></div>
         </div>
+        <p class="note">For the ball screw, the motor torque is shown as the force it puts on the screw: force = torque ·
+          2π / pitch. So all three cases use the same units. The collocated plant has a dip (the antiresonance) and then a
+          peak (the resonance). The non-collocated plant has only the peak, and its phase drops a further 180° there.</p>
       </section>
 
       <section class="panel" aria-labelledby="h-cl">
-        <h2 id="h-cl">Closed loop <span>what the cutting force sees</span></h2>
+        <h2 id="h-cl">Closed loop <span>what the cutting force sees at the stage</span></h2>
+        <div class="legend" data-legend="cases-mass"></div>
         <div class="two">
-          <div class="chart-box"><p class="chart-title">Compliance Y/F_d = G/(1 + G·C), µm/N</p>
-            <div class="legend"><span><i style="border-color:var(--s1)"></i>with controller</span>
-              <span><i class="dash" style="border-color:var(--ref)"></i>mass alone, 1/(m·ω²)</span></div>
+          <div class="chart-box"><p class="chart-title">Compliance at the stage Y/F_d, µm/N</p>
             <svg id="cY" class="chart" viewBox="0 0 440 260"></svg></div>
-          <div class="chart-box"><p class="chart-title">Stiffness F_d/Y = (1 + G·C)/G, N/µm</p>
-            <div class="legend"><span><i style="border-color:var(--s1)"></i>with controller</span>
-              <span><i class="dash" style="border-color:var(--ref)"></i>mass alone, m·ω²</span></div>
+          <div class="chart-box"><p class="chart-title">Stiffness at the stage F_d/Y, N/µm</p>
             <svg id="cS" class="chart" viewBox="0 0 440 260"></svg></div>
         </div>
       </section>
 
       <section class="panel" aria-labelledby="h-time">
         <h2 id="h-time">Stage position and controller force over time <span>mean plus sine force from t = 0</span></h2>
+        <div class="legend" data-legend="cases-cut"></div>
         <div class="two">
           <div class="chart-box"><p class="chart-title">The cut starts: the integrator pushes the mean force back, µm</p>
             <svg id="cEntry" class="chart" viewBox="0 0 440 240"></svg></div>
           <div class="chart-box"><p class="chart-title">Steady state, four tooth periods, µm</p>
             <svg id="cSteady" class="chart" viewBox="0 0 440 240"></svg>
-            <p class="chart-sub">Between the samples the mass moves freely. Dots: the positions the controller sees.</p></div>
+            <p class="chart-sub" id="steadyText"></p></div>
           <div class="chart-box"><p class="chart-title">The cut starts: controller force, N</p>
-            <div class="legend"><span><i style="border-color:var(--s2)"></i>controller force u</span>
-              <span><i class="dash" style="border-color:var(--ref)"></i>minus the cutting force</span></div>
             <svg id="cEntryU" class="chart" viewBox="0 0 440 240"></svg></div>
           <div class="chart-box"><p class="chart-title">Steady state: controller force, N</p>
-            <div class="legend"><span><i style="border-color:var(--s2)"></i>controller force u</span>
-              <span><i class="dash" style="border-color:var(--ref)"></i>minus the cutting force</span></div>
             <svg id="cSteadyU" class="chart" viewBox="0 0 440 240"></svg>
             <p class="chart-sub" id="steadyUText"></p></div>
         </div>
-        <p class="note">The dashed line is the force that would cancel the cut exactly. Where the controller force is
-          larger than that, the controller overshoots, and the mass must take the difference. The controller force
-          stays constant over each sample, because of the hold.</p>
+        <p class="note">The position is always the stage position, also when the controller reads the motor. Between the
+          samples the stage moves freely. The dashed line is the force that would cancel the cut exactly. Where the
+          controller force is larger than that, the controller overshoots, and the mass must take the difference. The
+          controller force stays constant over each sample, because of the hold. With the motor encoder, the stage does
+          not come back to zero: the integrator holds the motor still, and the coupling twists under the mean force.</p>
       </section>
 
       <section class="panel" aria-labelledby="h-sweep">
@@ -259,66 +285,82 @@ svg text { font-family: var(--mono); fill: var(--ink); }
           <label for="rpmHi">to</label><input id="rpmHi" type="number" step="500" min="20" value="30000">
           <span>rev/min</span>
         </div>
-        <div class="legend"><span><i style="border-color:var(--s1)"></i>with controller</span>
-          <span><i class="dash" style="border-color:var(--ref)"></i>mass alone</span></div>
+        <div class="legend" data-legend="cases-mass"></div>
         <div class="chart-box"><svg id="cSweep" class="chart" viewBox="0 0 880 280"></svg></div>
         <div class="two" style="margin-top:16px">
           <div class="chart-box"><p class="chart-title">Controller force per newton of cutting force, N/N</p>
-            <div class="legend"><span><i style="border-color:var(--s2)"></i>time simulation</span>
-              <span><i class="dash" style="border-color:var(--ref)"></i>|C·G/(1 + C·G)|, up to fs/2</span></div>
+            <div class="legend"><span><i></i>solid: time simulation</span>
+              <span><i class="dash"></i>dashed: transfer function, up to fs/2</span></div>
             <svg id="cRatio" class="chart" viewBox="0 0 440 260"></svg>
             <p class="chart-sub">Amplitude of the controller force divided by the amplitude of the cutting force.
               It does not depend on the force.</p></div>
           <div class="chart-box"><p class="chart-title">Controller power at <span id="powerF"></span>, W</p>
-            <div class="legend"><span><i style="border-color:var(--s2)"></i>peak |u·v|</span>
-              <span><i style="border-color:var(--s3)"></i>mean u·v</span></div>
+            <div class="legend"><span><i></i>solid: peak |u·v|</span>
+              <span><i class="dash"></i>dashed: mean u·v</span></div>
             <svg id="cPower" class="chart" viewBox="0 0 440 260"></svg>
-            <p class="chart-sub">Mechanical power, force times stage speed. Negative mean: the controller takes energy out.</p></div>
+            <p class="chart-sub">Mechanical power, force times speed where the controller pushes. Negative mean: the
+              controller takes energy out.</p></div>
         </div>
         <p class="note">Power cannot be made unitless per newton: it grows with the square of the force amplitude.
           Twice the force gives four times the power. So the power chart uses the force amplitude set on the left.
           The mean force does no work in the steady state, because the stage does not move on average. This is the
-          mechanical power at the stage only. The motor heat comes from the current, which follows the force
-          (mean force included), and it is not in this chart.</p>
+          mechanical power only. For the ball screw it is the motor torque times the motor speed. The motor heat comes
+          from the current, which follows the force (mean force included), and it is not in this chart.</p>
       </section>
 
       <section class="panel note" aria-labelledby="h-model">
         <h2 id="h-model">How this is calculated</h2>
-        <p><b>Plant.</b> The stage is a single rigid mass: G(s) = 1/(m·s²), from force in N to position in m.
+        <p><b>Linear motor.</b> The stage is a single rigid mass: G(s) = 1/(m·s²), from force in N to position in m.
           The controller force is held constant over each sample (a zero-order hold). The discrete plant is
           G(z) = T²(z + 1) / (2m(z − 1)²), with T = 1/f<sub>s</sub>. This already holds the lag of the hold, about
           half a sample.</p>
+        <p><b>Ball-screw servo.</b> A BLDC motor turns the ball screw through a coupling. Everything is written in
+          linear terms, with r = pitch/2π in m/rad. The motor torque τ becomes the force u = τ/r. The rotor becomes a
+          mass m<sub>1</sub> = J<sub>rotor</sub>/r². The screw (steel, J<sub>screw</sub> = π·ρ·L·d⁴/32) and the stage
+          become m<sub>2</sub> = m + J<sub>screw</sub>/r². The coupling becomes a spring k = k<sub>c</sub>/r², with a
+          damper c = 2ζ·√(k·μ), μ = m<sub>1</sub>m<sub>2</sub>/(m<sub>1</sub> + m<sub>2</sub>). So ζ is the damping
+          ratio of the mode where the motor and the stage swing against each other. The motor force acts on
+          m<sub>1</sub>. The cutting force always acts on m<sub>2</sub>. The controller reads x<sub>1</sub> (the rotary
+          encoder, collocated) or x<sub>2</sub> (the linear encoder, non-collocated). The resonance is at
+          √(k/μ)/2π. The motor encoder also sees an antiresonance at √(k/m<sub>2</sub>)/2π: there the stage swings on
+          the coupling while the motor stands still. The plant with its hold is found with one matrix exponential, so
+          it is exact at the samples.</p>
         <p><b>Controller.</b> C(s) = K · 1/s · (s + 2πf<sub>i</sub>)(s + 2πf<sub>d</sub>) / (s + 2πf<sub>lp</sub>)²,
           with f<sub>i</sub> = f<sub>b</sub>/10, f<sub>d</sub> = f<sub>b</sub>/3 and f<sub>lp</sub> = 4·f<sub>b</sub>.
           Each factor is translated to discrete time with the bilinear rule (Tustin), s = (2/T)(z − 1)/(z + 1).
-          K is set so that |C·G| = 1 at f<sub>b</sub>, and f<sub>b</sub> is searched so that the phase margin is 30°.</p>
+          K is set so that |C·G| = 1 at f<sub>b</sub>. Each case gets its own K and f<sub>b</sub>, with the same rule:
+          f<sub>b</sub> is the highest bandwidth where the worst phase margin, over all points where |C·G| crosses 1,
+          is still 30°. With a resonance, the loop can cross 1 again near the resonance, and that crossing can set
+          the limit. The page then checks the closed loop at the samples for stability.</p>
         <p><b>Why f<sub>b</sub> follows the loop rate and not the mass.</b> With these frequency ratios, the
           continuous loop has about 38° of phase margin at any bandwidth. The sampling lag takes the other 8°, and
-          that lag grows with f<sub>b</sub>/f<sub>s</sub>. So f<sub>b</sub> ends at about f<sub>s</sub>/23, or about
-          f<sub>s</sub>/69 with the extra computation delay. A heavier stage only needs a larger K. The stiffness near
-          f<sub>b</sub> is then about m·(2πf<sub>b</sub>)², so the mass and the loop rate both help.</p>
+          that lag grows with f<sub>b</sub>/f<sub>s</sub>. So for the linear motor f<sub>b</sub> ends at about
+          f<sub>s</sub>/23. A heavier stage only needs a larger K. The stiffness near f<sub>b</sub> is then about
+          m·(2πf<sub>b</sub>)², so the mass and the loop rate both help. For the ball screw the resonance can lower
+          f<sub>b</sub> further.</p>
         <p><b>Cutting force.</b> F<sub>d</sub>(t) = F<sub>mean</sub> + F<sub>amp</sub> · sin(2π f<sub>tooth</sub> t),
-          with f<sub>tooth</sub> = teeth · rev/min / 60. It acts on the mass, next to the controller force.
-          So Y/F<sub>d</sub> = G/(1 + G·C) is the compliance, and its inverse is the stiffness.</p>
-        <p><b>Vibration.</b> The amplitude comes from a time simulation, not from the transfer function. The mass
+          with f<sub>tooth</sub> = teeth · rev/min / 60. It acts on the stage. The compliance is the stage position per
+          newton of cutting force, and its inverse is the stiffness.</p>
+        <p><b>Vibration.</b> The amplitude comes from a time simulation, not from the transfer function. The plant
           moves in continuous time, and it is integrated exactly between samples. The controller runs once per
-          sample. The amplitude is half of the peak-to-peak motion after the start transient, including the motion
-          between samples. Below about f<sub>s</sub>/4 this agrees with compliance × F<sub>amp</sub> within a few
-          per cent. Above half the loop rate, the discrete transfer functions have no meaning, but the simulation
-          still holds.</p>
+          sample. The amplitude is half of the peak-to-peak motion of the stage after the start transient, including
+          the motion between samples. Below about f<sub>s</sub>/4 this agrees with compliance × F<sub>amp</sub> within
+          a few per cent. Above half the loop rate, the discrete transfer functions have no meaning, but the
+          simulation still holds.</p>
         <p><b>Controller force and power.</b> The controller force u is the output of the controller after the hold.
-          The force ratio is the amplitude of u over F<sub>amp</sub> in the steady state. Below half the loop rate it
-          follows U/F<sub>d</sub> = −C·G/(1 + C·G): about 1 well below f<sub>b</sub>, where the controller takes the
-          whole force, a peak near f<sub>b</sub>, and falling above it, where the mass takes the force. The power is
-          u·v, with v the stage speed. Its mean is exact, because u is constant over each sample, so each sample adds
-          u·Δx of work. A positive mean is real. At low speed the integrator pushes energy in, and with the
-          computation delay the lag does the same far above f<sub>b</sub>. Near f<sub>b</sub> the controller takes energy
-          out, like a damper.</p>
+          The force ratio is the amplitude of u over F<sub>amp</sub> in the steady state: about 1 well below
+          f<sub>b</sub>, where the controller takes the whole force, a peak near f<sub>b</sub>, and falling above it,
+          where the mass takes the force. The power is u·v, with v the speed where u pushes: the stage for the linear
+          motor, the motor for the ball screw. Its mean is exact, because u is constant over each sample, so each
+          sample adds u·Δx of work.</p>
         <p><b>Limits.</b></p>
         <ul>
-          <li>The stage is one rigid mass. No resonances, no friction, no guide stiffness.</li>
+          <li>Linear motor: one rigid mass. No resonances, no friction, no guide stiffness.</li>
+          <li>Ball screw: the coupling is the only spring. The screw and the nut are axially rigid, and the screw
+            does not twist. In a real drive the screw and the nut add a second spring between the screw inertia and
+            the stage, often the softer one. No backlash, no friction.</li>
           <li>The force is one pure sine plus a mean. A real cut has harmonics of the tooth frequency.</li>
-          <li>No sensor noise, no quantisation, no force limit on the actuator.</li>
+          <li>No sensor noise, no quantisation, no force or torque limit on the motor.</li>
           <li>The cut does not react to the motion, so this model shows forced vibration, not chatter.</li>
         </ul>
       </section>
@@ -332,18 +374,25 @@ svg text { font-family: var(--mono); fill: var(--ink); }
 const M = window.ControlModel;
 
 const $ = (id) => document.getElementById(id);
-const ids = ["Famp", "Fmean", "teeth", "rpm", "m", "fs"];
+const ids = ["Famp", "Fmean", "teeth", "rpm", "m", "fs", "pitch", "kc", "d", "L", "Jr", "zeta"];
+
+const CASE = {
+  linear: { name: "Linear motor", sub: "stage mass only", color: "var(--s1)" },
+  colloc: { name: "Ball screw, collocated", sub: "rotary encoder", color: "var(--s2)" },
+  noncolloc: { name: "Ball screw, non-collocated", sub: "linear encoder", color: "var(--s3)" },
+};
 
 function params() {
   const p = { ...M.DEFAULTS };
   for (const id of ids) p[id] = parseFloat($(id).value);
   p.teeth = Math.max(1, Math.round(p.teeth));
-  p.delay = $("delay").checked;
   return p;
 }
 function valid(p) {
-  return p.Famp >= 0 && Number.isFinite(p.Fmean) && p.teeth >= 1 && p.rpm > 0 && p.m > 0 && p.fs >= 100;
+  return p.Famp >= 0 && Number.isFinite(p.Fmean) && p.teeth >= 1 && p.rpm > 0 && p.m > 0 && p.fs >= 100 &&
+    p.pitch > 0 && p.kc > 0 && p.d > 0 && p.L > 0 && p.Jr > 0 && p.zeta >= 0;
 }
+const chosen = () => M.CASES.filter((id) => $(`case-${id}`).checked);
 
 // ----- Number formats ------------------------------------------------------
 const sup = (s) => String(s).replace(/./g, (c) => "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"["0123456789-".indexOf(c)] ?? c);
@@ -359,12 +408,6 @@ function sig(v, n = 3) {
   return v.toFixed(d);
 }
 const hz = (f) => f >= 1000 ? `${sig(f / 1000)} kHz` : `${sig(f)} Hz`;
-function tile(id, v, s, state) {
-  const el = $(id);
-  el.querySelector(".v").textContent = v;
-  el.querySelector(".s").textContent = s;
-  if (state) el.dataset.state = state; else delete el.dataset.state;
-}
 
 // ----- SVG helpers ---------------------------------------------------------
 const NS = "http://www.w3.org/2000/svg";
@@ -396,17 +439,21 @@ function logLabel(v) {
 // A line chart. Series share one x axis. Hover shows every series at the x
 // under the pointer.
 //   series: [{ pts: [[x, y]], color, dash, label, fmt, dots }]
-//   vlines: [{ x, label }], markers: [{ x, y, label }]
+//   vlines: [{ x, label, color }], markers: [{ x, y, label, color }]
+//   yFromN: only the first N series set the y range (log axes get a decade
+//   of room on each side).
 function chart(svg, o) {
+  o = { ...o, series: o.series.filter((s) => s.pts.length) };
+  if (!o.series.length) { svg.replaceChildren(); return null; }
   const [, , W, H] = svg.getAttribute("viewBox").split(" ").map(Number);
   svg.replaceChildren();
   const m = { l: 58, r: 14, t: 12, b: o.xLabel ? 36 : 20 };
   const pw = W - m.l - m.r, ph = H - m.t - m.b;
   const all = o.series.flatMap((s) => s.pts);
-  const xs = all.map((p) => p[0]), ys = (o.yFromFirst ? o.series[0].pts : all).map((p) => p[1]).filter((y) => Number.isFinite(y) && (!o.yLog || y > 0));
+  const xs = all.map((p) => p[0]), ys = (o.yFromN ? o.series.slice(0, o.yFromN).flatMap((s) => s.pts) : all).map((p) => p[1]).filter((y) => Number.isFinite(y) && (!o.yLog || y > 0));
   let [x0, x1] = o.xRange ?? [Math.min(...xs), Math.max(...xs)];
   let [y0, y1] = o.yRange ?? [Math.min(...ys), Math.max(...ys)];
-  if (o.yLog && o.yFromFirst) { y0 /= 10; y1 *= 10; }
+  if (o.yLog && o.yFromN) { y0 /= 10; y1 *= 10; }
   if (o.yLog) {
     y0 = 10 ** Math.floor(Math.log10(y0) + 1e-9); y1 = 10 ** Math.ceil(Math.log10(y1) - 1e-9);
     if (y1 <= y0) y1 = y0 * 10;
@@ -465,9 +512,9 @@ function chart(svg, o) {
   }
   for (const v of o.vlines ?? []) {
     if (v.x < x0 || v.x > x1) continue;
-    plot.append(el("line", { x1: X(v.x), x2: X(v.x), y1: m.t, y2: m.t + ph, stroke: "var(--muted)", "stroke-dasharray": "3 3" }));
+    plot.append(el("line", { x1: X(v.x), x2: X(v.x), y1: m.t, y2: m.t + ph, stroke: v.color ?? "var(--muted)", "stroke-dasharray": "3 3" }));
     if (v.label) plot.append(el("text", { x: X(v.x) + (v.left ? -4 : 4), y: m.t + 12 + (v.row ?? 0) * 13, "font-size": 10.5,
-      "text-anchor": v.left ? "end" : "start", fill: "var(--muted)" }, v.label));
+      "text-anchor": v.left ? "end" : "start", fill: v.color ?? "var(--muted)" }, v.label));
   }
   for (const s of o.series) {
     const pts = s.pts.filter((p) => Number.isFinite(p[1]) && (!o.yLog || p[1] > 0));
@@ -481,7 +528,7 @@ function chart(svg, o) {
   }
   for (const mk of o.markers ?? []) {
     if (!(mk.x >= x0 && mk.x <= x1 && mk.y >= y0 && mk.y <= y1)) continue;
-    plot.append(el("circle", { cx: X(mk.x), cy: Y(mk.y), r: 4.5, fill: "var(--ink)", stroke: "var(--panel)", "stroke-width": 2 }));
+    plot.append(el("circle", { cx: X(mk.x), cy: Y(mk.y), r: 4.5, fill: mk.color ?? "var(--ink)", stroke: "var(--panel)", "stroke-width": 2 }));
     if (mk.label) {
       const right = X(mk.x) < m.l + pw * 0.62;
       plot.append(el("text", { x: X(mk.x) + (right ? 8 : -8), y: Y(mk.y) + (mk.below ? 15 : -8), "font-size": 11,
@@ -567,74 +614,195 @@ function phaseTicks(lo, hi) {
   return out;
 }
 
-// ----- Block diagram -------------------------------------------------------
-function diagram(p) {
-  const svg = $("diagram");
+// ----- Legends -------------------------------------------------------------
+function legends(cases) {
+  const item = (color, text, dash) => {
+    const s = document.createElement("span");
+    const i = document.createElement("i");
+    i.style.borderColor = color;
+    if (dash) i.className = "dash";
+    s.append(i, text);
+    return s;
+  };
+  for (const box of document.querySelectorAll("[data-legend]")) {
+    const kind = box.dataset.legend;
+    const items = cases.map((id) => item(CASE[id].color, CASE[id].name));
+    if (kind === "cases-mass") items.push(item("var(--ref)", "stage mass alone, m", true));
+    if (kind === "cases-cut") items.push(item("var(--ref)", "minus the cutting force", true));
+    box.replaceChildren(...items);
+  }
+}
+
+// ----- Diagrams ------------------------------------------------------------
+function svgKit(svg) {
   svg.replaceChildren();
   const line = (pts, extra = {}) => svg.append(el("polyline", { points: pts.map((q) => q.join(",")).join(" "), fill: "none",
-    stroke: "var(--ink)", "stroke-width": 1.5, "marker-end": "url(#arrow)", ...extra }));
+    stroke: "var(--ink)", "stroke-width": 1.5, "marker-end": `url(#arrow-${svg.id})`, ...extra }));
   const box = (x, y, w, h, label, sub, extra = {}) => {
     svg.append(el("rect", { x, y, width: w, height: h, rx: 4, fill: "var(--panel)", stroke: "var(--ink)", "stroke-width": 1.5, ...extra }));
     svg.append(el("text", { x: x + w / 2, y: y + h / 2 + (sub ? -2 : 4), "text-anchor": "middle", "font-size": 13, "font-weight": 500 }, label));
     if (sub) svg.append(el("text", { x: x + w / 2, y: y + h / 2 + 13, "text-anchor": "middle", "font-size": 10, fill: "var(--muted)" }, sub));
   };
+  const text = (x, y, s, extra = {}) => svg.append(el("text", { x, y, "font-size": 11.5, ...extra }, s));
+  const defs = el("defs");
+  const mk = el("marker", { id: `arrow-${svg.id}`, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" });
+  mk.append(el("path", { d: "M0,0L10,5L0,10z", fill: "var(--ink)" }));
+  defs.append(mk);
+  svg.append(defs);
+  return { line, box, text };
+}
+
+function diagram(p) {
+  const svg = $("diagram");
+  const { line, box, text } = svgKit(svg);
   const sum = (x, y) => {
     svg.append(el("circle", { cx: x, cy: y, r: 11, fill: "var(--panel)", stroke: "var(--ink)", "stroke-width": 1.5 }));
     svg.append(el("path", { d: `M${x - 6},${y}H${x + 6}M${x},${y - 6}V${y + 6}`, stroke: "var(--ink)", "stroke-width": 1.2 }));
   };
-  const text = (x, y, s, extra = {}) => svg.append(el("text", { x, y, "font-size": 11.5, ...extra }, s));
-  const defs = el("defs");
-  const mk = el("marker", { id: "arrow", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" });
-  mk.append(el("path", { d: "M0,0L10,5L0,10z", fill: "var(--ink)" }));
-  defs.append(mk);
-  svg.append(defs);
-
   const yM = 120;
   // Digital part.
-  svg.append(el("rect", { x: 20, y: 44, width: 470, height: 184, rx: 6, fill: "var(--digital)", stroke: "var(--line)", "stroke-dasharray": "4 3" }));
+  svg.append(el("rect", { x: 20, y: 44, width: 400, height: 184, rx: 6, fill: "var(--digital)", stroke: "var(--line)", "stroke-dasharray": "4 3" }));
   text(30, 62, `controller, runs at fs = ${hz(p.fs)}`, { fill: "var(--muted)", "font-size": 11 });
 
   text(34, yM - 8, "r = 0", { fill: "var(--muted)" });
   line([[34, yM], [69, yM]]);
   sum(80, yM);
   text(62, yM + 28, "−", { "font-size": 16 });
-  line([[91, yM], [124, yM]]);
-  text(96, yM - 8, "e[k]", { fill: "var(--muted)" });
-  box(126, yM - 26, 136, 52, "C(z)", "1/s, lead, low-pass");
-  line([[262, yM], [294, yM]]);
-  text(266, yM - 8, "u[k]", { fill: "var(--muted)" });
-  box(296, yM - 22, 72, 44, "z⁻¹", p.delay ? "delay on" : "delay off",
-    p.delay ? {} : { "stroke-dasharray": "4 3", stroke: "var(--muted)" });
-  line([[368, yM], [398, yM]]);
-  box(400, yM - 22, 76, 44, "ZOH", "hold");
-  line([[476, yM], [549, yM]]);
-  text(482, yM - 8, "u(t)", { fill: "var(--muted)" });
+  line([[91, yM], [134, yM]]);
+  text(98, yM - 8, "e[k]", { fill: "var(--muted)" });
+  box(136, yM - 26, 136, 52, "C(z)", "1/s, lead, low-pass");
+  line([[272, yM], [318, yM]]);
+  text(278, yM - 8, "u[k]", { fill: "var(--muted)" });
+  box(320, yM - 22, 76, 44, "ZOH", "hold");
+  line([[396, yM], [534, yM]]);
+  text(404, yM - 8, "motor force u(t)", { fill: "var(--muted)" });
 
   // Physical part.
-  sum(560, yM);
-  text(566, yM + 28, "+", { "font-size": 14 });
-  line([[560, 22], [560, yM - 12]]);
-  text(572, 26, "cutting force F_d(t)", { "font-weight": 500 });
-  text(572, 41, `= ${sig(p.Fmean)} + ${sig(p.Famp)}·sin(2π·${sig(M.toothFreq(p))} Hz·t) N`, { fill: "var(--muted)", "font-size": 10.5 });
-  line([[571, yM], [614, yM]]);
-  box(616, yM - 26, 130, 52, "G(s) = 1/(m·s²)", `m = ${sig(p.m)} kg`);
-  line([[746, yM], [870, yM]]);
-  text(800, yM - 8, "position y", { "font-weight": 500 });
+  line([[630, 22], [630, yM - 28]]);
+  text(642, 26, "cutting force F_d(t), on the stage", { "font-weight": 500 });
+  text(642, 41, `= ${sig(p.Fmean)} + ${sig(p.Famp)}·sin(2π·${sig(M.toothFreq(p))} Hz·t) N`, { fill: "var(--muted)", "font-size": 10.5 });
+  box(536, yM - 26, 190, 52, "stage plant", "one of the three cases, below");
+  line([[726, yM], [870, yM]]);
+  text(760, yM - 8, "stage position", { "font-weight": 500 });
 
   // Feedback through the sampler.
-  svg.append(el("polyline", { points: `790,${yM} 790,200 610,200`, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }));
-  // Sampler switch.
+  svg.append(el("polyline", { points: `746,${yM} 746,200 610,200`, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }));
+  text(738, 166, "measured position: the stage,", { fill: "var(--muted)", "font-size": 10.5, "text-anchor": "end" });
+  text(738, 180, "or the motor when collocated", { fill: "var(--muted)", "font-size": 10.5, "text-anchor": "end" });
   svg.append(el("circle", { cx: 606, cy: 200, r: 3, fill: "var(--ink)" }));
   svg.append(el("line", { x1: 604, y1: 198, x2: 582, y2: 188, stroke: "var(--ink)", "stroke-width": 1.5 }));
   svg.append(el("circle", { cx: 578, cy: 200, r: 3, fill: "var(--ink)" }));
-  text(560, 222, "sample every T = 1/fs", { fill: "var(--muted)", "font-size": 10.5 });
+  text(540, 222, "sample every T = 1/fs", { fill: "var(--muted)", "font-size": 10.5 });
   line([[575, 200], [80, 200], [80, yM + 13]]);
   text(300, 194, "y[k]", { fill: "var(--muted)" });
+}
+
+// The ball-screw mechanics, with both encoders.
+function mechDiagram(p, q) {
+  const svg = $("mech");
+  const { line, box, text } = svgKit(svg);
+  const yA = 96;
+  text(20, 20, "Ball-screw servo", { "font-weight": 500 });
+  text(20, 36, "in linear terms: m₁ = J_rotor/r², m₂ = m + J_screw/r², k = k_c/r², r = pitch/2π", { fill: "var(--muted)", "font-size": 10.5 });
+
+  // Motor with the rotary encoder on its back.
+  svg.append(el("circle", { cx: 52, cy: yA, r: 14, fill: "var(--panel)", stroke: CASE.colloc.color, "stroke-width": 2 }));
+  text(52, yA + 4, "E", { "text-anchor": "middle", "font-size": 11, "font-weight": 600, fill: CASE.colloc.color });
+  text(20, yA + 50, "rotary encoder,", { fill: CASE.colloc.color, "font-size": 10.5 });
+  text(20, yA + 64, "collocated", { fill: CASE.colloc.color, "font-size": 10.5 });
+  svg.append(el("line", { x1: 66, y1: yA, x2: 80, y2: yA, stroke: "var(--ink)", "stroke-width": 3 }));
+  box(80, yA - 32, 120, 64, "BLDC motor", `J = ${sig(p.Jr)} g·cm²`);
+  text(140, yA - 40, `m₁ = ${sig(q.m1)} kg`, { "text-anchor": "middle", fill: "var(--muted)", "font-size": 10.5 });
+
+  // Coupling: a spring above a damper, between two shafts.
+  svg.append(el("line", { x1: 200, y1: yA, x2: 222, y2: yA, stroke: "var(--ink)", "stroke-width": 3 }));
+  svg.append(el("line", { x1: 222, y1: yA - 22, x2: 222, y2: yA + 22, stroke: "var(--ink)", "stroke-width": 2 }));
+  svg.append(el("line", { x1: 302, y1: yA - 22, x2: 302, y2: yA + 22, stroke: "var(--ink)", "stroke-width": 2 }));
+  let zz = `M222,${yA - 14}H236`;
+  for (let i = 0; i < 6; i++) zz += `L${240 + i * 8},${yA - 14 + (i % 2 ? 7 : -7)}`;
+  zz += `L288,${yA - 14}H302`;
+  svg.append(el("path", { d: zz, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }));
+  svg.append(el("path", { d: `M222,${yA + 14}H256M256,${yA + 6}V${yA + 22}M250,${yA + 6}H272V${yA + 22}H250M266,${yA + 14}H302`,
+    fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }));
+  text(262, yA - 30, "coupling", { "text-anchor": "middle", "font-size": 10.5, fill: "var(--muted)" });
+  text(262, yA + 40, `k_c = ${sig(p.kc)} N·m/rad`, { "text-anchor": "middle", "font-size": 10.5, fill: "var(--muted)" });
+  text(262, yA + 54, `ζ = ${sig(p.zeta)}`, { "text-anchor": "middle", "font-size": 10.5, fill: "var(--muted)" });
+
+  // Screw with its thread, and the stage on the nut.
+  svg.append(el("line", { x1: 302, y1: yA, x2: 320, y2: yA, stroke: "var(--ink)", "stroke-width": 3 }));
+  svg.append(el("rect", { x: 320, y: yA - 8, width: 520, height: 16, fill: "var(--digital)", stroke: "var(--ink)", "stroke-width": 1.2 }));
+  let th = "";
+  for (let x = 326; x < 836; x += 9) th += `M${x},${yA + 8}L${x + 6},${yA - 8}`;
+  svg.append(el("path", { d: th, stroke: "var(--muted)", "stroke-width": 1 }));
+  text(330, yA + 30, `ball screw ⌀${sig(p.d)} × ${sig(p.L)} mm, pitch ${sig(p.pitch)} mm, steel`, { fill: "var(--muted)", "font-size": 10.5 });
+  box(560, yA - 56, 150, 44, "stage", `m = ${sig(p.m)} kg`, { fill: "var(--panel)" });
+  svg.append(el("rect", { x: 600, y: yA - 12, width: 70, height: 24, rx: 3, fill: "var(--panel)", stroke: "var(--ink)", "stroke-width": 1.5 }));
+  text(635, yA + 4, "nut", { "text-anchor": "middle", "font-size": 10.5 });
+  text(560, yA - 64, `m₂ = ${sig(q.m2)} kg (stage + screw)`, { fill: "var(--muted)", "font-size": 10.5 });
+  // The cutting force on the stage.
+  line([[780, yA - 34], [712, yA - 34]]);
+  text(786, yA - 30, "F_d", { "font-weight": 500 });
+  // Linear encoder: a scale under the stage.
+  svg.append(el("line", { x1: 520, y1: yA + 44, x2: 760, y2: yA + 44, stroke: CASE.noncolloc.color, "stroke-width": 2, "stroke-dasharray": "2 3" }));
+  svg.append(el("rect", { x: 620, y: yA + 36, width: 30, height: 10, fill: "var(--panel)", stroke: CASE.noncolloc.color, "stroke-width": 2 }));
+  svg.append(el("line", { x1: 635, y1: yA + 36, x2: 635, y2: yA + 12, stroke: CASE.noncolloc.color, "stroke-width": 1.5 }));
+  text(640, yA + 64, "linear encoder, non-collocated", { fill: CASE.noncolloc.color, "font-size": 10.5, "text-anchor": "middle" });
+  text(846, 170, `resonance ${hz(q.fRes)}`, { "text-anchor": "end", "font-size": 10.5, fill: "var(--muted)" });
+  text(846, 184, `antiresonance ${hz(q.fAnti)}`, { "text-anchor": "end", "font-size": 10.5, fill: "var(--muted)" });
+}
+
+// ----- Results table -------------------------------------------------------
+function table(rows, cases) {
+  const t = $("resTable");
+  t.replaceChildren();
+  const head = document.createElement("thead");
+  const hr = document.createElement("tr");
+  hr.append(document.createElement("th"));
+  for (const id of cases) {
+    const th = document.createElement("th");
+    th.style.borderBottomColor = CASE[id].color;
+    th.textContent = CASE[id].name;
+    const sm = document.createElement("small");
+    sm.textContent = CASE[id].sub;
+    th.append(sm);
+    hr.append(th);
+  }
+  head.append(hr);
+  const body = document.createElement("tbody");
+  for (const [label, fn] of rows) {
+    const tr = document.createElement("tr");
+    const th = document.createElement("td");
+    th.textContent = label;
+    tr.append(th);
+    for (const id of cases) {
+      const [v, s, state] = fn(id) ?? ["–", ""];
+      const td = document.createElement("td");
+      if (state) td.className = state;
+      const a = document.createElement("span"); a.className = "v"; a.textContent = v;
+      const b = document.createElement("span"); b.className = "s"; b.textContent = s ?? "";
+      td.append(a, b);
+      tr.append(td);
+    }
+    body.append(tr);
+  }
+  t.append(head, body);
 }
 
 // ----- Update --------------------------------------------------------------
 let timer = 0;
 function schedule() { clearTimeout(timer); timer = setTimeout(update, 120); }
+
+// Tuning and the sweep do not change with the spindle speed or the mean
+// force, so they are kept for the next update.
+const cache = new Map();
+function cached(key, fn) {
+  if (!cache.has(key)) {
+    if (cache.size > 60) cache.clear();
+    cache.set(key, fn());
+  }
+  return cache.get(key);
+}
+const tuneKey = (p, id) => JSON.stringify([id, p.m, p.fs, p.pm, ...(id === "linear" ? [] : [p.pitch, p.kc, p.d, p.L, p.Jr, p.zeta])]);
 
 const um = 1e6;
 // Any error must reach the status line. Otherwise the page keeps saying
@@ -652,32 +820,64 @@ function run() {
   const p = params();
   const status = $("status");
   if (!valid(p)) { status.textContent = "Check the inputs: all must be positive."; status.className = "status bad"; return; }
-  let t;
-  try { t = M.tune(p); } catch (e) { status.textContent = e.message; status.className = "status bad"; return; }
+  const cases = chosen();
+  if (!cases.length) { status.textContent = "Select at least one case."; status.className = "status bad"; return; }
   status.className = "status";
   const t0 = performance.now();
 
   const ft = M.toothFreq(p), nyq = p.fs / 2;
+  const q = M.mechanics(p);
   $("toothText").textContent = `tooth frequency ${hz(ft)}`;
+  $("mechText").textContent = `motor side m₁ = ${sig(q.m1)} kg, stage side m₂ = ${sig(q.m2)} kg ` +
+    `(screw ${sig(q.mScrew)} kg), k = ${sig(q.k / um)} N/µm, resonance ${hz(q.fRes)}, antiresonance ${hz(q.fAnti)}`;
   diagram(p);
+  mechDiagram(p, q);
+  legends(cases);
 
-  // Tiles.
-  tile("tFb", hz(t.fb), `loop rate / f_b = ${sig(p.fs / t.fb)}`);
-  tile("tK", sig(t.K), "N/(m·s)");
-  tile("tPm", `${t.pmDeg.toFixed(1)}°`, `at ${hz(t.fc)}`, "ok");
-  tile("tGm", Number.isFinite(t.gmDb) ? `${t.gmDb.toFixed(1)} dB` : "none", Number.isFinite(t.f180) ? `×${t.gm.toFixed(2)} at ${hz(t.f180)}` : "",
-    t.gmDb >= 6 ? "ok" : "warn");
-  tile("tFt", hz(ft), `${sig(ft / t.fb)} × f_b, ${sig(ft / nyq)} × fs/2`, ft >= nyq ? "warn" : undefined);
-  const ss = M.steadyState(p, t);
-  const amp = ss.amp;
-  const massAmp = p.Famp / (p.m * (2 * Math.PI * ft) ** 2);
-  tile("tAmp", `${sig(amp * um)} µm`, `mass alone ${sig(massAmp * um)} µm`);
-  const entry = M.entryTrace(p, t);
-  tile("tPeak", `${sig(entry.peak * um)} µm`, "mean plus sine, before the integrator settles");
-  tile("tU", `${sig(ss.uAmp)} N`, `${sig(ss.uAmp / p.Famp)} N per N of cutting force`);
-  tile("tUpeak", `${sig(entry.uPeak)} N`, "when the cut starts, mean included");
-  tile("tP", `${sig(ss.pPeak)} W`, `peak |u·v|, mean ${sig(ss.pMean)} W`);
+  // Tune each case. A case that cannot be tuned, or is unstable, is shown in
+  // the table but not in the time and sweep charts.
+  const T = {}, err = {};
+  for (const id of cases) {
+    try { T[id] = cached(tuneKey(p, id), () => M.tune(p, id)); } catch (e) { err[id] = e.message; }
+  }
+  const tuned = cases.filter((id) => T[id]);
+  const live = tuned.filter((id) => T[id].stable);
+  const torque = (id, u) => (id === "linear" ? "" : `motor torque ${sig(u * q.r)} N·m`);
 
+  const SS = {}, EN = {};
+  const nEntry = Math.max(0, ...live.map((id) => M.entrySamples(p, T[id])));
+  for (const id of live) {
+    SS[id] = M.steadyState(p, T[id]);
+    EN[id] = M.entryTrace(p, T[id], nEntry);
+  }
+  const mStage = (id) => (id === "linear" ? p.m : q.m2);
+
+  $("resHead").textContent = `Tooth frequency ${hz(ft)}: ${sig(ft / nyq)} × half the loop rate.`;
+  table([
+    ["Bandwidth f_b", (id) => T[id] ? [hz(T[id].fb), `loop rate / f_b = ${sig(p.fs / T[id].fb)}`] : ["none", err[id], "bad"]],
+    ["Gain K", (id) => T[id] && [sig(T[id].K), "N/(m·s)"]],
+    ["Phase margin", (id) => T[id] && [`${T[id].pmDeg.toFixed(1)}°`, `worst crossing, at ${hz(T[id].fc)}`, "ok"]],
+    ["Gain margin", (id) => T[id] && (Number.isFinite(T[id].gmDb)
+      ? [`${T[id].gmDb.toFixed(1)} dB`, `×${T[id].gm.toFixed(2)} at ${hz(T[id].f180)}`, T[id].gmDb >= 6 ? "ok" : "warn"]
+      : ["none", "no −180° crossing above f_b", "ok"])],
+    ["Closed loop", (id) => T[id] && (T[id].stable
+      ? ["stable", `largest pole |z| = ${T[id].rho.toFixed(4)}`, "ok"]
+      : ["unstable", `largest pole |z| = ${T[id].rho.toFixed(4)}`, "bad"])],
+    ["Vibration amplitude", (id) => SS[id] && [`${sig(SS[id].amp * um)} µm`,
+      `stage side mass alone ${sig(p.Famp / (mStage(id) * (2 * Math.PI * ft) ** 2) * um)} µm`]],
+    ["Peak when the cut starts", (id) => EN[id] && [`${sig(EN[id].peak * um)} µm`, "mean plus sine, before the integrator settles"]],
+    ["Controller force amplitude", (id) => SS[id] && [`${sig(SS[id].uAmp)} N`,
+      `${sig(SS[id].uAmp / p.Famp)} N per N of cutting force${id === "linear" ? "" : `, ${torque(id, SS[id].uAmp)}`}`]],
+    ["Peak controller force", (id) => EN[id] && [`${sig(EN[id].uPeak)} N`,
+      `when the cut starts, mean included${id === "linear" ? "" : `, ${torque(id, EN[id].uPeak)}`}`]],
+    ["Controller power", (id) => SS[id] && [`${sig(SS[id].pPeak)} W`, `peak |u·v|, mean ${sig(SS[id].pMean)} W`]],
+  ], cases);
+
+  const bad = cases.filter((id) => !T[id] || !T[id].stable);
+  const uw = $("unstableWarn");
+  uw.hidden = !bad.length;
+  uw.textContent = bad.length ? `${bad.map((id) => CASE[id].name).join(" and ")}: no stable controller with this rule. ` +
+    `The time and sweep charts leave this case out. Try a stiffer coupling, more damping, or a higher loop rate.` : "";
   const warn = $("nyqWarn");
   if (ft >= nyq) {
     warn.hidden = false;
@@ -686,149 +886,156 @@ function run() {
       `The frequency plots stop at ${hz(nyq)}.`;
   } else warn.hidden = true;
 
-  // Frequency plots.
-  const fd = M.frequencyData(p, t);
-  const fx = fd.map((r) => r.f);
-  const xR = [fx[0], fx[fx.length - 1]];
+  // Frequency plots, on one grid for all cases.
+  const fLo = Math.min(...tuned.map((id) => T[id].fb)) / 200;
+  const FD = {};
+  for (const id of tuned) FD[id] = M.frequencyData(p, T[id], 600, fLo);
   const xTip = (f) => hz(f);
-  const vFb = { x: t.fb, label: "f_b" };
   const deg = (r) => r * 180 / Math.PI;
-  const bode = (idm, idp, key, color, unitScale, fmt, extra = {}) => {
-    chart($(idm), { xLog: true, yLog: true, xRange: xR, yLabel: extra.yLabel, xTip, vlines: [vFb, ...(extra.vlines ?? [])],
-      hlines: extra.hlines, markers: extra.markers,
-      series: [{ pts: fd.map((r) => [r.f, r[key] * unitScale]), color, fmt }] });
-    chart($(idp), { xLog: true, xRange: xR, yTicks: "phase", yLabel: "phase °", xLabel: "frequency, Hz", xTip,
-      yFmt: (v) => String(v), vlines: [vFb, ...(extra.vlines ?? [])], hlines: extra.phl, markers: extra.phm,
-      series: [{ pts: fd.map((r) => [r.f, deg(r[key + "ph"])]), color, fmt: (v) => `${v.toFixed(1)}°` }] });
-  };
-  bode("cGm", "cGp", "G", "var(--s1)", um, (v) => `${sig(v)} µm/N`, { yLabel: "µm/N" });
-  bode("cCm", "cCp", "C", "var(--s2)", 1 / um, (v) => `${sig(v)} N/µm`, { yLabel: "N/µm" });
-  const gmMarks = Number.isFinite(t.f180) ? [{ x: t.f180, y: 1 / t.gm, label: `GM ${t.gmDb.toFixed(1)} dB`, below: true }] : [];
-  bode("cLm", "cLp", "L", "var(--s3)", 1, (v) => sig(v), {
-    yLabel: "|C·G|", hlines: [{ y: 1, label: "1" }],
-    markers: [{ x: t.fc, y: 1, label: "crossover" }, ...gmMarks],
-    vlines: Number.isFinite(t.f180) ? [{ x: t.f180, label: "−180°", row: 1 }] : [],
-    phl: [{ y: -180, label: "−180°" }],
-    phm: [{ x: t.fc, y: -180 + t.pmDeg, label: `PM ${t.pmDeg.toFixed(1)}°`, below: true },
-      ...(Number.isFinite(t.f180) ? [{ x: t.f180, y: -180 }] : [])],
-  });
-  $("marginText").textContent = `Phase margin ${t.pmDeg.toFixed(1)}° at ${hz(t.fc)}. ` +
-    (Number.isFinite(t.gmDb) ? `Gain margin ${t.gmDb.toFixed(1)} dB at ${hz(t.f180)}.` : "No phase crossing, no gain margin.");
+  const vFb = tuned.map((id, i) => ({ x: T[id].fb, label: "f_b", color: CASE[id].color, row: i }));
+  if (!tuned.length) for (const c of ["cGm", "cGp", "cCm", "cCp", "cLm", "cLp", "cY", "cS"]) $(c).replaceChildren();
+  if (tuned.length) {
+    const fd0 = FD[tuned[0]];
+    const xR = [fd0[0].f, fd0[fd0.length - 1].f];
+    const bode = (idm, idp, key, unitScale, fmt, extra = {}) => {
+      chart($(idm), { xLog: true, yLog: true, xRange: xR, yLabel: extra.yLabel, xTip, vlines: vFb,
+        hlines: extra.hlines, markers: extra.markers,
+        series: tuned.map((id) => ({ pts: FD[id].map((r) => [r.f, r[key] * unitScale]), color: CASE[id].color, label: CASE[id].name, fmt })) });
+      chart($(idp), { xLog: true, xRange: xR, yTicks: "phase", yLabel: "phase °", xLabel: "frequency, Hz", xTip,
+        yFmt: (v) => String(v), vlines: vFb, hlines: extra.phl, markers: extra.phm,
+        series: tuned.map((id) => ({ pts: FD[id].map((r) => [r.f, deg(r[key + "ph"])]), color: CASE[id].color,
+          label: CASE[id].name, fmt: (v) => `${v.toFixed(1)}°` })) });
+    };
+    bode("cGm", "cGp", "G", um, (v) => `${sig(v)} µm/N`, { yLabel: "µm/N" });
+    bode("cCm", "cCp", "C", 1 / um, (v) => `${sig(v)} N/µm`, { yLabel: "N/µm" });
+    bode("cLm", "cLp", "L", 1, (v) => sig(v), {
+      yLabel: "|C·G|", hlines: [{ y: 1, label: "1" }],
+      markers: tuned.flatMap((id) => [{ x: T[id].fc, y: 1, color: CASE[id].color },
+        ...(Number.isFinite(T[id].f180) ? [{ x: T[id].f180, y: 1 / T[id].gm, color: CASE[id].color }] : [])]),
+      phl: [{ y: -180, label: "−180°" }, { y: -540 }],
+    });
+    $("marginText").textContent = tuned.map((id) => `${CASE[id].name}: phase margin ${T[id].pmDeg.toFixed(1)}° at ${hz(T[id].fc)}, ` +
+      (Number.isFinite(T[id].gmDb) ? `gain margin ${T[id].gmDb.toFixed(1)} dB at ${hz(T[id].f180)}.` : "no gain margin limit.")).join(" ");
 
-  const inBand = ft < fd[fd.length - 1].f && ft > fd[0].f;
-  const yAt = inBand ? M.cabs(M.complianceAt(ft, p, t)) : NaN;
-  const toothLine = inBand ? [{ x: ft, label: "tooth", left: true, row: 1 }] : [];
-  chart($("cY"), { xLog: true, yLog: true, yFromFirst: true, xRange: xR, xLabel: "frequency, Hz", yLabel: "µm/N", xTip,
-    vlines: [vFb, ...toothLine],
-    markers: inBand ? [{ x: ft, y: yAt * um, label: `${sig(yAt * um)} µm/N` }] : [],
-    series: [
-      { pts: fd.map((r) => [r.f, r.Y * um]), color: "var(--s1)", label: "with controller", fmt: (v) => `${sig(v)} µm/N` },
-      { pts: fd.map((r) => [r.f, r.mass * um]), color: "var(--ref)", dash: true, label: "mass alone", fmt: (v) => `${sig(v)} µm/N` },
-    ] });
-  chart($("cS"), { xLog: true, yLog: true, yFromFirst: true, xRange: xR, xLabel: "frequency, Hz", yLabel: "N/µm", xTip,
-    vlines: [vFb, ...toothLine],
-    markers: inBand ? [{ x: ft, y: 1 / yAt / um, label: `${sig(1 / yAt / um)} N/µm`, below: true }] : [],
-    series: [
-      { pts: fd.map((r) => [r.f, 1 / r.Y / um]), color: "var(--s1)", label: "with controller", fmt: (v) => `${sig(v)} N/µm` },
-      { pts: fd.map((r) => [r.f, 1 / r.mass / um]), color: "var(--ref)", dash: true, label: "mass alone", fmt: (v) => `${sig(v)} N/µm` },
-    ] });
+    const stab = tuned.filter((id) => T[id].stable);
+    const inBand = ft < xR[1] && ft > xR[0];
+    const toothLine = inBand ? [{ x: ft, label: "tooth", left: true, row: 0 }] : [];
+    const yAt = (id) => M.cabs(M.complianceAt(ft, p, T[id]));
+    const massRef = { pts: fd0.map((r) => [r.f, r.mass * um]), color: "var(--ref)", dash: true, label: "stage mass alone", fmt: (v) => `${sig(v)} µm/N` };
+    chart($("cY"), { xLog: true, yLog: true, yFromN: stab.length || 1, xRange: xR, xLabel: "frequency, Hz", yLabel: "µm/N", xTip,
+      vlines: [...toothLine],
+      markers: inBand ? stab.map((id) => ({ x: ft, y: yAt(id) * um, color: CASE[id].color })) : [],
+      series: [...stab.map((id) => ({ pts: FD[id].map((r) => [r.f, r.Y * um]), color: CASE[id].color, label: CASE[id].name,
+        fmt: (v) => `${sig(v)} µm/N` })), massRef] });
+    chart($("cS"), { xLog: true, yLog: true, yFromN: stab.length || 1, xRange: xR, xLabel: "frequency, Hz", yLabel: "N/µm", xTip,
+      vlines: [...toothLine],
+      markers: inBand ? stab.map((id) => ({ x: ft, y: 1 / yAt(id) / um, color: CASE[id].color })) : [],
+      series: [...stab.map((id) => ({ pts: FD[id].map((r) => [r.f, 1 / r.Y / um]), color: CASE[id].color, label: CASE[id].name,
+        fmt: (v) => `${sig(v)} N/µm` })),
+        { ...massRef, pts: fd0.map((r) => [r.f, 1 / r.mass / um]), fmt: (v) => `${sig(v)} N/µm` }] });
+  }
 
   // Time plots. The start trace is thinned to min and max per bucket, so the
   // envelope stays true.
-  const xs = entry.xs, n = xs.length, T = 1 / p.fs;
-  const buckets = 700, per = Math.max(1, Math.ceil(n / buckets));
-  const ent = [];
-  for (let i = 0; i < n; i += per) {
-    let lo = i, hi = i;
-    for (let j = i; j < Math.min(n, i + per); j++) { if (xs[j] < xs[lo]) lo = j; if (xs[j] > xs[hi]) hi = j; }
-    for (const j of lo < hi ? [lo, hi] : lo > hi ? [hi, lo] : [lo]) ent.push([j * T * 1000, xs[j] * um]);
-  }
-  chart($("cEntry"), { xLabel: "time, ms", yLabel: "µm", xTip: (v) => `${v.toFixed(2)} ms`, hlines: [{ y: 0 }],
-    series: [{ pts: ent, color: "var(--s1)", width: 1.5, fmt: (v) => `${sig(v)} µm` }] });
+  const Ts = 1 / p.fs;
+  const per = Math.max(1, Math.ceil((nEntry + 1) / 700));
+  const thin = (arr, val) => {
+    const out = [];
+    for (let i = 0; i < arr.length; i += per) {
+      let lo = i, hi = i;
+      for (let j = i; j < Math.min(arr.length, i + per); j++) { if (val(j) < val(lo)) lo = j; if (val(j) > val(hi)) hi = j; }
+      for (const j of lo < hi ? [lo, hi] : lo > hi ? [hi, lo] : [lo]) out.push([j * Ts * 1000, val(j)]);
+    }
+    return out;
+  };
   const wt = 2 * Math.PI * ft;
   const cut = (tt) => p.Fmean + p.Famp * Math.sin(wt * tt);
-  const us = entry.us, entU = [], entF = [];
-  for (let i = 0; i < us.length; i += per) {
-    let lo = i, hi = i, flo = i, fhi = i;
-    for (let j = i; j < Math.min(us.length, i + per); j++) {
-      if (us[j] < us[lo]) lo = j;
-      if (us[j] > us[hi]) hi = j;
-      if (-cut(j * T) < -cut(flo * T)) flo = j;
-      if (-cut(j * T) > -cut(fhi * T)) fhi = j;
-    }
-    for (const j of lo < hi ? [lo, hi] : lo > hi ? [hi, lo] : [lo]) entU.push([j * T * 1000, us[j]]);
-    for (const j of flo < fhi ? [flo, fhi] : flo > fhi ? [fhi, flo] : [flo]) entF.push([j * T * 1000, -cut(j * T)]);
-  }
-  chart($("cEntryU"), { xLabel: "time, ms", yLabel: "N", xTip: (v) => `${v.toFixed(2)} ms`, hlines: [{ y: 0 }],
-    series: [
-      { pts: entU, color: "var(--s2)", width: 1.5, label: "controller", fmt: (v) => `${sig(v)} N` },
-      { pts: entF, color: "var(--ref)", dash: true, width: 1.2, label: "−cutting force", fmt: (v) => `${sig(v)} N` },
-    ] });
+  const msTip = (v) => `${v.toFixed(2)} ms`;
+  chart($("cEntry"), { xLabel: "time, ms", yLabel: "µm", xTip: msTip, hlines: [{ y: 0 }],
+    series: live.map((id) => ({ pts: thin(EN[id].xs, (j) => EN[id].xs[j] * um), color: CASE[id].color, width: 1.5,
+      label: CASE[id].name, fmt: (v) => `${sig(v)} µm` })) });
+  const cutArr = new Float64Array(nEntry);
+  chart($("cEntryU"), { xLabel: "time, ms", yLabel: "N", xTip: msTip, hlines: [{ y: 0 }],
+    series: [...live.map((id) => ({ pts: thin(EN[id].us, (j) => EN[id].us[j]), color: CASE[id].color, width: 1.5,
+      label: CASE[id].name, fmt: (v) => `${sig(v)} N` })),
+      { pts: live.length ? thin(cutArr, (j) => -cut(j * Ts)) : [], color: "var(--ref)", dash: true, width: 1.2, label: "−cutting force", fmt: (v) => `${sig(v)} N` }] });
 
-  const st = M.steadyTrace(p, t, 4);
-  const stPts = st.points.map(([tt, x]) => [tt * 1000, x * um]);
-  // Every sub-th point falls on a sample: that is what the controller sees.
-  const samples = st.points.filter((_, i) => (i + 1) % st.sub === 0).map(([tt, x]) => [tt * 1000, x * um]);
-  chart($("cSteady"), { xLabel: "time, ms", yLabel: "µm", xTip: (v) => `${v.toFixed(3)} ms`,
-    hlines: [{ y: st.mid * um + st.amp * um, label: `+${sig(st.amp * um)} µm` }, { y: st.mid * um - st.amp * um }],
-    series: [{ pts: stPts, color: "var(--s1)", width: 1.5, dots: samples.length <= 200 ? samples : null, fmt: (v) => `${sig(v)} µm` }] });
+  const ST = {};
+  for (const id of live) ST[id] = M.steadyTrace(p, T[id], 4);
+  const usTip = (v) => `${v.toFixed(3)} ms`;
+  chart($("cSteady"), { xLabel: "time, ms", yLabel: "µm", xTip: usTip,
+    series: live.map((id) => {
+      const st = ST[id];
+      // Every sub-th point falls on a sample: that is what the controller sees.
+      const samples = st.points.filter((_, i) => (i + 1) % st.sub === 0).map(([tt, x]) => [tt * 1000, x * um]);
+      return { pts: st.points.map(([tt, x]) => [tt * 1000, x * um]), color: CASE[id].color, width: 1.5, label: CASE[id].name,
+        dots: samples.length <= 200 ? samples : null, fmt: (v) => `${sig(v)} µm` };
+    }) });
+  $("steadyText").textContent = live.map((id) => `${CASE[id].name}: ±${sig(ST[id].amp * um)} µm.`).join(" ") +
+    " Dots: the samples the controller takes.";
   // The controller force as a staircase: constant from one sample to the next.
-  const stU = [];
-  for (let i = 0; i + st.sub <= st.points.length; i += st.sub) {
-    const u = st.points[i][2];
-    stU.push([(st.points[i][0] - T / st.sub) * 1000, u], [st.points[i + st.sub - 1][0] * 1000, u]);
-  }
-  const stF = st.points.map(([tt]) => [tt * 1000, -cut(tt + st.t0)]);
-  const uMid = -p.Fmean;
-  chart($("cSteadyU"), { xLabel: "time, ms", yLabel: "N", xTip: (v) => `${v.toFixed(3)} ms`,
-    hlines: [{ y: uMid + st.uAmp, label: `±${sig(st.uAmp)} N` }, { y: uMid - st.uAmp }],
-    series: [
-      { pts: stU, color: "var(--s2)", width: 1.5, label: "controller", fmt: (v) => `${sig(v)} N` },
-      { pts: stF, color: "var(--ref)", dash: true, width: 1.2, label: "−cutting force", fmt: (v) => `${sig(v)} N` },
-    ] });
-  $("steadyUText").textContent = `Around −${sig(p.Fmean)} N (the mean force): ±${sig(st.uAmp)} N, ` +
-    `${sig(st.uAmp / p.Famp)} × the ±${sig(p.Famp)} N of the cut.`;
+  const stair = (st) => {
+    const out = [];
+    for (let i = 0; i + st.sub <= st.points.length; i += st.sub) {
+      const u = st.points[i][2];
+      out.push([(st.points[i][0] - Ts / st.sub) * 1000, u], [st.points[i + st.sub - 1][0] * 1000, u]);
+    }
+    return out;
+  };
+  const st0 = live.length ? ST[live[0]] : null;
+  chart($("cSteadyU"), { xLabel: "time, ms", yLabel: "N", xTip: usTip,
+    series: [...live.map((id) => ({ pts: stair(ST[id]), color: CASE[id].color, width: 1.5, label: CASE[id].name, fmt: (v) => `${sig(v)} N` })),
+      { pts: st0 ? st0.points.map(([tt]) => [tt * 1000, -cut(tt + st0.t0)]) : [], color: "var(--ref)", dash: true, width: 1.2,
+        label: "−cutting force", fmt: (v) => `${sig(v)} N` }] });
+  $("steadyUText").textContent = `Around −${sig(p.Fmean)} N (the mean force), against the ±${sig(p.Famp)} N of the cut: ` +
+    live.map((id) => `${CASE[id].name} ±${sig(ST[id].uAmp)} N`).join(", ") + ".";
 
   // Sweep.
   let lo = parseFloat($("rpmLo").value), hi = parseFloat($("rpmHi").value);
   if (!(lo > 0) || !(hi > lo)) { lo = 1000; hi = 30000; }
-  const sw = M.sweep(p, t, lo, hi, 150);
+  const SW = {};
+  for (const id of live) {
+    SW[id] = cached(`${tuneKey(p, id)}|${p.Famp}|${p.teeth}|${lo}|${hi}`, () => M.sweep(p, T[id], lo, hi, 120));
+  }
   const rpmAt = (f) => f * 60 / p.teeth;
-  const sv = [{ x: rpmAt(t.fb), label: "tooth = f_b" }, { x: rpmAt(nyq), label: "tooth = fs/2", row: 1 }];
-  chart($("cSweep"), { xLabel: "spindle speed, rev/min", yLabel: "µm", xTip: (v) => `${Math.round(v)} rev/min, tooth ${hz(v * p.teeth / 60)}`,
-    xFmt: (v) => String(Math.round(v)), vlines: sv,
-    yRange: [0, Math.max(...sw.map((r) => r.amp * um)) * 1.15],
-    markers: p.rpm >= lo && p.rpm <= hi ? [{ x: p.rpm, y: amp * um, label: `${sig(amp * um)} µm at ${Math.round(p.rpm)}` }] : [],
-    series: [
-      { pts: sw.map((r) => [r.rpm, r.amp * um]), color: "var(--s1)", label: "with controller", fmt: (v) => `${sig(v)} µm` },
-      { pts: sw.map((r) => [r.rpm, r.mass * um]), color: "var(--ref)", dash: true, label: "mass alone", fmt: (v) => `${sig(v)} µm` },
-    ] });
+  const sv = [...live.map((id, i) => ({ x: rpmAt(T[id].fb), label: "tooth = f_b", color: CASE[id].color, row: i })),
+    { x: rpmAt(nyq), label: "tooth = fs/2", row: live.length }];
   const swTip = (v) => `${Math.round(v)} rev/min, tooth ${hz(v * p.teeth / 60)}`;
   const onSpeed = p.rpm >= lo && p.rpm <= hi;
+  const any = live.length > 0;
+  const sw0 = any ? SW[live[0]] : [];
+  chart($("cSweep"), { xLabel: "spindle speed, rev/min", yLabel: "µm", xTip: swTip,
+    xFmt: (v) => String(Math.round(v)), vlines: sv, xRange: [lo, hi],
+    yRange: [0, Math.max(1e-12, ...live.flatMap((id) => SW[id].map((r) => r.amp * um))) * 1.15],
+    markers: onSpeed ? live.map((id) => ({ x: p.rpm, y: SS[id].amp * um, color: CASE[id].color })) : [],
+    series: [...live.map((id) => ({ pts: SW[id].map((r) => [r.rpm, r.amp * um]), color: CASE[id].color, label: CASE[id].name,
+      fmt: (v) => `${sig(v)} µm` })),
+      { pts: sw0.map((r) => [r.rpm, r.mass * um]), color: "var(--ref)", dash: true, label: "stage mass alone", fmt: (v) => `${sig(v)} µm` }] });
   chart($("cRatio"), { xLabel: "spindle speed, rev/min", yLabel: "N/N", xTip: swTip,
-    xFmt: (v) => String(Math.round(v)), xTicks: 4, vlines: sv, hlines: [{ y: 1, label: "1" }],
-    yRange: [0, Math.max(1.2, ...sw.map((r) => r.ratio)) * 1.15],
-    markers: onSpeed ? [{ x: p.rpm, y: ss.uAmp / p.Famp, label: `${sig(ss.uAmp / p.Famp)} N/N`, below: true }] : [],
-    series: [
-      { pts: sw.map((r) => [r.rpm, r.ratio]), color: "var(--s2)", label: "simulation", fmt: (v) => `${sig(v)} N/N` },
-      { pts: sw.map((r) => [r.rpm, r.tf]), color: "var(--ref)", dash: true, label: "transfer function", fmt: (v) => `${sig(v)} N/N` },
-    ] });
+    xFmt: (v) => String(Math.round(v)), xTicks: 4, vlines: sv, hlines: [{ y: 1, label: "1" }], xRange: [lo, hi],
+    yRange: [0, Math.max(1.2, ...live.flatMap((id) => SW[id].map((r) => r.ratio))) * 1.15],
+    markers: onSpeed ? live.map((id) => ({ x: p.rpm, y: SS[id].uAmp / p.Famp, color: CASE[id].color })) : [],
+    series: live.flatMap((id) => [
+      { pts: SW[id].map((r) => [r.rpm, r.ratio]), color: CASE[id].color, label: `${CASE[id].name}, simulation`, fmt: (v) => `${sig(v)} N/N` },
+      { pts: SW[id].map((r) => [r.rpm, r.tf]), color: CASE[id].color, dash: true, width: 1.2, label: "transfer function", fmt: (v) => `${sig(v)} N/N` },
+    ]) });
   $("powerF").textContent = `±${sig(p.Famp)} N`;
-  const pMax = Math.max(...sw.map((r) => r.pPeak)), pMin = Math.min(0, ...sw.map((r) => r.pMean));
+  const pMax = Math.max(0, ...live.flatMap((id) => SW[id].map((r) => r.pPeak)));
+  const pMin = Math.min(0, ...live.flatMap((id) => SW[id].map((r) => r.pMean)));
   chart($("cPower"), { xLabel: "spindle speed, rev/min", yLabel: "W", xTip: swTip,
-    xFmt: (v) => String(Math.round(v)), xTicks: 4, vlines: sv, hlines: [{ y: 0 }],
+    xFmt: (v) => String(Math.round(v)), xTicks: 4, vlines: sv, hlines: [{ y: 0 }], xRange: [lo, hi],
     yRange: [pMin - 0.08 * (pMax - pMin), pMax * 1.15 || 1],
-    markers: onSpeed ? [{ x: p.rpm, y: ss.pPeak, label: `${sig(ss.pPeak)} W`, below: true }] : [],
-    series: [
-      { pts: sw.map((r) => [r.rpm, r.pPeak]), color: "var(--s2)", label: "peak", fmt: (v) => `${sig(v)} W` },
-      { pts: sw.map((r) => [r.rpm, r.pMean]), color: "var(--s3)", label: "mean", fmt: (v) => `${sig(v)} W` },
-    ] });
+    markers: onSpeed ? live.map((id) => ({ x: p.rpm, y: SS[id].pPeak, color: CASE[id].color })) : [],
+    series: live.flatMap((id) => [
+      { pts: SW[id].map((r) => [r.rpm, r.pPeak]), color: CASE[id].color, label: `${CASE[id].name}, peak`, fmt: (v) => `${sig(v)} W` },
+      { pts: SW[id].map((r) => [r.rpm, r.pMean]), color: CASE[id].color, dash: true, width: 1.2, label: "mean", fmt: (v) => `${sig(v)} W` },
+    ]) });
 
   status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
 }
 
 for (const id of [...ids, "rpmLo", "rpmHi"]) $(id).addEventListener("input", schedule);
-$("delay").addEventListener("change", update);
+for (const id of M.CASES) $(`case-${id}`).addEventListener("change", update);
 update();
 </script>
 </body>

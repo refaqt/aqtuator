@@ -57,6 +57,10 @@ Results at the defaults (2 kg, 10 kHz, 2 teeth at 12000 rev/min, 50 N mean and 5
 
 Full table: [case README](../../simulation/cases/cutting-force-rejection/README.md#what-it-shows).
 
+- Later: the page now also compares a ball-screw servo with the linear motor, and the optional
+  computation delay is removed, because it will not be there in practice. See
+  [the ball-screw log](2026-09-28_ball-screw-servo-cases.md).
+
 ## Decisions Made
 
 - The hold lag is part of the discrete plant, so it is not added a second time. A computation delay

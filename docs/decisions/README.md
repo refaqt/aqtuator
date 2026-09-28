@@ -29,3 +29,4 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-09-22 | [Strip seal material and roller size](2026-09-22_strip-seal-material-and-roller-size.md) |
 | 2026-09-22 | [The first step lives in CLAUDE.md](2026-09-22_first-step-lives-in-claude-md.md) |
 | 2026-09-22 | [Hide the tooling gitlinks from `git status`](2026-09-22_hide-the-tooling-gitlinks.md) |
+| 2026-09-28 | [Tune each drive case with the same rule](2026-09-28_tune-each-drive-case-with-the-same-rule.md) |
