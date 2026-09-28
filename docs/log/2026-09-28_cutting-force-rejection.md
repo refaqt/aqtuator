@@ -33,6 +33,12 @@ function in discrete time.
   "How this is calculated" inside the sweep panel, is fixed too. See
   [the mistake note](../mistakes/2026-09-28_page-ran-against-a-cached-model.md).
 
+- Last: opened straight from disk, the page still said "Calculating…" forever. Browsers refuse
+  to load a module file for a page opened from disk, so the model never loaded. The model file is
+  now a plain script, and the page opens from disk with no server. The published page and the
+  check script work as before. See
+  [the mistake note](../mistakes/2026-09-28_page-needed-a-server-to-run.md).
+
 Results at the defaults (2 kg, 10 kHz, 2 teeth at 12000 rev/min, 50 N mean and 50 N amplitude):
 
 - **The loop rate sets the bandwidth, not the mass.** The bandwidth is the loop rate divided by 23:

@@ -15,13 +15,9 @@ It runs in the browser.
 node simulation/cases/cutting-force-rejection/check_model.mjs
 ```
 
-To run the page from a local clone, serve the folder, because browsers block modules opened
-straight from disk:
-
-```bash
-python3 -m http.server -d simulation/cases/cutting-force-rejection 8000
-# then open http://localhost:8000
-```
+To run the page from a local clone, open `index.html` in the browser. No server is needed. The
+model file `control_model.js` is a plain script, not a module, because browsers refuse to load a
+module for a page opened straight from disk.
 
 Log: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md).
 

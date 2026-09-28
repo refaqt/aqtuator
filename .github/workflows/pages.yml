@@ -57,7 +57,7 @@ jobs:
           # running the new page against the old model.
           v="${GITHUB_SHA:0:12}"
           sed -i "s#from \"./strip_model.js\"#from \"./strip_model.js?v=$v\"#" _site/strip-seal/index.html
-          sed -i "s#from \"./control_model.js\"#from \"./control_model.js?v=$v\"#" _site/cutting-force/index.html
+          sed -i "s#src=\"./control_model.js\"#src=\"./control_model.js?v=$v\"#" _site/cutting-force/index.html
           grep -q "strip_model.js?v=$v" _site/strip-seal/index.html
           grep -q "control_model.js?v=$v" _site/cutting-force/index.html
           cat > _site/index.html <<'HTML'
