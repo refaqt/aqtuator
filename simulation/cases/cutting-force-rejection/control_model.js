@@ -1,22 +1,43 @@
-// Motion controller against a milling force: a moving mass, a discrete
-// controller at the loop rate, and a sine cutting force with a mean.
+// Motion controller against a milling force: a stage, a discrete controller
+// at the loop rate, and a sine cutting force with a mean. Three cases:
+//
+//   "linear"     linear motor. One rigid mass, the stage.
+//   "colloc"     BLDC motor, coupling, ball screw, stage. The controller reads
+//                the rotary encoder on the motor (collocated).
+//   "noncolloc"  the same mechanics. The controller reads a linear encoder on
+//                the stage (non-collocated).
 //
 // Units inside this file: SI (m, N, s, Hz, kg). The page converts to µm.
 //
 // The loop (reference is zero, so the controller only fights the force):
 //
-//   F_d ──────────────┐
-//                     v
-//   0 ─(+)─ C(z) ─ ZOH ─(+)─ G(s) = 1/(m s²) ─┬─ y
-//       ^-                                      │
-//       └──────────── sample at fs ────────────┘
+//   F_d (on the stage) ───────────┐
+//                                 v
+//   0 ─(+)─ C(z) ─ ZOH ── u ──> plant ─┬─ stage position y_s
+//       ^-                             └─ measured position y_m
+//       └──────── sample at fs ────────────┘
 //
-//   Y / F_d = G_zoh(z) / (1 + G_zoh(z) · C(z))     (compliance)
+// With y_m = G_mu·u + G_md·F_d and y_s = G_su·u + G_sd·F_d, and u = −C·y_m:
 //
-// Plant with a zero-order hold (the controller force stays constant for one
-// sample). This already holds the half-sample lag of the hold:
+//   U / F_d   = −C·G_md / (1 + C·G_mu)                 (controller force)
+//   Y_s / F_d = G_sd − G_su·C·G_md / (1 + C·G_mu)      (compliance)
 //
-//   G_zoh(z) = T² (z + 1) / (2 m (z − 1)²)
+// For the linear motor all four are the same G, so Y/F_d = G/(1 + C·G).
+//
+// Ball screw in linear coordinates, r = pitch/(2π) in m/rad:
+//
+//   motor side  m1 = J_rotor / r²          motor force u = torque / r
+//   stage side  m2 = m + J_screw / r²      J_screw = π·ρ·L·d⁴/32, steel
+//   coupling    k  = k_c / r²,  c = 2·ζ·√(k·μ),  μ = m1·m2/(m1 + m2)
+//
+//   m1·x1'' = u − k·(x1 − x2) − c·(x1' − x2')
+//   m2·x2'' = F_d + k·(x1 − x2) + c·(x1' − x2')
+//
+// The screw and the nut are axially rigid. The coupling is the only spring.
+//
+// The plant is a state space. The hold is exact: Φ = e^{AT} and Γ come from
+// one matrix exponential. G(z) = c·(zI − Φ)⁻¹·Γ. For one mass this is
+// T² (z + 1) / (2 m (z − 1)²), the formula in plantAt.
 //
 // Controller, continuous time:
 //
@@ -33,9 +54,8 @@
 //
 //   out[k] = b0 · in[k] + b1 · in[k−1] − a1 · out[k−1]
 //
-// K is set so that |C·G| = 1 at f_b. f_b is set so that the phase margin is
-// the target (30°). An optional extra one-sample computation delay z⁻¹ can be
-// switched on. It is not the hold lag: that one is already inside G_zoh.
+// K is set so that |C·G_mu| = 1 at f_b. f_b is set so that the phase margin
+// is the target (30°). Each case is tuned on its own plant with this rule.
 
 const DEFAULTS = {
   Famp: 50,        // N, amplitude (peak) of the sine part of the cutting force
@@ -44,9 +64,17 @@ const DEFAULTS = {
   rpm: 12000,      // spindle speed, rev/min
   m: 2,            // kg, moving mass of the stage
   fs: 10000,       // Hz, controller loop rate
-  delay: false,    // extra one-sample computation delay
   pm: 30,          // degrees, target phase margin
+  pitch: 5,        // mm per revolution, ball-screw pitch
+  kc: 450,         // N·m/rad, coupling stiffness
+  d: 16,           // mm, ball-screw diameter
+  L: 400,          // mm, ball-screw length
+  Jr: 119,         // g·cm², rotor inertia of the BLDC motor
+  zeta: 0.1,       // damping ratio of the motor, coupling and screw mode
 };
+
+const CASES = ["linear", "colloc", "noncolloc"];
+const STEEL = 7850;  // kg/m³
 
 // ---------------------------------------------------------------------------
 // Complex numbers as [re, im].
@@ -58,7 +86,182 @@ const cdiv = (a, b) => {
   return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d];
 };
 const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const csub = (a, b) => [a[0] - b[0], a[1] - b[1]];
 const cabs = (a) => Math.hypot(a[0], a[1]);
+const carg = (a) => Math.atan2(a[1], a[0]);
+
+// Solve M·x = b for complex M (n × n) and b (n). Gauss with row pivots.
+function csolve(M, b) {
+  const n = b.length;
+  const A = M.map((row, i) => [...row.map((v) => [...v]), [...b[i]]]);
+  for (let c = 0; c < n; c++) {
+    let piv = c;
+    for (let r = c + 1; r < n; r++) if (cabs(A[r][c]) > cabs(A[piv][c])) piv = r;
+    [A[c], A[piv]] = [A[piv], A[c]];
+    for (let r = c + 1; r < n; r++) {
+      const f = cdiv(A[r][c], A[c][c]);
+      for (let k = c; k <= n; k++) A[r][k] = csub(A[r][k], cmul(f, A[c][k]));
+    }
+  }
+  const x = new Array(n);
+  for (let r = n - 1; r >= 0; r--) {
+    let s = A[r][n];
+    for (let k = r + 1; k < n; k++) s = csub(s, cmul(A[r][k], x[k]));
+    x[r] = cdiv(s, A[r][r]);
+  }
+  return x;
+}
+
+// Solve M·x = a and M·x = b at once, for real a and b. Used for the plant
+// responses, so it is kept lean.
+function csolve2(M, a, b) {
+  const n = a.length;
+  const re = M.map((row) => row.map((v) => v[0])), im = M.map((row) => row.map((v) => v[1]));
+  const r = [a.map((v) => [v, 0]), b.map((v) => [v, 0])];
+  for (let c = 0; c < n; c++) {
+    let piv = c;
+    for (let i = c + 1; i < n; i++) if (Math.hypot(re[i][c], im[i][c]) > Math.hypot(re[piv][c], im[piv][c])) piv = i;
+    for (const A of [re, im, r[0], r[1]]) [A[c], A[piv]] = [A[piv], A[c]];
+    const pr = re[c][c], pi = im[c][c], pd = pr * pr + pi * pi;
+    for (let i = c + 1; i < n; i++) {
+      const fr = (re[i][c] * pr + im[i][c] * pi) / pd, fi = (im[i][c] * pr - re[i][c] * pi) / pd;
+      for (let k = c; k < n; k++) {
+        const xr = re[c][k], xi = im[c][k];
+        re[i][k] -= fr * xr - fi * xi;
+        im[i][k] -= fr * xi + fi * xr;
+      }
+      for (const R of r) R[i] = [R[i][0] - (fr * R[c][0] - fi * R[c][1]), R[i][1] - (fr * R[c][1] + fi * R[c][0])];
+    }
+  }
+  return r.map((R) => {
+    const x = new Array(n);
+    for (let i = n - 1; i >= 0; i--) {
+      let s = R[i];
+      for (let k = i + 1; k < n; k++) s = csub(s, cmul([re[i][k], im[i][k]], x[k]));
+      x[i] = cdiv(s, [re[i][i], im[i][i]]);
+    }
+    return x;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Real matrices as arrays of rows.
+// ---------------------------------------------------------------------------
+
+const zeros = (n, m = n) => Array.from({ length: n }, () => new Array(m).fill(0));
+const eye = (n) => zeros(n).map((row, i) => { row[i] = 1; return row; });
+function matmul(A, B) {
+  const n = A.length, m = B[0].length, q = B.length;
+  const C = zeros(n, m);
+  for (let i = 0; i < n; i++) for (let k = 0; k < q; k++) {
+    const a = A[i][k];
+    if (a !== 0) for (let j = 0; j < m; j++) C[i][j] += a * B[k][j];
+  }
+  return C;
+}
+const norm1 = (A) => Math.max(...A[0].map((_, j) => A.reduce((s, row) => s + Math.abs(row[j]), 0)));
+
+// e^A by scaling and squaring, with a Taylor series on A/2^s, |A/2^s| ≤ 0.5.
+function expm(A) {
+  const n = A.length;
+  const s = Math.max(0, Math.ceil(Math.log2(norm1(A) || 1)) + 1);
+  const As = A.map((row) => row.map((v) => v / 2 ** s));
+  let E = eye(n), term = eye(n);
+  for (let k = 1; k <= 18; k++) {
+    term = matmul(term, As).map((row) => row.map((v) => v / k));
+    E = E.map((row, i) => row.map((v, j) => v + term[i][j]));
+  }
+  for (let i = 0; i < s; i++) E = matmul(E, E);
+  return E;
+}
+
+// ---------------------------------------------------------------------------
+// Mechanics and plants.
+// ---------------------------------------------------------------------------
+
+// The ball-screw drive in linear coordinates. Also the two mode frequencies:
+// the resonance, and the antiresonance the motor encoder sees (the stage side
+// swinging on the coupling while the motor stands still).
+function mechanics(p) {
+  const r = p.pitch / 1000 / (2 * Math.PI);
+  const d = p.d / 1000, L = p.L / 1000;
+  const Js = Math.PI * STEEL * L * d ** 4 / 32;
+  const Jr = p.Jr * 1e-7;
+  const m1 = Jr / r ** 2, m2 = p.m + Js / r ** 2;
+  const k = p.kc / r ** 2, mu = m1 * m2 / (m1 + m2);
+  const c = 2 * p.zeta * Math.sqrt(k * mu);
+  return { r, Js, Jr, m1, m2, mScrew: Js / r ** 2, k, c, mu,
+    fRes: Math.sqrt(k / mu) / (2 * Math.PI), fAnti: Math.sqrt(k / m2) / (2 * Math.PI) };
+}
+
+// Continuous plant of one case. Indices into the state:
+//   im  motor position (the motor force works on it), iv its speed,
+//   is  stage position, iy measured position.
+function plantFor(p, id) {
+  if (id === "linear") {
+    return { id, n: 2, A: [[0, 1], [0, 0]], Bu: [0, 1 / p.m], Bd: [0, 1 / p.m],
+      im: 0, iv: 1, is: 0, iy: 0, mStage: p.m, mTotal: p.m };
+  }
+  const q = mechanics(p);
+  const { m1, m2, k, c } = q;
+  return { id, n: 4, mech: q,
+    A: [[0, 1, 0, 0], [-k / m1, -c / m1, k / m1, c / m1], [0, 0, 0, 1], [k / m2, c / m2, -k / m2, -c / m2]],
+    Bu: [0, 1 / m1, 0, 0], Bd: [0, 0, 0, 1 / m2],
+    im: 0, iv: 1, is: 2, iy: id === "colloc" ? 0 : 2, mStage: m2, mTotal: m1 + m2 };
+}
+
+// Exact step of length h, with the controller force u and the mean force
+// constant, and a sine force F_amp·sin(ω t) on the stage:
+//
+//   x(t0 + h) = Φ·x + Gu·u + Gf·F_mean + F_amp·(Ss·sin ω t0 + Sc·cos ω t0)
+//
+// One matrix exponential of the plant with the two inputs and a sine
+// generator (s' = ω c, c' = −ω s) added as states.
+function stepMatrices(pl, h, w = 0) {
+  const n = pl.n, N = n + 4;
+  const M = zeros(N);
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) M[i][j] = pl.A[i][j] * h;
+    M[i][n] = pl.Bu[i] * h;
+    M[i][n + 1] = pl.Bd[i] * h;
+    M[i][n + 2] = pl.Bd[i] * h;
+  }
+  M[n + 2][n + 3] = w * h;
+  M[n + 3][n + 2] = -w * h;
+  const E = expm(M);
+  const col = (j) => E.slice(0, n).map((row) => row[j]);
+  return { Phi: E.slice(0, n).map((row) => row.slice(0, n)), Gu: col(n), Gf: col(n + 1), Ss: col(n + 2), Sc: col(n + 3) };
+}
+
+// The plant with its hold, at the loop rate. Cached on the plant.
+function discrete(pl, T) {
+  if (!pl.disc || pl.disc.T !== T) pl.disc = { T, ...stepMatrices(pl, T) };
+  return pl.disc;
+}
+
+// Plant with hold for one mass, as a formula. With z = e^{jθ}:
+//   (z + 1)/(z − 1)² = −cos(θ/2) / (2 sin²(θ/2)) · e^{−jθ/2}
+// so the phase is −π − θ/2 and the gain is T² cos(θ/2) / (4 m sin²(θ/2)).
+// The checks compare the state-space plant with it.
+function plantAt(f, p) {
+  const T = 1 / p.fs, theta = 2 * Math.PI * f * T;
+  const mag = T * T * Math.cos(theta / 2) / (4 * p.m * Math.sin(theta / 2) ** 2);
+  const ph = -Math.PI - theta / 2;
+  return { h: [mag * Math.cos(ph), mag * Math.sin(ph)], ph };
+}
+
+// The four discrete plant responses at f, complex:
+//   mu: motor force to measured position, md: cutting force to measured,
+//   su: motor force to stage position,    sd: cutting force to stage.
+// The cutting force is treated as held too, like the motor force. This is
+// close below about fs/4. The time simulation uses the true sine.
+function plantResp(f, p, pl) {
+  const T = 1 / p.fs, d = discrete(pl, T), n = pl.n;
+  const th = 2 * Math.PI * f * T, z = [Math.cos(th), Math.sin(th)];
+  const M = d.Phi.map((row, i) => row.map((v, j) => (i === j ? csub(z, [v, 0]) : [-v, 0])));
+  const [xu, xd] = csolve2(M, d.Gu, d.Gf);
+  return { mu: xu[pl.iy], md: xd[pl.iy], su: xu[pl.is], sd: xd[pl.is], n };
+}
 
 // ---------------------------------------------------------------------------
 // Controller sections.
@@ -88,21 +291,7 @@ function sectionAt(s, theta) {
   return { h: cdiv(num, den), ph: Math.atan2(num[1], num[0]) - Math.atan2(den[1], den[0]) };
 }
 
-// ---------------------------------------------------------------------------
-// Frequency responses. f in Hz, 0 < f < fs/2. Phases in radians, unwrapped.
-// ---------------------------------------------------------------------------
-
-// Plant with hold. With z = e^{jθ}:
-//   (z + 1)/(z − 1)² = −cos(θ/2) / (2 sin²(θ/2)) · e^{−jθ/2}
-// so the phase is −π − θ/2 and the gain is T² cos(θ/2) / (4 m sin²(θ/2)).
-function plantAt(f, p) {
-  const T = 1 / p.fs, theta = 2 * Math.PI * f * T;
-  const mag = T * T * Math.cos(theta / 2) / (4 * p.m * Math.sin(theta / 2) ** 2);
-  const ph = -Math.PI - theta / 2;
-  return { h: [mag * Math.cos(ph), mag * Math.sin(ph)], ph };
-}
-
-// Controller C(z), with gain K and the optional delay.
+// Controller C(z), with gain K.
 function controllerAt(f, p, tuned) {
   const T = 1 / p.fs, theta = 2 * Math.PI * f * T;
   let h = [tuned.K, 0], ph = 0;
@@ -111,119 +300,204 @@ function controllerAt(f, p, tuned) {
     h = cmul(h, r.h);
     ph += r.ph;
   }
-  if (p.delay) {
-    h = cmul(h, [Math.cos(theta), -Math.sin(theta)]);
-    ph -= theta;
-  }
   return { h, ph };
 }
 
+// ---------------------------------------------------------------------------
+// Frequency responses. f in Hz, 0 < f < fs/2.
+// ---------------------------------------------------------------------------
+
+// Loop C·G_mu at f. The phases here are wrapped to (−π, π]. frequencyData
+// unwraps them over its grid.
 function loopAt(f, p, tuned) {
-  const g = plantAt(f, p), c = controllerAt(f, p, tuned);
-  return { h: cmul(g.h, c.h), ph: g.ph + c.ph, g, c };
+  const g = plantResp(f, p, tuned.plant), c = controllerAt(f, p, tuned);
+  const h = cmul(g.mu, c.h);
+  return { h, g, c };
 }
 
-// Compliance Y/F_d in m/N (complex).
+// Compliance Y_s/F_d at the stage in m/N (complex).
 function complianceAt(f, p, tuned) {
   const l = loopAt(f, p, tuned);
-  return cdiv(l.g.h, cadd([1, 0], l.h));
+  const r = cdiv(cmul(l.c.h, l.g.md), cadd([1, 0], l.h));
+  return csub(l.g.sd, cmul(l.g.su, r));
 }
 
-// Controller force per newton of cutting force, U/F_d = −C·G/(1 + C·G)
+// Controller force per newton of cutting force, U/F_d = −C·G_md/(1 + C·G_mu)
 // (complex, no unit). Well below f_b the controller takes the whole force,
 // far above it the mass does.
 function forceRatioAt(f, p, tuned) {
   const l = loopAt(f, p, tuned);
-  const r = cdiv(l.h, cadd([1, 0], l.h));
+  const r = cdiv(cmul(l.c.h, l.g.md), cadd([1, 0], l.h));
   return [-r[0], -r[1]];
 }
 
-// Exact steady state at the samples under F_amp · e^{jωt}, for any ω that is
-// not a multiple of fs/2, also above half the loop rate. Over one sample the
-// controller force u is constant, and the mass integrates u and the sine:
+// Exact steady state at the samples under F_amp · e^{jωt} on the stage, for
+// any ω that is not a multiple of fs/2, also above half the loop rate. Over
+// one sample u is constant, and the plant integrates u and the sine exactly:
 //
-//   x[k+1] = x[k] + T·v[k] + T²/(2m)·u[k] + Dx·e^{jωkT}
-//   v[k+1] = v[k] + T/m·u[k]             + Dv·e^{jωkT}
-//   u[k]   = −C(z)·x[k]
+//   x[k+1] = Φ·x[k] + Gu·u[k] + F_amp·(Ss + j·Sc)·e^{jωkT},   u[k] = −C(z)·y_m[k]
 //
-// With x[k] = X·z^k, v[k] = V·z^k, u[k] = U·z^k and z = e^{jωT} this is a
-// 2 × 2 linear system in X and V. The controller works u[k]·(x[k+1] − x[k])
-// in each sample, so its mean power is ½·Re(U · conj(X·(z − 1))) / T.
-// Returns X in m, V in m/s, U in N (complex) and pMean in W.
+// With x[k] = X·z^k and z = e^{jωT} this is one linear system in X. The
+// controller works u[k]·(x_motor[k+1] − x_motor[k]) in each sample, so its
+// mean power is ½·Re(U · conj(X_motor·(z − 1))) / T.
+// Returns X (the stage position) in m, U in N (complex) and pMean in W.
 function sampledSteadyAt(f, p, tuned) {
-  const T = 1 / p.fs, m = p.m, w = 2 * Math.PI * f;
+  const pl = tuned.plant, T = 1 / p.fs, w = 2 * Math.PI * f, n = pl.n;
+  const s = stepMatrices(pl, T, w);
   const z = [Math.cos(w * T), Math.sin(w * T)];
-  const zm1 = [z[0] - 1, z[1]];
-  const jw = [0, w];
-  const F = [p.Famp / m, 0];
-  const Dv = cmul(F, cdiv(zm1, jw));
-  const Dx = cmul(F, cadd(cdiv(zm1, cmul(jw, jw)), cdiv([-T, 0], jw)));
   const C = controllerAt(f, p, tuned).h;
-  // (z − 1 + C·T²/(2m))·X − T·V = Dx   and   (C·T/m)·X + (z − 1)·V = Dv
-  const a11 = cadd(zm1, cmul(C, [T * T / (2 * m), 0])), a12 = [-T, 0];
-  const a21 = cmul(C, [T / m, 0]), a22 = zm1;
-  const det = cadd(cmul(a11, a22), cmul([-a12[0], -a12[1]], a21));
-  const X = cdiv(cadd(cmul(Dx, a22), cmul([-a12[0], -a12[1]], Dv)), det);
-  const V = cdiv(cadd(cmul(a11, Dv), cmul([-a21[0], -a21[1]], Dx)), det);
-  const U = cmul([-C[0], -C[1]], X);
-  const dX = cmul(X, zm1);
+  const M = s.Phi.map((row, i) => row.map((v, j) => {
+    let e = [-v, 0];
+    if (i === j) e = cadd(e, z);
+    if (j === pl.iy) e = cadd(e, cmul(C, [s.Gu[i], 0]));
+    return e;
+  }));
+  const X = csolve(M, s.Ss.map((v, i) => [v * p.Famp, s.Sc[i] * p.Famp]));
+  const U = cmul([-C[0], -C[1]], X[pl.iy]);
+  const dX = cmul(X[pl.im], [z[0] - 1, z[1]]);
   const pMean = 0.5 * (U[0] * dX[0] + U[1] * dX[1]) / T;
-  return { X, V, U, pMean };
+  return { X: X[pl.is], U, pMean, n };
 }
 
 // ---------------------------------------------------------------------------
 // Tuning: find f_b for the target phase margin.
 // ---------------------------------------------------------------------------
 
-// Loop gain and phase at f_b with K = 1.
-function loopAtFb(fb, p) {
-  const t = { K: 1, sections: sections(fb, 1 / p.fs) };
-  return loopAt(fb, p, t);
-}
+const wrap = (a) => a - 2 * Math.PI * Math.round(a / (2 * Math.PI));
 
-function tune(p) {
-  const pmTarget = (p.pm ?? 30) * Math.PI / 180;
-  const pmOf = (fb) => Math.PI + loopAtFb(fb, p).ph;
-  // The phase margin falls as f_b rises, from about 38° at a slow f_b.
-  let lo = p.fs * 1e-5, hi = p.fs * 0.2;
-  if (pmOf(lo) < pmTarget) throw new Error("the phase margin target is above what this controller can reach");
-  for (let i = 0; i < 100; i++) {
-    const mid = Math.sqrt(lo * hi);
-    if (pmOf(mid) > pmTarget) lo = mid; else hi = mid;
-  }
-  const fb = Math.sqrt(lo * hi);
+// The controller for a bandwidth f_b, with K set so that |C·G_mu| = 1 there.
+function controllerFor(fb, p, pl) {
   const secs = sections(fb, 1 / p.fs);
-  const K = 1 / cabs(loopAtFb(fb, p).h);
-  const tuned = { fb, K, sections: secs };
-  return { ...tuned, ...margins(p, tuned) };
+  const K = 1 / cabs(loopAt(fb, p, { K: 1, sections: secs, plant: pl }).h);
+  return { plant: pl, fb, K, sections: secs };
 }
 
-// Phase margin at the gain crossover, gain margin where the phase passes −180°.
-function margins(p, tuned) {
+// Tune for the target phase margin. The margin that counts is the worst one
+// over all gain crossovers: a resonance can make the loop cross 1 again, away
+// from f_b. The margin is about 38° at a slow f_b and falls as f_b rises. A
+// resonance can bend that, so scan up from a slow f_b, take the first place
+// where the worst margin drops below the target, and bisect there.
+function tune(p, id = "linear") {
+  const pl = plantFor(p, id);
+  const pmTarget = p.pm ?? 30;
+  const pmOf = (fb) => margins(p, controllerFor(fb, p, pl), 200, 16).pmDeg;
+  const grid = logspace(p.fs * 1e-4, p.fs * 0.2, 80);
+  if (!(pmOf(grid[0]) >= pmTarget)) throw new Error("the phase margin target is above what this controller can reach");
+  let lo = NaN, hi = NaN;
+  for (let i = 1; i < grid.length; i++) {
+    if (!(pmOf(grid[i]) >= pmTarget)) { lo = grid[i - 1]; hi = grid[i]; break; }
+  }
+  if (Number.isNaN(lo)) throw new Error("no bandwidth gives the target phase margin");
+  for (let i = 0; i < 36; i++) {
+    const mid = Math.sqrt(lo * hi);
+    if (pmOf(mid) >= pmTarget) lo = mid; else hi = mid;
+  }
+  // The search used a coarse grid. If the fine one finds a worse crossing,
+  // step f_b down until it agrees.
+  let tuned, fb = lo;
+  for (let i = 0; i < 200; i++) {
+    tuned = { id, ...controllerFor(fb, p, pl) };
+    Object.assign(tuned, margins(p, tuned));
+    if (tuned.pmDeg >= pmTarget - 0.05) break;
+    fb *= 0.99;
+  }
+  tuned.rho = spectralRadius(p, tuned);
+  tuned.stable = tuned.rho < 1;
+  return tuned;
+}
+
+// All gain crossovers and all −180° crossings up to fs/2. The phase margin
+// is the worst one over the crossovers. The gain margin is the smallest one
+// over the crossings where the loop gain is below 1. (Below f_b the phase is
+// also under −180°, from the integrator, but there the gain is far above 1.)
+// fc and f180 are where these worst values sit.
+function margins(p, tuned, nGrid = 2000, iters = 40) {
   const nyq = p.fs / 2;
-  const grid = logspace(tuned.fb / 1000, nyq * 0.9999, 2000);
-  const mag = (f) => cabs(loopAt(f, p, tuned).h);
-  const ph = (f) => loopAt(f, p, tuned).ph;
+  const grid = logspace(tuned.fb / 1000, nyq * 0.9999, nGrid);
+  // A lightly damped resonance is a narrow peak, easy to step over. Add a
+  // dense band around it, and around the place where it folds back below
+  // half the loop rate when it sits above.
+  const mech = tuned.plant.mech;
+  if (mech) {
+    for (const f0 of [mech.fRes, mech.fAnti]) {
+      const fa = Math.abs(f0 - p.fs * Math.round(f0 / p.fs));
+      for (const fc of new Set([f0, fa])) {
+        if (fc > 0 && fc < nyq) grid.push(...logspace(fc * 0.8, Math.min(fc * 1.25, nyq * 0.9999), Math.max(30, Math.round(nGrid / 8))));
+      }
+    }
+    grid.sort((a, b) => a - b);
+  }
+  const L = (f) => loopAt(f, p, tuned).h;
+  const mag = (f) => cabs(L(f));
+  const pmAt = (f) => wrap(Math.PI + carg(L(f)));
   const bisect = (fn, a, b) => {
     let fa = fn(a);
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < iters; i++) {
       const c = Math.sqrt(a * b), fc = fn(c);
       if (Math.sign(fc) === Math.sign(fa)) { a = c; fa = fc; } else b = c;
     }
     return Math.sqrt(a * b);
   };
-  let fc = NaN, f180 = NaN;
+  let fc = NaN, pm = Infinity, f180 = NaN, gm = Infinity;
+  const vals = grid.map((f) => L(f));
   for (let i = 1; i < grid.length; i++) {
-    if (Number.isNaN(fc) && mag(grid[i - 1]) >= 1 && mag(grid[i]) < 1) {
-      fc = bisect((f) => Math.log(mag(f)), grid[i - 1], grid[i]);
+    const a = vals[i - 1], b = vals[i];
+    if ((cabs(a) - 1) * (cabs(b) - 1) < 0) {
+      const f = bisect((x) => Math.log(mag(x)), grid[i - 1], grid[i]);
+      const m = pmAt(f);
+      if (m < pm) { pm = m; fc = f; }
     }
-    if (Number.isNaN(f180) && ph(grid[i - 1]) > -Math.PI && ph(grid[i]) <= -Math.PI) {
-      f180 = bisect((f) => ph(f) + Math.PI, grid[i - 1], grid[i]);
+    // The loop crosses the negative real axis: Im changes sign with Re < 0.
+    if (a[1] * b[1] < 0 && a[0] + b[0] < 0) {
+      const f = bisect((x) => L(x)[1], grid[i - 1], grid[i]);
+      const g = 1 / mag(f);
+      if (g > 1 && g < gm) { gm = g; f180 = f; }
     }
   }
-  const pm = (Math.PI + ph(fc)) * 180 / Math.PI;
-  const gm = Number.isNaN(f180) ? Infinity : 1 / mag(f180);
-  return { fc, pmDeg: pm, f180, gm, gmDb: 20 * Math.log10(gm) };
+  return { fc, pmDeg: pm * 180 / Math.PI, f180, gm, gmDb: 20 * Math.log10(gm) };
+}
+
+// ---------------------------------------------------------------------------
+// Closed loop at the samples, and its stability.
+// ---------------------------------------------------------------------------
+
+// One sample of the closed loop without the cutting force. The state is the
+// plant state, then the input and output memory of each controller section.
+function closedLoopStep(p, tuned, state) {
+  const pl = tuned.plant, n = pl.n, d = discrete(pl, 1 / p.fs);
+  const x = state.slice(0, n), next = new Array(state.length).fill(0);
+  let s = x[pl.iy];
+  tuned.sections.forEach((c, i) => {
+    const out = c.b0 * s + c.b1 * state[n + 2 * i] - c.a1 * state[n + 2 * i + 1];
+    next[n + 2 * i] = s;
+    next[n + 2 * i + 1] = out;
+    s = out;
+  });
+  const u = -tuned.K * s;
+  for (let i = 0; i < n; i++) {
+    let v = d.Gu[i] * u;
+    for (let j = 0; j < n; j++) v += d.Phi[i][j] * x[j];
+    next[i] = v;
+  }
+  return next;
+}
+
+// Spectral radius of the closed loop at the samples: the largest |pole|.
+// Found as ‖A^N‖^(1/N) with N = 2^20, by squaring. Below 1: stable.
+function spectralRadius(p, tuned) {
+  const N = tuned.plant.n + 2 * tuned.sections.length;
+  const cols = eye(N).map((e) => closedLoopStep(p, tuned, e));
+  let A = zeros(N).map((row, i) => row.map((_, j) => cols[j][i]));
+  let logScale = 0;
+  const steps = 20;
+  for (let i = 0; i < steps; i++) {
+    const nrm = norm1(A);
+    if (nrm === 0) return 0;
+    A = A.map((row) => row.map((v) => v / nrm));
+    logScale = 2 * (logScale + Math.log(nrm));
+    A = matmul(A, A);
+  }
+  return Math.exp((logScale + Math.log(norm1(A) || 1e-300)) / 2 ** steps);
 }
 
 function logspace(a, b, n) {
@@ -233,67 +507,85 @@ function logspace(a, b, n) {
 
 const toothFreq = (p) => p.teeth * p.rpm / 60;
 
-// Everything the frequency charts need, on one grid up to just below fs/2.
-function frequencyData(p, tuned, n = 600) {
-  const f = logspace(tuned.fb / 200, p.fs / 2 * 0.98, n);
-  const rows = f.map((fi) => {
+// Everything the frequency charts need, on one grid from fLo up to just
+// below fs/2. Phases are unwrapped along the grid. The plant starts near
+// −180°, like a mass.
+function frequencyData(p, tuned, n = 600, fLo = tuned.fb / 200) {
+  const f = logspace(fLo, p.fs / 2 * 0.98, n);
+  let gPrev = -Math.PI;
+  return f.map((fi) => {
     const l = loopAt(fi, p, tuned);
-    const y = cdiv(l.g.h, cadd([1, 0], l.h));
+    let gph = carg(l.g.mu);
+    gph += 2 * Math.PI * Math.round((gPrev - gph) / (2 * Math.PI));
+    gPrev = gph;
+    const r = cdiv(cmul(l.c.h, l.g.md), cadd([1, 0], l.h));
+    const y = csub(l.g.sd, cmul(l.g.su, r));
     return {
       f: fi,
-      G: cabs(l.g.h), Gph: l.g.ph,
+      G: cabs(l.g.mu), Gph: gph,
       C: cabs(l.c.h), Cph: l.c.ph,
-      L: cabs(l.h), Lph: l.ph,
+      L: cabs(l.h), Lph: gph + l.c.ph,
       Y: cabs(y),                                   // m/N
-      mass: 1 / (p.m * (2 * Math.PI * fi) ** 2),    // m/N, the bare mass
+      mass: 1 / (p.m * (2 * Math.PI * fi) ** 2),    // m/N, the bare stage mass
     };
   });
-  return rows;
 }
 
 // ---------------------------------------------------------------------------
-// Time simulation. The mass moves in continuous time and is integrated exactly
-// between samples. The controller runs at the loop rate.
+// Time simulation. The plant moves in continuous time and is integrated
+// exactly between samples. The controller runs at the loop rate.
 // ---------------------------------------------------------------------------
 
-// Move the mass from time t0 over a step h, under a constant force P plus
-// Famp · sin(ω t). Exact for this force.
-function advance(x, v, P, Famp, w, t0, h, m) {
-  let dx = v * h + P * h * h / (2 * m);
-  let dv = P * h / m;
-  if (Famp !== 0 && w > 0) {
-    const t1 = t0 + h, k = Famp / (m * w);
-    dv += k * (Math.cos(w * t0) - Math.cos(w * t1));
-    dx += k * (Math.cos(w * t0) * h - (Math.sin(w * t1) - Math.sin(w * t0)) / w);
+// Step matrices for a step h at the tooth frequency, cached on the plant.
+function stepCached(pl, h, w) {
+  pl.steps ??= new Map();
+  const key = `${h}|${w}`;
+  if (!pl.steps.has(key)) {
+    if (pl.steps.size > 8) pl.steps.clear();
+    pl.steps.set(key, stepMatrices(pl, h, w));
   }
-  return [x + dx, v + dv];
+  return pl.steps.get(key);
+}
+
+// x ← one exact step from time t0. Writes into out.
+function advance(S, x, u, Fmean, Famp, w, t0, out) {
+  const n = x.length, sn = Famp * Math.sin(w * t0), cs = Famp * Math.cos(w * t0);
+  for (let i = 0; i < n; i++) {
+    let v = S.Gu[i] * u + S.Gf[i] * Fmean + S.Ss[i] * sn + S.Sc[i] * cs;
+    const row = S.Phi[i];
+    for (let j = 0; j < n; j++) v += row[j] * x[j];
+    out[i] = v;
+  }
+  return out;
 }
 
 // Run the loop for a number of samples. The cutting force starts at t = 0.
-//   record: 'all' keeps x and the applied controller force u at every sample,
-//           'none' keeps nothing.
-//   window: from this sample on, track min and max of x, also between
-//           samples (sub points per sample), min and max of u, the peak of
-//           the controller power u·v, and the work u·Δx the controller does.
-//   fine:   keep [t, x, u, v] at the sub points of the window.
+//   record: 'all' keeps the stage position and the applied controller force
+//           u at every sample, 'none' keeps nothing.
+//   window: from this sample on, track min and max of the stage position,
+//           also between samples (sub points per sample), min and max of u,
+//           the peak of the controller power u·v, and the work u·Δx.
+//           v and x are at the motor side, where u pushes.
+//   fine:   keep [t, x_stage, u, v_motor] at the sub points of the window.
 function simulate(p, tuned, opts = {}) {
-  const T = 1 / p.fs, m = p.m;
+  const pl = tuned.plant, n = pl.n, T = 1 / p.fs;
   const w = 2 * Math.PI * toothFreq(p);
   const Fmean = opts.Fmean ?? p.Fmean, Famp = opts.Famp ?? p.Famp;
-  const n = opts.samples;
+  const N = opts.samples;
   const sub = opts.sub ?? 1;
-  const from = opts.window ?? n;
+  const from = opts.window ?? N;
+  const full = stepCached(pl, T, w), part = stepCached(pl, T / sub, w);
   const secs = tuned.sections, K = tuned.K;
   const sin_ = secs.map(() => 0), sout = secs.map(() => 0);
-  let x = 0, v = 0, uPrev = 0;
+  let x = new Array(n).fill(0), y = new Array(n).fill(0);
   let lo = Infinity, hi = -Infinity, peak = 0;
   let uLo = Infinity, uHi = -Infinity, uPeak = 0, pPeak = 0, work = 0;
-  const xs = opts.record === "all" ? new Float64Array(n + 1) : null;
-  const us = opts.record === "all" ? new Float64Array(n) : null;
+  const xs = opts.record === "all" ? new Float64Array(N + 1) : null;
+  const us = opts.record === "all" ? new Float64Array(N) : null;
   const fine = opts.fine ? [] : null;
-  for (let k = 0; k < n; k++) {
+  for (let k = 0; k < N; k++) {
     // Sample the position, run the controller: u = −K · C1 · C2 · C3 · y.
-    let s = x;
+    let s = x[pl.iy];
     for (let i = 0; i < secs.length; i++) {
       const c = secs[i];
       const out = c.b0 * s + c.b1 * sin_[i] - c.a1 * sout[i];
@@ -301,54 +593,62 @@ function simulate(p, tuned, opts = {}) {
       sout[i] = out;
       s = out;
     }
-    const uNow = -K * s;
-    const u = p.delay ? uPrev : uNow;
-    uPrev = uNow;
-    if (xs) { xs[k] = x; us[k] = u; }
+    const u = -K * s;
+    if (xs) { xs[k] = x[pl.is]; us[k] = u; }
     if (Math.abs(u) > uPeak) uPeak = Math.abs(u);
-    const t0 = k * T, P = u + Fmean;
+    const t0 = k * T, xm0 = x[pl.im];
     if (k >= from) {
       if (u < uLo) uLo = u;
       if (u > uHi) uHi = u;
-      if (Math.abs(u * v) > pPeak) pPeak = Math.abs(u * v);
-      // Also look between samples: the mass moves on, the peak can fall there.
-      // u stays constant, but the speed v changes, so the power does too.
+      if (Math.abs(u * x[pl.iv]) > pPeak) pPeak = Math.abs(u * x[pl.iv]);
+      if (x[pl.is] < lo) lo = x[pl.is];
+      if (x[pl.is] > hi) hi = x[pl.is];
+      // Step through the sample in sub parts: the stage moves on between
+      // samples and the peak can fall there. u stays constant, but the speed
+      // changes, so the power does too.
       for (let j = 1; j <= sub; j++) {
-        const [xj, vj] = advance(x, v, P, Famp, w, t0, T * j / sub, m);
+        advance(part, x, u, Fmean, Famp, w, t0 + T * (j - 1) / sub, y);
+        [x, y] = [y, x];
+        const xj = x[pl.is], vj = x[pl.iv];
         if (xj < lo) lo = xj;
         if (xj > hi) hi = xj;
         if (Math.abs(u * vj) > pPeak) pPeak = Math.abs(u * vj);
         if (fine) fine.push([t0 + T * j / sub, xj, u, vj]);
       }
-      if (x < lo) lo = x;
-      if (x > hi) hi = x;
+      // u is constant over the sample, so its work is exactly u · Δx.
+      work += u * (x[pl.im] - xm0);
+    } else {
+      advance(full, x, u, Fmean, Famp, w, t0, y);
+      [x, y] = [y, x];
     }
-    const xOld = x;
-    [x, v] = advance(x, v, P, Famp, w, t0, T, m);
-    // u is constant over the sample, so its work is exactly u · Δx.
-    if (k >= from) work += u * (x - xOld);
-    if (Math.abs(x) > peak) peak = Math.abs(x);
+    if (!Number.isFinite(x[pl.is])) break;
+    if (Math.abs(x[pl.is]) > peak) peak = Math.abs(x[pl.is]);
   }
-  if (xs) xs[n] = x;
-  const tWin = Math.max(0, n - from) * T;
+  if (xs) xs[N] = x[pl.is];
+  const tWin = Math.max(0, N - from) * T;
   return { xs, us, fine, lo, hi, amp: (hi - lo) / 2, peak, T,
     uAmp: (uHi - uLo) / 2, uPeak, pPeak, pMean: tWin > 0 ? work / tWin : NaN };
 }
 
 // Samples until the start transient has died out. The slowest closed-loop pole
-// sits near the integrator frequency f_b/10.
-const settleSamples = (p, tuned) => Math.ceil(15 / (tuned.fb / 10) * p.fs);
+// sits near the integrator frequency f_b/10. A lightly damped resonance can
+// be slower, so the largest pole |z| = ρ also sets a floor. Capped at 2 s.
+function settleSamples(p, tuned) {
+  const byFb = Math.ceil(15 / (tuned.fb / 10) * p.fs);
+  const byRho = tuned.rho > 0 && tuned.rho < 1 ? Math.ceil(Math.log(1e-5) / Math.log(tuned.rho)) : 0;
+  return Math.min(Math.max(byFb, byRho), Math.ceil(2 * p.fs));
+}
 
 // The steady state under the sine part of the force alone. The mean force
-// only moves the mass during the start transient: the integrator takes it
+// only moves the stage during the start transient: the integrator takes it
 // back to zero. The window is a whole number of tooth periods, so the mean
 // power is not biased by a part period. Returns, in SI units:
-//   amp    vibration amplitude (half of peak to peak), m
+//   amp    vibration amplitude of the stage (half of peak to peak), m
 //   uAmp   controller force amplitude (half of peak to peak), N
 //   pPeak  peak controller power |u·v|, W
 //   pMean  mean controller power, W. Negative: the controller takes energy
-//          out of the stage. In the steady state it takes out exactly what
-//          the cutting force puts in.
+//          out. In the steady state it takes out exactly what the cutting
+//          force puts in.
 function steadyState(p, tuned) {
   const ft = toothFreq(p);
   const settle = settleSamples(p, tuned);
@@ -362,9 +662,11 @@ function steadyState(p, tuned) {
 // Steady-state amplitude of the vibration (half of peak to peak), in m.
 const steadyAmplitude = (p, tuned) => steadyState(p, tuned).amp;
 
+// Samples in the start trace: a third of the settle time from f_b.
+const entrySamples = (p, tuned) => Math.ceil(Math.ceil(15 / (tuned.fb / 10) * p.fs) / 3);
+
 // The start of the cut: mean plus sine from t = 0, as a trace.
-function entryTrace(p, tuned) {
-  const n = Math.ceil(settleSamples(p, tuned) / 3);
+function entryTrace(p, tuned, n = entrySamples(p, tuned)) {
   return simulate(p, tuned, { samples: n, record: "all" });
 }
 
@@ -381,8 +683,8 @@ function steadyTrace(p, tuned, periods = 4) {
 }
 
 // The steady state against spindle speed. amp in m, uAmp in N, powers in W,
-// ratio = uAmp / Famp in N/N. tf is |C·G/(1 + C·G)|, the force ratio from the
-// discrete transfer function (NaN from half the loop rate on).
+// ratio = uAmp / Famp in N/N. tf is |U/F_d| from the discrete transfer
+// function (NaN from half the loop rate on). mass is the stage mass alone.
 function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
   const out = [];
   for (let i = 0; i < n; i++) {
@@ -401,8 +703,8 @@ function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
 // opened straight from disk (file://), so the page would never calculate.
 // The page and the checks both read the functions from this one object.
 globalThis.ControlModel = {
-  DEFAULTS, cabs, sections, plantAt, controllerAt, loopAt, complianceAt,
-  forceRatioAt, sampledSteadyAt, tune, margins, logspace, toothFreq,
-  frequencyData, simulate, settleSamples, steadyState, steadyAmplitude,
-  entryTrace, steadyTrace, sweep,
+  DEFAULTS, CASES, cabs, expm, mechanics, plantFor, stepMatrices, plantResp, sections, plantAt,
+  controllerAt, loopAt, complianceAt, forceRatioAt, sampledSteadyAt, tune, margins, spectralRadius,
+  logspace, toothFreq, frequencyData, simulate, settleSamples, steadyState, steadyAmplitude,
+  entrySamples, entryTrace, steadyTrace, sweep,
 };

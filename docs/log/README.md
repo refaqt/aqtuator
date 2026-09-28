@@ -105,3 +105,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-25 | [The 0.25 mm seal strip: radius, pull, and 304 instead of 301](2026-09-25_strip-seal-radius-pull-and-304.md) | engineering, simulation |  |
 | 2026-09-25 | [Drives and a motion controller for the MK21 linear stages](2026-09-25_linear-stage-drive-and-motion-controller-survey.md) | engineering, hardware, software, purchasing |  |
 | 2026-09-28 | [A web page to design the seal strip and its screw preload](2026-09-28_strip-seal-designer.md) | engineering, simulation, software |  |
+| 2026-09-28 | [A web page for the controller against the cutting force](2026-09-28_cutting-force-rejection.md) | engineering, simulation, software |  |
+| 2026-09-28 | [The cutting force page compares a linear motor with a ball-screw servo](2026-09-28_ball-screw-servo-cases.md) | engineering, simulation, software |  |
