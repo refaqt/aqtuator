@@ -55,12 +55,51 @@ computed from what holds the strip, not from the drawing.
 
 ## Next Steps
 
-- [ ] Confirm the layout against the CAD model and run the case again.
-- [ ] Design a spring at one end of the strip: about 15 N on a 40 mm strip, with at least
-      3 mm of travel.
+- [x] Confirm the layout against the CAD model. Confirmed on 2026-09-28, see the update below.
+- [ ] Design a spring at one end of the strip to set the preload during fitting: about 54 N
+      on the 150 mm strip, with at least 3 mm of travel. Both ends are clamped afterwards.
 - [ ] Choose a way to open the bend: a longer ramp, a lower rise, or a small gap at rollers 1
       and 4. Check how far the strip then leaves the profile, with the magnets.
 - [ ] Keep 301 (11R51). Drop 304 for this strip thickness.
+
+## Update, 2026-09-28
+
+Answers to the open questions above:
+
+- **The strip is about 150 mm wide**, not 40 mm. The limits per mm of width stay the same.
+  The most pull that keeps 30 mm is now 0.36 N/mm times 150 mm, which is **about 54 N**.
+- **The layout is read correctly off the sketch**, and the dimensions are right.
+- **The ends are clamped after the preload.** A soft spring at one end sets the pull during
+  fitting. After that, both ends are clamped. A spring left in place could let the strip
+  shift and buckle.
+- **0.25 mm is not a requirement.** It was an investigation. A thicker strip is less likely
+  to wrinkle or be punctured. A thinner strip has a higher fatigue limit.
+
+What this changes:
+
+- **Clamping both ends after the preload does not bring back the large pull.** The earlier
+  result of 56 to 223 N/mm was for a strip that is fixed flat first and then pushed up by
+  the carriage. Here the carriage is already in place when the strip is clamped, so the
+  extra 2.4 mm of path is already in the strip. When the carriage moves, the bump moves with
+  it and the path length stays the same. The pull stays at the preload.
+- **The bump itself acts as a soft spring.** Near 0.36 N/mm, a change of 0.1 mm in strip
+  length changes the pull by only about 0.08 N/mm, because the strip changes the height of
+  its arch. Stretching the steel of a 1 m strip by 0.1 mm would change it by about 4.6 N/mm.
+  So small length changes after clamping, for example from heat or creep, change the pull
+  only a little. This is an estimate from the current model. The new model must check it,
+  also with the carriage near the clamps.
+- **A wide strip may be about 9 percent more stressed.** A strip much wider than it is thick
+  cannot curl sideways when it bends. This makes it stiffer, and the bending stress goes up
+  by about 1 / (1 − 0.3²), which is 1.1. The model does not include this yet. At 30 mm that
+  could mean about 850 MPa instead of 771 MPa. This is an estimate. It depends on how Alleima
+  calculated the stress in their own fatigue tests. Their test strips are also much wider
+  than they are thick, so the effect may already be in their 775 MPa.
+
+### Next step
+
+Build a model and an animation of the strip as the carriage moves along it, in a next commit.
+It should use the 150 mm width, a preload set by a spring and then two clamped ends, and
+show the tightest radius and the pull at each carriage position.
 
 <details>
 <summary>Checks</summary>
@@ -72,5 +111,10 @@ repeats this check at 10 and 40 N/mm on every run and stops if it fails. A grid 
 is fine enough.
 
 The case needs `numpy` and `scipy`, like the encoder case needs `magpylib`.
+
+Update of 2026-09-28: the soft-spring estimate comes from the extra path length that the
+model gives at 0.3 and 0.5 N/mm, 2.513 mm and 2.253 mm. That is 1.3 mm of length per N/mm
+of pull. The steel stretch is E t / L = 185000 × 0.25 / 1000 = 46 N/mm per mm of length,
+for a 1 m strip.
 
 </details>
