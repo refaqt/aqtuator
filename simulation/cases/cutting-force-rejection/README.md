@@ -2,7 +2,8 @@
 
 A web page that shows how well a digital position controller holds a stage still while a milling
 cutter pushes on it. It tunes the controller for a 30° phase margin and shows the open loop, the
-compliance, the stiffness and the vibration of the stage.
+compliance, the stiffness, the vibration of the stage, and the force and power the controller must
+deliver.
 
 **Open it:** <https://refaqt.github.io/aqtuator/cutting-force/> (after the one-time Pages setup, see
 the [strip seal log](../../../docs/log/2026-09-28_strip-seal-designer.md)). No server and no install.
@@ -52,9 +53,19 @@ Log: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md).
   motion after the start transient, also between samples. It still holds when the tooth frequency is
   above half the loop rate, where the discrete transfer functions stop.
 
+- **Controller force.** The force u after the hold, over time at the start of the cut and in the
+  steady state. The force ratio is the steady amplitude of u divided by F_amp, in N/N. Below half
+  the loop rate it follows U/F_d = −C·G/(1 + C·G).
+- **Controller power.** u·v, the force times the stage speed, in W at the force amplitude on the
+  page. It cannot be made unitless per newton, because it grows with F_amp². The mean power is
+  exact: u is constant over each sample, so each sample adds u·Δx of work. The check script compares
+  it with an exact steady-state solution at the samples, which also holds above half the loop rate.
+
 `check_model.mjs` checks the phase margin and crossover, that f_b does not depend on the mass, that
 a constant force leaves no deflection, that the simulation matches compliance × force within 2 %
-up to 2·f_b, and that the Tustin controller matches C(s) at low frequency.
+up to 2·f_b, that the controller force matches −C·G/(1 + C·G) within 2 %, that the mean controller
+power matches the exact sampled solution (also above half the loop rate), and that the Tustin
+controller matches C(s) at low frequency.
 
 ## What it shows
 
@@ -67,6 +78,15 @@ up to 2·f_b, and that the Tustin controller matches C(s) at low frequency.
 - **A computation delay costs a factor of three in bandwidth**: f_b = f_s/69 (144 Hz at 10 kHz).
   The lowest stiffness falls to 0.63 N/µm, and the start of the cut pushes the stage 76 µm instead
   of 14 µm.
+
+- **The controller pushes up to twice as hard as the cut, near f_b.** The force ratio is about 1
+  well below f_b, where the controller takes the whole force. It peaks at 1.95 N/N near f_b. Above
+  f_b it falls, and the mass takes the force. At the defaults (400 Hz) the controller swings
+  ±97 N against a ±50 N cut. When the cut starts it reaches 149 N, with the mean force.
+- **The controller power stays small**: 1.4 W peak at 400 Hz. Its mean is −0.44 W: the controller
+  takes energy out of the stage, like a damper. At low speed the mean turns slightly positive,
+  because the integrator pushes energy in. This is mechanical power only. The motor heat depends on
+  the current, so on the force, and it is not in the model.
 
 Results at the defaults:
 

@@ -6,7 +6,8 @@
 // 2. f_b does not depend on the mass. K grows with the mass.
 // 3. A constant force gives no lasting deflection (the integrator).
 // 4. The time simulation agrees with the discrete compliance where both
-//    should hold (tooth frequency well below half the loop rate).
+//    should hold (tooth frequency well below half the loop rate), for the
+//    vibration, the controller force and the mean controller power.
 // 5. The Tustin controller matches C(s) at low frequency.
 
 import * as M from "./control_model.js";
@@ -45,6 +46,20 @@ for (const delay of [false, true]) {
     const tf = M.cabs(M.complianceAt(f, q, t)) * p.Famp;
     check(near(sim, tf, 0.02), `${tag}: at ${f.toFixed(0)} Hz, simulation ${(sim * 1e6).toFixed(3)} µm, ` +
       `compliance × force ${(tf * 1e6).toFixed(3)} µm`);
+    const st = M.steadyState(q, t);
+    const ratio = M.cabs(M.forceRatioAt(f, q, t));
+    check(near(st.uAmp / p.Famp, ratio, 0.02), `${tag}: at ${f.toFixed(0)} Hz, controller force ` +
+      `${(st.uAmp / p.Famp).toFixed(4)} N/N, transfer function ${ratio.toFixed(4)} N/N`);
+  }
+
+  // The mean controller power, against the exact sampled steady state. Also
+  // above half the loop rate, where only the sampled solution holds.
+  for (const f of [t.fb / 5, t.fb, 2 * t.fb, 0.37 * p.fs, 1.3 * p.fs]) {
+    const q = { ...p, rpm: f * 60 / p.teeth };
+    const st = M.steadyState(q, t);
+    const ex = M.sampledSteadyAt(f, q, t);
+    check(Math.abs(st.pMean - ex.pMean) <= 0.01 * st.pPeak, `${tag}: at ${f.toFixed(0)} Hz, mean controller power ` +
+      `${st.pMean.toPrecision(3)} W, exact ${ex.pMean.toPrecision(3)} W (peak ${st.pPeak.toPrecision(3)} W)`);
   }
 }
 
