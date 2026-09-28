@@ -129,6 +129,48 @@ export function complianceAt(f, p, tuned) {
   return cdiv(l.g.h, cadd([1, 0], l.h));
 }
 
+// Controller force per newton of cutting force, U/F_d = −C·G/(1 + C·G)
+// (complex, no unit). Well below f_b the controller takes the whole force,
+// far above it the mass does.
+export function forceRatioAt(f, p, tuned) {
+  const l = loopAt(f, p, tuned);
+  const r = cdiv(l.h, cadd([1, 0], l.h));
+  return [-r[0], -r[1]];
+}
+
+// Exact steady state at the samples under F_amp · e^{jωt}, for any ω that is
+// not a multiple of fs/2, also above half the loop rate. Over one sample the
+// controller force u is constant, and the mass integrates u and the sine:
+//
+//   x[k+1] = x[k] + T·v[k] + T²/(2m)·u[k] + Dx·e^{jωkT}
+//   v[k+1] = v[k] + T/m·u[k]             + Dv·e^{jωkT}
+//   u[k]   = −C(z)·x[k]
+//
+// With x[k] = X·z^k, v[k] = V·z^k, u[k] = U·z^k and z = e^{jωT} this is a
+// 2 × 2 linear system in X and V. The controller works u[k]·(x[k+1] − x[k])
+// in each sample, so its mean power is ½·Re(U · conj(X·(z − 1))) / T.
+// Returns X in m, V in m/s, U in N (complex) and pMean in W.
+export function sampledSteadyAt(f, p, tuned) {
+  const T = 1 / p.fs, m = p.m, w = 2 * Math.PI * f;
+  const z = [Math.cos(w * T), Math.sin(w * T)];
+  const zm1 = [z[0] - 1, z[1]];
+  const jw = [0, w];
+  const F = [p.Famp / m, 0];
+  const Dv = cmul(F, cdiv(zm1, jw));
+  const Dx = cmul(F, cadd(cdiv(zm1, cmul(jw, jw)), cdiv([-T, 0], jw)));
+  const C = controllerAt(f, p, tuned).h;
+  // (z − 1 + C·T²/(2m))·X − T·V = Dx   and   (C·T/m)·X + (z − 1)·V = Dv
+  const a11 = cadd(zm1, cmul(C, [T * T / (2 * m), 0])), a12 = [-T, 0];
+  const a21 = cmul(C, [T / m, 0]), a22 = zm1;
+  const det = cadd(cmul(a11, a22), cmul([-a12[0], -a12[1]], a21));
+  const X = cdiv(cadd(cmul(Dx, a22), cmul([-a12[0], -a12[1]], Dv)), det);
+  const V = cdiv(cadd(cmul(a11, Dv), cmul([-a21[0], -a21[1]], Dx)), det);
+  const U = cmul([-C[0], -C[1]], X);
+  const dX = cmul(X, zm1);
+  const pMean = 0.5 * (U[0] * dX[0] + U[1] * dX[1]) / T;
+  return { X, V, U, pMean };
+}
+
 // ---------------------------------------------------------------------------
 // Tuning: find f_b for the target phase margin.
 // ---------------------------------------------------------------------------
@@ -228,9 +270,12 @@ function advance(x, v, P, Famp, w, t0, h, m) {
 }
 
 // Run the loop for a number of samples. The cutting force starts at t = 0.
-//   record: 'all' keeps x at every sample, 'none' keeps nothing.
+//   record: 'all' keeps x and the applied controller force u at every sample,
+//           'none' keeps nothing.
 //   window: from this sample on, track min and max of x, also between
-//           samples (sub points per sample).
+//           samples (sub points per sample), min and max of u, the peak of
+//           the controller power u·v, and the work u·Δx the controller does.
+//   fine:   keep [t, x, u, v] at the sub points of the window.
 export function simulate(p, tuned, opts = {}) {
   const T = 1 / p.fs, m = p.m;
   const w = 2 * Math.PI * toothFreq(p);
@@ -242,7 +287,9 @@ export function simulate(p, tuned, opts = {}) {
   const sin_ = secs.map(() => 0), sout = secs.map(() => 0);
   let x = 0, v = 0, uPrev = 0;
   let lo = Infinity, hi = -Infinity, peak = 0;
+  let uLo = Infinity, uHi = -Infinity, uPeak = 0, pPeak = 0, work = 0;
   const xs = opts.record === "all" ? new Float64Array(n + 1) : null;
+  const us = opts.record === "all" ? new Float64Array(n) : null;
   const fine = opts.fine ? [] : null;
   for (let k = 0; k < n; k++) {
     // Sample the position, run the controller: u = −K · C1 · C2 · C3 · y.
@@ -257,42 +304,63 @@ export function simulate(p, tuned, opts = {}) {
     const uNow = -K * s;
     const u = p.delay ? uPrev : uNow;
     uPrev = uNow;
-    if (xs) xs[k] = x;
+    if (xs) { xs[k] = x; us[k] = u; }
+    if (Math.abs(u) > uPeak) uPeak = Math.abs(u);
     const t0 = k * T, P = u + Fmean;
     if (k >= from) {
+      if (u < uLo) uLo = u;
+      if (u > uHi) uHi = u;
+      if (Math.abs(u * v) > pPeak) pPeak = Math.abs(u * v);
       // Also look between samples: the mass moves on, the peak can fall there.
+      // u stays constant, but the speed v changes, so the power does too.
       for (let j = 1; j <= sub; j++) {
-        const [xj] = advance(x, v, P, Famp, w, t0, T * j / sub, m);
+        const [xj, vj] = advance(x, v, P, Famp, w, t0, T * j / sub, m);
         if (xj < lo) lo = xj;
         if (xj > hi) hi = xj;
-        if (fine) fine.push([t0 + T * j / sub, xj]);
+        if (Math.abs(u * vj) > pPeak) pPeak = Math.abs(u * vj);
+        if (fine) fine.push([t0 + T * j / sub, xj, u, vj]);
       }
       if (x < lo) lo = x;
       if (x > hi) hi = x;
     }
+    const xOld = x;
     [x, v] = advance(x, v, P, Famp, w, t0, T, m);
+    // u is constant over the sample, so its work is exactly u · Δx.
+    if (k >= from) work += u * (x - xOld);
     if (Math.abs(x) > peak) peak = Math.abs(x);
   }
   if (xs) xs[n] = x;
-  return { xs, fine, lo, hi, amp: (hi - lo) / 2, peak, T };
+  const tWin = Math.max(0, n - from) * T;
+  return { xs, us, fine, lo, hi, amp: (hi - lo) / 2, peak, T,
+    uAmp: (uHi - uLo) / 2, uPeak, pPeak, pMean: tWin > 0 ? work / tWin : NaN };
 }
 
 // Samples until the start transient has died out. The slowest closed-loop pole
 // sits near the integrator frequency f_b/10.
 export const settleSamples = (p, tuned) => Math.ceil(15 / (tuned.fb / 10) * p.fs);
 
-// Steady-state amplitude of the vibration (half of peak to peak), in m.
-// The mean force only moves the mass during the start transient: the
-// integrator takes it back to zero. So the steady state needs only the sine.
-export function steadyAmplitude(p, tuned) {
+// The steady state under the sine part of the force alone. The mean force
+// only moves the mass during the start transient: the integrator takes it
+// back to zero. The window is a whole number of tooth periods, so the mean
+// power is not biased by a part period. Returns, in SI units:
+//   amp    vibration amplitude (half of peak to peak), m
+//   uAmp   controller force amplitude (half of peak to peak), N
+//   pPeak  peak controller power |u·v|, W
+//   pMean  mean controller power, W. Negative: the controller takes energy
+//          out of the stage. In the steady state it takes out exactly what
+//          the cutting force puts in.
+export function steadyState(p, tuned) {
   const ft = toothFreq(p);
   const settle = settleSamples(p, tuned);
-  const periods = Math.max(3, Math.ceil(ft * 0.02));  // at least 3 periods
-  const win = Math.ceil(Math.min(periods, 200) / ft * p.fs) + 1;
-  const sub = Math.min(64, Math.max(1, Math.ceil(8 * ft / p.fs)));
+  const periods = Math.min(200, Math.max(3, Math.ceil(ft * 0.02)));  // at least 3 periods
+  const win = Math.max(8, Math.round(periods / ft * p.fs));
+  const sub = Math.min(64, Math.max(4, Math.ceil(8 * ft / p.fs)));
   const r = simulate(p, tuned, { samples: settle + win, window: settle, sub, Fmean: 0 });
-  return r.amp;
+  return { amp: r.amp, uAmp: r.uAmp, pPeak: r.pPeak, pMean: r.pMean };
 }
+
+// Steady-state amplitude of the vibration (half of peak to peak), in m.
+export const steadyAmplitude = (p, tuned) => steadyState(p, tuned).amp;
 
 // The start of the cut: mean plus sine from t = 0, as a trace.
 export function entryTrace(p, tuned) {
@@ -308,17 +376,22 @@ export function steadyTrace(p, tuned, periods = 4) {
   const sub = Math.min(64, Math.max(4, Math.ceil(24 * ft / p.fs)));
   const r = simulate(p, tuned, { samples: settle + win, window: settle, sub, fine: true });
   const t0 = settle / p.fs;
-  return { points: r.fine.map(([t, x]) => [t - t0, x]), sub, amp: r.amp, mid: (r.hi + r.lo) / 2 };
+  return { points: r.fine.map(([t, x, u, v]) => [t - t0, x, u, v]), sub, amp: r.amp, mid: (r.hi + r.lo) / 2,
+    uAmp: r.uAmp, pPeak: r.pPeak, pMean: r.pMean, t0 };
 }
 
-// Steady amplitude against spindle speed, in m.
+// The steady state against spindle speed. amp in m, uAmp in N, powers in W,
+// ratio = uAmp / Famp in N/N. tf is |C·G/(1 + C·G)|, the force ratio from the
+// discrete transfer function (NaN from half the loop rate on).
 export function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
   const out = [];
   for (let i = 0; i < n; i++) {
     const rpm = rpmLo + (rpmHi - rpmLo) * i / (n - 1);
     const q = { ...p, rpm };
     const ft = toothFreq(q);
-    out.push({ rpm, f: ft, amp: steadyAmplitude(q, tuned),
+    const st = steadyState(q, tuned);
+    out.push({ rpm, f: ft, ...st, ratio: st.uAmp / p.Famp,
+      tf: ft < p.fs / 2 ? cabs(forceRatioAt(ft, q, tuned)) : NaN,
       mass: p.Famp / (p.m * (2 * Math.PI * ft) ** 2) });
   }
   return out;
