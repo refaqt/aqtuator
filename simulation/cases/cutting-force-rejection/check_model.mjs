@@ -10,7 +10,9 @@
 //    vibration, the controller force and the mean controller power.
 // 5. The Tustin controller matches C(s) at low frequency.
 
-import * as M from "./control_model.js";
+// The model is a plain script (see its end), so it hands over one object.
+import "./control_model.js";
+const M = globalThis.ControlModel;
 
 let failed = 0;
 const check = (ok, text) => {

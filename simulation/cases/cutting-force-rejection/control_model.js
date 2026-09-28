@@ -37,7 +37,7 @@
 // the target (30°). An optional extra one-sample computation delay z⁻¹ can be
 // switched on. It is not the hold lag: that one is already inside G_zoh.
 
-export const DEFAULTS = {
+const DEFAULTS = {
   Famp: 50,        // N, amplitude (peak) of the sine part of the cutting force
   Fmean: 50,       // N, mean cutting force
   teeth: 2,        // number of teeth on the cutter
@@ -58,7 +58,7 @@ const cdiv = (a, b) => {
   return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d];
 };
 const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
-export const cabs = (a) => Math.hypot(a[0], a[1]);
+const cabs = (a) => Math.hypot(a[0], a[1]);
 
 // ---------------------------------------------------------------------------
 // Controller sections.
@@ -70,7 +70,7 @@ function leadLag(a, b, T) {
 }
 
 // The three sections of C(z)/K for a given bandwidth f_b.
-export function sections(fb, T) {
+function sections(fb, T) {
   const w = 2 * Math.PI * fb;
   return [
     { b0: T / 2, b1: T / 2, a1: -1 },     // integrator
@@ -95,7 +95,7 @@ function sectionAt(s, theta) {
 // Plant with hold. With z = e^{jθ}:
 //   (z + 1)/(z − 1)² = −cos(θ/2) / (2 sin²(θ/2)) · e^{−jθ/2}
 // so the phase is −π − θ/2 and the gain is T² cos(θ/2) / (4 m sin²(θ/2)).
-export function plantAt(f, p) {
+function plantAt(f, p) {
   const T = 1 / p.fs, theta = 2 * Math.PI * f * T;
   const mag = T * T * Math.cos(theta / 2) / (4 * p.m * Math.sin(theta / 2) ** 2);
   const ph = -Math.PI - theta / 2;
@@ -103,7 +103,7 @@ export function plantAt(f, p) {
 }
 
 // Controller C(z), with gain K and the optional delay.
-export function controllerAt(f, p, tuned) {
+function controllerAt(f, p, tuned) {
   const T = 1 / p.fs, theta = 2 * Math.PI * f * T;
   let h = [tuned.K, 0], ph = 0;
   for (const s of tuned.sections) {
@@ -118,13 +118,13 @@ export function controllerAt(f, p, tuned) {
   return { h, ph };
 }
 
-export function loopAt(f, p, tuned) {
+function loopAt(f, p, tuned) {
   const g = plantAt(f, p), c = controllerAt(f, p, tuned);
   return { h: cmul(g.h, c.h), ph: g.ph + c.ph, g, c };
 }
 
 // Compliance Y/F_d in m/N (complex).
-export function complianceAt(f, p, tuned) {
+function complianceAt(f, p, tuned) {
   const l = loopAt(f, p, tuned);
   return cdiv(l.g.h, cadd([1, 0], l.h));
 }
@@ -132,7 +132,7 @@ export function complianceAt(f, p, tuned) {
 // Controller force per newton of cutting force, U/F_d = −C·G/(1 + C·G)
 // (complex, no unit). Well below f_b the controller takes the whole force,
 // far above it the mass does.
-export function forceRatioAt(f, p, tuned) {
+function forceRatioAt(f, p, tuned) {
   const l = loopAt(f, p, tuned);
   const r = cdiv(l.h, cadd([1, 0], l.h));
   return [-r[0], -r[1]];
@@ -150,7 +150,7 @@ export function forceRatioAt(f, p, tuned) {
 // 2 × 2 linear system in X and V. The controller works u[k]·(x[k+1] − x[k])
 // in each sample, so its mean power is ½·Re(U · conj(X·(z − 1))) / T.
 // Returns X in m, V in m/s, U in N (complex) and pMean in W.
-export function sampledSteadyAt(f, p, tuned) {
+function sampledSteadyAt(f, p, tuned) {
   const T = 1 / p.fs, m = p.m, w = 2 * Math.PI * f;
   const z = [Math.cos(w * T), Math.sin(w * T)];
   const zm1 = [z[0] - 1, z[1]];
@@ -181,7 +181,7 @@ function loopAtFb(fb, p) {
   return loopAt(fb, p, t);
 }
 
-export function tune(p) {
+function tune(p) {
   const pmTarget = (p.pm ?? 30) * Math.PI / 180;
   const pmOf = (fb) => Math.PI + loopAtFb(fb, p).ph;
   // The phase margin falls as f_b rises, from about 38° at a slow f_b.
@@ -199,7 +199,7 @@ export function tune(p) {
 }
 
 // Phase margin at the gain crossover, gain margin where the phase passes −180°.
-export function margins(p, tuned) {
+function margins(p, tuned) {
   const nyq = p.fs / 2;
   const grid = logspace(tuned.fb / 1000, nyq * 0.9999, 2000);
   const mag = (f) => cabs(loopAt(f, p, tuned).h);
@@ -226,15 +226,15 @@ export function margins(p, tuned) {
   return { fc, pmDeg: pm, f180, gm, gmDb: 20 * Math.log10(gm) };
 }
 
-export function logspace(a, b, n) {
+function logspace(a, b, n) {
   const la = Math.log10(a), lb = Math.log10(b);
   return Array.from({ length: n }, (_, i) => 10 ** (la + (lb - la) * i / (n - 1)));
 }
 
-export const toothFreq = (p) => p.teeth * p.rpm / 60;
+const toothFreq = (p) => p.teeth * p.rpm / 60;
 
 // Everything the frequency charts need, on one grid up to just below fs/2.
-export function frequencyData(p, tuned, n = 600) {
+function frequencyData(p, tuned, n = 600) {
   const f = logspace(tuned.fb / 200, p.fs / 2 * 0.98, n);
   const rows = f.map((fi) => {
     const l = loopAt(fi, p, tuned);
@@ -276,7 +276,7 @@ function advance(x, v, P, Famp, w, t0, h, m) {
 //           samples (sub points per sample), min and max of u, the peak of
 //           the controller power u·v, and the work u·Δx the controller does.
 //   fine:   keep [t, x, u, v] at the sub points of the window.
-export function simulate(p, tuned, opts = {}) {
+function simulate(p, tuned, opts = {}) {
   const T = 1 / p.fs, m = p.m;
   const w = 2 * Math.PI * toothFreq(p);
   const Fmean = opts.Fmean ?? p.Fmean, Famp = opts.Famp ?? p.Famp;
@@ -337,7 +337,7 @@ export function simulate(p, tuned, opts = {}) {
 
 // Samples until the start transient has died out. The slowest closed-loop pole
 // sits near the integrator frequency f_b/10.
-export const settleSamples = (p, tuned) => Math.ceil(15 / (tuned.fb / 10) * p.fs);
+const settleSamples = (p, tuned) => Math.ceil(15 / (tuned.fb / 10) * p.fs);
 
 // The steady state under the sine part of the force alone. The mean force
 // only moves the mass during the start transient: the integrator takes it
@@ -349,7 +349,7 @@ export const settleSamples = (p, tuned) => Math.ceil(15 / (tuned.fb / 10) * p.fs
 //   pMean  mean controller power, W. Negative: the controller takes energy
 //          out of the stage. In the steady state it takes out exactly what
 //          the cutting force puts in.
-export function steadyState(p, tuned) {
+function steadyState(p, tuned) {
   const ft = toothFreq(p);
   const settle = settleSamples(p, tuned);
   const periods = Math.min(200, Math.max(3, Math.ceil(ft * 0.02)));  // at least 3 periods
@@ -360,16 +360,16 @@ export function steadyState(p, tuned) {
 }
 
 // Steady-state amplitude of the vibration (half of peak to peak), in m.
-export const steadyAmplitude = (p, tuned) => steadyState(p, tuned).amp;
+const steadyAmplitude = (p, tuned) => steadyState(p, tuned).amp;
 
 // The start of the cut: mean plus sine from t = 0, as a trace.
-export function entryTrace(p, tuned) {
+function entryTrace(p, tuned) {
   const n = Math.ceil(settleSamples(p, tuned) / 3);
   return simulate(p, tuned, { samples: n, record: "all" });
 }
 
 // A few periods of the steady state, with points between the samples.
-export function steadyTrace(p, tuned, periods = 4) {
+function steadyTrace(p, tuned, periods = 4) {
   const ft = toothFreq(p);
   const settle = settleSamples(p, tuned);
   const win = Math.max(8, Math.ceil(periods / ft * p.fs));
@@ -383,7 +383,7 @@ export function steadyTrace(p, tuned, periods = 4) {
 // The steady state against spindle speed. amp in m, uAmp in N, powers in W,
 // ratio = uAmp / Famp in N/N. tf is |C·G/(1 + C·G)|, the force ratio from the
 // discrete transfer function (NaN from half the loop rate on).
-export function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
+function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
   const out = [];
   for (let i = 0; i < n; i++) {
     const rpm = rpmLo + (rpmHi - rpmLo) * i / (n - 1);
@@ -396,3 +396,13 @@ export function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
   }
   return out;
 }
+
+// A plain script, not a module. Browsers refuse to load a module for a page
+// opened straight from disk (file://), so the page would never calculate.
+// The page and the checks both read the functions from this one object.
+globalThis.ControlModel = {
+  DEFAULTS, cabs, sections, plantAt, controllerAt, loopAt, complianceAt,
+  forceRatioAt, sampledSteadyAt, tune, margins, logspace, toothFreq,
+  frequencyData, simulate, settleSamples, steadyState, steadyAmplitude,
+  entryTrace, steadyTrace, sweep,
+};

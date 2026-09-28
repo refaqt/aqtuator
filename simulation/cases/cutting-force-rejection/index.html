@@ -326,8 +326,10 @@ svg text { font-family: var(--mono); fill: var(--ink); }
   </div>
 </div>
 
+<!-- A plain script, so the page also works when opened straight from disk. -->
+<script src="./control_model.js"></script>
 <script type="module">
-import * as M from "./control_model.js";
+const M = window.ControlModel;
 
 const $ = (id) => document.getElementById(id);
 const ids = ["Famp", "Fmean", "teeth", "rpm", "m", "fs"];
