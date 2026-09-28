@@ -55,11 +55,12 @@ Full table: [case README](../../simulation/cases/cutting-force-rejection/README.
 ## Open Questions
 
 - How stiff are the nut and the screw along the axis? This decides how much of the screw inertia
-  really helps the stage.
+  really helps the stage. Answered later the same day: about 32 N/µm, and it removes most of the
+  advantage. See [the axial stiffness log](2026-09-28_ball-screw-axial-stiffness.md).
 - What coupling, pitch and motor would we actually use? The defaults are a common choice, not a
   selection.
 
 ## Next Steps
 
-- [ ] Add the axial stiffness of the screw and the nut as a second spring.
+- [x] Add the axial stiffness of the screw and the nut as a second spring.
 - [ ] Check the page on GitHub Pages after the merge.

@@ -14,7 +14,7 @@ counterpart lives in [`modules/flexure-ball-screw-servo-stage/measurement/`](../
 | [`strip-seal-fatigue`](cases/strip-seal-fatigue/) | Python | Which strip material and roller size does the seal need, and how should its life be stated? (Fatigue values are measured supplier data, and they hold for dry air only.) |
 | [`strip-seal-preload`](cases/strip-seal-preload/) | Python (`numpy`, `scipy`) | Which radius does a 0.25 mm strip really take over 10 mm rollers, how does the pull change it, and can 304 replace 301? (Layout read off a sketch; confirm against CAD.) |
 | [`strip-seal-designer`](cases/strip-seal-designer/) | HTML + JavaScript (Node for checks) | How does the strip bend over the rollers, what force does each roller carry, and how much screw travel gives how much preload? Web page on GitHub Pages. (Magnet strip stiffness is an estimate.) |
-| [`cutting-force-rejection`](cases/cutting-force-rejection/) | HTML + JavaScript (Node for checks) | How much does the stage move under a milling force? Compares a linear motor with a ball-screw servo, read at the motor or at the stage. Web page on GitHub Pages. (Rigid screw and nut, one sine force.) |
+| [`cutting-force-rejection`](cases/cutting-force-rejection/) | HTML + JavaScript (Node for checks) | How much does the stage move under a milling force? Compares a linear motor with a ball-screw servo, read at the motor or at the stage. Web page on GitHub Pages. (Coupling and axial stiffness, one sine force.) |
 
 Results summaries belong in `results/<case-slug>/summary.md`. Heavy outputs
 (`results/<case>/exports/`) are gitignored.
