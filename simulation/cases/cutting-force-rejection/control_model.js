@@ -24,16 +24,29 @@
 //
 // For the linear motor all four are the same G, so Y/F_d = G/(1 + C·G).
 //
-// Ball screw in linear coordinates, r = pitch/(2π) in m/rad:
+// Ball screw in linear coordinates, r = pitch/(2π) in m/rad. Three masses
+// in a chain, joined by two springs:
 //
-//   motor side  m1 = J_rotor / r²          motor force u = torque / r
-//   stage side  m2 = m + J_screw / r²      J_screw = π·ρ·L·d⁴/32, steel
-//   coupling    k  = k_c / r²,  c = 2·ζ·√(k·μ),  μ = m1·m2/(m1 + m2)
+//   m1 ──k_c── m_s ──k_a── m
 //
-//   m1·x1'' = u − k·(x1 − x2) − c·(x1' − x2')
-//   m2·x2'' = F_d + k·(x1 − x2) + c·(x1' − x2')
+//   motor     m1  = J_rotor / r²        motor force u = torque / r
+//   screw     m_s = J_screw / r²        J_screw = π·ρ·L·d⁴/32, steel
+//   stage     m                          cutting force F_d
+//   coupling  k_c = k_coupling / r²     (torsion, seen along the axis)
+//   axial     1/k_a = 1/k_shaft + 1/k_nut + 1/k_bearing
+//             k_shaft = E·π·d_root²/4 / x_nut   (fixed bearing at the motor
+//             end, supported far end: the shaft between the fixed bearing
+//             and the nut carries the load)
 //
-// The screw and the nut are axially rigid. The coupling is the only spring.
+// Each spring has a damper, c = 2·ζ·√(k·μ), with μ the two masses on either
+// side of it (the rest of the chain added to the near side). That ratio is
+// exact for its mode when the other spring is rigid.
+//
+//   m1·x1'' = u − k_c·(x1 − xs) − c_c·(x1' − xs')
+//   m_s·xs'' = k_c·(x1 − xs) + c_c·(x1' − xs') − k_a·(xs − x) − c_a·(xs' − x')
+//   m·x''   = F_d + k_a·(xs − x) + c_a·(xs' − x')
+//
+// The screw does not twist, and there is no backlash and no friction.
 //
 // The plant is a state space. The hold is exact: Φ = e^{AT} and Γ come from
 // one matrix exponential. G(z) = c·(zI − Φ)⁻¹·Γ. For one mass this is
@@ -67,14 +80,20 @@ const DEFAULTS = {
   pm: 30,          // degrees, target phase margin
   pitch: 5,        // mm per revolution, ball-screw pitch
   kc: 450,         // N·m/rad, coupling stiffness
-  d: 16,           // mm, ball-screw diameter
+  d: 16,           // mm, ball-screw diameter (sets the screw inertia)
   L: 400,          // mm, ball-screw length
   Jr: 119,         // g·cm², rotor inertia of the BLDC motor
-  zeta: 0.1,       // damping ratio of the motor, coupling and screw mode
+  zeta: 0.1,       // damping ratio of the coupling
+  droot: 13.324,   // mm, screw root diameter, HIWIN 16-5
+  xnut: 380,       // mm, nut distance from the fixed bearing
+  knut: 118,       // N/µm, nut, HIWIN 16-5T4: 12 kgf/µm at 30 % of C, no preload
+  kbear: 104,      // N/µm, fixed support BK12, TBI Motion: 10.6 kgf/µm
+  zetaA: 0.05,     // damping ratio of the axial spring (shaft, nut, bearing)
 };
 
 const CASES = ["linear", "colloc", "noncolloc"];
-const STEEL = 7850;  // kg/m³
+const STEEL = 7850;       // kg/m³
+const E_STEEL = 2.06e11;  // Pa, 2.1·10⁴ kgf/mm² as in the TBI Motion catalogue
 
 // ---------------------------------------------------------------------------
 // Complex numbers as [re, im].
@@ -179,19 +198,30 @@ function expm(A) {
 // Mechanics and plants.
 // ---------------------------------------------------------------------------
 
-// The ball-screw drive in linear coordinates. Also the two mode frequencies:
-// the resonance, and the antiresonance the motor encoder sees (the stage side
-// swinging on the coupling while the motor stands still).
+// The ball-screw drive in linear coordinates, with its mode frequencies.
+// modes: the two natural frequencies of the chain (the third is the rigid
+// motion). antis: the antiresonances the motor encoder sees, the natural
+// frequencies of the screw and the stage while the motor stands still.
 function mechanics(p) {
   const r = p.pitch / 1000 / (2 * Math.PI);
   const d = p.d / 1000, L = p.L / 1000;
   const Js = Math.PI * STEEL * L * d ** 4 / 32;
   const Jr = p.Jr * 1e-7;
-  const m1 = Jr / r ** 2, m2 = p.m + Js / r ** 2;
-  const k = p.kc / r ** 2, mu = m1 * m2 / (m1 + m2);
-  const c = 2 * p.zeta * Math.sqrt(k * mu);
-  return { r, Js, Jr, m1, m2, mScrew: Js / r ** 2, k, c, mu,
-    fRes: Math.sqrt(k / mu) / (2 * Math.PI), fAnti: Math.sqrt(k / m2) / (2 * Math.PI) };
+  const m1 = Jr / r ** 2, ms = Js / r ** 2, m = p.m;
+  const kc = p.kc / r ** 2;
+  const kShaft = E_STEEL * Math.PI * (p.droot / 1000) ** 2 / 4 / (p.xnut / 1000);
+  const kNut = p.knut * 1e6, kBear = p.kbear * 1e6;
+  const ka = 1 / (1 / kShaft + 1 / kNut + 1 / kBear);
+  const muC = m1 * (ms + m) / (m1 + ms + m), muA = (m1 + ms) * m / (m1 + ms + m);
+  const cc = 2 * p.zeta * Math.sqrt(kc * muC), ca = 2 * p.zetaA * Math.sqrt(ka * muA);
+  // Roots of ω⁴ − b·ω² + c = 0, as frequencies in Hz, low first.
+  const roots = (b, c) => {
+    const disc = Math.sqrt(Math.max(0, b * b / 4 - c));
+    return [b / 2 - disc, b / 2 + disc].map((w2) => Math.sqrt(Math.max(0, w2)) / (2 * Math.PI));
+  };
+  const modes = roots(kc / m1 + kc / ms + ka / ms + ka / m, kc * ka * (m1 + ms + m) / (m1 * ms * m));
+  const antis = roots(kc / ms + ka / ms + ka / m, kc * ka / (ms * m));
+  return { r, Js, Jr, m1, ms, m, kc, kShaft, kNut, kBear, ka, cc, ca, modes, antis };
 }
 
 // Continuous plant of one case. Indices into the state:
@@ -200,14 +230,21 @@ function mechanics(p) {
 function plantFor(p, id) {
   if (id === "linear") {
     return { id, n: 2, A: [[0, 1], [0, 0]], Bu: [0, 1 / p.m], Bd: [0, 1 / p.m],
-      im: 0, iv: 1, is: 0, iy: 0, mStage: p.m, mTotal: p.m };
+      im: 0, iv: 1, is: 0, iy: 0 };
   }
   const q = mechanics(p);
-  const { m1, m2, k, c } = q;
-  return { id, n: 4, mech: q,
-    A: [[0, 1, 0, 0], [-k / m1, -c / m1, k / m1, c / m1], [0, 0, 0, 1], [k / m2, c / m2, -k / m2, -c / m2]],
-    Bu: [0, 1 / m1, 0, 0], Bd: [0, 0, 0, 1 / m2],
-    im: 0, iv: 1, is: 2, iy: id === "colloc" ? 0 : 2, mStage: m2, mTotal: m1 + m2 };
+  const { m1, ms, m, kc, ka, cc, ca } = q;
+  return { id, n: 6, mech: q,
+    A: [
+      [0, 1, 0, 0, 0, 0],
+      [-kc / m1, -cc / m1, kc / m1, cc / m1, 0, 0],
+      [0, 0, 0, 1, 0, 0],
+      [kc / ms, cc / ms, -(kc + ka) / ms, -(cc + ca) / ms, ka / ms, ca / ms],
+      [0, 0, 0, 0, 0, 1],
+      [0, 0, ka / m, ca / m, -ka / m, -ca / m],
+    ],
+    Bu: [0, 1 / m1, 0, 0, 0, 0], Bd: [0, 0, 0, 0, 0, 1 / m],
+    im: 0, iv: 1, is: 4, iy: id === "colloc" ? 0 : 4 };
 }
 
 // Exact step of length h, with the controller force u and the mean force
@@ -235,7 +272,10 @@ function stepMatrices(pl, h, w = 0) {
 
 // The plant with its hold, at the loop rate. Cached on the plant.
 function discrete(pl, T) {
-  if (!pl.disc || pl.disc.T !== T) pl.disc = { T, ...stepMatrices(pl, T) };
+  if (!pl.disc || pl.disc.T !== T) {
+    pl.disc = { T, ...stepMatrices(pl, T) };
+    pl.memo = new Map();
+  }
   return pl.disc;
 }
 
@@ -255,12 +295,19 @@ function plantAt(f, p) {
 //   su: motor force to stage position,    sd: cutting force to stage.
 // The cutting force is treated as held too, like the motor force. This is
 // close below about fs/4. The time simulation uses the true sine.
+// The responses are kept per frequency: the tuning asks for the same
+// frequencies many times while only the controller changes.
 function plantResp(f, p, pl) {
   const T = 1 / p.fs, d = discrete(pl, T), n = pl.n;
+  const hit = pl.memo.get(f);
+  if (hit) return hit;
+  if (pl.memo.size > 50000) pl.memo.clear();
   const th = 2 * Math.PI * f * T, z = [Math.cos(th), Math.sin(th)];
   const M = d.Phi.map((row, i) => row.map((v, j) => (i === j ? csub(z, [v, 0]) : [-v, 0])));
   const [xu, xd] = csolve2(M, d.Gu, d.Gf);
-  return { mu: xu[pl.iy], md: xd[pl.iy], su: xu[pl.is], sd: xd[pl.is], n };
+  const r = { mu: xu[pl.iy], md: xd[pl.iy], su: xu[pl.is], sd: xd[pl.is], n };
+  pl.memo.set(f, r);
+  return r;
 }
 
 // ---------------------------------------------------------------------------
@@ -380,8 +427,8 @@ function controllerFor(fb, p, pl) {
 function tune(p, id = "linear") {
   const pl = plantFor(p, id);
   const pmTarget = p.pm ?? 30;
-  const pmOf = (fb) => margins(p, controllerFor(fb, p, pl), 200, 16).pmDeg;
-  const grid = logspace(p.fs * 1e-4, p.fs * 0.2, 80);
+  const pmOf = (fb) => margins(p, controllerFor(fb, p, pl), 260, 16, p.fs * 1e-7).pmDeg;
+  const grid = logspace(p.fs * 1e-4, p.fs * 0.2, 60);
   if (!(pmOf(grid[0]) >= pmTarget)) throw new Error("the phase margin target is above what this controller can reach");
   let lo = NaN, hi = NaN;
   for (let i = 1; i < grid.length; i++) {
@@ -393,15 +440,20 @@ function tune(p, id = "linear") {
     if (pmOf(mid) >= pmTarget) lo = mid; else hi = mid;
   }
   // The search used a coarse grid. If the fine one finds a worse crossing,
-  // step f_b down until it agrees.
+  // step f_b down until it agrees. A very sharp resonance can also touch
+  // |C·G| = 1 so briefly that no grid sees it, and leave the loop just
+  // unstable. So the closed loop must be stable too.
   let tuned, fb = lo;
   for (let i = 0; i < 200; i++) {
     tuned = { id, ...controllerFor(fb, p, pl) };
     Object.assign(tuned, margins(p, tuned));
-    if (tuned.pmDeg >= pmTarget - 0.05) break;
+    if (tuned.pmDeg >= pmTarget - 0.05) {
+      tuned.rho = spectralRadius(p, tuned);
+      if (tuned.rho < 1) break;
+    }
     fb *= 0.99;
   }
-  tuned.rho = spectralRadius(p, tuned);
+  tuned.rho ??= spectralRadius(p, tuned);
   tuned.stable = tuned.rho < 1;
   return tuned;
 }
@@ -411,17 +463,22 @@ function tune(p, id = "linear") {
 // over the crossings where the loop gain is below 1. (Below f_b the phase is
 // also under −180°, from the integrator, but there the gain is far above 1.)
 // fc and f180 are where these worst values sit.
-function margins(p, tuned, nGrid = 2000, iters = 40) {
+// fLo sets the start of the grid. The tuning passes a fixed start, so every
+// step of its search asks for the same frequencies.
+function margins(p, tuned, nGrid = 2000, iters = 40, fLo = tuned.fb / 1000) {
   const nyq = p.fs / 2;
-  const grid = logspace(tuned.fb / 1000, nyq * 0.9999, nGrid);
+  const grid = logspace(fLo, nyq * 0.9999, nGrid);
   // A lightly damped resonance is a narrow peak, easy to step over. Add a
   // dense band around it, and around the place where it folds back below
   // half the loop rate when it sits above.
   const mech = tuned.plant.mech;
   if (mech) {
-    for (const f0 of [mech.fRes, mech.fAnti]) {
+    // The motor encoder also sees the antiresonances. The stage encoder
+    // does not.
+    const peaks = tuned.plant.id === "colloc" ? [...mech.modes, ...mech.antis] : mech.modes;
+    for (const f0 of peaks) {
       const fa = Math.abs(f0 - p.fs * Math.round(f0 / p.fs));
-      for (const fc of new Set([f0, fa])) {
+      for (const fc of f0 < nyq ? [f0] : [fa]) {
         if (fc > 0 && fc < nyq) grid.push(...logspace(fc * 0.8, Math.min(fc * 1.25, nyq * 0.9999), Math.max(30, Math.round(nGrid / 8))));
       }
     }

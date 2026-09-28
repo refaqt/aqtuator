@@ -12,10 +12,12 @@
 // Then:
 // 4. The state-space plant with hold matches the exact formula for one mass.
 // 5. f_b does not depend on the mass of the linear motor stage.
-// 6. With a very stiff coupling, the ball screw is one mass m1 + m2.
-// 7. The resonance sits at √(k/μ)/2π.
-// 8. The stability test agrees with the gain margin.
-// 9. The Tustin controller matches C(s) at low frequency.
+// 6. With stiff springs, the ball screw is one mass m1 + m_s + m.
+// 7. With a very stiff axial spring, the ball screw is the two-mass model.
+// 8. The two resonances sit at the natural frequencies of the chain.
+// 9. A narrow resonance and a soft axial spring do not break the tuning.
+// 10. The stability test agrees with the gain margin.
+// 11. The Tustin controller matches C(s) at low frequency.
 
 // The model is a plain script (see its end), so it hands over one object.
 import "./control_model.js";
@@ -36,18 +38,21 @@ for (const id of M.CASES) {
   check(t.stable, `${tag}: stable, largest closed-loop pole |z| = ${t.rho.toFixed(5)}`);
   const l = M.loopAt(t.fb, p, t);
   check(near(M.cabs(l.h), 1, 1e-6), `${tag}: |C·G| at f_b = ${M.cabs(l.h).toFixed(6)}`);
-  check(Math.abs(t.pmDeg - 30) < 0.1, `${tag}: worst phase margin ${t.pmDeg.toFixed(3)}° at ${t.fc.toFixed(1)} Hz`);
+  // At least 30°. More when a resonance sets the limit: a slightly higher
+  // f_b would make the loop cross 1 again there, with a poor margin.
+  check(t.pmDeg >= 29.9, `${tag}: worst phase margin ${t.pmDeg.toFixed(3)}° at ${t.fc.toFixed(1)} Hz`);
   check(t.gmDb > 1, `${tag}: gain margin ${t.gmDb.toFixed(2)} dB at ${t.f180.toFixed(1)} Hz`);
 
   const n = 3 * M.settleSamples(p, t);
   const r = M.simulate(p, t, { samples: n, Famp: 0, window: n - 10 });
   const rest = Math.max(Math.abs(r.lo), Math.abs(r.hi));
   if (id === "colloc") {
-    // The integrator holds the motor still. The stage stays off by the
-    // twist of the coupling under the mean force: F_mean / k.
-    const want = p.Fmean / M.mechanics(p).k;
-    check(near(rest, want, 1e-3), `${tag}: constant force, the stage stays off by ${(rest * 1e9).toFixed(2)} nm, ` +
-      `F_mean / k = ${(want * 1e9).toFixed(2)} nm`);
+    // The integrator holds the motor still. The stage stays off by what the
+    // two springs give under the mean force: F_mean·(1/k_c + 1/k_a).
+    const q = M.mechanics(p);
+    const want = p.Fmean * (1 / q.kc + 1 / q.ka);
+    check(near(rest, want, 1e-3), `${tag}: constant force, the stage stays off by ${(rest * 1e9).toFixed(1)} nm, ` +
+      `F_mean·(1/k_c + 1/k_a) = ${(want * 1e9).toFixed(1)} nm`);
   } else {
     check(rest < 1e-3 * r.peak, `${tag}: constant force, deflection falls from ` +
       `${(r.peak * 1e6).toFixed(3)} µm to ${(rest * 1e9).toFixed(4)} nm`);
@@ -95,42 +100,80 @@ for (const id of M.CASES) {
     `linear: five times the mass keeps f_b (${t.fb.toFixed(2)}, ${t2.fb.toFixed(2)} Hz) and gives five times K`);
 }
 
-// With a very stiff coupling, both ball-screw plants are one mass m1 + m2.
+// With stiff springs, both ball-screw plants are one mass m1 + m_s + m.
 {
-  const p = { ...M.DEFAULTS, kc: 1e7 };
+  const p = { ...M.DEFAULTS, kc: 1e7, knut: 1e6, kbear: 1e6, droot: 100 };
   const q = M.mechanics(p);
-  const one = { ...p, m: q.m1 + q.m2 };
+  const one = { ...p, m: q.m1 + q.ms + q.m };
   for (const id of ["colloc", "noncolloc"]) {
     const pl = M.plantFor(p, id);
     let worst = 0;
     for (const f of M.logspace(10, 500, 20)) {
       worst = Math.max(worst, Math.abs(M.cabs(M.plantResp(f, p, pl).mu) / M.cabs(M.plantAt(f, one).h) - 1));
     }
-    check(worst < 0.01, `${id}: stiff coupling acts as one mass of ${(q.m1 + q.m2).toFixed(1)} kg, ` +
+    check(worst < 0.01, `${id}: stiff springs act as one mass of ${one.m.toFixed(1)} kg, ` +
       `worst error ${(worst * 100).toFixed(3)} % up to 500 Hz`);
   }
 }
 
-// The resonance, as the peak of |x2/u|·ω²·(m1 + m2) with little damping.
+// With a very stiff axial spring, the chain is the two-mass model of before:
+// motor m1 on the coupling, screw and stage together. Its resonance is
+// √(k_c/μ)/2π with μ = m1·(m_s + m)/(m1 + m_s + m), 1.22 kHz at the defaults.
 {
-  const p = { ...M.DEFAULTS, zeta: 0.01 };
+  const p = { ...M.DEFAULTS, knut: 1e9, kbear: 1e9, droot: 1e4 };
+  const q = M.mechanics(p);
+  const mu = q.m1 * (q.ms + q.m) / (q.m1 + q.ms + q.m);
+  const f2 = Math.sqrt(q.kc / mu) / (2 * Math.PI);
+  check(near(q.modes[0], f2, 0.01), `stiff axial spring: first mode ${q.modes[0].toFixed(0)} Hz, ` +
+    `two-mass resonance ${f2.toFixed(0)} Hz`);
+  const t = M.tune(p, "noncolloc");
+  check(near(t.fb, 405.0, 0.01), `stiff axial spring: non-collocated f_b ${t.fb.toFixed(1)} Hz, two-mass model 405.0 Hz`);
+}
+
+// The two resonances, as the peaks of |x/u|·ω² with little damping.
+{
+  const p = { ...M.DEFAULTS, zeta: 0.01, zetaA: 0.01 };
   const q = M.mechanics(p);
   const pl = M.plantFor(p, "noncolloc");
-  let best = 0, fPeak = 0;
-  for (const f of M.logspace(q.fRes / 2, q.fRes * 2, 2000)) {
-    const v = M.cabs(M.plantResp(f, p, pl).mu) * (2 * Math.PI * f) ** 2;
-    if (v > best) { best = v; fPeak = f; }
+  for (const f0 of q.modes) {
+    let best = 0, fPeak = 0;
+    for (const f of M.logspace(f0 / 1.3, f0 * 1.3, 2000)) {
+      if (f >= p.fs / 2) break;
+      const v = M.cabs(M.plantResp(f, p, pl).mu) * (2 * Math.PI * f) ** 2;
+      if (v > best) { best = v; fPeak = f; }
+    }
+    check(near(fPeak, f0, 0.02), `resonance peak at ${fPeak.toFixed(0)} Hz, natural frequency ${f0.toFixed(0)} Hz`);
   }
-  check(near(fPeak, q.fRes, 0.02), `resonance peak at ${fPeak.toFixed(0)} Hz, √(k/μ)/2π = ${q.fRes.toFixed(0)} Hz`);
+}
+
+// A soft axial spring: the stage mode sits near f_b. The tuning must stay
+// stable at the target margin.
+{
+  const p = { ...M.DEFAULTS, knut: 20, kbear: 20 };
+  for (const id of ["colloc", "noncolloc"]) {
+    const t = M.tune(p, id);
+    check(t.pmDeg >= 29.9 && t.stable, `${id}, soft axial spring (${(M.mechanics(p).ka / 1e6).toFixed(1)} N/µm): ` +
+      `f_b ${t.fb.toFixed(1)} Hz, worst phase margin ${t.pmDeg.toFixed(2)}°, largest pole |z| ${t.rho.toFixed(5)}`);
+  }
 }
 
 // A soft coupling with little damping: a narrow resonance peak near f_b. The
 // tuning must not step over it.
 {
-  const p = { ...M.DEFAULTS, kc: 50, pitch: 10, zeta: 0.02, L: 800, d: 12 };
+  const p = { ...M.DEFAULTS, kc: 50, pitch: 10, zeta: 0.02, zetaA: 0.02, L: 800, d: 12 };
   const t = M.tune(p, "colloc");
   check(t.pmDeg >= 29.9 && t.stable, `colloc, soft coupling with ζ = 0.02: f_b ${t.fb.toFixed(1)} Hz, ` +
     `worst phase margin ${t.pmDeg.toFixed(2)}° at ${t.fc.toFixed(0)} Hz, largest pole |z| ${t.rho.toFixed(5)}`);
+}
+
+// A very sharp resonance (ζ = 0.008) whose peak just touches |C·G| = 1: no
+// grid sees that crossing. The tuning must still end with a stable loop.
+{
+  const p = { ...M.DEFAULTS, m: 3.77, fs: 11649, pitch: 11.98, kc: 1091, d: 23.48, L: 1352.5, Jr: 237.1,
+    zeta: 0.00793, droot: 19.48, xnut: 61.37, knut: 168.5, kbear: 28.17, zetaA: 0.054 };
+  const t = M.tune(p, "colloc");
+  check(t.stable && t.pmDeg >= 29.9, `colloc, sharp resonance: f_b ${t.fb.toFixed(1)} Hz, ` +
+    `gain margin ${t.gmDb.toFixed(2)} dB, largest pole |z| ${t.rho.toFixed(6)}`);
 }
 
 // The stability test agrees with the gain margin: a bit less gain than the
