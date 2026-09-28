@@ -4,7 +4,10 @@
 //
 // For each case (linear motor, ball screw with the motor encoder, ball screw
 // with the linear encoder):
-// 1. The tuning hits the target: |C·G| = 1 at f_b and a 30° phase margin.
+// 1. The tuning meets the robustness rules on every plant of the family
+//    (resonances moved ±15 %): peak sensitivity at most 6 dB, phase margin
+//    at least 30°, gain margin at least 6 dB, stable. |C·G| = 1 at f_b, and
+//    2 % above f_b a rule breaks, so f_b is the highest one.
 // 2. A constant force gives no lasting deflection (the integrator).
 // 3. The time simulation agrees with the discrete compliance where both
 //    should hold (tooth frequency well below half the loop rate), for the
@@ -18,6 +21,8 @@
 // 9. A narrow resonance and a soft axial spring do not break the tuning.
 // 10. The stability test agrees with the gain margin.
 // 11. The Tustin controller matches C(s) at low frequency.
+// 12. The sensitivity peak matches a dense scan.
+// 13. The linear motor has no resonance, so its family is one plant.
 
 // The model is a plain script (see its end), so it hands over one object.
 import "./control_model.js";
@@ -41,7 +46,13 @@ for (const id of M.CASES) {
   // At least 30°. More when a resonance sets the limit: a slightly higher
   // f_b would make the loop cross 1 again there, with a poor margin.
   check(t.pmDeg >= 29.9, `${tag}: worst phase margin ${t.pmDeg.toFixed(3)}° at ${t.fc.toFixed(1)} Hz`);
-  check(t.gmDb > 1, `${tag}: gain margin ${t.gmDb.toFixed(2)} dB at ${t.f180.toFixed(1)} Hz`);
+  check(t.gmDb >= 5.9, `${tag}: gain margin ${t.gmDb.toFixed(2)} dB at ${t.f180.toFixed(1)} Hz`);
+  const w = t.worst;
+  check(t.robust && w.msDb <= p.msDb + 0.01 && w.pmDeg >= p.pm - 0.01 && w.gmDb >= p.gmMinDb - 0.01 && w.rho < 1,
+    `${tag}: over ${t.family} plants, worst sensitivity peak ${w.msDb.toFixed(2)} dB, phase margin ` +
+    `${w.pmDeg.toFixed(1)}°, gain margin ${w.gmDb.toFixed(1)} dB, largest pole |z| ${w.rho.toFixed(5)}`);
+  check(t.limit.length > 0, `${tag}: f_b ${t.fb.toFixed(1)} Hz is the highest, 2 % above it breaks ` +
+    t.limit.map((b) => `${b.rule} (coupling × ${b.sc.toFixed(3)}, axial × ${b.sa.toFixed(3)})`).join(", "));
 
   const n = 3 * M.settleSamples(p, t);
   const r = M.simulate(p, t, { samples: n, Famp: 0, window: n - 10 });
@@ -119,6 +130,8 @@ for (const id of M.CASES) {
 // With a very stiff axial spring, the chain is the two-mass model of before:
 // motor m1 on the coupling, screw and stage together. Its resonance is
 // √(k_c/μ)/2π with μ = m1·(m_s + m)/(m1 + m_s + m), 1.22 kHz at the defaults.
+// f_b is the value of the two-mass model under the robustness rules, as found
+// with this model on 2026-09-28; the check guards it against later changes.
 {
   const p = { ...M.DEFAULTS, knut: 1e9, kbear: 1e9, droot: 1e4 };
   const q = M.mechanics(p);
@@ -127,7 +140,7 @@ for (const id of M.CASES) {
   check(near(q.modes[0], f2, 0.01), `stiff axial spring: first mode ${q.modes[0].toFixed(0)} Hz, ` +
     `two-mass resonance ${f2.toFixed(0)} Hz`);
   const t = M.tune(p, "noncolloc");
-  check(near(t.fb, 405.0, 0.01), `stiff axial spring: non-collocated f_b ${t.fb.toFixed(1)} Hz, two-mass model 405.0 Hz`);
+  check(near(t.fb, 158.9, 0.01), `stiff axial spring: non-collocated f_b ${t.fb.toFixed(1)} Hz, two-mass model 158.9 Hz`);
 }
 
 // The two resonances, as the peaks of |x/u|·ω² with little damping.
@@ -152,7 +165,7 @@ for (const id of M.CASES) {
   const p = { ...M.DEFAULTS, knut: 20, kbear: 20 };
   for (const id of ["colloc", "noncolloc"]) {
     const t = M.tune(p, id);
-    check(t.pmDeg >= 29.9 && t.stable, `${id}, soft axial spring (${(M.mechanics(p).ka / 1e6).toFixed(1)} N/µm): ` +
+    check(t.robust && t.stable, `${id}, soft axial spring (${(M.mechanics(p).ka / 1e6).toFixed(1)} N/µm): ` +
       `f_b ${t.fb.toFixed(1)} Hz, worst phase margin ${t.pmDeg.toFixed(2)}°, largest pole |z| ${t.rho.toFixed(5)}`);
   }
 }
@@ -162,7 +175,7 @@ for (const id of M.CASES) {
 {
   const p = { ...M.DEFAULTS, kc: 50, pitch: 10, zeta: 0.02, zetaA: 0.02, L: 800, d: 12 };
   const t = M.tune(p, "colloc");
-  check(t.pmDeg >= 29.9 && t.stable, `colloc, soft coupling with ζ = 0.02: f_b ${t.fb.toFixed(1)} Hz, ` +
+  check(t.robust && t.stable, `colloc, soft coupling with ζ = 0.02: f_b ${t.fb.toFixed(1)} Hz, ` +
     `worst phase margin ${t.pmDeg.toFixed(2)}° at ${t.fc.toFixed(0)} Hz, largest pole |z| ${t.rho.toFixed(5)}`);
 }
 
@@ -172,7 +185,7 @@ for (const id of M.CASES) {
   const p = { ...M.DEFAULTS, m: 3.77, fs: 11649, pitch: 11.98, kc: 1091, d: 23.48, L: 1352.5, Jr: 237.1,
     zeta: 0.00793, droot: 19.48, xnut: 61.37, knut: 168.5, kbear: 28.17, zetaA: 0.054 };
   const t = M.tune(p, "colloc");
-  check(t.stable && t.pmDeg >= 29.9, `colloc, sharp resonance: f_b ${t.fb.toFixed(1)} Hz, ` +
+  check(t.stable && t.robust, `colloc, sharp resonance: f_b ${t.fb.toFixed(1)} Hz, ` +
     `gain margin ${t.gmDb.toFixed(2)} dB, largest pole |z| ${t.rho.toFixed(6)}`);
 }
 
@@ -200,6 +213,25 @@ for (const id of M.CASES) {
   const cz = M.controllerAt(f, p, t).h;
   check(near(M.cabs(cz), M.cabs(c), 0.01), `Tustin controller at ${f.toFixed(1)} Hz: ` +
     `${M.cabs(cz).toExponential(4)} against C(s) ${M.cabs(c).toExponential(4)} N/m`);
+}
+
+// The sensitivity peak from margins, against a dense scan of 1/|1 + C·G|.
+for (const id of M.CASES) {
+  const p = { ...M.DEFAULTS };
+  const t = M.tune(p, id);
+  let best = 0;
+  for (const f of M.logspace(t.fb / 1000, 0.4999 * p.fs, 200000)) {
+    const h = M.loopAt(f, p, t).h;
+    best = Math.max(best, 1 / Math.hypot(1 + h[0], h[1]));
+  }
+  check(t.ms >= best * 0.9999 && near(t.ms, best, 0.005), `${id}: sensitivity peak ${t.ms.toFixed(4)}, dense scan ${best.toFixed(4)}`);
+}
+
+// The linear motor has no resonance: the spread changes nothing.
+{
+  const p = { ...M.DEFAULTS };
+  const a = M.tune(p, "linear"), b = M.tune({ ...p, spread: 0 }, "linear");
+  check(a.family === 1 && a.fb === b.fb, `linear: one plant in the family, f_b ${a.fb.toFixed(2)} Hz with and without the spread`);
 }
 
 if (failed) {

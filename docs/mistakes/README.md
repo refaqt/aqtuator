@@ -33,3 +33,4 @@ Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mista
 | 2026-09-22 | [Put back the tooling update to get a clean working tree](2026-09-22_reverted-the-tooling-update.md) |
 | 2026-09-28 | [The web page ran against an old, cached model file](2026-09-28_page-ran-against-a-cached-model.md) |
 | 2026-09-28 | [The web page needed a server to run, and did not say so](2026-09-28_page-needed-a-server-to-run.md) |
+| 2026-09-28 | [Tuned the drive controllers for phase margin only](2026-09-28_tuned-for-phase-margin-only.md) |

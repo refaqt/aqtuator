@@ -108,3 +108,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-28 | [A web page for the controller against the cutting force](2026-09-28_cutting-force-rejection.md) | engineering, simulation, software |  |
 | 2026-09-28 | [The cutting force page compares a linear motor with a ball-screw servo](2026-09-28_ball-screw-servo-cases.md) | engineering, simulation, software |  |
 | 2026-09-28 | [The ball screw gets its axial stiffness, and loses most of its lead](2026-09-28_ball-screw-axial-stiffness.md) | engineering, simulation, software |  |
+| 2026-09-28 | [The cutting force page tunes every drive with robust rules](2026-09-28_robust-tuning-and-damping.md) | engineering, simulation, software |  |

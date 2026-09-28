@@ -67,8 +67,12 @@
 //
 //   out[k] = b0 · in[k] + b1 · in[k−1] − a1 · out[k−1]
 //
-// K is set so that |C·G_mu| = 1 at f_b. f_b is set so that the phase margin
-// is the target (30°). Each case is tuned on its own plant with this rule.
+// K is set so that |C·G_mu| = 1 at f_b. f_b is the highest bandwidth where
+// the loop meets four robustness rules: peak sensitivity |1/(1 + C·G)| at
+// most 6 dB, phase margin at least 30°, gain margin at least 6 dB, and a
+// stable closed loop. The rules must hold on a family of plants: each
+// resonance moved ±15 % in frequency, with the same controller. Each case is
+// tuned on its own plant with these rules.
 
 const DEFAULTS = {
   Famp: 50,        // N, amplitude (peak) of the sine part of the cutting force
@@ -83,12 +87,15 @@ const DEFAULTS = {
   d: 16,           // mm, ball-screw diameter (sets the screw inertia)
   L: 400,          // mm, ball-screw length
   Jr: 119,         // g·cm², rotor inertia of the BLDC motor
-  zeta: 0.1,       // damping ratio of the coupling
+  zeta: 0.02,      // damping ratio of the coupling, metal bellows or disc: an estimate, 0.01 to 0.03
   droot: 13.324,   // mm, screw root diameter, HIWIN 16-5
   xnut: 380,       // mm, nut distance from the fixed bearing
   knut: 118,       // N/µm, nut, HIWIN 16-5T4: 12 kgf/µm at 30 % of C, no preload
   kbear: 104,      // N/µm, fixed support BK12, TBI Motion: 10.6 kgf/µm
-  zetaA: 0.05,     // damping ratio of the axial spring (shaft, nut, bearing)
+  zetaA: 0.02,     // damping ratio of the axial spring (shaft, nut, bearing): an estimate, 0.01 to 0.05
+  msDb: 6,         // dB, highest allowed peak of the sensitivity |1/(1 + C·G)|
+  gmMinDb: 6,      // dB, lowest allowed gain margin
+  spread: 0.15,    // ± share by which each resonance frequency may move
 };
 
 const CASES = ["linear", "colloc", "noncolloc"];
@@ -202,16 +209,18 @@ function expm(A) {
 // modes: the two natural frequencies of the chain (the third is the rigid
 // motion). antis: the antiresonances the motor encoder sees, the natural
 // frequencies of the screw and the stage while the motor stands still.
-function mechanics(p) {
+// sc and sa scale the coupling and the axial stiffness, for the plant family
+// of the tuning. The dampers follow, so each ζ stays the same.
+function mechanics(p, sc = 1, sa = 1) {
   const r = p.pitch / 1000 / (2 * Math.PI);
   const d = p.d / 1000, L = p.L / 1000;
   const Js = Math.PI * STEEL * L * d ** 4 / 32;
   const Jr = p.Jr * 1e-7;
   const m1 = Jr / r ** 2, ms = Js / r ** 2, m = p.m;
-  const kc = p.kc / r ** 2;
+  const kc = sc * p.kc / r ** 2;
   const kShaft = E_STEEL * Math.PI * (p.droot / 1000) ** 2 / 4 / (p.xnut / 1000);
   const kNut = p.knut * 1e6, kBear = p.kbear * 1e6;
-  const ka = 1 / (1 / kShaft + 1 / kNut + 1 / kBear);
+  const ka = sa / (1 / kShaft + 1 / kNut + 1 / kBear);
   const muC = m1 * (ms + m) / (m1 + ms + m), muA = (m1 + ms) * m / (m1 + ms + m);
   const cc = 2 * p.zeta * Math.sqrt(kc * muC), ca = 2 * p.zetaA * Math.sqrt(ka * muA);
   // Roots of ω⁴ − b·ω² + c = 0, as frequencies in Hz, low first.
@@ -227,14 +236,14 @@ function mechanics(p) {
 // Continuous plant of one case. Indices into the state:
 //   im  motor position (the motor force works on it), iv its speed,
 //   is  stage position, iy measured position.
-function plantFor(p, id) {
+function plantFor(p, id, sc = 1, sa = 1) {
   if (id === "linear") {
-    return { id, n: 2, A: [[0, 1], [0, 0]], Bu: [0, 1 / p.m], Bd: [0, 1 / p.m],
+    return { id, n: 2, sc: 1, sa: 1, A: [[0, 1], [0, 0]], Bu: [0, 1 / p.m], Bd: [0, 1 / p.m],
       im: 0, iv: 1, is: 0, iy: 0 };
   }
-  const q = mechanics(p);
+  const q = mechanics(p, sc, sa);
   const { m1, ms, m, kc, ka, cc, ca } = q;
-  return { id, n: 6, mech: q,
+  return { id, n: 6, mech: q, sc, sa,
     A: [
       [0, 1, 0, 0, 0, 0],
       [-kc / m1, -cc / m1, kc / m1, cc / m1, 0, 0],
@@ -407,54 +416,113 @@ function sampledSteadyAt(f, p, tuned) {
 }
 
 // ---------------------------------------------------------------------------
-// Tuning: find f_b for the target phase margin.
+// Tuning: find the highest f_b that meets the robustness rules.
 // ---------------------------------------------------------------------------
 
 const wrap = (a) => a - 2 * Math.PI * Math.round(a / (2 * Math.PI));
 
-// The controller for a bandwidth f_b, with K set so that |C·G_mu| = 1 there.
+// The controller for a bandwidth f_b, with K set so that |C·G| = 1 there.
 function controllerFor(fb, p, pl) {
   const secs = sections(fb, 1 / p.fs);
   const K = 1 / cabs(loopAt(fb, p, { K: 1, sections: secs, plant: pl }).h);
   return { plant: pl, fb, K, sections: secs };
 }
 
-// Tune for the target phase margin. The margin that counts is the worst one
-// over all gain crossovers: a resonance can make the loop cross 1 again, away
-// from f_b. The margin is about 38° at a slow f_b and falls as f_b rises. A
-// resonance can bend that, so scan up from a slow f_b, take the first place
-// where the worst margin drops below the target, and bisect there.
+// The plants the controller must work on: the nominal one, and for the ball
+// screw the same drive with each resonance moved by ± spread in frequency.
+// A frequency changes with √k, so the stiffness scales by (1 ± spread)².
+// Coupling and axial spring move on their own: 3 × 3 = 9 plants.
+function plantFamily(p, id) {
+  const nominal = plantFor(p, id);
+  const d = p.spread ?? 0.15;
+  if (id === "linear" || !(d > 0)) return [nominal];
+  const scales = [1, (1 - d) ** 2, (1 + d) ** 2];
+  const out = [];
+  for (const sc of scales) for (const sa of scales) out.push(sc === 1 && sa === 1 ? nominal : plantFor(p, id, sc, sa));
+  return out;
+}
+
+// The rules every plant of the family must meet with one controller:
+//   peak sensitivity  max |1/(1 + C·G)| ≤ msDb (6 dB, so the loop stays at
+//                     least 0.5 away from −1 in any direction)
+//   phase margin      ≥ pm (30°) at every gain crossover
+//   gain margin       ≥ gmMinDb (6 dB) at every −180° crossing
+//   stable            largest closed-loop pole |z| < 1
+// fine: the fine frequency grid (1000 points, with dense bands around each
+// resonance). Otherwise the coarse grid of the search,
+// which also stops at the first broken rule.
+// Returns ok, the worst value of each margin with the plant that gave it,
+// and the list of broken rules.
+function robustness(p, tuned, family, fine = true) {
+  const msMax = 10 ** ((p.msDb ?? 6) / 20), pmMin = p.pm ?? 30, gmMin = 10 ** ((p.gmMinDb ?? 6) / 20);
+  const w = { ms: 0, pmDeg: Infinity, gm: Infinity, rho: 0 };
+  const broken = [];
+  for (const pl of family) {
+    const t = { ...tuned, plant: pl };
+    const m = fine ? margins(p, t, 1000) : margins(p, t, 260, 16, p.fs * 1e-7);
+    const rho = spectralRadius(p, t);
+    const at = { sc: pl.sc, sa: pl.sa };
+    if (m.ms > w.ms) Object.assign(w, { ms: m.ms, fMs: m.fMs, msAt: at });
+    if (m.pmDeg < w.pmDeg) Object.assign(w, { pmDeg: m.pmDeg, fc: m.fc, pmAt: at });
+    if (m.gm < w.gm) Object.assign(w, { gm: m.gm, f180: m.f180, gmAt: at });
+    if (rho > w.rho) Object.assign(w, { rho, rhoAt: at });
+    if (!(rho < 1)) broken.push({ rule: "unstable", ...at });
+    else {
+      if (!(m.ms <= msMax)) broken.push({ rule: "Ms", ...at });
+      if (!(m.pmDeg >= pmMin)) broken.push({ rule: "PM", ...at });
+      if (!(m.gm >= gmMin)) broken.push({ rule: "GM", ...at });
+    }
+    if (!fine && broken.length) break;
+  }
+  w.msDb = 20 * Math.log10(w.ms);
+  w.gmDb = 20 * Math.log10(w.gm);
+  return { ok: broken.length === 0, worst: w, broken };
+}
+
+// Tune for the rules above. Scan up from a slow f_b, take the first place
+// where a rule breaks, and bisect there. Rules can hold again at a higher
+// f_b, but such a loop would be fragile, so the search stops at the first
+// break.
 function tune(p, id = "linear") {
-  const pl = plantFor(p, id);
-  const pmTarget = p.pm ?? 30;
-  const pmOf = (fb) => margins(p, controllerFor(fb, p, pl), 260, 16, p.fs * 1e-7).pmDeg;
+  const family = plantFamily(p, id), pl = family[0];
+  const okAt = (fb) => robustness(p, controllerFor(fb, p, pl), family, false).ok;
   const grid = logspace(p.fs * 1e-4, p.fs * 0.2, 60);
-  if (!(pmOf(grid[0]) >= pmTarget)) throw new Error("the phase margin target is above what this controller can reach");
+  if (!okAt(grid[0])) throw new Error("the robustness rules are stricter than this controller can reach");
   let lo = NaN, hi = NaN;
   for (let i = 1; i < grid.length; i++) {
-    if (!(pmOf(grid[i]) >= pmTarget)) { lo = grid[i - 1]; hi = grid[i]; break; }
+    if (!okAt(grid[i])) { lo = grid[i - 1]; hi = grid[i]; break; }
   }
-  if (Number.isNaN(lo)) throw new Error("no bandwidth gives the target phase margin");
-  for (let i = 0; i < 36; i++) {
+  if (Number.isNaN(lo)) throw new Error("no bandwidth meets the robustness rules");
+  for (let i = 0; i < 20; i++) {
     const mid = Math.sqrt(lo * hi);
-    if (pmOf(mid) >= pmTarget) lo = mid; else hi = mid;
+    if (okAt(mid)) lo = mid; else hi = mid;
   }
-  // The search used a coarse grid. If the fine one finds a worse crossing,
-  // step f_b down until it agrees. A very sharp resonance can also touch
-  // |C·G| = 1 so briefly that no grid sees it, and leave the loop just
-  // unstable. So the closed loop must be stable too.
-  let tuned, fb = lo;
-  for (let i = 0; i < 200; i++) {
-    tuned = { id, ...controllerFor(fb, p, pl) };
-    Object.assign(tuned, margins(p, tuned));
-    if (tuned.pmDeg >= pmTarget - 0.05) {
-      tuned.rho = spectralRadius(p, tuned);
-      if (tuned.rho < 1) break;
-    }
+  // The search used a coarse grid. If the fine one finds a broken rule, step
+  // f_b down until it agrees, then bisect that last step on the fine grid.
+  const fineAt = (f) => {
+    const t = { id, ...controllerFor(f, p, pl) };
+    return { t, rob: robustness(p, t, family, true) };
+  };
+  let fb = lo, cur = fineAt(fb), bad = NaN;
+  for (let i = 0; i < 200 && !cur.rob.ok; i++) {
+    bad = fb;
     fb *= 0.99;
+    cur = fineAt(fb);
   }
-  tuned.rho ??= spectralRadius(p, tuned);
+  for (let i = 0; i < 4 && !Number.isNaN(bad) && cur.rob.ok; i++) {
+    const mid = Math.sqrt(fb * bad), next = fineAt(mid);
+    if (next.rob.ok) { fb = mid; cur = next; } else bad = mid;
+  }
+  const { t: tuned, rob } = cur;
+  // The margins of the nominal plant, for the charts and the table.
+  Object.assign(tuned, margins(p, tuned));
+  tuned.rho = spectralRadius(p, tuned);
   tuned.stable = tuned.rho < 1;
+  tuned.robust = rob.ok;
+  tuned.worst = rob.worst;
+  tuned.family = family.length;
+  // What stops a faster loop: the rules that break 2 % above f_b.
+  tuned.limit = robustness(p, controllerFor(fb * 1.02, p, pl), family, true).broken;
   return tuned;
 }
 
@@ -462,7 +530,8 @@ function tune(p, id = "linear") {
 // is the worst one over the crossovers. The gain margin is the smallest one
 // over the crossings where the loop gain is below 1. (Below f_b the phase is
 // also under −180°, from the integrator, but there the gain is far above 1.)
-// fc and f180 are where these worst values sit.
+// fc and f180 are where these worst values sit. ms is the peak of the
+// sensitivity |1/(1 + C·G)|, at fMs: 1/ms is the closest the loop comes to −1.
 // fLo sets the start of the grid. The tuning passes a fixed start, so every
 // step of its search asks for the same frequencies.
 function margins(p, tuned, nGrid = 2000, iters = 40, fLo = tuned.fb / 1000) {
@@ -487,6 +556,7 @@ function margins(p, tuned, nGrid = 2000, iters = 40, fLo = tuned.fb / 1000) {
   const L = (f) => loopAt(f, p, tuned).h;
   const mag = (f) => cabs(L(f));
   const pmAt = (f) => wrap(Math.PI + carg(L(f)));
+  const sens = (f) => 1 / cabs(cadd([1, 0], L(f)));
   const bisect = (fn, a, b) => {
     let fa = fn(a);
     for (let i = 0; i < iters; i++) {
@@ -497,6 +567,11 @@ function margins(p, tuned, nGrid = 2000, iters = 40, fLo = tuned.fb / 1000) {
   };
   let fc = NaN, pm = Infinity, f180 = NaN, gm = Infinity;
   const vals = grid.map((f) => L(f));
+  let iMs = 0, ms = 0;
+  for (let i = 0; i < grid.length; i++) {
+    const s = 1 / cabs(cadd([1, 0], vals[i]));
+    if (s > ms) { ms = s; iMs = i; }
+  }
   for (let i = 1; i < grid.length; i++) {
     const a = vals[i - 1], b = vals[i];
     if ((cabs(a) - 1) * (cabs(b) - 1) < 0) {
@@ -511,7 +586,18 @@ function margins(p, tuned, nGrid = 2000, iters = 40, fLo = tuned.fb / 1000) {
       if (g > 1 && g < gm) { gm = g; f180 = f; }
     }
   }
-  return { fc, pmDeg: pm * 180 / Math.PI, f180, gm, gmDb: 20 * Math.log10(gm) };
+  // Refine the sensitivity peak between the grid neighbours: golden section
+  // on log f.
+  let a = Math.log(grid[Math.max(0, iMs - 1)]), b = Math.log(grid[Math.min(grid.length - 1, iMs + 1)]);
+  const g = (Math.sqrt(5) - 1) / 2;
+  let x1 = b - g * (b - a), x2 = a + g * (b - a), s1 = sens(Math.exp(x1)), s2 = sens(Math.exp(x2));
+  for (let i = 0; i < iters; i++) {
+    if (s1 > s2) { b = x2; x2 = x1; s2 = s1; x1 = b - g * (b - a); s1 = sens(Math.exp(x1)); }
+    else { a = x1; x1 = x2; s1 = s2; x2 = a + g * (b - a); s2 = sens(Math.exp(x2)); }
+  }
+  let fMs = grid[iMs];
+  if (Math.max(s1, s2) > ms) { ms = Math.max(s1, s2); fMs = Math.exp(s1 > s2 ? x1 : x2); }
+  return { fc, pmDeg: pm * 180 / Math.PI, f180, gm, gmDb: 20 * Math.log10(gm), ms, msDb: 20 * Math.log10(ms), fMs };
 }
 
 // ---------------------------------------------------------------------------
@@ -582,6 +668,7 @@ function frequencyData(p, tuned, n = 600, fLo = tuned.fb / 200) {
       G: cabs(l.g.mu), Gph: gph,
       C: cabs(l.c.h), Cph: l.c.ph,
       L: cabs(l.h), Lph: gph + l.c.ph,
+      S: 1 / cabs(cadd([1, 0], l.h)),               // sensitivity, no unit
       Y: cabs(y),                                   // m/N
       mass: 1 / (p.m * (2 * Math.PI * fi) ** 2),    // m/N, the bare stage mass
     };
@@ -762,6 +849,7 @@ function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
 globalThis.ControlModel = {
   DEFAULTS, CASES, cabs, expm, mechanics, plantFor, stepMatrices, plantResp, sections, plantAt,
   controllerAt, loopAt, complianceAt, forceRatioAt, sampledSteadyAt, tune, margins, spectralRadius,
+  plantFamily, robustness,
   logspace, toothFreq, frequencyData, simulate, settleSamples, steadyState, steadyAmplitude,
   entrySamples, entryTrace, steadyTrace, sweep,
 };

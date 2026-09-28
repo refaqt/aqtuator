@@ -1,7 +1,7 @@
 # 2026-09-28 — Tune each drive case with the same rule
 
 - **Date:** 2026-09-28
-- **Status:** Accepted
+- **Status:** Superseded by [Robust tuning rules for the drive cases](2026-09-28_robust-tuning-rules-for-the-drive-cases.md). Each case still gets its own controller; only the rule changed.
 
 ## Context
 
