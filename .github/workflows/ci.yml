@@ -31,6 +31,9 @@ jobs:
       - name: Strip seal designer model checks
         run: node simulation/cases/strip-seal-designer/check_model.mjs
 
+      - name: Cutting force rejection model checks
+        run: node simulation/cases/cutting-force-rejection/check_model.mjs
+
       - name: Install host software
         run: |
           pip install -e modules/flexure-ball-screw-servo-stage/software/measurement-tools

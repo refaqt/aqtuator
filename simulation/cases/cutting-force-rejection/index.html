@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cutting Force Rejection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f2f4f4;
+  --panel: #ffffff;
+  --ink: #1a2227;
+  --muted: #5d6a72;
+  --line: #d5dcdf;
+  --grid: #e6ebed;
+  --accent: #1d6b74;
+  --digital: #eef4f5;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --ref: #8a959b;
+  --ok: #2f7d4a;
+  --warn: #a86b00;
+  --bad: #b3261e;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cond: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab;
+    --line: #2d3a40; --grid: #233036; --accent: #5cb8c2; --digital: #1f2b30;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --ref: #7d8a91;
+    --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab;
+  --line: #2d3a40; --grid: #233036; --accent: #5cb8c2; --digital: #1f2b30;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --ref: #7d8a91;
+  --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans);
+  padding-inline: 16px; padding-block: 20px 40px;
+}
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font: 600 26px/1.15 var(--cond); margin: 0; letter-spacing: 0.01em; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 80ch; }
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+aside {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; display: grid; gap: 14px; position: sticky; top: 12px;
+}
+@media (max-width: 900px) { aside { position: static; } }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+legend {
+  font: 600 11px/1 var(--sans); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--accent); padding: 0 0 6px;
+}
+.field { display: grid; grid-template-columns: 1fr 96px; gap: 8px; align-items: center; }
+.field small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+input[type="number"] {
+  width: 100%; font: 13px var(--mono); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 4px; padding: 5px 6px; text-align: right;
+}
+input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.check { display: flex; gap: 8px; align-items: flex-start; }
+.check input { margin-top: 3px; accent-color: var(--accent); }
+.check small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+.derived { font: 12px var(--mono); color: var(--muted); }
+
+main { display: grid; gap: 20px; min-width: 0; }
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; min-width: 0;
+}
+.panel h2 {
+  font: 600 16px/1.2 var(--cond); margin: 0 0 10px; letter-spacing: 0.02em;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.panel h2 span { font: 400 12px var(--sans); color: var(--muted); }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.tile { border-left: 3px solid var(--line); padding: 2px 0 2px 10px; display: grid; gap: 2px; }
+.tile[data-state="ok"] { border-color: var(--ok); }
+.tile[data-state="warn"] { border-color: var(--warn); }
+.tile[data-state="bad"] { border-color: var(--bad); }
+.tile .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.tile .v { font: 500 22px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+.tile .s { font: 12px var(--mono); color: var(--muted); }
+.warning { margin: 12px 0 0; padding: 8px 10px; border-left: 3px solid var(--warn); color: var(--ink); font-size: 13px; }
+.warning[hidden] { display: none; }
+
+.scroll { overflow-x: auto; }
+svg { display: block; }
+svg text { font-family: var(--mono); fill: var(--ink); }
+#diagram { width: 100%; min-width: 660px; height: auto; }
+
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1100px) { .three { grid-template-columns: minmax(0, 1fr); } }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 800px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.chart-box { position: relative; }
+.chart { width: 100%; height: auto; touch-action: pan-y; }
+.chart-title { font: 500 13px var(--sans); margin: 0 0 4px; }
+.chart-sub { font: 12px var(--mono); color: var(--muted); margin: 2px 0 0; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+.legend i { display: inline-block; width: 16px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+.legend i.dash { border-top-style: dashed; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 4px; padding: 6px 8px; font: 12px/1.45 var(--mono); white-space: nowrap;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); z-index: 2;
+}
+.tip[hidden] { display: none; }
+.tip b { font-weight: 500; }
+.tip .n { color: var(--muted); }
+.tip i { display: inline-block; width: 12px; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+
+.range-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 8px; font-size: 13px; }
+.range-row input { width: 96px; }
+.note { color: var(--muted); font-size: 13px; }
+.note p, .note ul { max-width: 95ch; }
+.note p { margin: 0 0 8px; }
+.note ul { margin: 0 0 8px; padding-left: 18px; }
+.note code { font: 12px var(--mono); }
+.status { font: 12px var(--mono); color: var(--muted); }
+.status.bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Cutting Force Rejection</h1>
+    <p>A stage mass held in place by a digital position controller, while a milling cutter pushes on it.
+      Set the cutting force, the cutter and the controller loop rate. The page tunes the controller for a
+      30° phase margin, and shows how much the stage moves. All transfer functions are in discrete time,
+      at the loop rate.</p>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <fieldset>
+        <legend>Cutting force</legend>
+        <div class="field"><label for="Famp">Force amplitude <small>N, peak of the sine</small></label>
+          <input id="Famp" type="number" step="5" min="0" value="50"></div>
+        <div class="field"><label for="Fmean">Force mean <small>N</small></label>
+          <input id="Fmean" type="number" step="5" value="50"></div>
+        <div class="field"><label for="teeth">Number of teeth</label>
+          <input id="teeth" type="number" step="1" min="1" max="20" value="2"></div>
+        <div class="field"><label for="rpm">Spindle speed <small>rev/min</small></label>
+          <input id="rpm" type="number" step="500" min="10" value="12000"></div>
+        <div class="derived" id="toothText"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Stage and controller</legend>
+        <div class="field"><label for="m">Stage mass <small>kg</small></label>
+          <input id="m" type="number" step="0.1" min="0.01" value="2"></div>
+        <div class="field"><label for="fs">Loop rate <small>Hz</small></label>
+          <input id="fs" type="number" step="1000" min="100" value="10000"></div>
+        <label class="check"><input id="delay" type="checkbox">
+          <span>One sample computation delay
+            <small>Force from sample k is applied at sample k+1. The hold lag is already in the plant, so this is extra.</small></span></label>
+      </fieldset>
+      <div class="status" id="status">Calculating…</div>
+    </aside>
+
+    <main>
+      <section class="panel" aria-labelledby="h-res">
+        <h2 id="h-res">Results <span>controller tuned for 30° phase margin</span></h2>
+        <div class="tiles">
+          <div class="tile" id="tFb"><span class="k">Bandwidth f_b</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tK"><span class="k">Gain K</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tPm"><span class="k">Phase margin</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tGm"><span class="k">Gain margin</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tFt"><span class="k">Tooth frequency</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tAmp"><span class="k">Vibration amplitude</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tPeak"><span class="k">Peak when the cut starts</span><span class="v">–</span><span class="s">–</span></div>
+        </div>
+        <p class="warning" id="nyqWarn" hidden></p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-diag">
+        <h2 id="h-diag">Block diagram <span>the shaded part runs in the controller, once per sample</span></h2>
+        <div class="scroll"><svg id="diagram" viewBox="0 0 900 250" role="img"
+          aria-label="Control loop: controller, hold, cutting force added to the controller force, stage mass, position sampled back to the controller"></svg></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-ol">
+        <h2 id="h-ol">Open loop <span>plant G, controller C and loop C·G, up to half the loop rate</span></h2>
+        <div class="three">
+          <div class="chart-box"><p class="chart-title">Plant G (mass with hold), µm/N</p>
+            <svg id="cGm" class="chart" viewBox="0 0 420 210"></svg>
+            <svg id="cGp" class="chart" viewBox="0 0 420 150"></svg></div>
+          <div class="chart-box"><p class="chart-title">Controller C, N/µm</p>
+            <svg id="cCm" class="chart" viewBox="0 0 420 210"></svg>
+            <svg id="cCp" class="chart" viewBox="0 0 420 150"></svg></div>
+          <div class="chart-box"><p class="chart-title">Loop C·G, no unit</p>
+            <svg id="cLm" class="chart" viewBox="0 0 420 210"></svg>
+            <svg id="cLp" class="chart" viewBox="0 0 420 150"></svg>
+            <p class="chart-sub" id="marginText"></p></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-cl">
+        <h2 id="h-cl">Closed loop <span>what the cutting force sees</span></h2>
+        <div class="two">
+          <div class="chart-box"><p class="chart-title">Compliance Y/F_d = G/(1 + G·C), µm/N</p>
+            <div class="legend"><span><i style="border-color:var(--s1)"></i>with controller</span>
+              <span><i class="dash" style="border-color:var(--ref)"></i>mass alone, 1/(m·ω²)</span></div>
+            <svg id="cY" class="chart" viewBox="0 0 440 260"></svg></div>
+          <div class="chart-box"><p class="chart-title">Stiffness F_d/Y = (1 + G·C)/G, N/µm</p>
+            <div class="legend"><span><i style="border-color:var(--s1)"></i>with controller</span>
+              <span><i class="dash" style="border-color:var(--ref)"></i>mass alone, m·ω²</span></div>
+            <svg id="cS" class="chart" viewBox="0 0 440 260"></svg></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-time">
+        <h2 id="h-time">Stage position over time <span>mean plus sine force from t = 0</span></h2>
+        <div class="two">
+          <div class="chart-box"><p class="chart-title">The cut starts: the integrator pushes the mean force back, µm</p>
+            <svg id="cEntry" class="chart" viewBox="0 0 440 240"></svg></div>
+          <div class="chart-box"><p class="chart-title">Steady state, four tooth periods, µm</p>
+            <svg id="cSteady" class="chart" viewBox="0 0 440 240"></svg>
+            <p class="chart-sub">Between the samples the mass moves freely. Dots: the positions the controller sees.</p></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-sweep">
+        <h2 id="h-sweep">Vibration amplitude against spindle speed <span>same cutter and force</span></h2>
+        <div class="range-row">
+          <label for="rpmLo">From</label><input id="rpmLo" type="number" step="500" min="10" value="1000">
+          <label for="rpmHi">to</label><input id="rpmHi" type="number" step="500" min="20" value="30000">
+          <span>rev/min</span>
+        </div>
+        <div class="legend"><span><i style="border-color:var(--s1)"></i>with controller</span>
+          <span><i class="dash" style="border-color:var(--ref)"></i>mass alone</span></div>
+        <div class="chart-box"><svg id="cSweep" class="chart" viewBox="0 0 880 280"></svg></div>
+      </section>
+
+      <section class="panel note" aria-labelledby="h-model">
+        <h2 id="h-model">How this is calculated</h2>
+        <p><b>Plant.</b> The stage is a single rigid mass: G(s) = 1/(m·s²), from force in N to position in m.
+          The controller force is held constant over each sample (a zero-order hold). The discrete plant is
+          G(z) = T²(z + 1) / (2m(z − 1)²), with T = 1/f<sub>s</sub>. This already holds the lag of the hold, about
+          half a sample.</p>
+        <p><b>Controller.</b> C(s) = K · 1/s · (s + 2πf<sub>i</sub>)(s + 2πf<sub>d</sub>) / (s + 2πf<sub>lp</sub>)²,
+          with f<sub>i</sub> = f<sub>b</sub>/10, f<sub>d</sub> = f<sub>b</sub>/3 and f<sub>lp</sub> = 4·f<sub>b</sub>.
+          Each factor is translated to discrete time with the bilinear rule (Tustin), s = (2/T)(z − 1)/(z + 1).
+          K is set so that |C·G| = 1 at f<sub>b</sub>, and f<sub>b</sub> is searched so that the phase margin is 30°.</p>
+        <p><b>Why f<sub>b</sub> follows the loop rate and not the mass.</b> With these frequency ratios, the
+          continuous loop has about 38° of phase margin at any bandwidth. The sampling lag takes the other 8°, and
+          that lag grows with f<sub>b</sub>/f<sub>s</sub>. So f<sub>b</sub> ends at about f<sub>s</sub>/23, or about
+          f<sub>s</sub>/69 with the extra computation delay. A heavier stage only needs a larger K. The stiffness near
+          f<sub>b</sub> is then about m·(2πf<sub>b</sub>)², so the mass and the loop rate both help.</p>
+        <p><b>Cutting force.</b> F<sub>d</sub>(t) = F<sub>mean</sub> + F<sub>amp</sub> · sin(2π f<sub>tooth</sub> t),
+          with f<sub>tooth</sub> = teeth · rev/min / 60. It acts on the mass, next to the controller force.
+          So Y/F<sub>d</sub> = G/(1 + G·C) is the compliance, and its inverse is the stiffness.</p>
+        <p><b>Vibration.</b> The amplitude comes from a time simulation, not from the transfer function. The mass
+          moves in continuous time, and it is integrated exactly between samples. The controller runs once per
+          sample. The amplitude is half of the peak-to-peak motion after the start transient, including the motion
+          between samples. Below about f<sub>s</sub>/4 this agrees with compliance × F<sub>amp</sub> within a few
+          per cent. Above half the loop rate, the discrete transfer functions have no meaning, but the simulation
+          still holds.</p>
+        <p><b>Limits.</b></p>
+        <ul>
+          <li>The stage is one rigid mass. No resonances, no friction, no guide stiffness.</li>
+          <li>The force is one pure sine plus a mean. A real cut has harmonics of the tooth frequency.</li>
+          <li>No sensor noise, no quantisation, no force limit on the actuator.</li>
+          <li>The cut does not react to the motion, so this model shows forced vibration, not chatter.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+import * as M from "./control_model.js";
+
+const $ = (id) => document.getElementById(id);
+const ids = ["Famp", "Fmean", "teeth", "rpm", "m", "fs"];
+
+function params() {
+  const p = { ...M.DEFAULTS };
+  for (const id of ids) p[id] = parseFloat($(id).value);
+  p.teeth = Math.max(1, Math.round(p.teeth));
+  p.delay = $("delay").checked;
+  return p;
+}
+function valid(p) {
+  return p.Famp >= 0 && Number.isFinite(p.Fmean) && p.teeth >= 1 && p.rpm > 0 && p.m > 0 && p.fs >= 100;
+}
+
+// ----- Number formats ------------------------------------------------------
+const sup = (s) => String(s).replace(/./g, (c) => "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"["0123456789-".indexOf(c)] ?? c);
+function sig(v, n = 3) {
+  if (!Number.isFinite(v)) return "–";
+  if (v === 0) return "0";
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    const e = Math.floor(Math.log10(a));
+    return `${(v / 10 ** e).toFixed(n - 1)}·10${sup(e)}`;
+  }
+  const d = Math.max(0, n - 1 - Math.floor(Math.log10(a)));
+  return v.toFixed(d);
+}
+const hz = (f) => f >= 1000 ? `${sig(f / 1000)} kHz` : `${sig(f)} Hz`;
+function tile(id, v, s, state) {
+  const el = $(id);
+  el.querySelector(".v").textContent = v;
+  el.querySelector(".s").textContent = s;
+  if (state) el.dataset.state = state; else delete el.dataset.state;
+}
+
+// ----- SVG helpers ---------------------------------------------------------
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function niceTicks(lo, hi, n = 5) {
+  const span = hi - lo || 1;
+  const step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= step0);
+  const out = [];
+  for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9 * span; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(lo, hi) {
+  const out = [];
+  for (let e = Math.ceil(Math.log10(lo) - 1e-9); e <= Math.floor(Math.log10(hi) + 1e-9); e++) out.push(10 ** e);
+  return out;
+}
+function logLabel(v) {
+  const e = Math.round(Math.log10(v));
+  if (e >= -2 && e <= 4) return e >= 3 ? `${10 ** (e - 3)}k` : String(+v.toFixed(Math.max(0, -e)));
+  return `10${sup(e)}`;
+}
+
+// A line chart. Series share one x axis. Hover shows every series at the x
+// under the pointer.
+//   series: [{ pts: [[x, y]], color, dash, label, fmt, dots }]
+//   vlines: [{ x, label }], markers: [{ x, y, label }]
+function chart(svg, o) {
+  const [, , W, H] = svg.getAttribute("viewBox").split(" ").map(Number);
+  svg.replaceChildren();
+  const m = { l: 58, r: 14, t: 12, b: o.xLabel ? 36 : 20 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const all = o.series.flatMap((s) => s.pts);
+  const xs = all.map((p) => p[0]), ys = (o.yFromFirst ? o.series[0].pts : all).map((p) => p[1]).filter((y) => Number.isFinite(y) && (!o.yLog || y > 0));
+  let [x0, x1] = o.xRange ?? [Math.min(...xs), Math.max(...xs)];
+  let [y0, y1] = o.yRange ?? [Math.min(...ys), Math.max(...ys)];
+  if (o.yLog && o.yFromFirst) { y0 /= 10; y1 *= 10; }
+  if (o.yLog) {
+    y0 = 10 ** Math.floor(Math.log10(y0) + 1e-9); y1 = 10 ** Math.ceil(Math.log10(y1) - 1e-9);
+    if (y1 <= y0) y1 = y0 * 10;
+  } else if (!o.yRange) {
+    const pad = (y1 - y0) * 0.06 || Math.abs(y1) * 0.1 || 1;
+    y0 -= pad; y1 += pad;
+    const t = niceTicks(y0, y1, 5);
+    y0 = Math.min(y0, t[0]); y1 = Math.max(y1, t[t.length - 1]);
+  }
+  const fx = o.xLog ? (x) => (Math.log10(x) - Math.log10(x0)) / (Math.log10(x1) - Math.log10(x0))
+                    : (x) => (x - x0) / (x1 - x0);
+  const fy = o.yLog ? (y) => (Math.log10(y) - Math.log10(y0)) / (Math.log10(y1) - Math.log10(y0))
+                    : (y) => (y - y0) / (y1 - y0);
+  const X = (x) => m.l + pw * fx(x), Y = (y) => m.t + ph * (1 - fy(y));
+  const g = el("g");
+
+  // Grid and axes.
+  const xt = o.xLog ? logTicks(x0, x1) : niceTicks(x0, x1, o.xTicks ?? 6);
+  const yt = o.yTicks === "phase" ? phaseTicks(y0, y1) : o.yLog ? logTicks(y0, y1) : niceTicks(y0, y1, 5);
+  if (o.xLog) {
+    for (let e = Math.floor(Math.log10(x0)); e <= Math.ceil(Math.log10(x1)); e++) {
+      for (let k = 2; k < 10; k++) {
+        const v = k * 10 ** e;
+        if (v > x0 && v < x1) g.append(el("line", { x1: X(v), x2: X(v), y1: m.t, y2: m.t + ph, stroke: "var(--grid)", "stroke-width": 0.5 }));
+      }
+    }
+  }
+  for (const v of xt) {
+    g.append(el("line", { x1: X(v), x2: X(v), y1: m.t, y2: m.t + ph, stroke: "var(--grid)" }));
+    g.append(el("text", { x: X(v), y: m.t + ph + 14, "font-size": 10.5, "text-anchor": "middle", fill: "var(--muted)" },
+      o.xLog ? logLabel(v) : (o.xFmt ?? sig)(v)));
+  }
+  for (const v of yt) {
+    g.append(el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: "var(--grid)" }));
+    g.append(el("text", { x: m.l - 6, y: Y(v) + 3.5, "font-size": 10.5, "text-anchor": "end", fill: "var(--muted)" },
+      o.yLog ? logLabel(v) : (o.yFmt ?? ((t) => sig(t)))(v)));
+  }
+  g.append(el("rect", { x: m.l, y: m.t, width: pw, height: ph, fill: "none", stroke: "var(--line)" }));
+  if (o.xLabel) g.append(el("text", { x: m.l + pw / 2, y: H - 4, "font-size": 11, "text-anchor": "middle", fill: "var(--muted)" }, o.xLabel));
+  if (o.yLabel) g.append(el("text", { x: 12, y: m.t + ph / 2, "font-size": 11, "text-anchor": "middle", fill: "var(--muted)",
+    transform: `rotate(-90 12 ${m.t + ph / 2})` }, o.yLabel));
+
+  const clipId = `clip-${svg.id}`;
+  const defs = el("defs");
+  const cp = el("clipPath", { id: clipId });
+  cp.append(el("rect", { x: m.l, y: m.t, width: pw, height: ph }));
+  defs.append(cp);
+  g.append(defs);
+  const plot = el("g", { "clip-path": `url(#${clipId})` });
+
+  for (const h of o.hlines ?? []) {
+    if (h.y < y0 || h.y > y1) continue;
+    plot.append(el("line", { x1: m.l, x2: m.l + pw, y1: Y(h.y), y2: Y(h.y), stroke: "var(--muted)", "stroke-dasharray": "3 3" }));
+    if (h.label) plot.append(el("text", { x: m.l + pw - 4, y: Y(h.y) - 4, "font-size": 10.5, "text-anchor": "end", fill: "var(--muted)" }, h.label));
+  }
+  for (const v of o.vlines ?? []) {
+    if (v.x < x0 || v.x > x1) continue;
+    plot.append(el("line", { x1: X(v.x), x2: X(v.x), y1: m.t, y2: m.t + ph, stroke: "var(--muted)", "stroke-dasharray": "3 3" }));
+    if (v.label) plot.append(el("text", { x: X(v.x) + (v.left ? -4 : 4), y: m.t + 12 + (v.row ?? 0) * 13, "font-size": 10.5,
+      "text-anchor": v.left ? "end" : "start", fill: "var(--muted)" }, v.label));
+  }
+  for (const s of o.series) {
+    const pts = s.pts.filter((p) => Number.isFinite(p[1]) && (!o.yLog || p[1] > 0));
+    if (!pts.length) continue;
+    const d = pts.map((p, i) => `${i ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
+    plot.append(el("path", { d, fill: "none", stroke: s.color, "stroke-width": s.width ?? 2,
+      "stroke-dasharray": s.dash ? "5 4" : "none", "stroke-linejoin": "round" }));
+    if (s.dots) for (const p of s.dots) {
+      plot.append(el("circle", { cx: X(p[0]), cy: Y(p[1]), r: 2.6, fill: s.color, stroke: "var(--panel)", "stroke-width": 1 }));
+    }
+  }
+  for (const mk of o.markers ?? []) {
+    if (!(mk.x >= x0 && mk.x <= x1 && mk.y >= y0 && mk.y <= y1)) continue;
+    plot.append(el("circle", { cx: X(mk.x), cy: Y(mk.y), r: 4.5, fill: "var(--ink)", stroke: "var(--panel)", "stroke-width": 2 }));
+    if (mk.label) {
+      const right = X(mk.x) < m.l + pw * 0.62;
+      plot.append(el("text", { x: X(mk.x) + (right ? 8 : -8), y: Y(mk.y) + (mk.below ? 15 : -8), "font-size": 11,
+        "text-anchor": right ? "start" : "end", "font-weight": 500 }, mk.label));
+    }
+  }
+  g.append(plot);
+
+  // Hover: a hairline that snaps to the nearest x, and one tooltip for all series.
+  const hair = el("line", { y1: m.t, y2: m.t + ph, stroke: "var(--muted)", visibility: "hidden" });
+  const dots = o.series.map((s) => el("circle", { r: 3.5, fill: s.color, stroke: "var(--panel)", "stroke-width": 1.5, visibility: "hidden" }));
+  g.append(hair, ...dots);
+  const hit = el("rect", { x: m.l, y: m.t, width: pw, height: ph, fill: "transparent" });
+  g.append(hit);
+  svg.append(g);
+
+  const box = svg.parentElement;
+  let tip = box.querySelector(`.tip[data-for="${svg.id}"]`);
+  if (!tip) {
+    tip = document.createElement("div");
+    tip.className = "tip"; tip.hidden = true; tip.dataset.for = svg.id;
+    box.append(tip);
+  }
+  const nearest = (pts, x) => {
+    let lo = 0, hi = pts.length - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (pts[mid][0] < x) lo = mid; else hi = mid; }
+    return Math.abs(pts[lo][0] - x) <= Math.abs(pts[hi][0] - x) ? pts[lo] : pts[hi];
+  };
+  const inv = (px) => {
+    const u = (px - m.l) / pw;
+    return o.xLog ? 10 ** (Math.log10(x0) + u * (Math.log10(x1) - Math.log10(x0))) : x0 + u * (x1 - x0);
+  };
+  const move = (ev) => {
+    const r = svg.getBoundingClientRect();
+    const px = (ev.clientX - r.left) * W / r.width;
+    const x = inv(Math.min(m.l + pw, Math.max(m.l, px)));
+    const ref = nearest(o.series[0].pts, x);
+    hair.setAttribute("x1", X(ref[0])); hair.setAttribute("x2", X(ref[0]));
+    hair.setAttribute("visibility", "visible");
+    tip.replaceChildren();
+    const head = document.createElement("div");
+    head.className = "n";
+    head.textContent = o.xTip(ref[0]);
+    tip.append(head);
+    o.series.forEach((s, i) => {
+      const p = nearest(s.pts, ref[0]);
+      const ok = Number.isFinite(p[1]) && (!o.yLog || p[1] > 0) && p[1] >= y0 && p[1] <= y1;
+      dots[i].setAttribute("visibility", ok ? "visible" : "hidden");
+      if (ok) { dots[i].setAttribute("cx", X(p[0])); dots[i].setAttribute("cy", Y(p[1])); }
+      const row = document.createElement("div");
+      const key = document.createElement("i");
+      key.style.borderColor = s.color;
+      if (s.dash) key.style.borderTopStyle = "dashed";
+      const val = document.createElement("b");
+      val.textContent = (s.fmt ?? sig)(p[1]);
+      const name = document.createElement("span");
+      name.className = "n";
+      name.textContent = s.label ? `  ${s.label}` : "";
+      row.append(key, val, name);
+      tip.append(row);
+    });
+    tip.hidden = false;
+    const bx = box.getBoundingClientRect();
+    const left = ev.clientX - bx.left, top = ev.clientY - bx.top;
+    const tw = tip.offsetWidth;
+    tip.style.left = `${left + 14 + tw > bx.width ? left - 14 - tw : left + 14}px`;
+    tip.style.top = `${Math.max(0, top - 10 - tip.offsetHeight)}px`;
+  };
+  const leave = () => {
+    tip.hidden = true;
+    hair.setAttribute("visibility", "hidden");
+    dots.forEach((d) => d.setAttribute("visibility", "hidden"));
+  };
+  hit.addEventListener("pointermove", move);
+  hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", leave);
+  return { X, Y };
+}
+function phaseTicks(lo, hi) {
+  const step = hi - lo > 400 ? 180 : hi - lo > 200 ? 90 : 45;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out.push(v);
+  return out;
+}
+
+// ----- Block diagram -------------------------------------------------------
+function diagram(p) {
+  const svg = $("diagram");
+  svg.replaceChildren();
+  const line = (pts, extra = {}) => svg.append(el("polyline", { points: pts.map((q) => q.join(",")).join(" "), fill: "none",
+    stroke: "var(--ink)", "stroke-width": 1.5, "marker-end": "url(#arrow)", ...extra }));
+  const box = (x, y, w, h, label, sub, extra = {}) => {
+    svg.append(el("rect", { x, y, width: w, height: h, rx: 4, fill: "var(--panel)", stroke: "var(--ink)", "stroke-width": 1.5, ...extra }));
+    svg.append(el("text", { x: x + w / 2, y: y + h / 2 + (sub ? -2 : 4), "text-anchor": "middle", "font-size": 13, "font-weight": 500 }, label));
+    if (sub) svg.append(el("text", { x: x + w / 2, y: y + h / 2 + 13, "text-anchor": "middle", "font-size": 10, fill: "var(--muted)" }, sub));
+  };
+  const sum = (x, y) => {
+    svg.append(el("circle", { cx: x, cy: y, r: 11, fill: "var(--panel)", stroke: "var(--ink)", "stroke-width": 1.5 }));
+    svg.append(el("path", { d: `M${x - 6},${y}H${x + 6}M${x},${y - 6}V${y + 6}`, stroke: "var(--ink)", "stroke-width": 1.2 }));
+  };
+  const text = (x, y, s, extra = {}) => svg.append(el("text", { x, y, "font-size": 11.5, ...extra }, s));
+  const defs = el("defs");
+  const mk = el("marker", { id: "arrow", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" });
+  mk.append(el("path", { d: "M0,0L10,5L0,10z", fill: "var(--ink)" }));
+  defs.append(mk);
+  svg.append(defs);
+
+  const yM = 120;
+  // Digital part.
+  svg.append(el("rect", { x: 20, y: 44, width: 470, height: 184, rx: 6, fill: "var(--digital)", stroke: "var(--line)", "stroke-dasharray": "4 3" }));
+  text(30, 62, `controller, runs at fs = ${hz(p.fs)}`, { fill: "var(--muted)", "font-size": 11 });
+
+  text(34, yM - 8, "r = 0", { fill: "var(--muted)" });
+  line([[34, yM], [69, yM]]);
+  sum(80, yM);
+  text(62, yM + 28, "−", { "font-size": 16 });
+  line([[91, yM], [124, yM]]);
+  text(96, yM - 8, "e[k]", { fill: "var(--muted)" });
+  box(126, yM - 26, 136, 52, "C(z)", "1/s, lead, low-pass");
+  line([[262, yM], [294, yM]]);
+  text(266, yM - 8, "u[k]", { fill: "var(--muted)" });
+  box(296, yM - 22, 72, 44, "z⁻¹", p.delay ? "delay on" : "delay off",
+    p.delay ? {} : { "stroke-dasharray": "4 3", stroke: "var(--muted)" });
+  line([[368, yM], [398, yM]]);
+  box(400, yM - 22, 76, 44, "ZOH", "hold");
+  line([[476, yM], [549, yM]]);
+  text(482, yM - 8, "u(t)", { fill: "var(--muted)" });
+
+  // Physical part.
+  sum(560, yM);
+  text(566, yM + 28, "+", { "font-size": 14 });
+  line([[560, 22], [560, yM - 12]]);
+  text(572, 26, "cutting force F_d(t)", { "font-weight": 500 });
+  text(572, 41, `= ${sig(p.Fmean)} + ${sig(p.Famp)}·sin(2π·${sig(M.toothFreq(p))} Hz·t) N`, { fill: "var(--muted)", "font-size": 10.5 });
+  line([[571, yM], [614, yM]]);
+  box(616, yM - 26, 130, 52, "G(s) = 1/(m·s²)", `m = ${sig(p.m)} kg`);
+  line([[746, yM], [870, yM]]);
+  text(800, yM - 8, "position y", { "font-weight": 500 });
+
+  // Feedback through the sampler.
+  svg.append(el("polyline", { points: `790,${yM} 790,200 610,200`, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }));
+  // Sampler switch.
+  svg.append(el("circle", { cx: 606, cy: 200, r: 3, fill: "var(--ink)" }));
+  svg.append(el("line", { x1: 604, y1: 198, x2: 582, y2: 188, stroke: "var(--ink)", "stroke-width": 1.5 }));
+  svg.append(el("circle", { cx: 578, cy: 200, r: 3, fill: "var(--ink)" }));
+  text(560, 222, "sample every T = 1/fs", { fill: "var(--muted)", "font-size": 10.5 });
+  line([[575, 200], [80, 200], [80, yM + 13]]);
+  text(300, 194, "y[k]", { fill: "var(--muted)" });
+}
+
+// ----- Update --------------------------------------------------------------
+let timer = 0;
+function schedule() { clearTimeout(timer); timer = setTimeout(update, 120); }
+
+const um = 1e6;
+function update() {
+  const p = params();
+  const status = $("status");
+  if (!valid(p)) { status.textContent = "Check the inputs: all must be positive."; status.className = "status bad"; return; }
+  let t;
+  try { t = M.tune(p); } catch (e) { status.textContent = e.message; status.className = "status bad"; return; }
+  status.className = "status";
+  const t0 = performance.now();
+
+  const ft = M.toothFreq(p), nyq = p.fs / 2;
+  $("toothText").textContent = `tooth frequency ${hz(ft)}`;
+  diagram(p);
+
+  // Tiles.
+  tile("tFb", hz(t.fb), `loop rate / f_b = ${sig(p.fs / t.fb)}`);
+  tile("tK", sig(t.K), "N/(m·s)");
+  tile("tPm", `${t.pmDeg.toFixed(1)}°`, `at ${hz(t.fc)}`, "ok");
+  tile("tGm", Number.isFinite(t.gmDb) ? `${t.gmDb.toFixed(1)} dB` : "none", Number.isFinite(t.f180) ? `×${t.gm.toFixed(2)} at ${hz(t.f180)}` : "",
+    t.gmDb >= 6 ? "ok" : "warn");
+  tile("tFt", hz(ft), `${sig(ft / t.fb)} × f_b, ${sig(ft / nyq)} × fs/2`, ft >= nyq ? "warn" : undefined);
+  const amp = M.steadyAmplitude(p, t);
+  const massAmp = p.Famp / (p.m * (2 * Math.PI * ft) ** 2);
+  tile("tAmp", `${sig(amp * um)} µm`, `mass alone ${sig(massAmp * um)} µm`);
+  const entry = M.entryTrace(p, t);
+  tile("tPeak", `${sig(entry.peak * um)} µm`, "mean plus sine, before the integrator settles");
+
+  const warn = $("nyqWarn");
+  if (ft >= nyq) {
+    warn.hidden = false;
+    warn.textContent = `The tooth frequency is above half the loop rate (${hz(nyq)}). The controller cannot see this ` +
+      `vibration: it only sees an aliased, slower signal. The amplitude above comes from the time simulation. ` +
+      `The frequency plots stop at ${hz(nyq)}.`;
+  } else warn.hidden = true;
+
+  // Frequency plots.
+  const fd = M.frequencyData(p, t);
+  const fx = fd.map((r) => r.f);
+  const xR = [fx[0], fx[fx.length - 1]];
+  const xTip = (f) => hz(f);
+  const vFb = { x: t.fb, label: "f_b" };
+  const deg = (r) => r * 180 / Math.PI;
+  const bode = (idm, idp, key, color, unitScale, fmt, extra = {}) => {
+    chart($(idm), { xLog: true, yLog: true, xRange: xR, yLabel: extra.yLabel, xTip, vlines: [vFb, ...(extra.vlines ?? [])],
+      hlines: extra.hlines, markers: extra.markers,
+      series: [{ pts: fd.map((r) => [r.f, r[key] * unitScale]), color, fmt }] });
+    chart($(idp), { xLog: true, xRange: xR, yTicks: "phase", yLabel: "phase °", xLabel: "frequency, Hz", xTip,
+      yFmt: (v) => String(v), vlines: [vFb, ...(extra.vlines ?? [])], hlines: extra.phl, markers: extra.phm,
+      series: [{ pts: fd.map((r) => [r.f, deg(r[key + "ph"])]), color, fmt: (v) => `${v.toFixed(1)}°` }] });
+  };
+  bode("cGm", "cGp", "G", "var(--s1)", um, (v) => `${sig(v)} µm/N`, { yLabel: "µm/N" });
+  bode("cCm", "cCp", "C", "var(--s2)", 1 / um, (v) => `${sig(v)} N/µm`, { yLabel: "N/µm" });
+  const gmMarks = Number.isFinite(t.f180) ? [{ x: t.f180, y: 1 / t.gm, label: `GM ${t.gmDb.toFixed(1)} dB`, below: true }] : [];
+  bode("cLm", "cLp", "L", "var(--s3)", 1, (v) => sig(v), {
+    yLabel: "|C·G|", hlines: [{ y: 1, label: "1" }],
+    markers: [{ x: t.fc, y: 1, label: "crossover" }, ...gmMarks],
+    vlines: Number.isFinite(t.f180) ? [{ x: t.f180, label: "−180°", row: 1 }] : [],
+    phl: [{ y: -180, label: "−180°" }],
+    phm: [{ x: t.fc, y: -180 + t.pmDeg, label: `PM ${t.pmDeg.toFixed(1)}°`, below: true },
+      ...(Number.isFinite(t.f180) ? [{ x: t.f180, y: -180 }] : [])],
+  });
+  $("marginText").textContent = `Phase margin ${t.pmDeg.toFixed(1)}° at ${hz(t.fc)}. ` +
+    (Number.isFinite(t.gmDb) ? `Gain margin ${t.gmDb.toFixed(1)} dB at ${hz(t.f180)}.` : "No phase crossing, no gain margin.");
+
+  const inBand = ft < fd[fd.length - 1].f && ft > fd[0].f;
+  const yAt = inBand ? M.cabs(M.complianceAt(ft, p, t)) : NaN;
+  const toothLine = inBand ? [{ x: ft, label: "tooth", left: true, row: 1 }] : [];
+  chart($("cY"), { xLog: true, yLog: true, yFromFirst: true, xRange: xR, xLabel: "frequency, Hz", yLabel: "µm/N", xTip,
+    vlines: [vFb, ...toothLine],
+    markers: inBand ? [{ x: ft, y: yAt * um, label: `${sig(yAt * um)} µm/N` }] : [],
+    series: [
+      { pts: fd.map((r) => [r.f, r.Y * um]), color: "var(--s1)", label: "with controller", fmt: (v) => `${sig(v)} µm/N` },
+      { pts: fd.map((r) => [r.f, r.mass * um]), color: "var(--ref)", dash: true, label: "mass alone", fmt: (v) => `${sig(v)} µm/N` },
+    ] });
+  chart($("cS"), { xLog: true, yLog: true, yFromFirst: true, xRange: xR, xLabel: "frequency, Hz", yLabel: "N/µm", xTip,
+    vlines: [vFb, ...toothLine],
+    markers: inBand ? [{ x: ft, y: 1 / yAt / um, label: `${sig(1 / yAt / um)} N/µm`, below: true }] : [],
+    series: [
+      { pts: fd.map((r) => [r.f, 1 / r.Y / um]), color: "var(--s1)", label: "with controller", fmt: (v) => `${sig(v)} N/µm` },
+      { pts: fd.map((r) => [r.f, 1 / r.mass / um]), color: "var(--ref)", dash: true, label: "mass alone", fmt: (v) => `${sig(v)} N/µm` },
+    ] });
+
+  // Time plots. The start trace is thinned to min and max per bucket, so the
+  // envelope stays true.
+  const xs = entry.xs, n = xs.length, T = 1 / p.fs;
+  const buckets = 700, per = Math.max(1, Math.ceil(n / buckets));
+  const ent = [];
+  for (let i = 0; i < n; i += per) {
+    let lo = i, hi = i;
+    for (let j = i; j < Math.min(n, i + per); j++) { if (xs[j] < xs[lo]) lo = j; if (xs[j] > xs[hi]) hi = j; }
+    for (const j of lo < hi ? [lo, hi] : lo > hi ? [hi, lo] : [lo]) ent.push([j * T * 1000, xs[j] * um]);
+  }
+  chart($("cEntry"), { xLabel: "time, ms", yLabel: "µm", xTip: (v) => `${v.toFixed(2)} ms`, hlines: [{ y: 0 }],
+    series: [{ pts: ent, color: "var(--s1)", width: 1.5, fmt: (v) => `${sig(v)} µm` }] });
+
+  const st = M.steadyTrace(p, t, 4);
+  const stPts = st.points.map(([tt, x]) => [tt * 1000, x * um]);
+  // Every sub-th point falls on a sample: that is what the controller sees.
+  const samples = st.points.filter((_, i) => (i + 1) % st.sub === 0).map(([tt, x]) => [tt * 1000, x * um]);
+  chart($("cSteady"), { xLabel: "time, ms", yLabel: "µm", xTip: (v) => `${v.toFixed(3)} ms`,
+    hlines: [{ y: st.mid * um + st.amp * um, label: `+${sig(st.amp * um)} µm` }, { y: st.mid * um - st.amp * um }],
+    series: [{ pts: stPts, color: "var(--s1)", width: 1.5, dots: samples.length <= 200 ? samples : null, fmt: (v) => `${sig(v)} µm` }] });
+
+  // Sweep.
+  let lo = parseFloat($("rpmLo").value), hi = parseFloat($("rpmHi").value);
+  if (!(lo > 0) || !(hi > lo)) { lo = 1000; hi = 30000; }
+  const sw = M.sweep(p, t, lo, hi, 150);
+  const rpmAt = (f) => f * 60 / p.teeth;
+  const sv = [{ x: rpmAt(t.fb), label: "tooth = f_b" }, { x: rpmAt(nyq), label: "tooth = fs/2", row: 1 }];
+  chart($("cSweep"), { xLabel: "spindle speed, rev/min", yLabel: "µm", xTip: (v) => `${Math.round(v)} rev/min, tooth ${hz(v * p.teeth / 60)}`,
+    xFmt: (v) => String(Math.round(v)), vlines: sv,
+    yRange: [0, Math.max(...sw.map((r) => r.amp * um)) * 1.15],
+    markers: p.rpm >= lo && p.rpm <= hi ? [{ x: p.rpm, y: amp * um, label: `${sig(amp * um)} µm at ${Math.round(p.rpm)}` }] : [],
+    series: [
+      { pts: sw.map((r) => [r.rpm, r.amp * um]), color: "var(--s1)", label: "with controller", fmt: (v) => `${sig(v)} µm` },
+      { pts: sw.map((r) => [r.rpm, r.mass * um]), color: "var(--ref)", dash: true, label: "mass alone", fmt: (v) => `${sig(v)} µm` },
+    ] });
+
+  status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
+}
+
+for (const id of [...ids, "rpmLo", "rpmHi"]) $(id).addEventListener("input", schedule);
+$("delay").addEventListener("change", update);
+update();
+</script>
+</body>
+</html>
