@@ -104,3 +104,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-25 | [A measured seal strip, and a way to preload ours](2026-09-25_strip-seal-thickness-and-preload.md) | engineering, measurement, hardware |  |
 | 2026-09-25 | [The 0.25 mm seal strip: radius, pull, and 304 instead of 301](2026-09-25_strip-seal-radius-pull-and-304.md) | engineering, simulation |  |
 | 2026-09-25 | [Drives and a motion controller for the MK21 linear stages](2026-09-25_linear-stage-drive-and-motion-controller-survey.md) | engineering, hardware, software, purchasing |  |
+| 2026-09-28 | [A web page to design the seal strip and its screw preload](2026-09-28_strip-seal-designer.md) | engineering, simulation, software |  |

@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Strip Seal Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f2f4f4;
+  --panel: #ffffff;
+  --ink: #1a2227;
+  --muted: #5d6a72;
+  --line: #d5dcdf;
+  --grid: #e6ebed;
+  --steel: #3e5566;
+  --roller: #8a99a3;
+  --roller-fill: #e4e9ec;
+  --magnet: #b9c4ca;
+  --accent: #1d6b74;
+  --force: #c4541a;
+  --ok: #2f7d4a;
+  --warn: #a86b00;
+  --bad: #b3261e;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cond: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab;
+    --line: #2d3a40; --grid: #233036; --steel: #a9c2d3; --roller: #6f8290;
+    --roller-fill: #26323a; --magnet: #3c4b53; --accent: #5cb8c2; --force: #f08a4b;
+    --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab;
+  --line: #2d3a40; --grid: #233036; --steel: #a9c2d3; --roller: #6f8290;
+  --roller-fill: #26323a; --magnet: #3c4b53; --accent: #5cb8c2; --force: #f08a4b;
+  --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans);
+  padding-inline: 16px; padding-block: 20px 40px;
+}
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 {
+  font: 600 26px/1.15 var(--cond); margin: 0; letter-spacing: 0.01em; text-wrap: balance;
+}
+header p { margin: 4px 0 0; color: var(--muted); max-width: 75ch; }
+.layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+aside {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; display: grid; gap: 14px; position: sticky; top: 12px;
+}
+@media (max-width: 900px) { aside { position: static; } }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+legend {
+  font: 600 11px/1 var(--sans); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--accent); padding: 0 0 6px;
+}
+.field { display: grid; grid-template-columns: 1fr 92px; gap: 8px; align-items: center; }
+.field label { color: var(--ink); }
+.field small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+input[type="number"], select {
+  width: 100%; font: 13px var(--mono); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 4px; padding: 5px 6px; text-align: right;
+}
+select { text-align: left; font-family: var(--sans); }
+input:focus-visible, select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.check { display: flex; gap: 8px; align-items: flex-start; }
+.check input { margin-top: 3px; accent-color: var(--accent); }
+.derived { font: 12px var(--mono); color: var(--muted); }
+
+main { display: grid; gap: 20px; min-width: 0; }
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; min-width: 0;
+}
+.panel h2 {
+  font: 600 16px/1.2 var(--cond); margin: 0 0 10px; letter-spacing: 0.02em;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.panel h2 span { font: 400 12px var(--sans); color: var(--muted); }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.tile { border-left: 3px solid var(--line); padding: 2px 0 2px 10px; display: grid; gap: 2px; }
+.tile[data-state="ok"] { border-color: var(--ok); }
+.tile[data-state="warn"] { border-color: var(--warn); }
+.tile[data-state="bad"] { border-color: var(--bad); }
+.tile .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.tile .v { font: 500 22px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+.tile .s { font: 12px var(--mono); color: var(--muted); }
+
+.drawing-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button {
+  font: 12px var(--sans); background: transparent; color: var(--ink); border: 0;
+  padding: 4px 10px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+.scroll { overflow-x: auto; }
+svg { display: block; }
+svg text { font-family: var(--mono); fill: var(--ink); }
+#drawing { width: 100%; min-width: 640px; height: auto; }
+
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 700px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.chart { width: 100%; height: auto; }
+.chart-title { font: 500 13px var(--sans); margin: 0 0 4px; }
+
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font: 600 11px var(--sans); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+td { font: 13px var(--mono); }
+
+.screw-row { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 12px; align-items: center; }
+.note { color: var(--muted); font-size: 13px; max-width: 80ch; }
+.note p { margin: 0 0 8px; }
+.note ul { margin: 0 0 8px; padding-left: 18px; }
+.status { font: 12px var(--mono); color: var(--muted); }
+.status.bad { color: var(--bad); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Strip Seal Designer</h1>
+    <p>A spring steel strip over the four carriage rollers. Set the layout and the screw travel.
+      The page solves the true shape of the strip, the force on each roller, the stress and the
+      fatigue life. Rollers 1 and 4 press the strip on the magnet strips. Rollers 2 and 3 lift it.</p>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <fieldset>
+        <legend>Strip</legend>
+        <div class="field"><label for="material">Material</label>
+          <select id="material">
+            <option value="301">SS 301</option>
+            <option value="304">SS 304</option>
+          </select></div>
+        <div class="field"><label for="t">Thickness <small>mm</small></label>
+          <input id="t" type="number" step="0.01" min="0.03" max="1" value="0.25"></div>
+        <div class="field"><label for="width">Width <small>mm</small></label>
+          <input id="width" type="number" step="1" min="1" value="150"></div>
+        <div class="field"><label for="length">Length between clamps <small>mm</small></label>
+          <input id="length" type="number" step="10" min="50" value="1000"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Rollers</legend>
+        <div class="field"><label for="D">Roller diameter <small>mm</small></label>
+          <input id="D" type="number" step="0.5" min="1" value="10"></div>
+        <div class="field"><label for="a">Distance 1–2 and 3–4 <small>mm, centre to centre</small></label>
+          <input id="a" type="number" step="0.1" min="5" value="26.2"></div>
+        <div class="field"><label for="b">Distance 2–3 <small>mm, centre to centre</small></label>
+          <input id="b" type="number" step="1" min="10" value="119"></div>
+        <div class="field"><label for="dz">Height 2/3 above 1/4 <small>mm, centre to centre</small></label>
+          <input id="dz" type="number" step="0.05" value="-4.25"></div>
+        <div class="derived" id="liftText"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Carriage and magnets</legend>
+        <div class="field"><label for="clear">Carriage underside <small>mm above the profile</small></label>
+          <input id="clear" type="number" step="0.25" min="0" value="15.75"></div>
+        <div class="field"><label for="k">Magnet strip stiffness <small>N/mm³, estimate</small></label>
+          <input id="k" type="number" step="1" min="0.5" value="20"></div>
+        <div class="field"><label for="q">Magnet pull <small>N/mm², estimate</small></label>
+          <input id="q" type="number" step="0.001" min="0" value="0.005"></div>
+        <label class="check"><input id="plate" type="checkbox">
+          <span>Plate factor 1/(1−ν²) on the bending stress <small class="derived">wide strip, +10 %</small></span></label>
+      </fieldset>
+      <div class="status" id="status">Solving…</div>
+    </aside>
+
+    <main>
+      <section class="panel" aria-labelledby="h-screw">
+        <h2 id="h-screw">Screw preload <span>fit the strip loose, then tighten the countersunk screw</span></h2>
+        <div class="screw-row">
+          <input id="uRange" type="range" min="0" max="3" step="0.01" value="0.5" aria-label="Screw travel">
+          <div class="field" style="grid-template-columns: 1fr"><input id="u" type="number" step="0.01" min="0" value="0.5" aria-label="Screw travel in mm"></div>
+        </div>
+        <p class="status" style="margin:6px 0 12px">Screw travel in mm: how far the end of the strip moves after the strip lies on the rollers with no pull.</p>
+        <div class="tiles">
+          <div class="tile" id="tPull"><span class="k">Pull in the strip</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tArch"><span class="k">Arch height 2–3</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tRadius"><span class="k">Tightest radius</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tStress"><span class="k">Highest stress</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tYield"><span class="k">Yield / tensile strength</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tLife"><span class="k">Fatigue life</span><span class="v">–</span><span class="s">–</span></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-draw">
+        <h2 id="h-draw">Layout and roller forces
+          <span class="drawing-bar">Height
+            <span class="seg" role="group" aria-label="Vertical scale">
+              <button type="button" id="ve1" aria-pressed="true">×1 at scale</button>
+              <button type="button" id="ve4" aria-pressed="false">×4</button>
+            </span>
+          </span>
+        </h2>
+        <div class="scroll"><svg id="drawing" role="img" aria-label="Strip over the four rollers, with force arrows"></svg></div>
+        <div class="scroll" style="margin-top:10px">
+          <table id="forces">
+            <thead><tr><th>Force on</th><th>Horizontal N</th><th>Vertical N</th><th>Total N</th><th>Direction</th><th>Per mm width</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="note" style="margin-top:8px">Forces act on the part, from the strip. Horizontal is positive to the right,
+          vertical positive up, direction in degrees from the right, counter clockwise. The magnet strips carry the
+          reaction of rollers 1 and 4: the strip is pinched there and bends like a clamped beam.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-curves">
+        <h2 id="h-curves">What the screw does <span>for this layout and strip length</span></h2>
+        <div class="two">
+          <div><p class="chart-title">Pull against screw travel</p><svg id="cPull" class="chart" viewBox="0 0 420 250"></svg></div>
+          <div><p class="chart-title">Arch height above rollers 2 and 3 against pull: the gauge for fitting</p><svg id="cArch" class="chart" viewBox="0 0 420 250"></svg></div>
+        </div>
+        <div class="field" style="grid-template-columns: auto 110px auto; justify-content: start; margin-top: 12px">
+          <label for="target">Target pull, N</label>
+          <input id="target" type="number" step="5" min="0" value="54">
+          <span class="derived" id="targetText"></span>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-stress">
+        <h2 id="h-stress">Bending stress along the strip <span>top surface, plus the pull adds a mean stress</span></h2>
+        <svg id="cStress" class="chart" viewBox="0 0 860 240"></svg>
+        <p class="note" id="cycleText"></p>
+      </section>
+
+      <section class="panel note" aria-labelledby="h-model">
+        <h2 id="h-model">How this is calculated</h2>
+        <p>The strip is a thin beam under a pull. The page finds the shape with the lowest energy: bending energy plus
+          the work of the pull, with the exact curvature. Rollers 1 and 4 hold the strip down, rollers 2 and 3 hold it
+          up, and the magnet strips are an elastic bed that pushes, plus a small magnetic pull near the strip. Nothing
+          forces the strip onto the rollers, so the radius comes out of the solution. This is the solver from
+          <code>simulation/cases/strip-seal-preload/</code>, ported to JavaScript and checked against it.</p>
+        <p><b>Screw preload.</b> The strip is fitted with loose screws and lies over the rollers with no pull. A screw
+          travel <i>u</i> must then be taken up by a flatter arch and by stretching the steel:
+          <i>u</i> = extra(0) − extra(T) + L·T / (E·t). The arch is a soft spring, so at low pull most of the travel
+          goes into the arch. That is why the arch height is a good gauge for the pull. The arch height is
+          measured from a straight edge on the tops of rollers 2 and 3 to the underside of the strip, at its
+          highest point. It is zero when the strip runs flat over the two rollers.</p>
+        <p><b>Fatigue.</b> One crossing of the carriage over a point of the strip gives that point the whole stress
+          profile above once. The history is cut into cycles by rainflow counting, the pull adds to the mean,
+          Goodman corrects for the mean, and a Basquin line through 0.9 Rm at 10³ and the fatigue limit at 2·10⁶
+          gives the life (50 % survival). Below the fatigue limit the life has no limit.</p>
+        <p><b>Assumptions.</b></p>
+        <ul>
+          <li>The pull is the same along the whole strip: it slides on the magnets while the screw is tightened.</li>
+          <li>The carriage is far from both clamps. Near a clamp the pull can change.</li>
+          <li>The rollers turn freely. No friction.</li>
+          <li>Magnet strip stiffness and pull are estimates. The stiffness sets the force on rollers 1 and 4 and
+            changes the tightest radius, so measure it or try the range 5 to 1000 N/mm³.</li>
+          <li id="matNote"></li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+import * as M from "./strip_model.js";
+
+const $ = (id) => document.getElementById(id);
+const ids = ["material", "t", "width", "length", "D", "a", "b", "dz", "clear", "k", "q"];
+let ve = 1;
+let curve = null, curveKey = "", lastShape = null;
+
+function params() {
+  const p = { ...M.DEFAULTS };
+  for (const id of ids) p[id] = id === "material" ? $(id).value : parseFloat($(id).value);
+  p.plate = $("plate").checked;
+  p.u = parseFloat($("u").value) || 0;
+  return p;
+}
+
+const fmt = (v, d = 1) => Number.isFinite(v) ? v.toFixed(d) : "–";
+const fmtN = (v) => Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2);
+function fmtLife(n) {
+  if (n === Infinity) return "no limit";
+  if (n === 0) return "set";
+  const e = Math.floor(Math.log10(n));
+  return `${(n / 10 ** e).toFixed(1)}·10${String(e).replace(/./g, (c) => "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"["0123456789-".indexOf(c)])}`;
+}
+function tile(id, v, s, state) {
+  const el = $(id);
+  el.querySelector(".v").textContent = v;
+  el.querySelector(".s").textContent = s;
+  if (state) el.dataset.state = state; else delete el.dataset.state;
+}
+
+// ----- SVG helpers ---------------------------------------------------------
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function niceTicks(lo, hi, n = 5) {
+  const span = hi - lo || 1;
+  const step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= step0);
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+
+function lineChart(svg, { W, H, xs, series, xLabel, yLabel, marker, hlines = [], xMax, yMin = 0 }) {
+  svg.replaceChildren();
+  const m = { l: 52, r: 14, t: 12, b: 38 };
+  const x0 = Math.min(...xs), x1 = xMax ?? Math.max(...xs);
+  let y1 = -Infinity, y0 = yMin;
+  for (const s of series) {
+    s.ys.forEach((v, i) => {
+      if (Number.isFinite(v) && xs[i] <= x1) { y1 = Math.max(y1, v); y0 = Math.min(y0, v); }
+    });
+  }
+  for (const h of hlines) y1 = Math.max(y1, h.y);
+  y1 = y1 + (y1 - y0) * 0.06;
+  const X = (v) => m.l + (v - x0) / (x1 - x0) * (W - m.l - m.r);
+  const Y = (v) => H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b);
+  const g = el("g");
+  for (const t of niceTicks(y0, y1)) {
+    g.append(el("line", { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: "var(--grid)", "stroke-width": 1 }));
+    g.append(el("text", { x: m.l - 6, y: Y(t) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)" }, String(t)));
+  }
+  for (const t of niceTicks(x0, x1)) {
+    g.append(el("line", { x1: X(t), x2: X(t), y1: H - m.b, y2: H - m.b + 4, stroke: "var(--muted)" }));
+    g.append(el("text", { x: X(t), y: H - m.b + 16, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }, String(t)));
+  }
+  g.append(el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: "var(--muted)" }));
+  g.append(el("text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }, xLabel));
+  g.append(el("text", { x: 12, y: (m.t + H - m.b) / 2, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)",
+    transform: `rotate(-90 12 ${(m.t + H - m.b) / 2})` }, yLabel));
+  for (const h of hlines) {
+    if (h.y < y0 || h.y > y1) continue;
+    g.append(el("line", { x1: m.l, x2: W - m.r, y1: Y(h.y), y2: Y(h.y), stroke: h.color, "stroke-dasharray": "4 3", "stroke-width": 1.2 }));
+    g.append(el("text", { x: W - m.r - 4, y: Y(h.y) - 4, "text-anchor": "end", "font-size": 11, fill: h.color }, h.label));
+  }
+  for (const s of series) {
+    let d = "";
+    xs.forEach((x, i) => { if (x <= x1 && Number.isFinite(s.ys[i])) d += `${d ? "L" : "M"}${X(x).toFixed(1)},${Y(s.ys[i]).toFixed(1)}`; });
+    g.append(el("path", { d, fill: "none", stroke: s.color, "stroke-width": s.width ?? 2, "stroke-linejoin": "round" }));
+  }
+  if (marker && marker.x <= x1) {
+    g.append(el("line", { x1: X(marker.x), x2: X(marker.x), y1: Y(marker.y), y2: H - m.b, stroke: "var(--force)", "stroke-dasharray": "2 3" }));
+    g.append(el("circle", { cx: X(marker.x), cy: Y(marker.y), r: 5, fill: "var(--force)", stroke: "var(--panel)", "stroke-width": 2 }));
+    const right = X(marker.x) > W * 0.6;
+    g.append(el("text", { x: X(marker.x) + (right ? -9 : 9), y: Y(marker.y) - 8, "text-anchor": right ? "end" : "start",
+      "font-size": 12, fill: "var(--force)" }, marker.label));
+  }
+  svg.append(g);
+}
+
+// ----- Drawing -------------------------------------------------------------
+function drawLayout(p, s) {
+  const svg = $("drawing");
+  svg.replaceChildren();
+  const { rho, lift, rollers, centres } = s.layout;
+  const R = p.D / 2;
+  const xL = -30, xR = rollers[3] + 30;
+  const yTop = Math.max(p.clear, s.top) + 3, yBot = -4;
+  const scale = 4;            // px per mm horizontally
+  const W = (xR - xL) * scale;
+  const H = (yTop - yBot) * scale * ve + 70;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const X = (x) => (x - xL) * scale;
+  const Y = (y) => 30 + (yTop - y) * scale * ve;
+
+  // Magnet strips and profile.
+  svg.append(el("rect", { x: 0, y: Y(-p.t / 2), width: W, height: Math.max(3, 1.5 * scale * ve), fill: "var(--magnet)" }));
+  svg.append(el("text", { x: 6, y: Y(-p.t / 2) + 16, "font-size": 11, fill: "var(--muted)" }, "magnet strips on the profile"));
+  // Carriage underside.
+  svg.append(el("line", { x1: X(-R - 4), x2: X(rollers[3] + R + 4), y1: Y(p.clear), y2: Y(p.clear),
+    stroke: "var(--muted)", "stroke-dasharray": "6 4" }));
+  svg.append(el("text", { x: X(rollers[1] + 4), y: Y(p.clear) - 5, "font-size": 11, fill: "var(--muted)" },
+    `carriage underside ${fmt(p.clear, 2)} mm`));
+
+  // Rollers (ellipses when the height is stretched).
+  centres.forEach(([xc, yc], k) => {
+    svg.append(el("ellipse", { cx: X(xc), cy: Y(yc), rx: R * scale, ry: R * scale * ve,
+      fill: "var(--roller-fill)", stroke: "var(--roller)", "stroke-width": 1.5 }));
+    svg.append(el("circle", { cx: X(xc), cy: Y(yc), r: 2, fill: "var(--roller)" }));
+    const above = k === 0 || k === 3;
+    const side = k < 2 ? -1 : 1;
+    svg.append(el("text", { x: X(xc) + side * (R * scale + 8), y: Y(yc) + 4,
+      "text-anchor": k < 2 ? "end" : "start", "font-size": 12, "font-weight": 600, fill: "var(--muted)" }, String(k + 1)));
+  });
+
+  // Strip centre line.
+  let d = "";
+  for (let i = 0; i < s.x.length; i += 4) {
+    if (s.x[i] < xL || s.x[i] > xR) continue;
+    d += `${d ? "L" : "M"}${X(s.x[i]).toFixed(2)},${Y(s.y[i]).toFixed(2)}`;
+  }
+  svg.append(el("path", { d, fill: "none", stroke: "var(--steel)", "stroke-width": Math.max(2, p.t * scale * ve), "stroke-linejoin": "round" }));
+
+  // Arch height: from the line over the tops of rollers 2 and 3 to the strip underside.
+  const ax = s.archAt;
+  const yRollTop = lift - p.t / 2, yUnder = s.archTop - p.t / 2;
+  svg.append(el("line", { x1: X(rollers[1] - R), x2: X(rollers[2] + R), y1: Y(yRollTop), y2: Y(yRollTop),
+    stroke: "var(--accent)", "stroke-dasharray": "3 3", "stroke-width": 1 }));
+  svg.append(el("line", { x1: X(ax), x2: X(ax), y1: Y(yRollTop), y2: Y(yUnder), stroke: "var(--accent)", "stroke-width": 1.5,
+    "marker-start": "url(#tickA)", "marker-end": "url(#tickA)" }));
+  svg.append(el("text", { x: X(ax) + 6, y: (Y(yRollTop) + Y(yUnder)) / 2 + 4, "font-size": 12, fill: "var(--accent)" },
+    `arch ${fmt(s.archHeight, 2)} mm`));
+
+  // Force arrows on the rollers.
+  const defs = el("defs");
+  const mk = (id, color) => {
+    const m = el("marker", { id, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" });
+    m.append(el("path", { d: "M0,0 L10,5 L0,10 z", fill: color }));
+    return m;
+  };
+  defs.append(mk("arrF", "var(--force)"));
+  const tick = el("marker", { id: "tickA", viewBox: "0 0 10 10", refX: 5, refY: 5, markerWidth: 8, markerHeight: 8, orient: "auto" });
+  tick.append(el("path", { d: "M0,5 L10,5", stroke: "var(--accent)", "stroke-width": 2 }));
+  defs.append(tick);
+  svg.prepend(defs);
+
+  const totals = s.rollerForces.map((f) => Math.hypot(f.fx, f.fy) * p.width);
+  const fMax = Math.max(...totals, 1e-9);
+  centres.forEach(([xc, yc], k) => {
+    const f = s.rollerForces[k], F = totals[k];
+    if (F < 1e-6) return;
+    const len = 18 + 42 * Math.sqrt(F / fMax);    // px
+    // Direction on screen: y is flipped, and stretched by ve.
+    let dx = f.fx, dy = -f.fy * ve;
+    const n = Math.hypot(dx, dy); dx /= n; dy /= n;
+    const x0 = X(xc), y0 = Y(yc);
+    svg.append(el("line", { x1: x0, y1: y0, x2: x0 + dx * len, y2: y0 + dy * len,
+      stroke: "var(--force)", "stroke-width": 2.5, "marker-end": "url(#arrF)" }));
+    const lx = x0 + dx * (len + 8) + (k < 2 ? -4 : 4), ly = y0 + dy * (len + 8) + (dy > 0 ? 12 : -4);
+    svg.append(el("text", { x: lx, y: ly, "text-anchor": k < 2 ? "end" : "start", "font-size": 12, fill: "var(--force)" },
+      `F${k + 1} ${fmtN(F)} N`));
+  });
+}
+
+function forceTable(p, s) {
+  const rows = [];
+  s.rollerForces.forEach((f, k) => rows.push([`Roller ${k + 1}`, f.fx, f.fy]));
+  rows.push(["Magnets, left of middle", 0, s.profileForces[0]]);
+  rows.push(["Magnets, right of middle", 0, s.profileForces[1]]);
+  const tb = $("forces").querySelector("tbody");
+  tb.replaceChildren();
+  for (const [name, fx, fy] of rows) {
+    const tot = Math.hypot(fx, fy);
+    const ang = Math.atan2(fy, fx) * 180 / Math.PI;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${name}</td><td>${fmtN(fx * p.width)}</td><td>${fmtN(fy * p.width)}</td>` +
+      `<td>${fmtN(tot * p.width)}</td><td>${tot > 1e-9 ? ang.toFixed(0) + "°" : "–"}</td><td>${fmt(tot, 3)} N/mm</td>`;
+    tb.append(tr);
+  }
+}
+
+// ----- Update --------------------------------------------------------------
+function update() {
+  const t0 = performance.now();
+  const p = params();
+  const mat = M.MATERIALS[p.material];
+  const { lift } = M.layout(p);
+  $("liftText").textContent = `Strip lifted ${fmt(lift, 2)} mm by rollers 2 and 3`;
+  if (!(lift > 0) || !(p.t > 0) || !(p.D > 0) || !(p.a > p.D) || !(p.b > p.D)) {
+    $("status").textContent = "Check the inputs: the rollers must lift the strip and must not overlap.";
+    $("status").className = "status bad";
+    return;
+  }
+  const key = JSON.stringify([p.material, p.t, p.length, p.D, p.a, p.b, p.dz, p.k, p.q, p.plate]);
+  try {
+    if (key !== curveKey) { curve = M.screwCurve(p); curveKey = key; lastShape = null; }
+    const T = M.pullForTravel(p, curve, p.u);
+    const s = M.shape(p, T, { start: lastShape?.y });
+    lastShape = s;
+    const st = M.stressAndLife(p, s);
+    render(p, mat, s, st, T);
+    $("status").className = "status";
+    $("status").textContent = `Solved in ${(performance.now() - t0).toFixed(0)} ms`;
+  } catch (e) {
+    $("status").className = "status bad";
+    $("status").textContent = `The solver stopped: ${e.message}. Try other inputs.`;
+  }
+}
+
+function render(p, mat, s, st, T) {
+  const N = T * p.width;
+  tile("tPull", `${fmtN(N)} N`, `${fmt(T, 3)} N/mm · ${fmt(st.membrane, 1)} MPa`);
+  const room = p.clear - s.archTop - p.t / 2;
+  tile("tArch", `${fmt(s.archHeight, 2)} mm`,
+    `above the tops of rollers 2 and 3 · ${fmt(room, 2)} mm free under the carriage`,
+    room <= 0 ? "bad" : null);
+  tile("tRadius", `${fmt(s.rMin, 1)} mm`, `near roller ${s.at}`);
+  const ratio = st.peak / mat.Rp02;
+  tile("tStress", `${fmt(st.peak, 0)} MPa`, `bending ${fmt(st.bendMax, 0)} + pull ${fmt(st.membrane, 1)} · ${(ratio * 100).toFixed(0)} % of Rp0.2`,
+    ratio >= 1 ? "bad" : ratio > 0.8 ? "warn" : "ok");
+  tile("tYield", `${mat.Rp02} / ${mat.Rm}`, `MPa, Rp0.2 / Rm · ${p.material === "301" ? "11R51" : "+C1300"}`);
+  const [lo, hi] = st.life;
+  const sw = st.sigmaW;
+  const lifeText = lo === hi ? fmtLife(lo) : `${fmtLife(lo)} to ${fmtLife(hi)}`;
+  const swText = sw[0] === sw[1] ? `${sw[0].toFixed(0)}` : `${sw[0].toFixed(0)}–${sw[1].toFixed(0)}`;
+  tile("tLife", lifeText, `crossings · fatigue limit ${swText} MPa${st.extrapolated ? ", extrapolated" : ""}`,
+    lo === Infinity ? "ok" : lo === 0 || lo < 1e5 ? "bad" : "warn");
+
+  drawLayout(p, s);
+  forceTable(p, s);
+
+  // Screw curves.
+  const us = curve.map((c) => c.u);
+  const uMax = Math.max(1, Math.min(us[us.length - 1], Math.max(2 * p.u, 2)));
+  $("uRange").max = Math.max(3, Math.ceil(us[us.length - 1] * 10) / 10);
+  lineChart($("cPull"), { W: 420, H: 250, xs: us, xMax: uMax,
+    series: [{ ys: curve.map((c) => c.T * p.width), color: "var(--accent)" }],
+    xLabel: "screw travel, mm", yLabel: "pull, N",
+    marker: { x: p.u, y: N, label: `${fmtN(N)} N` } });
+  const nMax = Math.max(N * 2, 100);
+  const cut = curve.filter((c) => c.T * p.width <= nMax * 1.001);
+  const next = curve[cut.length];
+  if (next) cut.push(next);
+  lineChart($("cArch"), { W: 420, H: 250, xs: cut.map((c) => c.T * p.width), xMax: nMax,
+    series: [{ ys: cut.map((c) => c.archHeight), color: "var(--accent)" }],
+    xLabel: "pull, N", yLabel: "arch height, mm", yMin: 0,
+    hlines: [{ y: p.clear - M.layout(p).lift - p.t / 2, label: "carriage underside", color: "var(--bad)" }],
+    marker: { x: N, y: s.archHeight, label: `${fmt(s.archHeight, 2)} mm` } });
+
+  // Target pull.
+  const Tt = (parseFloat($("target").value) || 0) / p.width;
+  const ut = M.travelForPull(curve, Tt);
+  let archT = NaN;
+  for (let i = 1; i < curve.length; i++) {
+    if (Tt <= curve[i].T) {
+      const f = (Tt - curve[i - 1].T) / (curve[i].T - curve[i - 1].T);
+      archT = curve[i - 1].archHeight + f * (curve[i].archHeight - curve[i - 1].archHeight);
+      break;
+    }
+  }
+  const i1 = curve.findIndex((c) => c.T >= Tt);
+  const slope = i1 > 0 ? (curve[i1].archHeight - curve[i1 - 1].archHeight) / ((curve[i1].T - curve[i1 - 1].T) * p.width) : NaN;
+  $("targetText").textContent = `needs ${fmt(ut, 2)} mm screw travel, arch ${fmt(archT, 2)} mm` +
+    (Number.isFinite(slope) ? `, arch changes ${fmt(Math.abs(slope) * 10, 3)} mm per 10 N` : "");
+
+  // Stress along the strip.
+  const xs = [], ys = [];
+  for (let i = 1; i < s.x.length - 1; i += 3) { xs.push(s.x[i]); ys.push(st.stress[i]); }
+  const swLo = st.sigmaW[0];
+  lineChart($("cStress"), { W: 860, H: 240, xs, yMin: Math.min(...ys),
+    series: [{ ys, color: "var(--steel)" }],
+    xLabel: "position along the strip, mm (roller 1 at 0)", yLabel: "bending stress, MPa",
+    hlines: [{ y: swLo, label: `fatigue limit ${swLo.toFixed(0)} MPa`, color: "var(--warn)" },
+      { y: -swLo, label: `−${swLo.toFixed(0)} MPa`, color: "var(--warn)" }] });
+  const c0 = st.cycles[0];
+  $("cycleText").textContent = c0
+    ? `Largest cycle per crossing: amplitude ${c0.amp.toFixed(0)} MPa about a mean of ${c0.mean.toFixed(0)} MPa ` +
+      `(the pull included), which is ${st.sarMain.toFixed(0)} MPa fully reversed after Goodman. ` +
+      `${st.cycles.length} cycles per crossing in all.` + (s.gapOut > 0.01
+        ? ` The strip lifts ${s.gapOut.toFixed(3)} mm off the magnets outside the carriage.` : "")
+    : "";
+  $("matNote").textContent = `Material: ${mat.name}. ${mat.source}`;
+}
+
+let timer;
+const later = () => { clearTimeout(timer); timer = setTimeout(update, 120); };
+for (const id of ids) $(id).addEventListener("input", later);
+$("plate").addEventListener("change", later);
+$("target").addEventListener("input", later);
+$("u").addEventListener("input", () => { $("uRange").value = $("u").value; later(); });
+$("uRange").addEventListener("input", () => { $("u").value = $("uRange").value; later(); });
+for (const [id, v] of [["ve1", 1], ["ve4", 4]]) {
+  $(id).addEventListener("click", () => {
+    ve = v;
+    $("ve1").setAttribute("aria-pressed", String(v === 1));
+    $("ve4").setAttribute("aria-pressed", String(v === 4));
+    update();
+  });
+}
+update();
+</script>
+</body>
+</html>

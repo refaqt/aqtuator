@@ -28,6 +28,9 @@ jobs:
       - name: doqs validation
         run: python doqs/doqs.py check
 
+      - name: Strip seal designer model checks
+        run: node simulation/cases/strip-seal-designer/check_model.mjs
+
       - name: Install host software
         run: |
           pip install -e modules/flexure-ball-screw-servo-stage/software/measurement-tools
