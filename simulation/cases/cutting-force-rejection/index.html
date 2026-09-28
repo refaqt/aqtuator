@@ -150,7 +150,8 @@ table.res td.bad .v { color: var(--bad); }
     <h1>Cutting Force Rejection</h1>
     <p>A stage held in place by a digital position controller, while a milling cutter pushes on it. Three drives
       are compared: a linear motor, and a BLDC motor with a coupling and a ball screw, read at the motor or at the
-      stage. The page tunes the controller of each case for a 30° phase margin, and shows how much the stage moves.
+      stage. The page tunes the controller of each case with the same robustness rules, and shows how much the stage
+      moves.
       All transfer functions are in discrete time, at the loop rate.</p>
   </header>
 
@@ -188,6 +189,10 @@ table.res td.bad .v { color: var(--bad); }
           <input id="m" type="number" step="0.1" min="0.01" value="2"></div>
         <div class="field"><label for="fs">Loop rate <small>Hz</small></label>
           <input id="fs" type="number" step="1000" min="100" value="10000"></div>
+        <div class="field"><label for="msDb">Sensitivity peak limit <small>dB, 6 is usual for motion control</small></label>
+          <input id="msDb" type="number" step="0.5" min="1" value="6"></div>
+        <div class="field"><label for="spreadPct">Resonance spread <small>± %, the margins must hold over it</small></label>
+          <input id="spreadPct" type="number" step="5" min="0" max="50" value="15"></div>
       </fieldset>
       <fieldset>
         <legend>Ball-screw servo</legend>
@@ -201,8 +206,8 @@ table.res td.bad .v { color: var(--bad); }
           <input id="L" type="number" step="50" min="10" value="400"></div>
         <div class="field"><label for="Jr">BLDC rotor inertia <small>g·cm²</small></label>
           <input id="Jr" type="number" step="10" min="0.1" value="119"></div>
-        <div class="field"><label for="zeta">Coupling damping ratio</label>
-          <input id="zeta" type="number" step="0.01" min="0" value="0.1"></div>
+        <div class="field"><label for="zeta">Coupling damping ratio <small>metal bellows or disc: about 0.01 to 0.03</small></label>
+          <input id="zeta" type="number" step="0.005" min="0" value="0.02"></div>
       </fieldset>
       <fieldset>
         <legend>Ball screw along its axis</legend>
@@ -214,8 +219,8 @@ table.res td.bad .v { color: var(--bad); }
           <input id="knut" type="number" step="10" min="1" value="118"></div>
         <div class="field"><label for="kbear">Fixed bearing stiffness <small>N/µm, TBI BK12: 10.6 kgf/µm (label unclear in the sheet)</small></label>
           <input id="kbear" type="number" step="10" min="1" value="104"></div>
-        <div class="field"><label for="zetaA">Axial damping ratio <small>of the stage on the axial spring</small></label>
-          <input id="zetaA" type="number" step="0.01" min="0" value="0.05"></div>
+        <div class="field"><label for="zetaA">Axial damping ratio <small>of the stage on the axial spring, about 0.01 to 0.05</small></label>
+          <input id="zetaA" type="number" step="0.005" min="0" value="0.02"></div>
         <p class="derived">Fixed bearing at the motor end, supported far end. The shaft between the fixed bearing and
           the nut carries the load.</p>
         <div class="derived" id="mechText"></div>
@@ -225,7 +230,7 @@ table.res td.bad .v { color: var(--bad); }
 
     <main>
       <section class="panel" aria-labelledby="h-res">
-        <h2 id="h-res">Results <span>each controller tuned for 30° phase margin</span></h2>
+        <h2 id="h-res">Results <span>each controller tuned with the same robustness rules</span></h2>
         <p class="chart-sub" id="resHead"></p>
         <div class="res-wrap"><table class="res" id="resTable"></table></div>
         <p class="warning" id="unstableWarn" hidden></p>
@@ -255,6 +260,10 @@ table.res td.bad .v { color: var(--bad); }
             <svg id="cLp" class="chart" viewBox="0 0 420 150"></svg>
             <p class="chart-sub" id="marginText"></p></div>
         </div>
+        <div class="chart-box" style="margin-top:16px"><p class="chart-title">Sensitivity |1/(1 + C·G)|, dB, nominal plant</p>
+          <svg id="cSens" class="chart" viewBox="0 0 880 240"></svg>
+          <p class="chart-sub">Where this is high, the loop comes close to −1 and amplifies disturbances. The dashed line is
+            the limit. The peak of the worst plant in the family is in the table.</p></div>
         <p class="note">For the ball screw, the motor torque is shown as the force it puts on the screw: force = torque ·
           2π / pitch. So all three cases use the same units. The ball-screw plant has two resonances: the stage bouncing on
           the axial spring, and the motor swinging against the screw on the coupling. The collocated plant also has a
@@ -348,16 +357,29 @@ table.res td.bad .v { color: var(--bad); }
         <p><b>Controller.</b> C(s) = K · 1/s · (s + 2πf<sub>i</sub>)(s + 2πf<sub>d</sub>) / (s + 2πf<sub>lp</sub>)²,
           with f<sub>i</sub> = f<sub>b</sub>/10, f<sub>d</sub> = f<sub>b</sub>/3 and f<sub>lp</sub> = 4·f<sub>b</sub>.
           Each factor is translated to discrete time with the bilinear rule (Tustin), s = (2/T)(z − 1)/(z + 1).
-          K is set so that |C·G| = 1 at f<sub>b</sub>. Each case gets its own K and f<sub>b</sub>, with the same rule:
-          f<sub>b</sub> is the highest bandwidth where the worst phase margin, over all points where |C·G| crosses 1,
-          is still 30°. With a resonance, the loop can cross 1 again near the resonance, and that crossing can set
-          the limit. The page then checks the closed loop at the samples for stability.</p>
-        <p><b>Why f<sub>b</sub> follows the loop rate and not the mass.</b> With these frequency ratios, the
-          continuous loop has about 38° of phase margin at any bandwidth. The sampling lag takes the other 8°, and
-          that lag grows with f<sub>b</sub>/f<sub>s</sub>. So for the linear motor f<sub>b</sub> ends at about
-          f<sub>s</sub>/23. A heavier stage only needs a larger K. The stiffness near f<sub>b</sub> is then about
-          m·(2πf<sub>b</sub>)², so the mass and the loop rate both help. For the ball screw the resonance can lower
-          f<sub>b</sub> further.</p>
+          K is set so that |C·G| = 1 at f<sub>b</sub>. Each case gets its own K and f<sub>b</sub>, with the same
+          rules. f<sub>b</sub> is the highest bandwidth where the loop meets all of these:</p>
+        <ul>
+          <li>The sensitivity peak, the largest value of |1/(1 + C·G)|, is at most 6 dB (a factor 2; the limit is an
+            input). So the loop never comes closer than 0.5 to the point −1, in any direction. This is the usual
+            limit for motion systems. It also gives at least 6 dB gain margin and 29° phase margin.</li>
+          <li>The phase margin is at least 30° wherever |C·G| crosses 1. With a resonance, the loop can cross 1
+            again near the resonance.</li>
+          <li>The gain margin is at least 6 dB wherever the phase crosses −180° with |C·G| below 1.</li>
+          <li>The closed loop at the samples is stable.</li>
+          <li>All of this still holds when each resonance sits up to 15 % lower or higher than the model says (the
+            spread is an input), with the same controller. The page tests 9 plants: coupling and axial stiffness each
+            at (1 − 0.15)², 1 and (1 + 0.15)². The linear motor has no resonance, so it is one plant, with the same limits.</li>
+        </ul>
+        <p>The search starts at a slow f<sub>b</sub> and stops at the first bandwidth where a rule breaks. A resonance
+          that sits above 0 dB with a good phase at an even higher f<sub>b</sub> is not used: such a loop would be
+          fragile.</p>
+        <p><b>Why f<sub>b</sub> follows the loop rate and not the mass.</b> The controller shape is fixed, so the
+          sensitivity peak of the continuous loop is the same at any bandwidth. The sampling lag adds to it, and that
+          lag grows with f<sub>b</sub>/f<sub>s</sub>. So for the linear motor the 6 dB limit is reached at about
+          f<sub>b</sub> = f<sub>s</sub>/35. A heavier stage only needs a larger K. The stiffness near f<sub>b</sub> is
+          then about m·(2πf<sub>b</sub>)², so the mass and the loop rate both help. For the ball screw the resonances
+          lower f<sub>b</sub> much further.</p>
         <p><b>Cutting force.</b> F<sub>d</sub>(t) = F<sub>mean</sub> + F<sub>amp</sub> · sin(2π f<sub>tooth</sub> t),
           with f<sub>tooth</sub> = teeth · rev/min / 60. It acts on the stage. The compliance is the stage position per
           newton of cutting force, and its inverse is the stiffness.</p>
@@ -397,7 +419,7 @@ const M = window.ControlModel;
 
 const $ = (id) => document.getElementById(id);
 const ids = ["Famp", "Fmean", "teeth", "rpm", "m", "fs", "pitch", "kc", "d", "L", "Jr", "zeta",
-  "droot", "xnut", "knut", "kbear", "zetaA"];
+  "droot", "xnut", "knut", "kbear", "zetaA", "msDb"];
 
 const CASE = {
   linear: { name: "Linear motor", sub: "stage mass only", color: "var(--s1)" },
@@ -409,12 +431,14 @@ function params() {
   const p = { ...M.DEFAULTS };
   for (const id of ids) p[id] = parseFloat($(id).value);
   p.teeth = Math.max(1, Math.round(p.teeth));
+  p.spread = parseFloat($("spreadPct").value) / 100;
   return p;
 }
 function valid(p) {
   return p.Famp >= 0 && Number.isFinite(p.Fmean) && p.teeth >= 1 && p.rpm > 0 && p.m > 0 && p.fs >= 100 &&
     p.pitch > 0 && p.kc > 0 && p.d > 0 && p.L > 0 && p.Jr > 0 && p.zeta >= 0 &&
-    p.droot > 0 && p.droot <= p.d && p.xnut > 0 && p.xnut <= p.L && p.knut > 0 && p.kbear > 0 && p.zetaA >= 0;
+    p.droot > 0 && p.droot <= p.d && p.xnut > 0 && p.xnut <= p.L && p.knut > 0 && p.kbear > 0 && p.zetaA >= 0 &&
+    p.msDb > 0 && p.spread >= 0 && p.spread < 1;
 }
 const chosen = () => M.CASES.filter((id) => $(`case-${id}`).checked);
 
@@ -432,6 +456,21 @@ function sig(v, n = 3) {
   return v.toFixed(d);
 }
 const hz = (f) => f >= 1000 ? `${sig(f / 1000)} kHz` : `${sig(f)} Hz`;
+
+// Which plant of the family: each stiffness scale as a shift of its resonance.
+const shift = (k) => { const d = Math.round((Math.sqrt(k) - 1) * 100); return d === 0 ? "nominal" : `${d > 0 ? "+" : "−"}${Math.abs(d)} %`; };
+const spreadText = (at) => !at || (at.sc === 1 && at.sa === 1) ? "nominal plant"
+  : `coupling mode ${shift(at.sc)}, axial mode ${shift(at.sa)}`;
+const RULE = { Ms: "sensitivity peak", PM: "phase margin", GM: "gain margin", unstable: "stability" };
+// The rules that break 2 % above f_b, with the first plant that breaks each.
+function limitText(t) {
+  if (!t.limit.length) return ["–", "no rule breaks 2 % above f_b"];
+  const seen = new Map();
+  for (const b of t.limit) if (!seen.has(b.rule)) seen.set(b.rule, b);
+  const rules = [...seen.values()];
+  const plants = [...new Set(rules.map((b) => spreadText(b)))];
+  return [rules.map((b) => RULE[b.rule]).join(", "), plants.join("; ")];
+}
 
 // ----- SVG helpers ---------------------------------------------------------
 const NS = "http://www.w3.org/2000/svg";
@@ -845,7 +884,7 @@ function cached(key, fn) {
   }
   return cache.get(key);
 }
-const tuneKey = (p, id) => JSON.stringify([id, p.m, p.fs, p.pm, ...(id === "linear" ? [] : [p.pitch, p.kc, p.d, p.L, p.Jr, p.zeta, p.droot, p.xnut, p.knut, p.kbear, p.zetaA])]);
+const tuneKey = (p, id) => JSON.stringify([id, p.m, p.fs, p.pm, p.msDb, p.gmMinDb, ...(id === "linear" ? [] : [p.pitch, p.kc, p.d, p.L, p.Jr, p.zeta, p.droot, p.xnut, p.knut, p.kbear, p.zetaA, p.spread])]);
 
 const um = 1e6;
 // Any error must reach the status line. Otherwise the page keeps saying
@@ -864,7 +903,7 @@ function run() {
   const status = $("status");
   if (!valid(p)) {
     status.textContent = "Check the inputs: all must be positive, the root diameter at most the screw diameter, " +
-      "and the nut distance at most the screw length.";
+      "the nut distance at most the screw length, and the spread below 100 %.";
     status.className = "status bad";
     return;
   }
@@ -905,12 +944,18 @@ function run() {
   table([
     ["Bandwidth f_b", (id) => T[id] ? [hz(T[id].fb), `loop rate / f_b = ${sig(p.fs / T[id].fb)}`] : ["none", err[id], "bad"]],
     ["Gain K", (id) => T[id] && [sig(T[id].K), "N/(m·s)"]],
-    ["Phase margin", (id) => T[id] && [`${T[id].pmDeg.toFixed(1)}°`, `worst crossing, at ${hz(T[id].fc)}`, "ok"]],
-    ["Gain margin", (id) => T[id] && (Number.isFinite(T[id].gmDb)
-      ? [`${T[id].gmDb.toFixed(1)} dB`, `×${T[id].gm.toFixed(2)} at ${hz(T[id].f180)}`, T[id].gmDb >= 6 ? "ok" : "warn"]
+    ["Limited by", (id) => T[id] && limitText(T[id])],
+    ["Sensitivity peak", (id) => T[id] && [`${T[id].worst.msDb.toFixed(1)} dB`,
+      `worst of ${T[id].family} plant${T[id].family > 1 ? "s" : ""} (${spreadText(T[id].worst.msAt)}), at ${hz(T[id].worst.fMs)}`,
+      T[id].worst.msDb <= p.msDb + 0.01 ? "ok" : "warn"]],
+    ["Phase margin", (id) => T[id] && [`${T[id].worst.pmDeg.toFixed(1)}°`,
+      `worst crossing of all plants, at ${hz(T[id].worst.fc)}`, T[id].worst.pmDeg >= p.pm - 0.01 ? "ok" : "warn"]],
+    ["Gain margin", (id) => T[id] && (Number.isFinite(T[id].worst.gmDb)
+      ? [`${T[id].worst.gmDb.toFixed(1)} dB`, `worst of all plants, at ${hz(T[id].worst.f180)}`,
+        T[id].worst.gmDb >= p.gmMinDb - 0.01 ? "ok" : "warn"]
       : ["none", "no −180° crossing above f_b", "ok"])],
     ["Closed loop", (id) => T[id] && (T[id].stable
-      ? ["stable", `largest pole |z| = ${T[id].rho.toFixed(4)}`, "ok"]
+      ? ["stable", `largest pole |z| = ${T[id].rho.toFixed(4)}, worst plant ${T[id].worst.rho.toFixed(4)}`, T[id].robust ? "ok" : "warn"]
       : ["unstable", `largest pole |z| = ${T[id].rho.toFixed(4)}`, "bad"])],
     ["Vibration amplitude", (id) => SS[id] && [`${sig(SS[id].amp * um)} µm`,
       `stage mass alone ${sig(p.Famp / (p.m * (2 * Math.PI * ft) ** 2) * um)} µm`]],
@@ -925,7 +970,7 @@ function run() {
   const bad = cases.filter((id) => !T[id] || !T[id].stable);
   const uw = $("unstableWarn");
   uw.hidden = !bad.length;
-  uw.textContent = bad.length ? `${bad.map((id) => CASE[id].name).join(" and ")}: no stable controller with this rule. ` +
+  uw.textContent = bad.length ? `${bad.map((id) => CASE[id].name).join(" and ")}: no stable controller with these rules. ` +
     `The time and sweep charts leave this case out. Try a stiffer coupling, more damping, or a higher loop rate.` : "";
   const warn = $("nyqWarn");
   if (ft >= nyq) {
@@ -942,7 +987,7 @@ function run() {
   const xTip = (f) => hz(f);
   const deg = (r) => r * 180 / Math.PI;
   const vFb = tuned.map((id, i) => ({ x: T[id].fb, label: "f_b", color: CASE[id].color, row: i }));
-  if (!tuned.length) for (const c of ["cGm", "cGp", "cCm", "cCp", "cLm", "cLp", "cY", "cS"]) $(c).replaceChildren();
+  if (!tuned.length) for (const c of ["cGm", "cGp", "cCm", "cCp", "cLm", "cLp", "cSens", "cY", "cS"]) $(c).replaceChildren();
   if (tuned.length) {
     const fd0 = FD[tuned[0]];
     const xR = [fd0[0].f, fd0[fd0.length - 1].f];
@@ -963,8 +1008,14 @@ function run() {
         ...(Number.isFinite(T[id].f180) ? [{ x: T[id].f180, y: 1 / T[id].gm, color: CASE[id].color }] : [])]),
       phl: [{ y: -180, label: "−180°" }, { y: -540 }],
     });
-    $("marginText").textContent = tuned.map((id) => `${CASE[id].name}: phase margin ${T[id].pmDeg.toFixed(1)}° at ${hz(T[id].fc)}, ` +
+    $("marginText").textContent = "Nominal plant. " + tuned.map((id) => `${CASE[id].name}: phase margin ${T[id].pmDeg.toFixed(1)}° at ${hz(T[id].fc)}, ` +
       (Number.isFinite(T[id].gmDb) ? `gain margin ${T[id].gmDb.toFixed(1)} dB at ${hz(T[id].f180)}.` : "no gain margin limit.")).join(" ");
+    const dB = (v) => 20 * Math.log10(v);
+    chart($("cSens"), { xLog: true, xRange: xR, xLabel: "frequency, Hz", yLabel: "dB", xTip, vlines: vFb,
+      yRange: [-40, Math.max(p.msDb, ...tuned.flatMap((id) => FD[id].map((r) => dB(r.S)))) + 3],
+      hlines: [{ y: p.msDb, label: "limit" }, { y: 0 }],
+      series: tuned.map((id) => ({ pts: FD[id].map((r) => [r.f, dB(r.S)]), color: CASE[id].color, label: CASE[id].name,
+        fmt: (v) => `${v.toFixed(1)} dB` })) });
 
     const stab = tuned.filter((id) => T[id].stable);
     const inBand = ft < xR[1] && ft > xR[0];
@@ -1083,7 +1134,7 @@ function run() {
   status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
 }
 
-for (const id of [...ids, "rpmLo", "rpmHi"]) $(id).addEventListener("input", schedule);
+for (const id of [...ids, "spreadPct", "rpmLo", "rpmHi"]) $(id).addEventListener("input", schedule);
 for (const id of M.CASES) $(`case-${id}`).addEventListener("change", update);
 update();
 </script>

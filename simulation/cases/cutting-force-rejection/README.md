@@ -9,9 +9,9 @@ cutter pushes on it. It compares three drives, each with a checkbox:
 - **Ball-screw servo, non-collocated.** The same drive. The controller reads a linear encoder on the
   stage.
 
-For each case the page tunes the controller for a 30° phase margin, and shows the open loop, the
-compliance, the stiffness, the vibration of the stage, and the force and power the controller must
-deliver.
+For each case the page tunes the controller with the same robustness rules (see below), and shows
+the open loop, the sensitivity, the compliance, the stiffness, the vibration of the stage, and the
+force and power the controller must deliver.
 
 **Open it:** <https://refaqt.github.io/aqtuator/cutting-force/> (after the one-time Pages setup, see
 the [strip seal log](../../../docs/log/2026-09-28_strip-seal-designer.md)). No server and no install.
@@ -28,7 +28,8 @@ model file `control_model.js` is a plain script, not a module, because browsers 
 module for a page opened straight from disk.
 
 Logs: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md),
-[ball screw, 2026-09-28](../../../docs/log/2026-09-28_ball-screw-servo-cases.md).
+[ball screw, 2026-09-28](../../../docs/log/2026-09-28_ball-screw-servo-cases.md),
+[robust tuning, 2026-09-28](../../../docs/log/2026-09-28_robust-tuning-and-damping.md).
 
 ## Inputs
 
@@ -40,17 +41,19 @@ Logs: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md),
 | Spindle speed | 12000 rev/min | Tooth frequency = teeth · rev/min / 60 = 400 Hz |
 | Stage mass | 2 kg | The moving stage, in all three cases |
 | Loop rate | 10000 Hz | |
+| Sensitivity peak limit | 6 dB | The usual limit for motion systems, see the tuning rules |
+| Resonance spread | ±15 % | The margins must hold with each resonance this much off |
 | Ball-screw pitch | 5 mm | Per revolution |
 | Coupling stiffness | 450 N·m/rad | Between motor and screw |
 | Ball-screw diameter | 16 mm | Steel, 7850 kg/m³, a solid cylinder for the inertia |
 | Ball-screw length | 400 mm | |
 | BLDC rotor inertia | 119 g·cm² | |
-| Coupling damping ratio | 0.1 | Of the coupling |
+| Coupling damping ratio | 0.02 | Metal bellows or disc coupling. An estimate, range 0.01 to 0.03, see below |
 | Screw root diameter | 13.324 mm | HIWIN 16-5 (see sources below) |
 | Nut distance from the fixed bearing | 380 mm | The far end of the screw, the worst case |
 | Nut stiffness | 118 N/µm | HIWIN 16-5T4 |
 | Fixed bearing stiffness | 104 N/µm | TBI Motion BK12 |
-| Axial damping ratio | 0.05 | Of the stage on the axial spring. An estimate, not a catalogue value |
+| Axial damping ratio | 0.02 | Of the stage on the axial spring. An estimate, range 0.01 to 0.05, see below |
 
 The defaults are an SFU1605 screw with a BK12 fixed support at the motor end and a supported far
 end. The page has no computation delay: the controller applies the new
@@ -82,12 +85,29 @@ force in the same sample. The hold lag of half a sample is in the plant.
 - **Controller.** C(s) = K · 1/s · (s + 2πf_i)(s + 2πf_d) / (s + 2πf_lp)², with f_i = f_b/10,
   f_d = f_b/3, f_lp = 4·f_b. The three factors are translated to discrete time with the bilinear rule
   (Tustin) and run as difference equations.
-- **Tuning, the same rule for each case.** K makes |C·G| = 1 at f_b. f_b is the highest bandwidth
-  where the worst phase margin, over every point where |C·G| crosses 1, is still 30°, and where the
-  closed loop at the samples is stable (its largest pole has |z| < 1). With a resonance the loop can
-  cross 1 a second time near the resonance, and that crossing can set the limit. Then the margin at
-  f_b itself is more than 30°. A dense set of test frequencies around each resonance makes sure a
-  narrow peak is not missed. The stability test also catches a peak so sharp that no grid sees it.
+- **Tuning, the same rules for each case.** K makes |C·G| = 1 at f_b. f_b is the highest bandwidth,
+  counted up from a slow one, where the loop meets all of these rules:
+  1. **Sensitivity peak at most 6 dB.** The sensitivity S = 1/(1 + C·G) says how much the loop
+     amplifies a disturbance. Its peak Ms is 1 over the closest distance between C·G and the point
+     −1. Ms ≤ 2 (6 dB) keeps that distance at least 0.5 in any direction. This one rule already
+     gives at least 6 dB gain margin and 29° phase margin. It is the rule that catches a loop gain
+     near 1 where the phase is near −180°.
+  2. **Phase margin at least 30°** wherever |C·G| crosses 1, also near a resonance.
+  3. **Gain margin at least 6 dB** wherever the phase crosses −180° with |C·G| below 1.
+  4. **A stable closed loop** at the samples (its largest pole has |z| < 1).
+  5. **Rules 1 to 4 hold with the resonances off by ±15 %.** The controller is designed on the
+     nominal plant and then tested on 9 plants: the coupling stiffness and the axial stiffness each
+     at (1 − 0.15)², 1 and (1 + 0.15)². A real resonance is never exactly where a model puts it. The
+     linear motor has no resonance, so its family is one plant, with the same limits.
+
+  The search stops at the first bandwidth where a rule breaks. A loop that would meet the rules
+  again at a higher bandwidth, with a resonance above 0 dB, is not used. A dense set of test
+  frequencies around each resonance makes sure a narrow peak is not missed. The stability test
+  also catches a peak so sharp that no grid sees it. Sources for the limits: Åström and Murray,
+  *Feedback Systems*, chapter "Robust performance" (Ms of 1.2 to 2 is the usual range); Bruijnen,
+  van de Molengraft and Steinbuch,
+  [Optimization aided loop shaping for motion systems](https://pure.tue.nl/ws/files/1735760/722626141095799.pdf)
+  (a sensitivity peak below 6 dB).
 - **Compliance.** The cutting force acts on the stage. Y/F_d = G_sd − G_su·C·G_md/(1 + C·G_mu), in
   µm/N, where m is the measured position and s the stage. For the linear motor this is
   G/(1 + G·C). The stiffness is its inverse, in N/µm.
@@ -101,13 +121,15 @@ force in the same sample. The hold lag of half a sample is in the plant.
   motor, the motor for the ball screw. In W at the force amplitude on the page. The mean power is
   exact: u is constant over each sample, so each sample adds u·Δx of work.
 
-`check_model.mjs` checks, for each case, the phase margin and crossover, the stability, what a
+`check_model.mjs` checks, for each case, that all robustness rules hold on all 9 plants, that the
+rules break 2 % above f_b, that the sensitivity peak matches a dense scan, the phase margin and
+crossover, the stability, what a
 constant force leaves behind, that the simulation matches compliance × force within 2 % up to 2·f_b,
 that the controller force matches the transfer function within 2 %, and that the mean controller
 power matches an exact steady-state solution at the samples (also above half the loop rate). It also
 checks that the matrix plant equals the formula for one mass, that f_b does not depend on the mass
 of the linear motor stage, that stiff springs behave as one mass m₁ + m_s + m, that a very stiff
-axial spring gives back the two-mass model (f_b 405 Hz), that the two resonances sit at the natural
+axial spring gives back the two-mass model (f_b 159 Hz), that the two resonances sit at the natural
 frequencies of the chain, that a soft axial spring, a narrow resonance and a very sharp resonance do
 not break the tuning, that the stability test agrees with the gain margin, and that the Tustin
 controller matches C(s) at low frequency.
@@ -116,56 +138,66 @@ controller matches C(s) at low frequency.
 
 Results at the defaults:
 
-| Case | f_b | Worst phase margin at | Gain margin | Vibration at 400 Hz | Peak at the start of the cut | Lowest stiffness |
-| --- | --- | --- | --- | --- | --- | --- |
-| Linear motor | 431 Hz | 431 Hz | 9.7 dB | 7.0 µm | 13.9 µm | 5.6 N/µm |
-| Ball screw, collocated | 290 Hz | 1.28 kHz | 2.4 dB | 1.9 µm | 5.5 µm | 3.9 N/µm |
-| Ball screw, non-collocated | 127 Hz | 127 Hz (35°) | 9.1 dB | 3.3 µm | 6.8 µm | 4.8 N/µm |
+| Case | f_b | Limited by | Sensitivity peak (worst plant) | Gain margin (worst plant) | Vibration at 400 Hz | Peak at the start of the cut | Lowest stiffness |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Linear motor | 287 Hz | Sensitivity peak | 6.0 dB | 11.3 dB | 7.8 µm | 25.3 µm | 2.5 N/µm |
+| Ball screw, collocated | 102 Hz | Sensitivity peak and gain margin, coupling mode −15 % | 6.0 dB | 6.2 dB | 2.1 µm | 10.3 µm | 1.3 N/µm |
+| Ball screw, non-collocated | 73 Hz | Phase margin at the stage mode, both modes −15 % | 5.1 dB | 12.4 dB | 2.5 µm | 12.5 µm | 2.1 N/µm |
 
-- **The axial spring takes away most of the ball-screw advantage.** With the screw and nut rigid,
-  the ball screw looked 10 to 20 times stiffer than the linear motor (0.27 to 0.34 µm at 400 Hz,
-  64 to 115 N/µm lowest stiffness). With the catalogue stiffness, the 2 kg stage sits on a 32 N/µm
-  spring and bounces at 646 Hz. The cut still moves the stage less at 400 Hz (1.9 and 3.3 µm
-  against 7.0 µm), but the lowest stiffness is now below the linear motor (3.9 and 4.8 N/µm
-  against 5.6 N/µm).
-- **Non-collocated: the stage mode limits the bandwidth to 127 Hz.** The linear encoder sees the
-  stage bounce at 646 Hz, with a further 180° of phase lag. To keep 30° there, f_b must stay low.
-  At f_b itself the margin is then 35°.
-- **Collocated: the coupling mode still sets the bandwidth (290 Hz),** with only 2.4 dB gain
-  margin. The motor encoder does not see the stage mode well, so the stage bounces at 646 Hz with
-  little help from the controller.
+- **All three bandwidths are lower than with the old rule (30° phase margin only).** The old rule
+  gave 431, 290 and 127 Hz. Those loops had a sensitivity peak of 6.8, 13.9 and 5.4 dB, and the
+  collocated one only 2.4 dB gain margin. They would not work on a real machine.
+- **The linear motor drops from 431 to 287 Hz.** Its loop is limited by the loop rate only. The old
+  30° loop came 0.46 away from −1, just below the 0.5 the rule asks. So f_b = f_s/35 now.
+- **The ball screw drops to about a third of its old bandwidth.** Two things add up. The new rules
+  do not let a resonance come near |C·G| = 1 with a poor phase. And the damping ratios are lower:
+  0.02 in place of 0.1 and 0.05, so the resonance peaks are 2 to 5 times higher.
+- **Collocated: the coupling mode sets the limit (102 Hz).** When the coupling is 15 % softer than
+  planned, its peak comes closest to −1.
+- **Non-collocated: the stage mode sets the limit (73 Hz).** The linear encoder sees the stage
+  bounce with a further 180° of phase lag. Just above 73 Hz, the peak of the stage mode crosses
+  |C·G| = 1 with too little phase margin.
+- **The ball screw still moves the stage less at 400 Hz** (2.1 and 2.5 µm against 7.8 µm), because
+  its large inertia takes much of the cut. It also moves less when the cut starts (10 and 13 µm
+  against 25 µm). But at its weakest frequency it is less stiff than the linear motor (1.3 and
+  2.1 N/µm against 2.5 N/µm).
 - **Collocated: the stage does not come back to zero.** The integrator holds the motor still, but
   the coupling and the axial spring give way under the mean force. At 50 N the stage stays
   1.6 µm off: F_mean·(1/k_c + 1/k_a).
-- **A faster loop does not help the ball screw.** At 40 kHz the linear motor reaches f_b = 1.7 kHz
-  and 90 N/µm. The ball-screw cases stay at 310 and 126 Hz, and near 4 N/µm. The resonances, not
-  the sampling, are the limit.
+- **A faster loop only helps the linear motor.** At 40 kHz the linear motor reaches f_b = 1.15 kHz
+  and 40 N/µm. The ball-screw cases stay at 104 and 73 Hz. The resonances, not the sampling, are the
+  limit.
+- **The damping ratios matter a lot, and they are estimates.** With 0.01 on both springs the
+  ball-screw bandwidths fall to 79 and 56 Hz. With 0.03 on the coupling and 0.05 on the axial
+  spring they rise to 120 and 107 Hz. Measure the drive before trusting these numbers.
+- **The spread costs about 15 %.** Without it (resonances exactly as modelled) the ball-screw
+  bandwidths would be 120 and 86 Hz.
 - **The nut position matters.** With the nut 100 mm from the fixed bearing, the shaft is almost four
-  times stiffer. The vibration at 400 Hz falls to 1.05 and 1.9 µm, and the lowest stiffness rises to
-  5.3 and 7.6 N/µm.
+  times stiffer. The vibration at 400 Hz falls to 1.2 and 1.4 µm, and the lowest stiffness rises to
+  2.0 and 3.1 N/µm.
 - **A stiffer nut helps less than expected.** With TBI's 32 kgf/µm (314 N/µm) in place of HIWIN's
-  value, the vibration at 400 Hz is 1.4 and 2.5 µm. The shaft and the bearing are now the soft parts.
+  value, the vibration at 400 Hz is 1.6 and 1.8 µm. The shaft and the bearing are now the soft parts.
 
-For the linear motor alone:For the linear motor alone:
+For the linear motor alone:
 
-- **The loop rate sets the bandwidth, not the mass.** With these frequency ratios the continuous
-  loop has about 38° of phase margin at any bandwidth. The sampling lag takes the other 8°. So
-  f_b = f_s/23 (431 Hz at 10 kHz), with a gain margin of 9.7 dB. A heavier stage only needs a larger
-  K. The stiffness scales with m·(2πf_b)². The lowest stiffness is about 0.38 of that, just below
-  f_b.
-- **The controller pushes up to twice as hard as the cut, near f_b.** The force ratio is about 1
-  well below f_b, where the controller takes the whole force. It peaks at 1.95 N/N near f_b. Above
-  f_b it falls, and the mass takes the force. At the defaults (400 Hz) the controller swings
-  ±97 N against a ±50 N cut. When the cut starts it reaches 149 N, with the mean force.
-- **The controller power stays small**: 1.4 W peak at 400 Hz. Its mean is −0.44 W: the controller
+- **The loop rate sets the bandwidth, not the mass.** The controller shape is fixed, so the
+  continuous loop has the same sensitivity peak at any bandwidth. The sampling lag adds to it. So
+  f_b = f_s/35 (287 Hz at 10 kHz), with 32.6° phase margin and 11.3 dB gain margin. A heavier stage
+  only needs a larger K. The stiffness scales with m·(2πf_b)². The lowest stiffness is about 0.38 of
+  that, just below f_b.
+- **The controller pushes up to 1.8 times as hard as the cut, near f_b.** The force ratio is about 1
+  well below f_b, where the controller takes the whole force. It peaks at 1.81 N/N at 254 Hz. Above
+  f_b it falls, and the mass takes the force. At the defaults (400 Hz) the controller swings ±65 N
+  against a ±50 N cut. When the cut starts it reaches 131 N, with the mean force.
+- **The controller power stays small**: 1.0 W peak at 400 Hz. Its mean is −0.29 W: the controller
   takes energy out of the stage, like a damper. This is mechanical power only. The motor heat
   depends on the current, so on the force, and it is not in the model.
 
 | Linear motor | f_b | Vibration at 400 Hz | Peak at the start of the cut | Lowest stiffness |
 | --- | --- | --- | --- | --- |
-| Defaults | 431 Hz | 7.0 µm | 13.9 µm | 5.6 N/µm |
-| Mass 10 kg | 431 Hz | 1.4 µm | 2.8 µm | 28 N/µm |
-| Loop rate 40 kHz | 1724 Hz | 0.55 µm | 0.8 µm | 90 N/µm |
+| Defaults | 287 Hz | 7.8 µm | 25.3 µm | 2.5 N/µm |
+| Mass 10 kg | 287 Hz | 1.6 µm | 5.1 µm | 12.5 N/µm |
+| Loop rate 40 kHz | 1146 Hz | 1.25 µm | 2.0 µm | 40 N/µm |
 
 ## Sources for the axial stiffness
 
@@ -179,7 +211,18 @@ Checked on 2026-09-28.
 | Bearing 10.6 kgf/µm = 104 N/µm | [TBI BK series sheet (Anaheim Automation)](https://anaheimautomation.com/media/anaheim/files/manuals/linearcomponents/L011175_-_TBI_Support_Unit_BK_Series.pdf), BK12 row | The column heading in the sheet is unclear. The unit, kgf/µm, shows it is a stiffness. Check with the maker |
 | E = 2.1·10⁴ kgf/mm² (206 GPa), shaft formula δ = P·L₀/(A·E) | TBI catalogue, page C21 | Fixed-supported: only the shaft between the fixed bearing and the nut |
 
-The axial damping ratio 0.05 is an estimate. No catalogue gives it.
+## Sources for the damping ratios
+
+Checked on 2026-09-28. No maker of couplings or ball screws publishes a damping ratio, so both
+values are estimates. Use the range, not the single number, when you judge a result.
+
+| Value | Source | Note |
+| --- | --- | --- |
+| Coupling ζ = 0.02, range 0.01 to 0.03 | [Machine Design, "Servocoupling dynamics"](https://www.machinedesign.com/mechanical-motion-systems/article/21832369/motion-design-101-servocoupling-dynamics); [Design World, "Servomotor couplings: stiffness, damping, hunting"](https://www.designworldonline.com/servomotor-couplings-stiffness-damping-hunting-and-stabilization-considerations/) | Metal bellows and disc couplings are all metal, and their damping is "minimal at best". Only elastomer couplings damp well. No number is given. 0.01 to 0.03 is the usual range for bolted steel parts. |
+| Axial ζ = 0.02, range 0.01 to 0.05 | [Measured axial mode of a ball-screw test stand, 349 Hz, loss factor 0.04](https://www.researchgate.net/figure/Measured-axial-mode-shape-of-the-large-ball-screw-test-stand-at-349-Hz-with-loss-factor_fig5_245372959) | A loss factor η is about 2ζ, so ζ ≈ 0.02. The full paper could not be opened. Other studies of feed drives report 0.02 to 0.1; the high end includes friction in the guides, which this model does not have. |
+
+The old values, 0.1 and 0.05, came from no source. They were too high, and they made the ball screw
+look better than it is.
 
 ## Limits
 
