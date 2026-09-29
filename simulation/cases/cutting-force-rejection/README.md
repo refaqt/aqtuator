@@ -10,8 +10,8 @@ cutter pushes on it. It compares three drives, each with a checkbox:
   stage.
 
 For each case the page tunes the controller with the same robustness rules (see below), and shows
-the open loop, the sensitivity, the compliance, the stiffness, the vibration of the stage, and the
-force and power the controller must deliver.
+the open loop, the sensitivity, the compliance, the stiffness, the vibration of the stage, the
+force and power the controller must deliver, and the depth of cut where chatter starts.
 
 **Open it:** <https://refaqt.github.io/aqtuator/cutting-force/> (after the one-time Pages setup, see
 the [strip seal log](../../../docs/log/2026-09-28_strip-seal-designer.md)). No server and no install.
@@ -29,7 +29,8 @@ module for a page opened straight from disk.
 
 Logs: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md),
 [ball screw, 2026-09-28](../../../docs/log/2026-09-28_ball-screw-servo-cases.md),
-[robust tuning, 2026-09-28](../../../docs/log/2026-09-28_robust-tuning-and-damping.md).
+[robust tuning, 2026-09-28](../../../docs/log/2026-09-28_robust-tuning-and-damping.md),
+[chatter, 2026-09-29](../../../docs/log/2026-09-29_chatter-limit.md).
 
 ## Inputs
 
@@ -120,6 +121,28 @@ force in the same sample. The hold lag of half a sample is in the plant.
 - **Controller power.** u·v, the force times the speed where it pushes: the stage for the linear
   motor, the motor for the ball screw. In W at the force amplitude on the page. The mean power is
   exact: u is constant over each sample, so each sample adds u·Δx of work.
+- **Chatter.** Regenerative chatter in one direction: each tooth cuts the wave the last tooth left.
+  The loop is 1 + K·a·(1 − e^(−jωT))·G(jω) = 0, with a the depth of cut, K the cutting stiffness,
+  T = 60/(teeth · rev/min) and G the compliance at the stage. A real depth solves it only where
+  Re G < 0:
+  - a_lim = −1/(2·K·Re G(jω_c)), and the speed follows from the phase: ω_c·T = ε + 2πk, with
+    ε = 2·arg G − π (taken in 0 to 2π) and k = 0, 1, 2 … Each k is one stability lobe.
+  - The lowest depth over all chatter frequencies is −1/(2·K·min Re G). Below it, the cut is stable at
+    every spindle speed. It is the floor under the lobes, and it does not depend on the speed.
+  - In milling (Altintas and Budak, zero-order method, one direction) the constant has the teeth and
+    a directional factor in it, but the depth stays proportional to −1/Re G. K and these constants
+    are the same for all drives. So the page shows −1/Re G divided by the floor of the collocated
+    ball screw, and no cutting stiffness is needed.
+  - G here is the stage position per newton of a true sine force, at the samples, with the
+    controller running. It is exact (it equals the sampled steady state). The compliance chart holds
+    the force over each sample, which adds half a sample of lag and moves the real part by 10 to
+    25 % near its lowest point. So the chatter chart does not use that one.
+  - Sources: J. Tlusty, *Manufacturing Processes and Equipment*, chapter on chatter; Y. Altintas,
+    *Manufacturing Automation*, chapter on machine tool vibrations (orthogonal cutting and the
+    zero-order milling method).
+    The check tests the formula against the textbook result for one mass on a spring,
+    min Re G = −1/(4kζ(1 + ζ)) at ω/ω_n = √(1 + 2ζ), and puts each lobe point back into the loop
+    equation.
 
 `check_model.mjs` checks, for each case, that all robustness rules hold on all 9 plants, that the
 rules break 2 % above f_b, that the sensitivity peak matches a dense scan, the phase margin and
@@ -132,7 +155,9 @@ of the linear motor stage, that stiff springs behave as one mass m₁ + m_s + m,
 axial spring gives back the two-mass model (f_b 159 Hz), that the two resonances sit at the natural
 frequencies of the chain, that a soft axial spring, a narrow resonance and a very sharp resonance do
 not break the tuning, that the stability test agrees with the gain margin, and that the Tustin
-controller matches C(s) at low frequency.
+controller matches C(s) at low frequency. For chatter it checks that the fast sine compliance equals
+the sampled steady state, that the lobes give the textbook result for one mass on a spring, that
+each lobe point solves the loop equation, and that the lobes touch the floor but never go below it.
 
 ## What it shows
 
@@ -177,6 +202,31 @@ Results at the defaults:
   2.0 and 3.1 N/µm.
 - **A stiffer nut helps less than expected.** With TBI's 32 kgf/µm (314 N/µm) in place of HIWIN's
   value, the vibration at 400 Hz is 1.6 and 1.8 µm. The shaft and the bearing are now the soft parts.
+
+Chatter at the defaults. The depth that is stable at every speed, relative to the collocated ball
+screw:
+
+| Case | min Re G | At | −1/min Re G | Relative |
+| --- | --- | --- | --- | --- |
+| Linear motor | −0.133 µm/N | 365 Hz | 7.54 N/µm | 2.87 |
+| Ball screw, collocated | −0.381 µm/N | 658 Hz | 2.62 N/µm | 1.00 |
+| Ball screw, non-collocated | −0.240 µm/N | 660 Hz | 4.16 N/µm | 1.59 |
+
+- **The linear motor allows about 2.9 times the depth of the collocated ball screw before chatter.**
+  Its weak point is just above its bandwidth. The ball screw is weakest at the stage mode on the
+  axial spring (646 Hz nominal), where little damping leaves a deep negative real part.
+- **The linear encoder helps against chatter (1.59).** The loop still sees the stage mode, so it
+  damps it a little. The motor encoder does not see it.
+- **The damping ratios decide the answer.** With 0.01 on both springs the linear motor is 5.9 times
+  better and the non-collocated case 1.67 times. With 0.03 and 0.05 the linear motor is only 1.09
+  times better and the non-collocated case 1.38 times. The linear motor does not change; only the
+  ball screw does.
+- **The nut near the fixed bearing** (100 mm) makes the ball screw stiffer: the linear motor is then
+  2.0 times better, the non-collocated case 1.64 times.
+- **A faster loop only helps the linear motor.** At 40 kHz it reaches 121 N/µm, 45 times the
+  collocated ball screw, which stays at 2.65 N/µm.
+- These numbers are for the stage alone. The tool and the spindle are in series with it. If they
+  are softer than the stage, they set the chatter limit, and the drives come closer together.
 
 For the linear motor alone:
 
@@ -235,4 +285,8 @@ look better than it is.
 - One damping ratio per spring. Each is exact only when the other spring is rigid.
 - The force is one sine plus a mean. A real cut also has harmonics of the tooth frequency.
 - No sensor noise, no quantisation, no force or torque limit on the motor.
-- The cut does not react to the motion. This is forced vibration, not chatter.
+- The vibration charts use a cut that does not react to the motion. The chatter chart uses a cut
+  that does, in one direction only, with no process damping (the extra damping of the cut at low
+  speed) and without the compliance of the tool and spindle.
+- The chatter lobes stop at a chatter frequency of 0.98 · f_s/2. The compliance is taken at the
+  samples; between samples the stage moves a little more.
