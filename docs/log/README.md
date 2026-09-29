@@ -113,3 +113,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-29 | [The cutting force page shows where chatter starts](2026-09-29_chatter-limit.md) | engineering, simulation, software |  |
 | 2026-09-29 | [Servotronix drives with a faster position loop](2026-09-29_servotronix-drives-with-a-faster-loop.md) | engineering, hardware, purchasing |  |
 | 2026-09-29 | [Drives from non-Israeli suppliers with an open control loop](2026-09-29_non-israeli-drives-with-open-control-loops.md) | engineering, hardware, purchasing |  |
+| 2026-09-29 | [Drives below 800 euro per axis, from maker forums and open source](2026-09-29_drives-below-800-euro-per-axis.md) | engineering, hardware, purchasing |  |

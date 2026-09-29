@@ -109,6 +109,9 @@ No purchase decision. For quotes we will ask, in this order:
 
 Aerotech stays an option only if we drop LinuxCNC as the motion controller.
 
+Later the same day these prices proved too high. See
+[Drives below 800 euro per axis](2026-09-29_drives-below-800-euro-per-axis.md).
+
 ## Open Questions
 
 - What do the Triamec TSD350-10 and TP350 cost? How much current noise is there at 2 A?
