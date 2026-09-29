@@ -23,7 +23,54 @@ we build ourselves. The earlier searches are in
 
 ## Work Done
 
-### Short answer
+### Update: new units only
+
+Later the same day we added one more rule: **we buy new units only.** We must supply the same
+drive to customers again and again. A used unit is fine only if a seller has a large stock of
+identical units. This changes the answer:
+
+- **No option is confirmed below 500 euro per axis for a new drive.** Most makers do not publish a
+  new price. We need quotes.
+- **The converter options lose most of their value.** The best drives for a new purchase read
+  1 Vpp directly, so they need no converter. For series use there is only one ready converter
+  box, the NiLAB NL-NQ6D, and its price is on request. The USD 87 iC-Haus board is an evaluation
+  board, not a series product. Our own small board with the iC-NQC chip would cost about 35 to
+  60 euro per unit, plus about 5,000 to 15,000 euro once for design and CE testing. Both figures
+  are estimates.
+- **The KEBA ServoOne junior is still on the KEBA web site, with no end-of-life notice.** It
+  stays the first choice if KEBA quotes a good new price. KEBA does not name a successor. Its
+  newer drives (ServoOne CM, KeDrive D3) need a three phase supply, so they do not fit.
+- **The Metronix smartServo BL 4104-C comes back as a strong option.** It reads 1 Vpp directly,
+  runs from 230 VAC single phase, and gives 4 A continuous and 12 A peak. Its manual gives a
+  position loop of about 128 µs (7.8 kHz). That is just below 8 kHz. No new price is published.
+- **The Delta ASDA-A3 gets weaker.** Every new unit is made after 2022. The newest Delta manual
+  (February 2025) still says that BiSS-C may not work on those units. We found no statement that
+  Delta has fixed this. Delta also still does not publish the position loop rate. The manual
+  gives only the shortest EtherCAT cycle, 125 µs, which is not the same thing.
+- **The Parker PSD1 is too expensive new:** USD 1,189 for the 2 A model (PSD1SW1200B1100000) at
+  a US shop. The BiSS-C version has the code PSD1SW1200B1300000.
+- **The Inovance SV680LNS2R8I** (the version for linear motors) has no public price, and its
+  loop rate is not published.
+- **The HIWIN E2 Advanced** (ED2F-E0-003-1-C-00) reads 1 Vpp, BiSS-C and EnDat directly. It
+  is the official replacement for the ED1. No price is published.
+- **One large used stock exists:** Lagerwerk has 59 used Metronix ARS 2105 drives at 134.93 euro
+  excluding VAT. This is not a good fit. It is the older model without built-in EtherCAT, the
+  EtherCAT module is not listed, and its speed loop runs at 100 µs, so the position loop is
+  slower. 59 units also do not cover several years of supply.
+
+| Drive, new | Reads 1 Vpp directly | Position loop | Status | New price found |
+| --- | --- | --- | --- | --- |
+| KEBA ServoOne junior SO22.003.0030 / SO22.006.0030 | Yes | 8 kHz (family brochure) | Listed on the KEBA site | Not published. USD 184 at one shop, condition not stated, out of stock |
+| Metronix smartServo BL 4104-C (9200-4104-1000) | Yes, and BiSS-C | About 7.8 kHz (128 µs, manual) | Listed | Not published |
+| HIWIN E2 Advanced ED2F-E0-003-1-C-00 | Yes, and BiSS-C | Not published | Current product | Not published |
+| Delta ASD-A3-0421-E | No. BiSS-C with a converter, and BiSS-C may not work on new units | Not published | Current product | Not found. The simpler B3 model costs 416.50 euro for 10 or more at DamenCNC |
+| Inovance SV680LNS2R8I | No. BiSS-C or SSI with a converter | Not published | Current product | Not published |
+| Parker PSD1SW1200B1300000 | No. BiSS-C with a converter | 8 kHz (catalog) | Listed | About USD 1,189. Over budget |
+
+The rest of this entry is the first search, before this rule was added. Where it recommends a
+used ServoOne junior, read "a new ServoOne junior, if KEBA quotes one".
+
+### Short answer (first search)
 
 - **The best find needs no converter.** A used KEBA ServoOne junior (the older name is LTi
   ServoOne junior) reads a 1 Vpp encoder directly. It has EtherCAT, a position and speed loop at
@@ -125,14 +172,17 @@ Delta to confirm that BiSS-C works on that unit.
 
 ## Decisions Made
 
-No purchase decision. The suggested order:
+No purchase decision. We buy new units only, so we need quotes first. The suggested order:
 
-1. Ask KEBA the three questions above: the loop rate of the junior, approval of a third-party
-   1 Vpp encoder, and whether the software and support are still available.
-2. If KEBA answers yes, buy one used SO22.006 with EtherCAT and test it on one stage. No
-   converter is needed.
-3. As the fallback, ask Delta and Inovance for the position loop period. If one of them reaches
-   8 kHz, the iC-NQC board plus that drive stays below 500 euro.
+1. Ask KEBA for a new price for 1 and for 10 units of the ServoOne junior SO22.003.0030 and
+   SO22.006.0030, how long they will keep making it, the loop rate of the junior, and approval
+   of a third-party 1 Vpp encoder.
+2. Ask Metronix for a new price for 1 and for 10 units of the smartServo BL 4104-C, and whether
+   its position loop can run at 125 µs or faster.
+3. Ask HIWIN for a price and the position loop rate of the E2 Advanced.
+4. Only if none of these fits: ask Delta and Inovance for a price and the position loop period,
+   and ask NiLAB for a price for the NL-NQ6D converter. Ask Delta in writing whether BiSS-C
+   works on new A3 drives.
 
 ## Open Questions
 
@@ -144,8 +194,8 @@ No purchase decision. The suggested order:
 
 ## Next Steps
 
-1. Send the questions to KEBA, Delta and Inovance.
-2. Look for a used ServoOne junior with EtherCAT, not Sercos.
+1. Send the price and loop rate questions to KEBA, Metronix and HIWIN.
+2. When quotes come back, compare them against the 500 euro budget per axis.
 
 <details>
 <summary>Sources and remarks</summary>
@@ -190,6 +240,22 @@ Drives:
 - Copley Xenus Plus: <https://datasheet.datasheetarchive.com/originals/crawler/copleycontrols.com/cca4087b61878b31d8b405e0457256be.pdf>
 - Kinco FD5P manual: <https://aiq-robotics.com/wp-content/uploads/2024/01/Kinco-FD5P-series-AC-servo-system-manual-EN-23125.pdf>
 - Rexroth forum post on loop times: <https://community.boschrexroth.com/ctrlx-drive-5thklqt9/post/axis-control-parameter-indradrive-GHtiXeA83gRrHGP>
+
+Update for new units only:
+
+- KEBA ServoOne product page: <https://www.keba.com/en/industrial-automation/products/servo-controllers/servoone-drive-system-detail>
+- KEBA ServoOne CM and KeDrive D3: <https://www.keba.com/en/industrial-automation/products/servo-controllers/servoone-cm-detail>, <https://www.keba.com/en/industrial-automation/products/servo-controllers/kedrive-d3-detail>
+- Metronix BL 4104-C: <https://www.metronix.de/en/products/smartservo-bl-4000-c/smartservo-bl-4104-c>
+- Delta A3 manual, revision 20250227, section 11.2.3.2: <https://www.damencnc.com/userdata/file/7617-5_Delta_ASDA_A3_Manual_English_2025.pdf>
+- Delta B3 price for 10 or more: <https://www.damencnc.com/en/ac-servo-drive-400w-asd-b3a-0421-e-ethercat-sto/a5753>
+- Parker PSD1 new price: <https://www.e-motionsupply.com/Parker_High_Performance_Drive_PSD1SW1200B110000_p/psd1sw1200b1100000.htm>
+- Parker BiSS-C order code: <https://ph.parker.com/us/en/psd1s-single-axis-servo-drives-5a-1-3-230vac-2-3kva/psd1sw1300b1300000>
+- Inovance SV680N order code: <https://www.manualslib.com/manual/3670582/Inovance-Sv680n-Series.html?page=14>
+- HIWIN E2 at Proax: <https://proax.ca/en/product/2639733/hiwed2fe00031c00>
+- HIWIN replacement guide (ED1 to E2): <https://www.hiwinmikro.tw/Handlers/DownloadFile.ashx?id=c3c3ddb1-eb69-40cc-9912-9f23c8cb59cd&lang=en>
+- Lagerwerk, 59 used ARS 2105: <https://www.lagerwerk.com/elektronik-mechanik/automation-bauteile/sonstige/17066/metronix-ars-2105-servopositionierregler-ohne-ext.-luefter>
+- NiLAB NL-NQ6D: <https://en.nilab.at/products/nl-nq6d-sin-cos-interpolator/>, NL-NQ8D: <https://www.nilab.at/dokuwiki/doku.php?id=en:miniature_motors:nq8d_interpolator>
+- iC-NQC chip price: <https://de-shop.ichaus.com/encoder-solutions/interpolators/ic-nqc>
 
 The drive and converter facts other than the ServoOne were read by research helpers from the
 documents above. The Heidenhain, Renishaw shop, SIKO and Parker distributor pages blocked
