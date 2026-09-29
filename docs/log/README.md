@@ -111,3 +111,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-28 | [The cutting force page tunes every drive with robust rules](2026-09-28_robust-tuning-and-damping.md) | engineering, simulation, software |  |
 | 2026-09-29 | [Why a lighter stage is less stiff, and why more gain does not help](2026-09-29_why-a-lighter-stage-is-less-stiff.md) | engineering, simulation |  |
 | 2026-09-29 | [The cutting force page shows where chatter starts](2026-09-29_chatter-limit.md) | engineering, simulation, software |  |
+| 2026-09-29 | [Servotronix drives with a faster position loop](2026-09-29_servotronix-drives-with-a-faster-loop.md) | engineering, hardware, purchasing |  |
