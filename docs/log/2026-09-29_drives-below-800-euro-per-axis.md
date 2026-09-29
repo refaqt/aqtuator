@@ -103,7 +103,7 @@ it for a small team.
 | Delta ASD-A3-0421-E + ASD-IF-EN0A20 box | Through the box, ×4 to ×2048 | Not published. Speed bandwidth 3.1 kHz | 5 notches, Bode tool | Drive about USD 210 used. Box: price not found |
 | Yaskawa SGD7S-2R8AA0A + JZDP-H003 | Through the converter | Not published | 5 notches, frequency analysis | Drive USD 378 used, converter 548 euro new. About 875 euro in total, over budget |
 | Kollmorgen AKD, first generation, used | Built in | 4 kHz. Fails | Biquads | USD 250 to 400 used |
-| Kollmorgen AKD2G, F3 option | Option F3 | 8 kHz | 4 free biquads | USD 1,300 or more used. Over budget |
+| Kollmorgen AKD2G, F3 option | Option F3 | 4 kHz (250 µs) in the installation manual. An earlier entry said 8 kHz, which was wrong | 4 free biquads | CHF 1,050 new, single axis. Over budget |
 
 Left out:
 

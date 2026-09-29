@@ -23,12 +23,16 @@ for the LinuxCNC PC, and a position loop of at least 8 kHz.
 
 ### Short answer
 
+Later correction: the Kollmorgen AKD2G does **not** meet the 8 kHz requirement. Its installation
+manual gives a position loop of 250 µs (4 kHz). See [HIWIN, Delta and Kollmorgen follow-up](2026-09-29_hiwin-delta-kollmorgen-follow-up.md).
+
 - **Three drives meet every hard requirement and let you set filters freely:**
   1. **Triamec TSD350 with the TP350 supply** (Switzerland). This is the best technical fit.
      The position loop runs at 100 kHz. It has five second order filters. In "Advanced" mode you
      set the numerator and denominator frequency and damping freely, as you did with Aerotech.
      You can also run your own C# program inside the drive at 10 kHz. No price was found.
-  2. **Kollmorgen AKD2G with the F3 connector option** (USA). The position loop runs at 8 kHz.
+  2. **Kollmorgen AKD2G with the F3 connector option** (USA). The position loop runs at 8 kHz
+     (wrong, see the correction above: it runs at 4 kHz).
      It has four biquad filters with free numerator and denominator frequency and Q. A two axis
      drive of 2 × 3 A costs about CHF 1,600 without the F3 option.
   3. **ADVANCED Motion Controls DPEANIU-015S400** (USA). The position loop runs at 10 kHz. The
@@ -62,7 +66,7 @@ for the LinuxCNC PC, and a position loop of at least 8 kHz.
 | Drive | Supply | Current, continuous / peak | 1 Vpp input | Loop rate (position) | Filters and code | Price found |
 | --- | --- | --- | --- | --- | --- | --- |
 | **Triamec TSD350-10 + TP350** | TP350: 1 phase 44 to 230 VAC, gives 325 VDC | 10 Arms / 20 A for 2 s, two axes | Yes, ×65 536, 500 kHz | 100 kHz. No separate velocity loop | 5 free biquads. C# code at 10 kHz | Not found |
-| **Kollmorgen AKD2G, F3 option** | 1 or 3 phase 120 to 240 VAC | 3 A / 9 A for 5 s. A 6 A model exists | Yes, with option F3 | 8 kHz (velocity 16 kHz) | 4 free biquads. No code in the drive found | About CHF 1,600 for 2 × 3 A without F3 |
+| **Kollmorgen AKD2G, F3 option** | 1 or 3 phase 120 to 240 VAC | 3 A / 9 A for 5 s. A 6 A model exists | Yes, with option F3 | 8 kHz according to a trade article. The manual says 4 kHz (250 µs). Velocity 16 kHz | 4 free biquads. No code in the drive found | About CHF 1,600 for 2 × 3 A without F3 |
 | **AMC DPEANIU-015S400** | 1 phase 100 to 240 VAC | 7.5 A / 15 A peak of sine (5.3 / 10.6 Arms) | Yes, ×2048, 200 kHz | 10 kHz (current 20 kHz) | 1 free biquad. No code in the drive found | USD 1,508 |
 | Rexroth ctrlX DRIVE XCS2-W0010F | 1 or 3 phase 100 to 240 VAC | 2.4 A / 10 A (data sheet still preliminary) | Yes, with the multi-encoder option | 8 kHz | Filter details not found | Not found |
 | Parker PSD1-S (PSD1SW1300) | 1 or 3 phase 230 VAC | 5 A / 15 A for 2 s | Yes, feedback code 2, 400 kHz | 8 kHz, only from a search result | "Notch filtering". Details not found | Not found |

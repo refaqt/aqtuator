@@ -90,6 +90,14 @@ Every task that changes the repo must start on a **new git branch** off `main`, 
   **inside** the FreeCAD interpreter, which `doqs.sh` cannot reach. `doqs.sh list`
   says so too.
 
+## Numbers that decide a pass or a fail
+
+**This mistake has happened three times.** Before you call a part a pass or a fail on a hard
+requirement, read the deciding number in the maker's own data sheet or manual. A trade article, a
+search result, a shop page or a textbook constant is not enough. If you cannot open the primary
+document, write "not confirmed" in the short answer and in the table. See
+[docs/mistakes/2026-09-29_loop-rate-from-a-trade-article.md](../../docs/mistakes/2026-09-29_loop-rate-from-a-trade-article.md).
+
 ## Validate
 
 ```bash
