@@ -31,6 +31,9 @@ The sections below the first survey give the details. The first survey is kept a
 Later correction: the CDHD2 also has an 8 kHz position controller, and the CDHD2 is now a legacy
 model. See [Servotronix drives with a faster position loop](2026-09-29_servotronix-drives-with-a-faster-loop.md).
 
+Later search: for drives from non-Israeli suppliers with a position loop of at least 8 kHz and
+free filters, see [Drives from non-Israeli suppliers with an open control loop](2026-09-29_non-israeli-drives-with-open-control-loops.md).
+
 ### First short answer
 
 - **48 VDC is too low for full force at 10 000 mm/min.** At that speed a 48 V drive gives about
