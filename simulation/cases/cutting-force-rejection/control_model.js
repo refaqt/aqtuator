@@ -415,6 +415,120 @@ function sampledSteadyAt(f, p, tuned) {
   return { X: X[pl.is], U, pMean, n };
 }
 
+// Compliance at the samples for a true sine force F·e^{jωt} on the stage, in
+// m/N (complex), for 0 < f < fs/2. The force is not held. Over one sample it
+// adds
+//
+//   g = ∫₀ᵀ e^{A(T−τ)}·B_d·e^{jωτ} dτ = (jωI − A)⁻¹·(e^{jωT}·I − Φ)·B_d
+//
+// and with x[k] = X·z^k and u[k] = −C(z)·y_m[k]:
+//
+//   (z·I − Φ + Γ_u·C·e_m)·X = g,   compliance = X at the stage.
+//
+// It equals sampledSteadyAt, without a matrix exponential per frequency. The
+// held force of complianceAt adds half a sample of lag, which moves the real
+// part. The chatter limit needs the true phase, so it uses this one.
+function sineComplianceAt(f, p, tuned) {
+  const pl = tuned.plant, T = 1 / p.fs, d = discrete(pl, T), w = 2 * Math.PI * f;
+  const z = [Math.cos(w * T), Math.sin(w * T)];
+  const Mg = pl.A.map((row, i) => row.map((v, j) => (i === j ? [-v, w] : [-v, 0])));
+  const rhs = d.Phi.map((row, i) => row.reduce((s, v, j) =>
+    cadd(s, cmul(i === j ? [z[0] - v, z[1]] : [-v, 0], [pl.Bd[j], 0])), [0, 0]));
+  const g = csolve(Mg, rhs);
+  const C = controllerAt(f, p, tuned).h;
+  const M = d.Phi.map((row, i) => row.map((v, j) => {
+    let e = [-v, 0];
+    if (i === j) e = cadd(e, z);
+    if (j === pl.iy) e = cadd(e, cmul(C, [d.Gu[i], 0]));
+    return e;
+  }));
+  return csolve(M, g)[pl.is];
+}
+
+// ---------------------------------------------------------------------------
+// Chatter: the stability lobes and the depth that is stable at every speed.
+// ---------------------------------------------------------------------------
+//
+// Regenerative chatter in one direction (Tlusty; Altintas, Manufacturing
+// Automation, chapter on machine tool vibrations): the chip thickness holds
+// the wave of the last tooth, so the loop is
+//
+//   1 + K·a·(1 − e^{−jωT})·G(jω) = 0,   T = 60/(teeth · rev/min)
+//
+// A real depth of cut a solves it only where Re G < 0:
+//
+//   a_lim = −1/(2·K·Re G(jω_c))
+//   ω_c·T = ε + 2πk,  ε = 2·arg G − π  (taken in 0 to 2π),  k = 0, 1, 2 …
+//
+// Each k is one lobe. The lowest a_lim over all chatter frequencies is
+// −1/(2·K·min Re G): below this depth the cut is stable at any speed. The
+// cutting stiffness K, the factor 2 and, in milling, the directional factor
+// are the same for every drive, so this file returns −1/Re G in N/m and the
+// page divides by one reference drive.
+
+// One point of lobe k at the chatter frequency f, for compliance g (Re g < 0).
+// Returns the depth −1/Re g in N/m, the tooth period T in s and the rev/min.
+function lobePoint(g, f, teeth, k) {
+  let eps = 2 * carg(g) - Math.PI;
+  eps -= 2 * Math.PI * Math.floor(eps / (2 * Math.PI));
+  const T = (eps + 2 * Math.PI * k) / (2 * Math.PI * f);
+  return { depth: -1 / g[0], T, rpm: 60 / (teeth * T), eps };
+}
+
+// Stability lobes for any compliance function comp(f) -> [re, im] in m/N.
+// Scans f from fLo to fHi, then refines the lowest Re G. Returns the lower
+// envelope of all lobes on an even rev/min grid (NaN where no lobe reaches),
+// and the floor −1/min Re G. Depths in N/m.
+function lobes(comp, fLo, fHi, teeth, rpmLo, rpmHi, nf = 3000, nr = 400) {
+  const f = logspace(fLo, fHi, nf);
+  const G = f.map(comp);
+  let iMin = 0;
+  for (let i = 1; i < nf; i++) if (G[i][0] < G[iMin][0]) iMin = i;
+  // Golden section between the two neighbours of the lowest grid point.
+  let a = f[Math.max(0, iMin - 1)], b = f[Math.min(nf - 1, iMin + 1)];
+  const gr = (Math.sqrt(5) - 1) / 2;
+  for (let it = 0; it < 40; it++) {
+    const c = b - gr * (b - a), d = a + gr * (b - a);
+    if (comp(c)[0] < comp(d)[0]) b = d; else a = c;
+  }
+  const fMin = (a + b) / 2, gMin = comp(fMin);
+  const minRe = Math.min(gMin[0], G[iMin][0]);
+
+  const rpm = Array.from({ length: nr }, (_, i) => rpmLo + (rpmHi - rpmLo) * i / (nr - 1));
+  const env = new Array(nr).fill(Infinity);
+  const dr = (rpmHi - rpmLo) / (nr - 1);
+  const put = (A, B) => {
+    const [lo, hi] = A.rpm < B.rpm ? [A, B] : [B, A];
+    for (let i = Math.max(0, Math.ceil((lo.rpm - rpmLo) / dr)); i < nr && rpm[i] <= hi.rpm; i++) {
+      const s = hi.rpm > lo.rpm ? (rpm[i] - lo.rpm) / (hi.rpm - lo.rpm) : 0;
+      env[i] = Math.min(env[i], lo.depth + s * (hi.depth - lo.depth));
+    }
+  };
+  // Join neighbouring frequencies of the same lobe with straight lines. Where
+  // ε wraps past 0 or 2π the lobe number changes, so that step is skipped.
+  let prev = null;
+  for (let i = 0; i < nf; i++) {
+    if (!(G[i][0] < 0)) { prev = null; continue; }
+    const w = 2 * Math.PI * f[i];
+    const eps = lobePoint(G[i], f[i], teeth, 0).eps;
+    const kLo = Math.max(0, Math.ceil((w * 60 / (teeth * rpmHi) - eps) / (2 * Math.PI)) - 1);
+    const kHi = Math.floor((w * 60 / (teeth * rpmLo) - eps) / (2 * Math.PI)) + 1;
+    const pts = new Map();
+    for (let k = kLo; k <= kHi; k++) pts.set(k, lobePoint(G[i], f[i], teeth, k));
+    if (prev && Math.abs(eps - prev.eps) < Math.PI) {
+      for (const [k, P] of pts) if (prev.pts.has(k)) put(prev.pts.get(k), P);
+    }
+    prev = { eps, pts };
+  }
+  return { rpm, depth: env.map((v) => (Number.isFinite(v) ? v : NaN)), floor: -1 / minRe, minRe, fMin };
+}
+
+// The chatter lobes of one tuned case, with the exact sine compliance, up to
+// just below half the loop rate.
+function chatter(p, tuned, rpmLo, rpmHi, nr = 800) {
+  return lobes((f) => sineComplianceAt(f, p, tuned), tuned.fb / 200, p.fs / 2 * 0.98, p.teeth, rpmLo, rpmHi, 3000, nr);
+}
+
 // ---------------------------------------------------------------------------
 // Tuning: find the highest f_b that meets the robustness rules.
 // ---------------------------------------------------------------------------
@@ -848,7 +962,7 @@ function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
 // The page and the checks both read the functions from this one object.
 globalThis.ControlModel = {
   DEFAULTS, CASES, cabs, expm, mechanics, plantFor, stepMatrices, plantResp, sections, plantAt,
-  controllerAt, loopAt, complianceAt, forceRatioAt, sampledSteadyAt, tune, margins, spectralRadius,
+  controllerAt, loopAt, complianceAt, forceRatioAt, sampledSteadyAt, sineComplianceAt, lobePoint, lobes, chatter, tune, margins, spectralRadius,
   plantFamily, robustness,
   logspace, toothFreq, frequencyData, simulate, settleSamples, steadyState, steadyAmplitude,
   entrySamples, entryTrace, steadyTrace, sweep,

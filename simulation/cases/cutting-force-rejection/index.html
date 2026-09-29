@@ -335,6 +335,21 @@ table.res td.bad .v { color: var(--bad); }
           from the current, which follows the force (mean force included), and it is not in this chart.</p>
       </section>
 
+      <section class="panel" aria-labelledby="h-chatter">
+        <h2 id="h-chatter">Chatter: stable depth of cut against spindle speed <span>relative to the collocated ball screw</span></h2>
+        <div class="legend"><span><i></i>solid: stability lobes, −1/Re G at the chatter frequency</span>
+          <span><i class="dash"></i>dashed: floor, −1/min Re G</span></div>
+        <div class="legend" data-legend="cases"></div>
+        <div class="chart-box"><svg id="cChatter" class="chart" viewBox="0 0 880 280"></svg>
+          <p class="chart-sub" id="chatterText"></p></div>
+        <p class="note">Below its line, a cut does not chatter. Below the dashed floor, it does not chatter at any
+          spindle speed. The depth is a_lim = −1/(2·K·Re G), with G the compliance at the stage and K the cutting
+          stiffness. K, the factor 2 and the tooth geometry are the same for all drives, so the chart divides by the
+          floor of the collocated ball screw: 2 means twice the depth of cut before chatter starts. It uses the same
+          rev/min range as the chart above. Only the compliance of the stage is in the model, not the compliance of the
+          tool and spindle.</p>
+      </section>
+
       <section class="panel note" aria-labelledby="h-model">
         <h2 id="h-model">How this is calculated</h2>
         <p><b>Linear motor.</b> The stage is a single rigid mass: G(s) = 1/(m·s²), from force in N to position in m.
@@ -395,6 +410,17 @@ table.res td.bad .v { color: var(--bad); }
           where the mass takes the force. The power is u·v, with v the speed where u pushes: the stage for the linear
           motor, the motor for the ball screw. Its mean is exact, because u is constant over each sample, so each
           sample adds u·Δx of work.</p>
+        <p><b>Chatter.</b> The tooth cuts the wave that the last tooth left. So the chip thickness, and with it the
+          force, depends on the motion now and one tooth period T earlier. The loop is
+          1 + K·a·(1 − e<sup>−jωT</sup>)·G(jω) = 0, with a the depth of cut, K the cutting stiffness and
+          T = 60/(teeth · rev/min). A real depth a solves it only where Re G &lt; 0: a<sub>lim</sub> = −1/(2·K·Re G).
+          The phase sets the speed: ω·T = ε + 2πk, with ε = 2·arg G − π and k = 0, 1, 2 … Each k is one lobe. The
+          lowest a<sub>lim</sub> over all frequencies, −1/(2·K·min Re G), is stable at every speed (Tlusty; Altintas,
+          <i>Manufacturing Automation</i>, chapter on machine tool vibrations). In milling the constant changes with the
+          tooth geometry, but it is
+          the same for every drive. G is the stage position per newton of a true sine force, at the samples, with the
+          controller running. This keeps the true phase of the force. The compliance chart above holds the force over
+          each sample, which adds half a sample of lag. The lobes stop at the chatter frequency 0.98 · f<sub>s</sub>/2.</p>
         <p><b>Limits.</b></p>
         <ul>
           <li>Linear motor: one rigid mass. No resonances, no friction, no guide stiffness.</li>
@@ -405,7 +431,10 @@ table.res td.bad .v { color: var(--bad); }
             stiffer.</li>
           <li>The force is one pure sine plus a mean. A real cut has harmonics of the tooth frequency.</li>
           <li>No sensor noise, no quantisation, no force or torque limit on the motor.</li>
-          <li>The cut does not react to the motion, so this model shows forced vibration, not chatter.</li>
+          <li>The vibration charts use a cut that does not react to the motion. The chatter chart uses a cut that
+            does, in one direction only. It leaves out the compliance of the tool and the spindle, which is in series
+            and would bring the drives closer together, and the extra damping of the cut at low speed (process
+            damping).</li>
         </ul>
       </section>
     </main>
@@ -939,6 +968,18 @@ function run() {
     EN[id] = M.entryTrace(p, T[id], nEntry);
   }
 
+  // Chatter lobes, over the rev/min range of the sweep. The reference is the
+  // collocated ball screw, tuned even when its box is off.
+  let lo = parseFloat($("rpmLo").value), hi = parseFloat($("rpmHi").value);
+  if (!(lo > 0) || !(hi > lo)) { lo = 1000; hi = 30000; }
+  const CH = {};
+  const chatterOf = (id, t) => cached(`chatter|${tuneKey(p, id)}|${p.teeth}|${lo}|${hi}`, () => M.chatter(p, t, lo, hi));
+  for (const id of live) CH[id] = chatterOf(id, T[id]);
+  let ref = null;
+  try {
+    const tc = T.colloc ?? cached(tuneKey(p, "colloc"), () => M.tune(p, "colloc"));
+    if (tc.stable) ref = CH.colloc ?? chatterOf("colloc", tc);
+  } catch (e) { ref = null; }
 
   $("resHead").textContent = `Tooth frequency ${hz(ft)}: ${sig(ft / nyq)} × half the loop rate.`;
   table([
@@ -965,6 +1006,9 @@ function run() {
     ["Peak controller force", (id) => EN[id] && [`${sig(EN[id].uPeak)} N`,
       `when the cut starts, mean included${id === "linear" ? "" : `, ${torque(id, EN[id].uPeak)}`}`]],
     ["Controller power", (id) => SS[id] && [`${sig(SS[id].pPeak)} W`, `peak |u·v|, mean ${sig(SS[id].pMean)} W`]],
+    ["Chatter-free depth, any speed", (id) => CH[id] && (ref
+      ? [`${sig(CH[id].floor / ref.floor)} ×`, `the collocated ball screw. −1/min Re G = ${sig(CH[id].floor / um)} N/µm at ${hz(CH[id].fMin)}`]
+      : [`${sig(CH[id].floor / um)} N/µm`, `−1/min Re G at ${hz(CH[id].fMin)}. No collocated reference.`])],
   ], cases);
 
   const bad = cases.filter((id) => !T[id] || !T[id].stable);
@@ -1091,8 +1135,6 @@ function run() {
     live.map((id) => `${CASE[id].name} ±${sig(ST[id].uAmp)} N`).join(", ") + ".";
 
   // Sweep.
-  let lo = parseFloat($("rpmLo").value), hi = parseFloat($("rpmHi").value);
-  if (!(lo > 0) || !(hi > lo)) { lo = 1000; hi = 30000; }
   const SW = {};
   for (const id of live) {
     SW[id] = cached(`${tuneKey(p, id)}|${p.Famp}|${p.teeth}|${lo}|${hi}`, () => M.sweep(p, T[id], lo, hi, 100));
@@ -1130,6 +1172,26 @@ function run() {
       { pts: SW[id].map((r) => [r.rpm, r.pPeak]), color: CASE[id].color, label: `${CASE[id].name}, peak`, fmt: (v) => `${sig(v)} W` },
       { pts: SW[id].map((r) => [r.rpm, r.pMean]), color: CASE[id].color, dash: true, width: 1.2, label: "mean", fmt: (v) => `${sig(v)} W` },
     ]) });
+
+  // Chatter lobes. Depth relative to the collocated floor, or in N/µm when
+  // there is no collocated reference.
+  const scale = ref ? 1 / ref.floor : 1 / um;
+  const unit = ref ? "×" : "N/µm";
+  const chLive = live.filter((id) => CH[id]);
+  const floorMax = Math.max(0, ...chLive.map((id) => CH[id].floor * scale));
+  chart($("cChatter"), { xLabel: "spindle speed, rev/min", yLabel: ref ? "depth / collocated floor" : "−1/Re G, N/µm", xTip: swTip,
+    xFmt: (v) => String(Math.round(v)), xRange: [lo, hi], yRange: [0, (floorMax || 1) * 2.5],
+    vlines: onSpeed ? [{ x: p.rpm, label: "set speed" }] : [],
+    hlines: ref ? [{ y: 1, label: "collocated floor = 1" }] : [],
+    series: chLive.flatMap((id) => [
+      { pts: CH[id].rpm.map((r, i) => [r, CH[id].depth[i] * scale]), color: CASE[id].color, label: `${CASE[id].name}, lobes`,
+        fmt: (v) => `${sig(v)} ${unit}` },
+      { pts: [[lo, CH[id].floor * scale], [hi, CH[id].floor * scale]], color: CASE[id].color, dash: true, width: 1.2,
+        label: "floor", fmt: (v) => `${sig(v)} ${unit}` },
+    ]) });
+  $("chatterText").textContent = chLive.map((id) => `${CASE[id].name}: ` + (ref ? `${sig(CH[id].floor / ref.floor)} × ` : "") +
+    `(−1/min Re G = ${sig(CH[id].floor / um)} N/µm, min Re G = ${sig(CH[id].minRe * um)} µm/N at ${hz(CH[id].fMin)})`).join(". ") +
+    (ref ? "." : ". The collocated ball screw has no stable controller, so the chart shows N/µm.");
 
   status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
 }

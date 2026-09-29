@@ -23,6 +23,13 @@
 // 11. The Tustin controller matches C(s) at low frequency.
 // 12. The sensitivity peak matches a dense scan.
 // 13. The linear motor has no resonance, so its family is one plant.
+// Chatter:
+// 14. The fast sine compliance equals the exact sampled steady state.
+// 15. For one mass on a spring, the lobes give the textbook lowest real part
+//     −1/(4kζ(1 + ζ)) at r = √(1 + 2ζ).
+// 16. Each lobe point solves 1 + a·(1 − e^{−jωT})·G = 0 with a = −1/(2 Re G).
+// 17. The floor matches a dense scan, and the lobes touch it but never go
+//     below it.
 
 // The model is a plain script (see its end), so it hands over one object.
 import "./control_model.js";
@@ -232,6 +239,57 @@ for (const id of M.CASES) {
   const p = { ...M.DEFAULTS };
   const a = M.tune(p, "linear"), b = M.tune({ ...p, spread: 0 }, "linear");
   check(a.family === 1 && a.fb === b.fb, `linear: one plant in the family, f_b ${a.fb.toFixed(2)} Hz with and without the spread`);
+}
+
+// Chatter 14: the fast sine compliance against sampledSteadyAt.
+for (const id of M.CASES) {
+  const p = { ...M.DEFAULTS };
+  const t = M.tune(p, id);
+  let worst = 0;
+  for (const f of [30, t.fb, 660, 3000]) {
+    const a = M.sineComplianceAt(f, p, t), X = M.sampledSteadyAt(f, p, t).X;
+    worst = Math.max(worst, Math.hypot(a[0] - X[0] / p.Famp, a[1] - X[1] / p.Famp) / M.cabs(a));
+  }
+  check(worst < 1e-9, `${id}: sine compliance equals the sampled steady state, worst error ${worst.toExponential(2)}`);
+}
+
+// Chatter 15 and 16: one mass on a spring, G = 1/(k(1 − r² + 2jζr)).
+const residual = (g, f, teeth, k) => {
+  const L = M.lobePoint(g, f, teeth, k), a = L.depth / 2, th = 2 * Math.PI * f * L.T;
+  const q = [1 - Math.cos(th), Math.sin(th)];               // 1 − e^{−jθ}
+  const r = [a * (q[0] * g[0] - q[1] * g[1]), a * (q[0] * g[1] + q[1] * g[0])];
+  return Math.hypot(1 + r[0], r[1]);
+};
+{
+  const k = 2e7, fn = 500, z = 0.03;
+  const comp = (f) => { const r = f / fn, d = k * ((1 - r * r) ** 2 + (2 * z * r) ** 2); return [(1 - r * r) / d, -2 * z * r / d]; };
+  const L = M.lobes(comp, 10, 5000, 2, 1000, 30000);
+  const want = -1 / (4 * k * z * (1 + z));
+  check(near(L.minRe, want, 1e-6) && near(L.fMin, fn * Math.sqrt(1 + 2 * z), 1e-3),
+    `one mass on a spring: lowest Re G ${L.minRe.toExponential(5)} at ${L.fMin.toFixed(2)} Hz, ` +
+    `textbook ${want.toExponential(5)} at ${(fn * Math.sqrt(1 + 2 * z)).toFixed(2)} Hz`);
+  let worst = 0;
+  for (const f of [510, 530, 600, 800]) for (const kk of [0, 1, 5]) worst = Math.max(worst, residual(comp(f), f, 2, kk));
+  check(worst < 1e-12, `one mass on a spring: lobe points solve the chatter equation, worst residual ${worst.toExponential(2)}`);
+}
+
+// Chatter 16 and 17 for each drive.
+for (const id of M.CASES) {
+  const p = { ...M.DEFAULTS };
+  const t = M.tune(p, id);
+  const c = M.chatter(p, t, 1000, 30000);
+  let worst = 0;
+  for (const f of M.logspace(t.fb / 2, p.fs / 2 * 0.9, 40)) {
+    const g = M.sineComplianceAt(f, p, t);
+    if (g[0] < 0) for (const kk of [0, 1, 7]) worst = Math.max(worst, residual(g, f, p.teeth, kk));
+  }
+  check(worst < 1e-9, `${id}: lobe points solve the chatter equation, worst residual ${worst.toExponential(2)}`);
+  let best = 0;
+  for (const f of M.logspace(t.fb / 200, p.fs / 2 * 0.98, 100000)) best = Math.min(best, M.sineComplianceAt(f, p, t)[0]);
+  const lowest = Math.min(...c.depth.filter(Number.isFinite));
+  check(c.minRe <= best * (1 - 1e-9) && near(c.minRe, best, 1e-4) && lowest >= c.floor * (1 - 1e-9) && near(lowest, c.floor, 0.01),
+    `${id}: floor −1/min Re G ${(c.floor / 1e6).toFixed(3)} N/µm at ${c.fMin.toFixed(1)} Hz, dense scan ` +
+    `${(-1 / best / 1e6).toFixed(3)} N/µm, lowest lobe from 1000 to 30000 rev/min ${(lowest / 1e6).toFixed(3)} N/µm`);
 }
 
 if (failed) {
