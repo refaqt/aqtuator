@@ -48,6 +48,50 @@ package MotorDriveRequirements {
     }
 
     // ---------------------------------------------------------------------
+    // The encoder and the stage the drive must work with
+    // ---------------------------------------------------------------------
+
+    enum def EncoderSignal {
+        doc /* The kinds of encoder signal a drive may have to read. */
+        enum sinCos1Vpp;   // 1 Vpp sine and cosine, incremental (analog)
+        enum bissC;        // BiSS-C, absolute (digital, serial)
+    }
+
+    part def LinearEncoder {
+        doc /*
+         * The linear encoder of the stage. The encoder requirement (DRV-08)
+         * reads its values from here. If we change the encoder, we change
+         * this part, and the requirement follows.
+         */
+        attribute signal : EncoderSignal;
+        attribute signalPeriod : LengthValue;  // for sine and cosine: one signal period
+    }
+
+    part def LinearMotorStage {
+        doc /* One linear motor stage: its encoder and its top speed. */
+        part encoder : LinearEncoder;
+        attribute maxSpeed : SpeedValue;
+    }
+
+    part currentStage : LinearMotorStage {
+        doc /*
+         * The stage as it is today. Change the values here when the encoder
+         * or the top speed changes. Every requirement that depends on them
+         * then changes with them.
+         *
+         * Today: an optical encoder with 1 Vpp sine and cosine output and a
+         * 20 µm grating pitch, and a top speed of 10 000 mm/min.
+         * The highest encoder signal frequency is then
+         * 10 000 mm/min / 20 µm = 8.3 kHz.
+         */
+        part :>> encoder {
+            attribute :>> signal = EncoderSignal::sinCos1Vpp;
+            attribute :>> signalPeriod = 0.020 [mm];
+        }
+        attribute :>> maxSpeed = (10000 / 60) [mm/s];  // 10 000 mm/min
+    }
+
+    // ---------------------------------------------------------------------
     // What we know about a candidate drive
     // ---------------------------------------------------------------------
 
@@ -68,6 +112,7 @@ package MotorDriveRequirements {
         attribute hasEtherCAT : Boolean;
         attribute hasCiA402Profile : Boolean;
         attribute readsSinCos1Vpp : Boolean;
+        attribute maxSinCosFrequency : FrequencyValue;       // highest 1 Vpp input frequency
         attribute readsBissC : Boolean;
         attribute positionLoopRate : FrequencyValue;
         attribute freeBiquadFilterCount : Natural;
@@ -145,8 +190,11 @@ package MotorDriveRequirements {
              *
              * It finds the commutation angle (the position of the coil
              * against the magnets) at start-up from the encoder, without
-             * Hall sensors. Check with MAXWELL whether the MK21 we buy has
-             * Hall sensors. If it has, a drive that reads them also passes.
+             * Hall sensors.
+             *
+             * Not known yet: whether the MK21 has Hall sensors. Until we
+             * know, a drive must work without them. If MAXWELL confirms
+             * Hall sensors, a drive that reads them also passes.
              */
             subject drive : MotorDrive;
             require constraint {
@@ -159,9 +207,11 @@ package MotorDriveRequirements {
         requirement def <'DRV-06'> MotorThermalSensor {
             doc /*
              * The drive reads the thermal sensor in the MK21 coil and stops
-             * the motor when the sensor trips. The data sheet names the
-             * sensor "3 PNC SNM120 in series". Confirm the sensor type with
-             * MAXWELL before you check a drive against it.
+             * the motor when the sensor trips.
+             *
+             * Not known yet: the sensor type. The data sheet only names it
+             * "3 PNC SNM120 in series". Ask MAXWELL before you check a drive
+             * against the sensor input itself.
              *
              * A drive without such an input still passes if the sensor can
              * be wired to a digital input that stops the drive.
@@ -188,37 +238,45 @@ package MotorDriveRequirements {
 
         requirement def <'DRV-08'> EncoderInput {
             doc /*
-             * The drive reads the linear encoder directly, with no converter
-             * box in between. It reads at least one of these two signals:
+             * The drive reads the encoder of the stage directly, with no
+             * converter box in between. The requirement depends on the
+             * encoder, so it takes the stage as an input:
              *
-             * - 1 Vpp sine and cosine, incremental (analog signals of 1 V
-             *   peak to peak), or
-             * - BiSS-C, absolute (a digital serial encoder signal).
+             * - For a 1 Vpp sine and cosine encoder, the drive reads 1 Vpp,
+             *   and it accepts the highest signal frequency: the top speed
+             *   divided by the signal period. Today that is 8.3 kHz.
+             * - For a BiSS-C encoder, the drive reads BiSS-C. It must also
+             *   read the full data frame of that encoder. Check this by hand
+             *   against the encoder data sheet.
              *
-             * The drive must accept the highest signal frequency the stage
-             * makes: the top speed divided by the signal period of the
-             * encoder we choose. For BiSS-C, it must read the full data frame
-             * of that encoder.
+             * When the encoder changes, change currentStage, not this text.
              */
             subject drive : MotorDrive;
-            require constraint { drive.readsSinCos1Vpp or drive.readsBissC }
+            in part stage : LinearMotorStage;
+            require constraint {
+                (stage.encoder.signal == EncoderSignal::sinCos1Vpp implies
+                    (drive.readsSinCos1Vpp and
+                     drive.maxSinCosFrequency >= stage.maxSpeed / stage.encoder.signalPeriod))
+                and
+                (stage.encoder.signal == EncoderSignal::bissC implies drive.readsBissC)
+            }
         }
 
         // --- Control loop ------------------------------------------------------
 
         requirement def <'DRV-09'> PositionLoopRate {
             doc /*
-             * The position loop inside the drive runs at 8 kHz or faster.
-             * This means an update period of 125 µs or shorter.
+             * The position loop inside the drive runs at 4 kHz or faster.
+             * This means an update period of 250 µs or shorter. A drive
+             * below 4 kHz fails. Above 4 kHz, faster is better: see DRV-P3.
              *
              * Read this number in the maker's own manual. Do not use the
              * current loop rate, the velocity loop rate or the shortest
              * EtherCAT cycle instead. They are different numbers, and they
-             * are often faster. For example, a position loop of 128 µs
-             * (7.8 kHz) fails.
+             * are often faster.
              */
             subject drive : MotorDrive;
-            require constraint { drive.positionLoopRate >= 8000 [Hz] }
+            require constraint { drive.positionLoopRate >= 4000 [Hz] }
         }
     }
 
@@ -254,6 +312,18 @@ package MotorDriveRequirements {
             subject drive : MotorDrive;
             require constraint { drive.publishesLoopDiagram }
         }
+
+        requirement def <'DRV-P3'> FasterPositionLoop {
+            doc /*
+             * Above the 4 kHz of DRV-09, a faster position loop is better.
+             * It adds less delay, so the loop can have more gain before it
+             * becomes unstable. Rank the drives that pass by this rate.
+             * The constraint below marks a clearly faster drive: 8 kHz or
+             * more, which is 125 µs or shorter.
+             */
+            subject drive : MotorDrive;
+            require constraint { drive.positionLoopRate >= 8000 [Hz] }
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -267,6 +337,7 @@ package MotorDriveRequirements {
          * The preferred requirements rank the candidates that pass.
          */
         subject drive : MotorDrive;
+        in part stage : LinearMotorStage;
 
         requirement continuousCurrent : Mandatory::ContinuousCurrent;
         requirement peakCurrent : Mandatory::PeakCurrent;
@@ -275,7 +346,14 @@ package MotorDriveRequirements {
         requirement linearMotorCommutation : Mandatory::LinearMotorCommutation;
         requirement motorThermalSensor : Mandatory::MotorThermalSensor;
         requirement etherCAT : Mandatory::EtherCAT;
-        requirement encoderInput : Mandatory::EncoderInput;
+        requirement encoderInput : Mandatory::EncoderInput {
+            in part :>> stage = MotorDriveSpecification::stage;
+        }
         requirement positionLoopRate : Mandatory::PositionLoopRate;
+    }
+
+    requirement currentDriveSpecification : MotorDriveSpecification {
+        doc /* The drive requirements for the stage as it is today. */
+        in part :>> stage = currentStage;
     }
 }
