@@ -31,3 +31,4 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-09-22 | [Hide the tooling gitlinks from `git status`](2026-09-22_hide-the-tooling-gitlinks.md) |
 | 2026-09-28 | [Tune each drive case with the same rule](2026-09-28_tune-each-drive-case-with-the-same-rule.md) |
 | 2026-09-28 | [Robust tuning rules for the drive cases](2026-09-28_robust-tuning-rules-for-the-drive-cases.md) |
+| 2026-09-30 | [Try the Servotronix polynomial velocity controller](2026-09-30_try-the-servotronix-polynomial-velocity-controller.md) |

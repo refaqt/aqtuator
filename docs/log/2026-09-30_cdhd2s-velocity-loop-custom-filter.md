@@ -117,8 +117,9 @@ If a corner frequency is above about 1 kHz, prewarp the Tustin method at that fr
 
 ## Decisions Made
 
-No purchase decision. The CDHD2S-003 with EtherCAT stays the best Servotronix choice. It now also
-looks like the only drive found so far that may take a free controller in the velocity loop.
+We will try the Servotronix polynomial velocity controller (mode 3). We buy the CDHD2S-003 with
+EtherCAT if Servotronix confirms that it has mode 3, and the legacy CDHD2-003 if it does not. See
+[the decision record](../decisions/2026-09-30_try-the-servotronix-polynomial-velocity-controller.md).
 
 ## Open Questions
 
