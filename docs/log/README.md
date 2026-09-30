@@ -117,3 +117,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-29 | [HIWIN, Delta and Kollmorgen follow-up](2026-09-29_hiwin-delta-kollmorgen-follow-up.md) | engineering, hardware, purchasing |  |
 | 2026-09-29 | [Encoder converters and drives that read SSI or BiSS-C](2026-09-29_encoder-converter-and-ssi-biss-drives.md) | engineering, hardware, purchasing |  |
 | 2026-09-29 | [The motor drive requirements are now in the SysML model](2026-09-29_motor-drive-requirements-in-sysml.md) | engineering, hardware, purchasing |  |
+| 2026-09-30 | [Tonghang drives checked against the drive requirements](2026-09-30_tonghang-drives-checked-against-the-requirements.md) | engineering, purchasing |  |
+| 2026-09-30 | [Delta ASDA-A3 drives checked against the drive requirements](2026-09-30_delta-asda-a3-checked-against-the-requirements.md) | engineering, purchasing |  |
