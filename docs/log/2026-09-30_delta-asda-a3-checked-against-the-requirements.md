@@ -68,6 +68,9 @@ encoder would not help until Delta confirms the function works on new drives.
 No purchase decision. The ASD-A3-0421-E goes on the short list as "not confirmed", together with
 the ASD-IF-EN0A20 converter box.
 
+Later the same day the user made it the fallback drive, in case the Servotronix CDHD2 does not
+work. See [the decision record](../decisions/2026-09-30_delta-asda-a3-as-fallback-drive.md).
+
 ## Open Questions
 
 - **What is the position loop rate of the ASDA-A3?** Only Delta can answer this. It decides
