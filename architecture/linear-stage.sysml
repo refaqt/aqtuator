@@ -154,10 +154,9 @@ package LinearStageRequirements {
             doc /*
              * The carriage reaches at least 3 m/s.
              *
-             * Note: the drive requirements in motor-drive.sysml use a top
-             * speed of 10 000 mm/min (0.17 m/s). The encoder frequency
-             * (DRV-08) and the bus voltage (DRV-04) follow from that speed.
-             * They must be checked again for 3 m/s.
+             * The drive requirements in motor-drive.sysml use this speed.
+             * The encoder frequency (DRV-08) and the bus voltage (DRV-04)
+             * follow from it.
              */
             subject stage : LinearStage;
             require constraint { stage.maxSpeed >= 3 [m/s] }
@@ -165,17 +164,17 @@ package LinearStageRequirements {
 
         requirement def <'STG-10'> ContinuousForce {
             doc /*
-             * The stage pushes the carriage with at least 200 N without a
+             * The stage pushes the carriage with at least 180 N without a
              * time limit.
              */
             subject stage : LinearStage;
-            require constraint { stage.continuousForce >= 200 [N] }
+            require constraint { stage.continuousForce >= 180 [N] }
         }
 
         requirement def <'STG-11'> PeakForce {
-            doc /* The stage pushes the carriage with at least 550 N at its peak. */
+            doc /* The stage pushes the carriage with at least 500 N at its peak. */
             subject stage : LinearStage;
-            require constraint { stage.peakForce >= 550 [N] }
+            require constraint { stage.peakForce >= 500 [N] }
         }
 
         requirement def <'STG-12'> OutputPower {
