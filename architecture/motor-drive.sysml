@@ -80,15 +80,15 @@ package MotorDriveRequirements {
          * then changes with them.
          *
          * Today: an optical encoder with 1 Vpp sine and cosine output and a
-         * 20 µm grating pitch, and a top speed of 10 000 mm/min.
-         * The highest encoder signal frequency is then
-         * 10 000 mm/min / 20 µm = 8.3 kHz.
+         * 20 µm grating pitch, and a top speed of 3 m/s (STG-09 in
+         * linear-stage.sysml). The highest encoder signal frequency is then
+         * 3 m/s / 20 µm = 150 kHz.
          */
         part :>> encoder {
             attribute :>> signal = EncoderSignal::sinCos1Vpp;
             attribute :>> signalPeriod = 0.020 [mm];
         }
-        attribute :>> maxSpeed = (10000 / 60) [mm/s];  // 10 000 mm/min
+        attribute :>> maxSpeed = 3 [m/s];
     }
 
     // ---------------------------------------------------------------------
@@ -167,19 +167,24 @@ package MotorDriveRequirements {
         requirement def <'DRV-04'> BusVoltage {
             doc /*
              * The DC bus of the drive (the internal supply voltage) is at
-             * least 160 V and at most 600 V.
+             * least 320 V and at most 600 V.
              *
-             * The lower limit comes from a hand calculation in the drive
-             * survey of 2026-09-25. The MK21 needs about 158 V to give
-             * 512 N at 10 000 mm/min with a hot coil (120 °C). It assumes
-             * sine commutation and 90 % use of the bus voltage. The upper
-             * limit is the highest voltage the MK21 allows.
+             * The lower limit comes from a hand calculation, done in the
+             * same way as in the drive survey of 2026-09-25. The MK21 needs
+             * about 320 V to give 180 N (STG-10) at 3 m/s (STG-09) with a
+             * hot coil (120 °C). It assumes sine commutation and 90 % use of
+             * the bus voltage. The full peak force of 500 N (STG-11) is only
+             * needed at lower speed, while the stage speeds up. 500 N at
+             * 3 m/s would need about 490 V. The upper limit is the highest
+             * voltage the MK21 allows.
              *
              * A drive fed from 230 VAC single phase has about 325 V, so it
-             * meets this. A drive of 48 V or 80 V does not.
+             * just meets this, with no margin when the mains voltage is low.
+             * It then gives 500 N up to about 1.7 m/s. A drive of 48 V or
+             * 80 V does not meet this.
              */
             subject drive : MotorDrive;
-            require constraint { drive.busVoltage >= 160 and drive.busVoltage <= 600 }
+            require constraint { drive.busVoltage >= 320 and drive.busVoltage <= 600 }
         }
 
         requirement def <'DRV-05'> LinearMotorCommutation {
@@ -244,7 +249,7 @@ package MotorDriveRequirements {
              *
              * - For a 1 Vpp sine and cosine encoder, the drive reads 1 Vpp,
              *   and it accepts the highest signal frequency: the top speed
-             *   divided by the signal period. Today that is 8.3 kHz.
+             *   divided by the signal period. Today that is 150 kHz.
              * - For a BiSS-C encoder, the drive reads BiSS-C. It must also
              *   read the full data frame of that encoder. Check this by hand
              *   against the encoder data sheet.
