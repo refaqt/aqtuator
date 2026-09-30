@@ -117,8 +117,8 @@ If a corner frequency is above about 1 kHz, prewarp the Tustin method at that fr
 
 ## Decisions Made
 
-We will try the Servotronix polynomial velocity controller (mode 3). We buy the CDHD2S-003 with
-EtherCAT if Servotronix confirms that it has mode 3, and the legacy CDHD2-003 if it does not. See
+We will try the Servotronix polynomial velocity controller (mode 3). We buy the CDHD2S-0032AEC2
+(EtherCAT version), once Servotronix confirms that it has mode 3. See
 [the decision record](../decisions/2026-09-30_try-the-servotronix-polynomial-velocity-controller.md).
 
 ## Open Questions
