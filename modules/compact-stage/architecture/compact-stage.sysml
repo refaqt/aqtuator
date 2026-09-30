@@ -1,30 +1,157 @@
-// Requirements for the linear motor stage.
+// The compact stage: its requirements, its parts, and the interfaces between
+// its parts.
 //
-// These requirements hold for the whole stage: its size, its accuracy, its
-// speed, its force and its load. Each requirement has a short name, for
-// example STG-05, that a design review or a measurement campaign can cite.
-//
-// The servo drive has its own requirements in motor-drive.sysml.
+// Requirements: STG-01 to STG-14 hold for the whole stage: its size, its
+// accuracy, its speed, its force and its load. A design review or a
+// measurement campaign can cite each one by its short name. The servo drive
+// has its own requirements in motor-drive.sysml.
 //
 // Rule for a pass or a fail: a bought part (a guide, a motor, an encoder)
 // passes only on the deciding number in the maker's own data sheet or
 // manual. A trade article, a shop page or a search result is not enough.
 // See docs/mistakes/2026-09-29_loop-rate-from-a-trade-article.md.
 //
-// Every error value below is a half band: "5 µm" means "within +/- 5 µm".
-package LinearStageRequirements {
+// Every error value is a half band: "5 µm" means "within +/- 5 µm".
+//
+// Structure:
+//
+// The compact stage is one assembly of five parts that we make:
+//
+//   compact-stage
+//     base             the fixed body; it mounts on the machine
+//     carriage-bottom  the moving part inside the base
+//     carriage-top     the moving part above the base; the load mounts on it
+//     sealing-strip    a strip that closes the slot in the top of the base
+//     sealing-clamp    holds one end of the strip on the base (two of them)
+//
+// The CAD of each part is in cad/parts/<part>/. The assembly is in
+// cad/assemblies/compact-stage/.
+//
+// Rule: every pair of parts that touch has an interface. The interface is a
+// port def below, a port on each part (the plain port on one side, the
+// conjugate ~ port on the other), and a connection in CompactStage. The
+// version is part of the name: a change that no longer fits the old part is
+// a new version (_v2), not an edit of _v1.
+//
+// Not modelled yet: the bought parts. The guide rails and blocks, the motor
+// (magnet track and coil), the encoder, the rollers and the screws come from
+// the parts library in modules/stoq/. When they enter this file, they bring their own
+// interfaces: for example base to rail, block to carriage-bottom, magnet
+// track to base, coil to carriage-bottom, and roller to sealing strip.
+//
+// The interfaces below say what joins what. They hold no dimensions yet.
+// Add a dimension when the CAD fixes it, and keep it the same in both.
+package CompactStage {
     private import ScalarValues::*;
     private import ISQ::*;
     private import SI::*;
 
     // ---------------------------------------------------------------------
-    // What we know about one stage design
+    // Interfaces to the outside. These are the interfaces of the whole
+    // module, and okh.toml lists them too, under [[provides-interface]].
     // ---------------------------------------------------------------------
 
-    part def LinearStage {
+    port def BaseMountInterface_v1 {
         doc /*
-         * One stage design, or one built stage. Fill in one of these per
-         * design, from the CAD model, the data sheets and the measurements.
+         * The bottom face of the base, where the stage screws onto the
+         * machine. The screw holes follow the grid of STG-14.
+         */
+        attribute holePitch : LengthValue;
+    }
+
+    port def CarriageMountInterface_v1 {
+        doc /*
+         * The top face of carriage-top, where the load screws onto the
+         * stage. The screw holes follow the grid of STG-14.
+         */
+        attribute holePitch : LengthValue;
+    }
+
+    // ---------------------------------------------------------------------
+    // Interfaces between the parts of the stage
+    // ---------------------------------------------------------------------
+
+    port def CarriageJointInterface_v1 {
+        doc /*
+         * carriage-bottom and carriage-top screw together, and move as one
+         * body. carriage-bottom is screwed onto the guide blocks. It has no
+         * connection with the base.
+         *
+         * The sealing strip runs through the carriage, over carriage-bottom
+         * and under carriage-top. The strip never touches either carriage
+         * half, so the strip has no interface with them. Only the rollers
+         * in the carriage touch the strip. They are bought parts and come
+         * later.
+         */
+    }
+
+    port def SlotSealInterface_v1 {
+        doc /*
+         * The sealing strip lies on the top of the base and closes the slot
+         * along the whole travel.
+         */
+    }
+
+    port def StripClampInterface_v1 {
+        doc /* A sealing clamp holds one end of the sealing strip. */
+    }
+
+    port def ClampMountInterface_v1 {
+        doc /* A sealing clamp screws onto one end of the base. */
+    }
+
+    // ---------------------------------------------------------------------
+    // Parts. Each port says which side of an interface a part is on.
+    // ---------------------------------------------------------------------
+
+    part def Base {
+        doc /* The fixed body of the stage. CAD: cad/parts/base/. */
+        port machineMount : BaseMountInterface_v1;
+        port slotSeal : SlotSealInterface_v1;
+        port clampMountStart : ClampMountInterface_v1;
+        port clampMountEnd : ClampMountInterface_v1;
+    }
+
+    part def CarriageBottom {
+        doc /* The moving part inside the base. CAD: cad/parts/carriage-bottom/. */
+        port carriageJoint : CarriageJointInterface_v1;
+    }
+
+    part def CarriageTop {
+        doc /*
+         * The moving part above the base. The load mounts on it.
+         * CAD: cad/parts/carriage-top/.
+         */
+        port loadMount : CarriageMountInterface_v1;
+        port carriageJoint : ~CarriageJointInterface_v1;
+    }
+
+    part def SealingStrip {
+        doc /* Closes the slot in the top of the base. CAD: cad/parts/sealing-strip/. */
+        port slotSeal : ~SlotSealInterface_v1;
+        port clampStart : ~StripClampInterface_v1;
+        port clampEnd : ~StripClampInterface_v1;
+    }
+
+    part def SealingClamp {
+        doc /*
+         * Holds one end of the sealing strip on the base. The stage has two,
+         * one at each end. CAD: cad/parts/sealing-clamp/.
+         */
+        port strip : StripClampInterface_v1;
+        port baseMount : ~ClampMountInterface_v1;
+    }
+
+    // ---------------------------------------------------------------------
+    // The assembly
+    // ---------------------------------------------------------------------
+
+    part def CompactStage {
+        doc /*
+         * The whole compact stage: one design, or one built stage. Fill in
+         * the attributes from the CAD model, the data sheets and the
+         * measurements. CompactStageSpecification checks them.
+         * CAD: cad/assemblies/compact-stage/.
          */
 
         // Size
@@ -52,6 +179,29 @@ package LinearStageRequirements {
         // Load and interfaces
         attribute lateralLoadCapacity : ForceValue;  // at the centre, in either direction
         attribute interfaceHolePitch : LengthValue;  // pitch of the screw holes at each interface
+
+        part base : Base;
+        part carriageBottom : CarriageBottom;
+        part carriageTop : CarriageTop;
+        part sealingStrip : SealingStrip;
+        part sealingClampStart : SealingClamp;
+        part sealingClampEnd : SealingClamp;
+
+        // Interfaces of the whole stage
+        port machineMount : BaseMountInterface_v1;
+        port loadMount : CarriageMountInterface_v1;
+        bind machineMount = base.machineMount;
+        bind loadMount = carriageTop.loadMount;
+
+        // The carriage
+        connect carriageBottom.carriageJoint to carriageTop.carriageJoint;
+
+        // The seal
+        connect base.slotSeal to sealingStrip.slotSeal;
+        connect sealingClampStart.strip to sealingStrip.clampStart;
+        connect sealingClampEnd.strip to sealingStrip.clampEnd;
+        connect sealingClampStart.baseMount to base.clampMountStart;
+        connect sealingClampEnd.baseMount to base.clampMountEnd;
     }
 
     // ---------------------------------------------------------------------
@@ -64,13 +214,13 @@ package LinearStageRequirements {
 
         requirement def <'STG-01'> Width {
             doc /* The stage is at most 210 mm wide. */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.width <= 210 [mm] }
         }
 
         requirement def <'STG-02'> Height {
             doc /* The stage is at most 60 mm high. */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.height <= 60 [mm] }
         }
 
@@ -82,7 +232,7 @@ package LinearStageRequirements {
              * Example: a stage with 200 mm travel and 60 mm height may be
              * at most 200 + 340 - 120 = 420 mm long.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint {
                 stage.length <= stage.travel + 340 [mm] - 2 * stage.height
             }
@@ -97,7 +247,7 @@ package LinearStageRequirements {
              * the random part together, without any calibration or error
              * table in the controller.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.positioningError <= 5 [µm] }
         }
 
@@ -109,7 +259,7 @@ package LinearStageRequirements {
              * travel. The positioning error along the motion is not part of
              * this requirement: see STG-04.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint {
                 stage.straightnessError <= 2 [µm] and stage.flatnessError <= 2 [µm]
             }
@@ -121,7 +271,7 @@ package LinearStageRequirements {
              * full travel, about each of the three axes: roll (about the
              * direction of motion), pitch and yaw.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint {
                 stage.rollError <= 20.0E-6
                 and stage.pitchError <= 20.0E-6
@@ -134,7 +284,7 @@ package LinearStageRequirements {
              * The carriage returns to the same position within +/- 0.1 µm
              * when it always comes from the same direction.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.unidirectionalRepeatability <= 0.1 [µm] }
         }
 
@@ -144,7 +294,7 @@ package LinearStageRequirements {
              * when it comes from either direction. This includes the
              * backlash and the hysteresis of the stage.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.bidirectionalRepeatability <= 0.3 [µm] }
         }
 
@@ -158,7 +308,7 @@ package LinearStageRequirements {
              * The encoder frequency (DRV-08) and the bus voltage (DRV-04)
              * follow from it.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.maxSpeed >= 3 [m/s] }
         }
 
@@ -167,13 +317,13 @@ package LinearStageRequirements {
              * The stage pushes the carriage with at least 180 N without a
              * time limit.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.continuousForce >= 180 [N] }
         }
 
         requirement def <'STG-11'> PeakForce {
             doc /* The stage pushes the carriage with at least 500 N at its peak. */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.peakForce >= 500 [N] }
         }
 
@@ -182,7 +332,7 @@ package LinearStageRequirements {
              * The stage gives at least 100 W of mechanical output power:
              * driving force times speed.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.maxOutputPower >= 100 [W] }
         }
 
@@ -193,7 +343,7 @@ package LinearStageRequirements {
              * The carriage carries a sideways load of at least 500 N at the
              * centre of the carriage, in either direction across the motion.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint { stage.lateralLoadCapacity >= 500 [N] }
         }
 
@@ -203,7 +353,7 @@ package LinearStageRequirements {
              * 20 mm, 40 mm or 80 mm. The hole pitch is a whole multiple of
              * 20 mm, so the stage mounts on the same grid as other parts.
              */
-            subject stage : LinearStage;
+            subject stage : CompactStage;
             require constraint {
                 stage.interfaceHolePitch == 20 [mm]
                 or stage.interfaceHolePitch == 40 [mm]
@@ -216,12 +366,12 @@ package LinearStageRequirements {
     // The full set, for one stage
     // ---------------------------------------------------------------------
 
-    requirement def LinearStageSpecification {
+    requirement def CompactStageSpecification {
         doc /*
-         * All requirements for one linear motor stage. A design passes
+         * All requirements for one compact stage. A design passes
          * when it meets every mandatory requirement.
          */
-        subject stage : LinearStage;
+        subject stage : CompactStage;
 
         requirement width : Mandatory::Width;
         requirement height : Mandatory::Height;

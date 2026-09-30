@@ -17,7 +17,7 @@ of these problems does not stop the project.
 
 The [Delta ASDA-A3 check](../log/2026-09-30_delta-asda-a3-checked-against-the-requirements.md)
 found one Delta drive that comes close to the requirements in
-[`architecture/motor-drive.sysml`](../../architecture/motor-drive.sysml): the ASD-A3-0421-E. It
+[`modules/compact-stage/architecture/motor-drive.sysml`](../../modules/compact-stage/architecture/motor-drive.sysml): the ASD-A3-0421-E. It
 runs a linear motor from another maker, finds the commutation angle without Hall sensors, reads
 a PTC or NTC motor sensor, and has EtherCAT with CiA 402. Delta is a large maker with a wide
 dealer network, so the drive should be easy to buy.

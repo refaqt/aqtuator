@@ -45,7 +45,7 @@ at lower speed. A 400 VAC drive would give 500 N at 3 m/s. But its bus can go ab
 limit of the MK21 when the mains voltage is high or when the motor brakes.
 
 
-The requirements are in [`architecture/linear-stage.sysml`](../../architecture/linear-stage.sysml).
+The requirements are in [`modules/compact-stage/architecture/compact-stage.sysml`](../../modules/compact-stage/architecture/compact-stage.sysml).
 Every error value is a half band: "5 µm" means "within +/- 5 µm".
 
 | Short name | Requirement |

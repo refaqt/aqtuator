@@ -7,7 +7,7 @@
 
 We want to run our own controller in the velocity loop of the drive:
 K · (s + a) · (s + b) / ( s · (s² + c·s + d) ). The drive must also meet the drive requirements in
-[`architecture/motor-drive.sysml`](../../architecture/motor-drive.sysml): EtherCAT, BiSS-C,
+[`modules/compact-stage/architecture/motor-drive.sysml`](../../modules/compact-stage/architecture/motor-drive.sysml): EtherCAT, BiSS-C,
 1 Vpp, and the MAXWELL MK21 linear motor.
 
 The [CDHD2S check](../log/2026-09-30_cdhd2s-velocity-loop-custom-filter.md) found that the

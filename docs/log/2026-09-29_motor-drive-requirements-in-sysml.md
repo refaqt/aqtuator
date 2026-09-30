@@ -26,7 +26,7 @@ Later the same day the user changed three things:
 
 The table below shows the requirements after this update.
 
-The requirements are in [`architecture/motor-drive.sysml`](../../architecture/motor-drive.sysml).
+The requirements are in [`modules/compact-stage/architecture/motor-drive.sysml`](../../modules/compact-stage/architecture/motor-drive.sysml).
 They say what the job needs, not which brand fills it.
 
 | Short name | Requirement | Kind |
