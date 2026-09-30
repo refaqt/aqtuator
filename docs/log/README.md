@@ -117,3 +117,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-29 | [HIWIN, Delta and Kollmorgen follow-up](2026-09-29_hiwin-delta-kollmorgen-follow-up.md) | engineering, hardware, purchasing |  |
 | 2026-09-29 | [Encoder converters and drives that read SSI or BiSS-C](2026-09-29_encoder-converter-and-ssi-biss-drives.md) | engineering, hardware, purchasing |  |
 | 2026-09-29 | [The motor drive requirements are now in the SysML model](2026-09-29_motor-drive-requirements-in-sysml.md) | engineering, hardware, purchasing |  |
+| 2026-09-30 | [Can the CDHD2S velocity loop run our own controller?](2026-09-30_cdhd2s-velocity-loop-custom-filter.md) | engineering, hardware, purchasing |  |
