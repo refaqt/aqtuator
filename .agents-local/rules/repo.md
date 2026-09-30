@@ -7,7 +7,7 @@ Agent-only. Humans: see `README.md` and `docs/onboarding.md`.
 AQTUATOR is a product line of linear stages. Each stage family is a module under `modules/`:
 `flexure-ball-screw-servo-stage` (active chatter suppression, the family that started the project)
 and `compact-stage` (compact
-stage, name reserved only). A Mekanika Pro milling machine is the test bench. Layout follows
+stage driven by a linear motor). A Mekanika Pro milling machine is the test bench. Layout follows
 [doqs](https://github.com/refaqt/doqs) — read `doqs/docs/architecture.md` before adding folders. If
 `doqs/` is empty: `bash setup-tooling.sh` from the repo root (agents, any OS). Humans on Windows may
 double-click `setup-tooling.bat`.
@@ -67,6 +67,23 @@ double-click `setup-tooling.bat`.
   green run can still carry a deprecation warning.
 - `ubuntu-latest` moves to Ubuntu 26 from 2026-10-19. Our jobs only need Python and Node, so
   keep `ubuntu-latest`. If a job breaks after that date, check the runner image change first.
+
+## Interfaces between parts
+
+Every time you add a part, or connect two parts, add the interface between them in the same
+change. Do not wait to be asked.
+
+- In the module's `architecture/<module>.sysml`: a `port def` with the version in its name
+  (`..._v1`), a port on each part (plain on one side, conjugate `~` on the other), and a
+  `connect` in the assembly's `part def`.
+- An interface on the outside of the module also goes in its `okh.toml`, as
+  `[[provides-interface]]` or `[[consumes-interface]]`.
+- A bought part from `modules/stoq/` has interfaces too. When it enters the architecture, add
+  them.
+- Do not invent dimensions. Leave an interface without numbers until the CAD or a data sheet
+  fixes them.
+
+Example: [`modules/compact-stage/architecture/compact-stage.sysml`](../../modules/compact-stage/architecture/compact-stage.sysml).
 
 ## Measurement data
 

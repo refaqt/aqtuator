@@ -5,7 +5,7 @@
 ## Goal
 
 Check whether Zhejiang Tonghang E-Drive Technology (web site tonghangedrive.com) sells a servo drive
-that meets the requirements in [`architecture/motor-drive.sysml`](../../architecture/motor-drive.sysml).
+that meets the requirements in [`modules/compact-stage/architecture/motor-drive.sysml`](../../modules/compact-stage/architecture/motor-drive.sysml).
 If not, say by how much each drive misses.
 
 ## Work Done

@@ -18,8 +18,11 @@ designed against real numbers rather than assumptions. The campaigns that measur
 that excited it and the host software that identified it all sit inside that family, because they
 move with it if it ever becomes its own repository.
 
-The second family is [`modules/compact-stage/`](../modules/compact-stage/). Only the module is
-reserved so far.
+The second family is [`modules/compact-stage/`](../modules/compact-stage/): a compact stage
+driven by an iron core linear motor. It holds the stage requirements, the servo drive
+requirements, and five parts we make (base, carriage bottom, carriage top, sealing strip and
+sealing clamp) with an interface between every pair of parts that touch. The parts exist in CAD
+but have no geometry yet.
 
 Folder names say what a stage is, not what it is called on a price list. A commercial name belongs
 in a family's `catalog.toml` when there is one.
@@ -36,10 +39,10 @@ The 200 N reluctance figure is pole-face Maxwell stress, not packaged continuous
 | Folder | What |
 | --- | --- |
 | [`modules/flexure-ball-screw-servo-stage/`](../modules/flexure-ball-screw-servo-stage/) | The chatter-suppression stage family: its measurement campaigns, firmware and host software |
-| [`modules/compact-stage/`](../modules/compact-stage/) | The compact stage family. Name reserved, nothing designed yet |
+| [`modules/compact-stage/`](../modules/compact-stage/) | The compact stage family: requirements, parts, interfaces and the assembly |
 | [`modules/stoq/`](../modules/stoq/) | Submodule: the shared parts library. Bought parts are read from here, never copied into this repository |
-| [`cad/`](../cad/) | FreeCAD models of the machine and the actuator |
-| [`architecture/`](../architecture/) | SysML requirements and block definitions |
+| [`cad/`](../cad/) | Shared FreeCAD notes. The models live in each module's `cad/` |
+| [`architecture/`](../architecture/) | SysML shared by more than one family. Each family keeps its own in its module |
 | [`simulation/`](../simulation/) | Design-time models: structural dynamics, PWM/RC trade-off |
 | [`docs/log/`](log/) | Chronological record of the work (activity log) |
 | [`docs/decisions/`](decisions/) | Why things are the way they are |

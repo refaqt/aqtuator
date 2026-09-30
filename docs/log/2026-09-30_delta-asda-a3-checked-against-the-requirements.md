@@ -5,7 +5,7 @@
 ## Goal
 
 Check whether any Delta ASDA-A3 servo drive meets the requirements in
-[`architecture/motor-drive.sysml`](../../architecture/motor-drive.sysml). The user supplied the
+[`modules/compact-stage/architecture/motor-drive.sysml`](../../modules/compact-stage/architecture/motor-drive.sysml). The user supplied the
 ASDA-A3 catalog (edition 2025-02-24) and the full user manual (edition 2025-02-27). If no drive
 passes, say which requirements it misses.
 

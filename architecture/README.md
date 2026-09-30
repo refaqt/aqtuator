@@ -1,13 +1,15 @@
 # Architecture (SysML)
 
-SysML requirements, block definitions and interfaces.
+SysML requirements, block definitions and interfaces for the repository as a whole.
 
-The requirements that measurement campaigns verify should be declared here, so that each
-`modules/<family>/measurement/results/<case>/summary.md` can cite them by name rather than restating the constraint.
+Each stage family keeps its own architecture in its module. This folder is empty until there is
+something that holds for more than one family.
 
-| File | What it holds |
+| Family | Architecture |
 | --- | --- |
-| [`motor-drive.sysml`](motor-drive.sysml) | Requirements for the servo drive of the MAXWELL MK21 linear motor stages. Each requirement has a short name (`DRV-01` to `DRV-09`, and `DRV-P1` to `DRV-P3` for preferences) that a drive search can cite. The encoder requirement follows the stage encoder, which is set in one place, `currentStage`. |
-| [`linear-stage.sysml`](linear-stage.sysml) | Requirements for the linear motor stage as a whole: size, accuracy, speed, force, load and the screw hole grid. Each requirement has a short name (`STG-01` to `STG-14`) that a design review or a measurement can cite. |
+| Compact stage | [`modules/compact-stage/architecture/`](../modules/compact-stage/architecture/): the stage requirements (`STG-01` to `STG-14`) with the parts and their interfaces in `compact-stage.sysml`, and the servo drive requirements (`DRV-01` to `DRV-09`, `DRV-P1` to `DRV-P3`) in `motor-drive.sysml`. |
+
+The requirements that measurement campaigns verify should be declared in SysML, so that each
+`modules/<family>/measurement/results/<case>/summary.md` can cite them by name rather than restating the constraint.
 
 See [`doqs/docs/architecture.md`](../doqs/docs/architecture.md).

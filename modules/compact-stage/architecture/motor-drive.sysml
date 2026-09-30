@@ -81,7 +81,7 @@ package MotorDriveRequirements {
          *
          * Today: an optical encoder with 1 Vpp sine and cosine output and a
          * 20 µm grating pitch, and a top speed of 3 m/s (STG-09 in
-         * linear-stage.sysml). The highest encoder signal frequency is then
+         * compact-stage.sysml). The highest encoder signal frequency is then
          * 3 m/s / 20 µm = 150 kHz.
          */
         part :>> encoder {

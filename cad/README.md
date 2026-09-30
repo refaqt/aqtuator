@@ -1,8 +1,10 @@
 # CAD
 
-FreeCAD models of the machine and the actuator. The X axis is the first design here: a base plate,
-a linear scale mount, and two linear guides carrying a linear motor. First-order concept sizing is
-in
+Shared FreeCAD material for the whole repository. It holds no models now.
+
+The geometry of a stage belongs to its module. The compact stage is in
+[`modules/compact-stage/cad/`](../modules/compact-stage/cad/). The first X axis design that lived
+here was removed on 2026-09-30. It is still in the git history. First-order concept sizing is in
 [`simulation/cases/short-stroke-actuator-concepts`](../simulation/cases/short-stroke-actuator-concepts/).
 
 **FreeCAD v1.1**, built-in Assembly workbench. To let an agent work in your open FreeCAD window,
@@ -32,11 +34,7 @@ free tier.
 supplier live in the shared parts library at [`modules/stoq/`](../modules/stoq/), and the
 assemblies link them from there by relative path.
 
-| Bought part | Where the model lives |
-| --- | --- |
-| HIWIN HGR15R418H rail | `modules/stoq/modules/hiwin/modules/hgr-rail/cad/parts/` |
-| HIWIN HGL15CAZBC+E2 block | `modules/stoq/modules/hiwin/modules/hgl-block/cad/parts/` |
-| MAXWELL MK2-180 magnet track | `modules/stoq/modules/maxwell/modules/mk2-stator/cad/parts/` |
+The library in [`modules/stoq/`](../modules/stoq/) lists every bought part it holds.
 
 Two rules follow from that. Never copy a supplier file into `cad/`: add it to the library instead,
 where its part number, mass, specification and download address are recorded with it. And keep
@@ -49,7 +47,8 @@ If you clone this repository, fetch the library with it:
 git submodule update --init --recursive
 ```
 
-Without that step, `modules/stoq/` is empty and both assemblies open with broken links.
+Without that step, `modules/stoq/` is empty and every assembly that uses a bought part opens with
+broken links.
 
 ## Starting the first model
 

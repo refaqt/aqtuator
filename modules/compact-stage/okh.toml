@@ -6,4 +6,38 @@ version = "0.1.0"
 # Firmware/software is GPL-3.0; docs/media is CC BY-SA 4.0. See the root README.md / LICENSE.
 license = "CERN-OHL-S-2.0"
 licensor = "Niels Bosmans"
-function = "Compact linear stage. Requirements and architecture are not written yet, so this manifest only reserves the module."
+function = "Compact linear stage driven by an iron core linear motor. A carriage in two halves moves along a closed base, and a sealing strip closes the slot between them. The requirements and the part structure are in architecture/. The parts exist in CAD, but have no geometry yet."
+source = ["cad/assemblies/compact-stage/compact-stage.FCStd"]
+
+# Interfaces of the whole stage. They mirror the port defs in
+# architecture/compact-stage.sysml.
+[[provides-interface]]
+name        = "BaseMountInterface"
+version     = "1.0"
+description = "Bottom face of the base, where the stage screws onto the machine. Screw holes on the STG-14 grid."
+
+[[provides-interface]]
+name        = "CarriageMountInterface"
+version     = "1.0"
+description = "Top face of carriage-top, where the load screws onto the stage. Screw holes on the STG-14 grid."
+
+# Parts we make. Bought parts come from the parts library in modules/stoq/.
+[[part]]
+name = "Base"
+source = ["cad/parts/base/base.FCStd"]
+
+[[part]]
+name = "Carriage Bottom"
+source = ["cad/parts/carriage-bottom/carriage-bottom.FCStd"]
+
+[[part]]
+name = "Carriage Top"
+source = ["cad/parts/carriage-top/carriage-top.FCStd"]
+
+[[part]]
+name = "Sealing Strip"
+source = ["cad/parts/sealing-strip/sealing-strip.FCStd"]
+
+[[part]]
+name = "Sealing Clamp"
+source = ["cad/parts/sealing-clamp/sealing-clamp.FCStd"]
