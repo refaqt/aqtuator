@@ -122,3 +122,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-30 | [Delta ASDA-A3 drives checked against the drive requirements](2026-09-30_delta-asda-a3-checked-against-the-requirements.md) | engineering, purchasing |  |
 | 2026-09-30 | [The linear stage requirements are now in the SysML model](2026-09-30_linear-stage-requirements-in-sysml.md) | engineering, hardware |  |
 | 2026-09-30 | [The compact stage has its parts, its assembly and its interfaces](2026-09-30_compact-stage-parts-and-interfaces.md) | engineering, cad |  |
+| 2026-10-01 | [The compact stage parts now sit in a Part container](2026-10-01_compact-stage-parts-in-a-part-container.md) | cad |  |

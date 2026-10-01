@@ -1,11 +1,11 @@
 {
-  "document": "SealingStrip",
+  "document": "sealing_strip",
   "errors": [],
   "objects": {},
   "params": {},
   "saved": true,
   "schema": 1,
   "sources": {
-    "sealing-strip.FCStd": "33a494cc39f9a14205ffc7c3c37f2581bee09134b1279de770b7da17a9e405d7"
+    "sealing-strip.FCStd": "5936b1aecf50820946552c71dda1093f0407971880d50cab84cf2573aa9c51d9"
   }
 }
