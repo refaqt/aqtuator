@@ -59,7 +59,7 @@
       "volume": 0.0
     },
     "Body": {
-      "area": 262711.0,
+      "area": 266172.0,
       "bbox": [
         0.0,
         0.0,
@@ -70,24 +70,24 @@
       ],
       "closed": true,
       "com": [
-        209.977,
-        104.81,
-        14.2639
+        209.974,
+        105.007,
+        13.6172
       ],
       "counts": {
-        "edges": 78,
-        "faces": 29,
+        "edges": 102,
+        "faces": 37,
         "shells": 1,
         "solids": 1,
-        "verts": 52
+        "verts": 68
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 1790390.0
+      "volume": 1572080.0
     },
     "Part": {
-      "area": 262711.0,
+      "area": 266172.0,
       "bbox": [
         0.0,
         0.0,
@@ -98,24 +98,24 @@
       ],
       "closed": true,
       "com": [
-        209.977,
-        104.81,
-        14.2639
+        209.974,
+        105.007,
+        13.6172
       ],
       "counts": {
-        "edges": 78,
-        "faces": 29,
+        "edges": 102,
+        "faces": 37,
         "shells": 1,
         "solids": 1,
-        "verts": 52
+        "verts": 68
       },
       "label": "base001",
       "type": "App::Part",
       "valid": true,
-      "volume": 1790390.0
+      "volume": 1572080.0
     },
     "Pocket": {
-      "area": 257456.0,
+      "area": 257996.0,
       "bbox": [
         0.0,
         0.0,
@@ -128,7 +128,7 @@
       "com": [
         210.0,
         105.0,
-        14.1623
+        13.4012
       ],
       "counts": {
         "edges": 36,
@@ -140,10 +140,10 @@
       "label": "Pocket",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 1858690.0
+      "volume": 1750690.0
     },
     "Pocket001": {
-      "area": 262711.0,
+      "area": 263251.0,
       "bbox": [
         0.0,
         0.0,
@@ -154,9 +154,9 @@
       ],
       "closed": true,
       "com": [
-        209.977,
-        104.81,
-        14.2639
+        209.975,
+        104.777,
+        13.4784
       ],
       "counts": {
         "edges": 78,
@@ -168,16 +168,44 @@
       "label": "Pocket001",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 1790390.0
+      "volume": 1682390.0
+    },
+    "Pocket002": {
+      "area": 266172.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        420.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        209.974,
+        105.007,
+        13.6172
+      ],
+      "counts": {
+        "edges": 102,
+        "faces": 37,
+        "shells": 1,
+        "solids": 1,
+        "verts": 68
+      },
+      "label": "Pocket002",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 1572080.0
     },
     "Sketch": {
       "area": 0.0,
       "bbox": [
         4.0,
-        28.0,
+        23.0,
         40.0,
         416.0,
-        182.0,
+        187.0,
         40.0
       ],
       "closed": true,
@@ -202,16 +230,16 @@
       "area": 0.0,
       "bbox": [
         4.0,
-        28.0,
+        23.0,
         13.0,
         416.0,
-        182.0,
+        187.0,
         13.0
       ],
       "closed": true,
       "com": [
         209.284,
-        104.192,
+        104.246,
         13.0
       ],
       "counts": {
@@ -225,12 +253,40 @@
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
+    },
+    "Sketch002": {
+      "area": 0.0,
+      "bbox": [
+        10.0,
+        55.5,
+        13.0,
+        410.0,
+        147.5,
+        13.0
+      ],
+      "closed": true,
+      "com": [
+        210.0,
+        101.5,
+        13.0
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "Sketch002",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     }
   },
   "params": {},
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "9b7091d509e2f3df5bbf37d2475aaf8afe0909ce81513f12abff0ba26bf3b716"
+    "base.FCStd": "46f5e1cd562d08d01b14011370f6790bc6675f8b8ab78ecb57cda6eb4cac6867"
   }
 }
