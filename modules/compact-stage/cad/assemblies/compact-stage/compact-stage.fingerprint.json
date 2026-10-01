@@ -1,11 +1,11 @@
 {
-  "document": "CompactStage",
+  "document": "compact_stage",
   "errors": [],
   "objects": {},
   "params": {},
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "b4b05e4103a20a7e817c0e9026477d33e29469040eea29db0cb83627f709b12d"
+    "compact-stage.FCStd": "5077db094342bc26efbedce7bdfede59764f4f19d0d4e950ab7d513431563788"
   }
 }
