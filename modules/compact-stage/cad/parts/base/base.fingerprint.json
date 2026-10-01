@@ -1,11 +1,236 @@
 {
   "document": "base",
   "errors": [],
-  "objects": {},
+  "objects": {
+    "Block": {
+      "area": 226800.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        420.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        210.0,
+        105.0,
+        20.0
+      ],
+      "counts": {
+        "edges": 12,
+        "faces": 6,
+        "shells": 1,
+        "solids": 1,
+        "verts": 8
+      },
+      "label": "Block",
+      "type": "PartDesign::Pad",
+      "valid": true,
+      "volume": 3528000.0
+    },
+    "BlockSketch": {
+      "area": 0.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        420.0,
+        210.0,
+        0.0
+      ],
+      "closed": true,
+      "com": [
+        210.0,
+        105.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 4,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 4
+      },
+      "label": "BlockSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Body": {
+      "area": 262711.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        420.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        209.977,
+        104.81,
+        14.2639
+      ],
+      "counts": {
+        "edges": 78,
+        "faces": 29,
+        "shells": 1,
+        "solids": 1,
+        "verts": 52
+      },
+      "label": "Body",
+      "type": "PartDesign::Body",
+      "valid": true,
+      "volume": 1790390.0
+    },
+    "Part": {
+      "area": 262711.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        420.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        209.977,
+        104.81,
+        14.2639
+      ],
+      "counts": {
+        "edges": 78,
+        "faces": 29,
+        "shells": 1,
+        "solids": 1,
+        "verts": 52
+      },
+      "label": "base001",
+      "type": "App::Part",
+      "valid": true,
+      "volume": 1790390.0
+    },
+    "Pocket": {
+      "area": 257456.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        420.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        210.0,
+        105.0,
+        14.1623
+      ],
+      "counts": {
+        "edges": 36,
+        "faces": 15,
+        "shells": 1,
+        "solids": 1,
+        "verts": 24
+      },
+      "label": "Pocket",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 1858690.0
+    },
+    "Pocket001": {
+      "area": 262711.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        420.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        209.977,
+        104.81,
+        14.2639
+      ],
+      "counts": {
+        "edges": 78,
+        "faces": 29,
+        "shells": 1,
+        "solids": 1,
+        "verts": 52
+      },
+      "label": "Pocket001",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 1790390.0
+    },
+    "Sketch": {
+      "area": 0.0,
+      "bbox": [
+        4.0,
+        28.0,
+        40.0,
+        416.0,
+        182.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        210.0,
+        105.0,
+        40.0
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "Sketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch001": {
+      "area": 0.0,
+      "bbox": [
+        4.0,
+        28.0,
+        13.0,
+        416.0,
+        182.0,
+        13.0
+      ],
+      "closed": true,
+      "com": [
+        209.284,
+        104.192,
+        13.0
+      ],
+      "counts": {
+        "edges": 22,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 22
+      },
+      "label": "Sketch001",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    }
+  },
   "params": {},
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "a0a7ff47b3fe77f89fedfe6adcbdb6639624210418a8f5993b1a0fdf3907e91b"
+    "base.FCStd": "9b7091d509e2f3df5bbf37d2475aaf8afe0909ce81513f12abff0ba26bf3b716"
   }
 }
