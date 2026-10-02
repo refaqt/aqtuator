@@ -33,13 +33,14 @@
 // version is part of the name: a change that no longer fits the old part is
 // a new version (_v2), not an edit of _v1.
 //
-// Not modelled yet: the bought parts. The guide rails and blocks, the motor
-// (magnet track and coil), the encoder, the rollers and the screws come from
-// the parts library in modules/stoq/. When they enter this file, they bring their own
-// interfaces: for example base to rail, block to carriage-bottom, magnet
-// track to base, coil to carriage-bottom, and roller to sealing strip.
+// Bought parts come from the parts library in modules/stoq/. The two guide
+// rails are in this file, with their interface to the base. Not modelled
+// yet: the guide blocks, the motor (magnet track and coil), the encoder, the
+// rollers and the screws. When they enter this file, they bring their own
+// interfaces: for example block to carriage-bottom, magnet track to base,
+// coil to carriage-bottom, and roller to sealing strip.
 //
-// The interfaces below say what joins what. They hold no dimensions yet.
+// The interfaces below say what joins what. Most hold no dimensions yet.
 // Add a dimension when the CAD fixes it, and keep it the same in both.
 package CompactStage {
     private import ScalarValues::*;
@@ -100,6 +101,39 @@ package CompactStage {
         doc /* A sealing clamp screws onto one end of the base. */
     }
 
+    port def RailMountInterface_v1 {
+        doc /*
+         * A guide rail lies on the floor of the base. The floor is 3 mm
+         * below the tops of the tabs. M4 screws go through the rail from
+         * above into threaded holes in the base. The holes go through the
+         * 10 mm floor. Use M4 x 16 screws: they engage 6.3 mm of thread.
+         * The M4 x 20 screw that HIWIN lists would come out of the bottom
+         * face by 0.3 mm.
+         *
+         * The tabs stand out from the side walls of the base, and each rail
+         * lies against them with its outer side. Its inner side touches
+         * nothing. Each tab is 20 mm long and starts 19 mm in from the end
+         * of the rail, so it never touches the rail end. The rounded
+         * corners at the foot of each tab stay 4.5 mm away from the rail.
+         *
+         * The reference rail (y = 169 mm) lies against two tabs, one near
+         * each end. The tabs set its position and its direction.
+         *
+         * The second rail (y = 41 mm) lies against one tab, near one end.
+         * The tab sets its position at that end only. To set its
+         * direction, put the carriage on both rails and move it from end
+         * to end while you tighten the screws of the second rail, one after
+         * the other. HIWIN calls this "alignment on the reference rail".
+         *
+         * The y positions are rail centres, measured from the long side of
+         * the base. The first hole is 40 mm from the end of the base.
+         */
+        attribute holePitch : LengthValue = 60 [mm];
+        attribute firstHoleOffset : LengthValue = 40 [mm];
+        attribute holesPerRail : Natural = 7;
+        attribute screwLength : LengthValue = 16 [mm];   // M4 x 16
+    }
+
     // ---------------------------------------------------------------------
     // Parts. Each port says which side of an interface a part is on.
     // ---------------------------------------------------------------------
@@ -110,6 +144,16 @@ package CompactStage {
         port slotSeal : SlotSealInterface_v1;
         port clampMountStart : ClampMountInterface_v1;
         port clampMountEnd : ClampMountInterface_v1;
+        port referenceRailMount : RailMountInterface_v1;
+        port secondRailMount : RailMountInterface_v1;
+    }
+
+    part def GuideRail {
+        doc /*
+         * A bought profile rail: HIWIN HGR15R, 418 mm long. It comes from
+         * the parts library in modules/stoq/. The stage has two.
+         */
+        port baseMount : ~RailMountInterface_v1;
     }
 
     part def CarriageBottom {
@@ -186,6 +230,8 @@ package CompactStage {
         part sealingStrip : SealingStrip;
         part sealingClampStart : SealingClamp;
         part sealingClampEnd : SealingClamp;
+        part referenceRail : GuideRail;
+        part secondRail : GuideRail;
 
         // Interfaces of the whole stage
         port machineMount : BaseMountInterface_v1;
@@ -202,6 +248,10 @@ package CompactStage {
         connect sealingClampEnd.strip to sealingStrip.clampEnd;
         connect sealingClampStart.baseMount to base.clampMountStart;
         connect sealingClampEnd.baseMount to base.clampMountEnd;
+
+        // The guide rails
+        connect base.referenceRailMount to referenceRail.baseMount;
+        connect base.secondRailMount to secondRail.baseMount;
     }
 
     // ---------------------------------------------------------------------

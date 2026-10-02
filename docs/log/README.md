@@ -123,3 +123,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-09-30 | [The linear stage requirements are now in the SysML model](2026-09-30_linear-stage-requirements-in-sysml.md) | engineering, hardware |  |
 | 2026-09-30 | [The compact stage has its parts, its assembly and its interfaces](2026-09-30_compact-stage-parts-and-interfaces.md) | engineering, cad |  |
 | 2026-10-01 | [The compact stage parts now sit in a Part container](2026-10-01_compact-stage-parts-in-a-part-container.md) | cad |  |
+| 2026-10-02 | [The base has mounting holes and alignment tabs for the guide rails](2026-10-02_rail-mounting-holes-in-the-base.md) | cad, architecture |  |
