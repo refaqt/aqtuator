@@ -22,7 +22,8 @@ The second family is [`modules/compact-stage/`](../modules/compact-stage/): a co
 driven by an iron core linear motor. It holds the stage requirements, the servo drive
 requirements, and five parts we make (base, carriage bottom, carriage top, sealing strip and
 sealing clamp) with an interface between every pair of parts that touch. The parts exist in CAD
-but have no geometry yet.
+but have no geometry yet. All servo drives we considered for it are compared in
+[`servo-drive-selection.md`](servo-drive-selection.md).
 
 Folder names say what a stage is, not what it is called on a price list. A commercial name belongs
 in a family's `catalog.toml` when there is one.

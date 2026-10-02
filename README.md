@@ -38,6 +38,7 @@ repository.
 
 Start with [`docs/architecture.md`](docs/architecture.md) for the technical overview, or
 [`docs/log/`](docs/log/) for the chronological story — 71 entries from June 2025 onward.
+For the servo drive choice, see [`docs/servo-drive-selection.md`](docs/servo-drive-selection.md).
 
 ## Clone
 
