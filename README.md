@@ -70,7 +70,9 @@ Cursor, Claude Code, and cloud agents: start at [`AGENTS.md`](AGENTS.md). Shared
 ## Hardware
 
 - Mekanika Pro milling machine with PlanetCNC control
-- ODrive S1 servo drive, linear and rotary encoder feedback
+- ODrive S1 servo drive, linear and rotary encoder feedback. **The ODrive is for testing only. We will
+  not use it in future developments.** See the
+  [decision record](docs/decisions/2026-10-02_odrive-is-for-testing-only.md).
 - Controllino MICRO (RP2040) for torque excitation and acquisition
 - DATAQ WinDaq HiRes DAQ, 8 channels, accelerometers and impact hammer
 

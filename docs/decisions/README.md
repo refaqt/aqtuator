@@ -33,3 +33,4 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-09-28 | [Robust tuning rules for the drive cases](2026-09-28_robust-tuning-rules-for-the-drive-cases.md) |
 | 2026-09-30 | [Try the Servotronix polynomial velocity controller](2026-09-30_try-the-servotronix-polynomial-velocity-controller.md) |
 | 2026-09-30 | [Delta ASDA-A3 is the fallback if the Servotronix drive does not work](2026-09-30_delta-asda-a3-as-fallback-drive.md) |
+| 2026-10-02 | [The ODrive is a test drive only. We will not use it in future developments](2026-10-02_odrive-is-for-testing-only.md) |

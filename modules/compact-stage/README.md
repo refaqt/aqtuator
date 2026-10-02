@@ -2,6 +2,10 @@
 
 Compact linear stage, driven by an iron core linear motor.
 
+The drive for this stage is not an ODrive. The ODrive was only a test drive on the Mekanika Pro,
+and we will not use it in future developments. See
+[the decision record](../../docs/decisions/2026-10-02_odrive-is-for-testing-only.md).
+
 ## Parts
 
 The stage is one assembly of five parts that we make. The sealing clamp is used twice, once at

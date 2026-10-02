@@ -40,6 +40,14 @@ double-click `setup-tooling.bat`.
 
 `docs/architecture.md` in this repo is a short overview — not a second copy of the spec.
 
+## The ODrive is for testing only
+
+The ODrive S1 was only a test drive on the Mekanika Pro. **We will not use it in future
+developments.** Do not suggest it, and do not choose a drive, an encoder or any other part
+because it works with the ODrive. Keep the existing ODrive code and logs. They support the test
+measurements. See
+[the decision record](../../docs/decisions/2026-10-02_odrive-is-for-testing-only.md).
+
 ## Stack and execution
 
 - **Mixed stack:** Python (`modules/*/software/*`), Arduino/C++ (`modules/*/firmware/*`),
