@@ -19,7 +19,7 @@ The file follows the style of the stage and drive requirements. Every error valu
 | ENC-01 | Resolution finer than 0.2 µm |
 | ENC-02 | Accuracy within +/- 5 µm over 200 mm |
 | ENC-03 | Maximum speed above 3 m/s |
-| ENC-04 | Absolute position over BiSS-C |
+| ENC-04 | Output is 1 Vpp sine and cosine, or BiSS-C. Incremental and absolute are both allowed |
 | ENC-05 | Periodic error within +/- 0.3 µm |
 | ENC-06 | Reading head less than 15 mm wide |
 | ENC-07 | Reading head less than 18 mm high |
@@ -38,6 +38,9 @@ confirmed" and keep the data sheet values.
 
 ## Decisions Made
 
+- ENC-04 allows 1 Vpp sine and cosine, or BiSS-C. You first asked for BiSS-C absolute only, then
+  allowed both. An incremental encoder needs a reference run after power on.
+
 - All eleven are hard requirements. You gave no preferences.
 - The file sits in the compact stage module, next to the drive requirements.
 - ENC-02 asks for the accuracy over 200 mm. The data sheet must state it for 200 mm or more.
@@ -50,7 +53,7 @@ confirmed" and keep the data sheet values.
   (STG-04) are both +/- 5 µm. The guide and the thermal drift add more error on top. Decide
   whether the encoder should be tighter, or whether the stage limit can be wider.
 - **The data rate at 3 m/s.** At 3 m/s and 0.2 µm, the position changes 15 million times each
-  second. The BiSS-C clock and the drive must keep up. This is a hand calculation. Check it
+  second. For BiSS-C, the clock and the drive must keep up. For 1 Vpp, the drive must read the signal frequency. This is a hand calculation. Check it
   against the encoder and the drive manuals.
 - **The existing drive check uses a 20 µm sine and cosine encoder.** DRV-08 already handles
   BiSS-C. Change `currentStage` in `motor-drive.sysml` when an encoder is chosen.
@@ -61,6 +64,7 @@ confirmed" and keep the data sheet values.
   error motion of the stage (STG-06, 20 µrad) and the mounting error of the head.
 - Search for encoders that meet ENC-01 to ENC-11. Read every deciding number in the maker's
   data sheet.
-- Check that the chosen drive reads the full BiSS-C frame of that encoder.
+- Check that the chosen drive reads the signal of that encoder. For BiSS-C, check the full frame.
+  For 1 Vpp, check the highest signal frequency (DRV-08).
 - Open the file once in SysON to confirm that it imports. It was written by hand and was not
   checked by a SysML parser.

@@ -17,8 +17,8 @@
 // Links to the rest of the stage:
 //
 // - ENC-03 uses the top speed of the stage (STG-09). Both say 3 m/s.
-// - ENC-04 matches the signal that the servo drive reads (DRV-08,
-//   EncoderSignal::bissC in motor-drive.sysml).
+// - ENC-04 allows the two signals that the servo drive reads (DRV-08,
+//   EncoderSignal in motor-drive.sysml): 1 Vpp sine and cosine, or BiSS-C.
 // - ENC-02 is the same size as the positioning error of the stage (STG-04).
 //   The encoder alone uses the whole budget. See the log entry of
 //   2026-10-02.
@@ -33,8 +33,8 @@ package LinearEncoderRequirements {
 
     enum def EncoderOutput {
         doc /* The kinds of output signal an encoder may have. */
-        enum sinCos1Vpp;   // 1 Vpp sine and cosine, incremental (analog)
-        enum bissC;        // BiSS-C, absolute (digital, serial)
+        enum sinCos1Vpp;   // 1 Vpp sine and cosine (analog), usually incremental
+        enum bissC;        // BiSS-C (digital, serial), usually absolute
         enum other;
     }
 
@@ -51,7 +51,6 @@ package LinearEncoderRequirements {
         attribute periodicError : LengthValue;         // half band, within one signal period
         attribute maxSpeed : SpeedValue;               // highest speed at which it still reports
         attribute output : EncoderOutput;
-        attribute isAbsolute : Boolean;
 
         // Reading head size
         attribute headWidth : LengthValue;             // across the direction of motion
@@ -94,7 +93,9 @@ package LinearEncoderRequirements {
              *
              * Resolution is the step size of the output. It is not the
              * accuracy. Use the resolution at the output we use (the
-             * BiSS-C frame), not the resolution of an interpolation box.
+             * BiSS-C frame, or the resolution that the drive reaches from
+             * the 1 Vpp signal), not the resolution of a separate
+             * interpolation box.
              */
             subject encoder : EncoderCandidate;
             require constraint { encoder.resolution < 0.2 [µm] }
@@ -123,16 +124,25 @@ package LinearEncoderRequirements {
             require constraint { encoder.maxSpeed > 3 [m/s] }
         }
 
-        requirement def <'ENC-04'> AbsoluteBissC {
+        requirement def <'ENC-04'> OutputSignal {
             doc /*
-             * The encoder gives the absolute position over BiSS-C. It needs
-             * no reference run after power on. The servo drive must read the
-             * full data frame (DRV-08). Check this by hand against both data
+             * The encoder has one of two outputs:
+             *
+             * - 1 Vpp sine and cosine, usually incremental. The drive
+             *   reads the signal and divides each period into steps.
+             * - BiSS-C, usually absolute. The drive reads the position as
+             *   a digital frame.
+             *
+             * Incremental or absolute are both allowed. An incremental
+             * encoder needs a reference run after power on. The drive must
+             * read the same signal (DRV-08). For BiSS-C, it must read the
+             * full data frame. Check this by hand against both data
              * sheets.
              */
             subject encoder : EncoderCandidate;
             require constraint {
-                encoder.isAbsolute and encoder.output == EncoderOutput::bissC
+                encoder.output == EncoderOutput::sinCos1Vpp
+                or encoder.output == EncoderOutput::bissC
             }
         }
 
@@ -230,7 +240,7 @@ package LinearEncoderRequirements {
         requirement resolution : Mandatory::Resolution;
         requirement accuracy : Mandatory::Accuracy;
         requirement maxSpeed : Mandatory::MaxSpeed;
-        requirement absoluteBissC : Mandatory::AbsoluteBissC;
+        requirement outputSignal : Mandatory::OutputSignal;
         requirement periodicError : Mandatory::PeriodicError;
         requirement headWidth : Mandatory::HeadWidth;
         requirement headHeight : Mandatory::HeadHeight;
