@@ -26,13 +26,19 @@ The file follows the style of the stage and drive requirements. Every error valu
 | ENC-08 | Reading head less than 40 mm long |
 | ENC-09 | Scale less than 1 mm high |
 | ENC-10 | Scale less than 12 mm wide |
+| ENC-11 | Reading head angle against the scale: roll, pitch and yaw each within what the data sheet allows |
 
 I also added a part for a candidate encoder, so a search can fill in one set of data sheet values
 per encoder. Nothing has been checked against a real encoder yet.
 
+ENC-11 has no number. You could not give one, so the requirement compares two things. One is the
+angle the encoder allows, from its data sheet. The other is the angle our stage gives, which has
+open values for now. Until those are filled in, ENC-11 cannot pass or fail. Mark it "not
+confirmed" and keep the data sheet values.
+
 ## Decisions Made
 
-- All ten are hard requirements. You gave no preferences.
+- All eleven are hard requirements. You gave no preferences.
 - The file sits in the compact stage module, next to the drive requirements.
 - ENC-02 asks for the accuracy over 200 mm. The data sheet must state it for 200 mm or more.
 - ENC-03 and ENC-01 should hold together. A data sheet often gives a lower top speed at a finer
@@ -51,7 +57,9 @@ per encoder. Nothing has been checked against a real encoder yet.
 
 ## Next Steps
 
-- Search for encoders that meet ENC-01 to ENC-10. Read every deciding number in the maker's
+- Fill in the angle our stage gives (roll, pitch and yaw). Use the CAD tolerances, the rotational
+  error motion of the stage (STG-06, 20 µrad) and the mounting error of the head.
+- Search for encoders that meet ENC-01 to ENC-11. Read every deciding number in the maker's
   data sheet.
 - Check that the chosen drive reads the full BiSS-C frame of that encoder.
 - Open the file once in SysON to confirm that it imports. It was written by hand and was not

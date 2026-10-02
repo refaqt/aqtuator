@@ -61,6 +61,24 @@ package LinearEncoderRequirements {
         // Scale size
         attribute scaleHeight : LengthValue;           // thickness, with any carrier or tape
         attribute scaleWidth : LengthValue;            // across the direction of motion
+
+        // Allowed angle of the reading head against the scale (half bands, rad)
+        attribute allowedRoll : Real;                  // about the direction of motion
+        attribute allowedPitch : Real;                 // about the axis across the motion, in the plane of the scale
+        attribute allowedYaw : Real;                   // about the axis normal to the scale
+    }
+
+    part def HeadMounting {
+        doc /*
+         * How far the reading head can sit out of line with the scale in our
+         * stage. It is the sum of the mounting error and the rotational
+         * error motion of the carriage (STG-06). The three values have no
+         * number yet. Fill them in from the CAD tolerances, or from a
+         * measurement. Half bands, in radians.
+         */
+        attribute rollDeviation : Real;
+        attribute pitchDeviation : Real;
+        attribute yawDeviation : Real;
     }
 
     // ---------------------------------------------------------------------
@@ -165,6 +183,37 @@ package LinearEncoderRequirements {
             subject encoder : EncoderCandidate;
             require constraint { encoder.scaleWidth < 12 [mm] }
         }
+
+        // --- Angle of the reading head against the scale ------------------------
+
+        requirement def <'ENC-11'> AngularTolerance {
+            doc /*
+             * The reading head may sit out of line with the scale by the
+             * angle that our stage gives, in all three directions. The
+             * encoder data sheet gives the allowed angle for each:
+             *
+             * - roll: rotation about the direction of motion
+             * - pitch: rotation about the axis across the motion, in the
+             *   plane of the scale
+             * - yaw: rotation about the axis normal to the scale
+             *
+             * Makers use other names for the same angles. Map them by the
+             * axis, not by the name. Each allowed angle must be at least
+             * the angle that the stage gives (HeadMounting).
+             *
+             * No number is set yet. The stage values in HeadMounting are
+             * open. Until they are filled in, this requirement cannot
+             * pass or fail: write "not confirmed" and keep the data sheet
+             * values for later.
+             */
+            subject encoder : EncoderCandidate;
+            in part mounting : HeadMounting;
+            require constraint {
+                encoder.allowedRoll >= mounting.rollDeviation
+                and encoder.allowedPitch >= mounting.pitchDeviation
+                and encoder.allowedYaw >= mounting.yawDeviation
+            }
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -188,5 +237,6 @@ package LinearEncoderRequirements {
         requirement headLength : Mandatory::HeadLength;
         requirement scaleHeight : Mandatory::ScaleHeight;
         requirement scaleWidth : Mandatory::ScaleWidth;
+        requirement angularTolerance : Mandatory::AngularTolerance;
     }
 }
