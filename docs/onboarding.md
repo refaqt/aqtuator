@@ -36,6 +36,10 @@ See [`modules/flexure-ball-screw-servo-stage/measurement/README.md`](../modules/
 
 ## 4. Hardware
 
+> **The ODrive is for testing only. We will not use it in future developments.** It is on this
+> list because the Mekanika Pro test setup uses it. See
+> [the decision record](decisions/2026-10-02_odrive-is-for-testing-only.md).
+
 For **Workflow A** (torque playback and acquisition):
 
 - Controllino MICRO flashed with

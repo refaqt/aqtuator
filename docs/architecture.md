@@ -50,6 +50,11 @@ The 200 N reluctance figure is pole-face Maxwell stress, not packaged continuous
 
 ## The identification signal chain
 
+> **The ODrive is a test drive only. We will not use it in future developments.** It sits in this
+> chain because the Mekanika Pro test machine uses it. It is not part of any product design. Do
+> not choose parts because they work with the ODrive. See
+> [the decision record](decisions/2026-10-02_odrive-is-for-testing-only.md).
+
 The central technical arrangement: a torque command generated on the host reaches the ODrive as an
 *analog* voltage, because the CAN path could not sustain the required rate.
 
