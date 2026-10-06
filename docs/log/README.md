@@ -126,3 +126,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-02 | [The base has mounting holes and alignment tabs for the guide rails](2026-10-02_rail-mounting-holes-in-the-base.md) | cad, architecture |  |
 | 2026-10-02 | [Comparison table of all linear encoders considered so far](2026-10-02_linear-encoder-comparison.md) | engineering, purchasing |  |
 | 2026-10-02 | [One overview of all servo drives we considered](2026-10-02_servo-drive-selection-overview.md) | engineering, purchasing |  |
+| 2026-10-06 | [Servo drives checked for a Bode plot tuning tool](2026-10-06_drives-checked-for-bode-plot-tuning.md) | engineering, purchasing |  |
