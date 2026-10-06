@@ -5,7 +5,7 @@ requirements. It is an overview. The research is in the log entries and decision
 each row and in [Sources](#sources). If a number here differs from a log entry, the log entry and the
 maker's own manual win. Tell us, and we fix this page.
 
-Last updated: 2026-10-02. Prices were seen on 2026-09-29 and many are asking prices.
+Last updated: 2026-10-06. Prices were seen on 2026-09-29 and many are asking prices.
 
 ## Short answer
 
@@ -15,6 +15,13 @@ Last updated: 2026-10-02. Prices were seen on 2026-09-29 and many are asking pri
 - **Fallback drive:** Delta **ASD-A3-0421-E** with the Delta **ASD-IF-EN0A20** converter box. It is
   not confirmed. See the
   [decision record](decisions/2026-09-30_delta-asda-a3-as-fallback-drive.md).
+- **New on 2026-10-06: the drive software must show Bode plots (DRV-10).** The chosen CDHD2S does
+  not meet this as documented: its software shows a frequency response with gain only, no phase.
+  The fallback Delta drive meets it. See [DRV-10 for each drive](#bode-plot-tuning-drv-10).
+- **Two drives meet all ten hard requirements in the maker's manuals:** the Kollmorgen **AKD**
+  (first generation, AKD-x00306 with EtherCAT) and the Copley **Xenus Plus XEL-230-18**. Both were
+  left out earlier only because the loop limit was then 8 kHz. Their prices are not confirmed. See
+  the [log entry](log/2026-10-06_drives-checked-for-bode-plot-tuning.md).
 - **No other drive passes all hard requirements within the budget.** Most others fail on price,
   supply voltage, the encoder input, or a loop rate we cannot confirm.
 - **Nothing is bought yet.** These points must be settled first:
@@ -26,6 +33,7 @@ Last updated: 2026-10-02. Prices were seen on 2026-09-29 and many are asking pri
   3. Delta must confirm a position loop of 4 kHz or faster, and we must decide whether Delta's own
      converter box is allowed.
   4. MAXWELL must tell us whether the MK21 has Hall sensors and what type its thermal sensor is.
+  5. Servotronix must tell us whether ServoStudio 2 can show the phase and a Bode plot (DRV-10).
 
 ## What the drive must do
 
@@ -44,6 +52,7 @@ That file is the source. This table is a copy for reading.
 | DRV-07 | EtherCAT with the CiA 402 drive profile (the master is a PC with LinuxCNC) | Hard |
 | DRV-08 | Reads the stage encoder directly, with no converter box. Today: 1 Vpp at up to 150 kHz (3 m/s divided by 20 µm) | Hard |
 | DRV-09 | Position loop at 4 kHz or faster (250 µs or shorter), read in the maker's manual | Hard |
+| DRV-10 | The maker's setup software has a tuning function that measures the axis and shows Bode plots (gain and phase against frequency) of the transfer function | Hard |
 | DRV-P1 | Our own filters in the loop, best as a free second order filter (a biquad) | Preferred |
 | DRV-P2 | A published block diagram of the control loop | Preferred |
 | DRV-P3 | A position loop faster than 4 kHz. 8 kHz or more is clearly better | Preferred |
@@ -109,7 +118,7 @@ These drives came from the searches. None is chosen. The last column says why.
 | Tonghang | T6DE / T6E, 220 V | [Product pages](https://www.tonghangedrive.com/servo-driver-series/), [T3D manual (sister drive)](https://www.cncdrive.com/downloads/T3D_servodrive.pdf) | 220 VAC, about 310 V. Pass | Likely enough (not published) | No linear mode found. **Fail** | NC | Yes | No 1 Vpp. **Fail** | NP. NC | First order filter only | Not found | Out: fails three hard requirements. No manuals published. [Log](log/2026-09-30_tonghang-drives-checked-against-the-requirements.md) |
 | Servotronix (Gaochuang) | CD3E-003 | [Quick start guide (Chinese)](https://28526507.s21i.faiusr.com/61/1/ABUIABA9GAAgjqvIwgYo-oP2iQY.pdf) | 1 phase 220 VAC. Pass | 3 / 9 A for 2 s | Not in logs | Not in logs | Not in logs | A/B pulses only. **Fail** | 8 kHz | No dual loop, no error table | NP | Out: no 1 Vpp. [Log](log/2026-09-29_servotronix-drives-with-a-faster-loop.md) |
 | Servotronix (Gaochuang) | LDHD3-006 | [Flyer](https://www.servotronix.cn/en/download/1136) | 1 phase 200 to 240 VAC. Pass | 6 / 18 A | Not in logs | Not in logs | Not in logs | A/B, BiSS-C, Tamagawa. **Fail** | NP | Not in logs | NP | Out: no 1 Vpp. [Log](log/2026-09-29_servotronix-drives-with-a-faster-loop.md) |
-| Kinco | FD5P | [Manual](https://aiq-robotics.com/wp-content/uploads/2024/01/Kinco-FD5P-series-AC-servo-system-manual-EN-23125.pdf) | Not in logs | Not in logs | Not in logs | Not in logs | Not in logs | Not in logs | 4 kHz | Not in logs | NP | Out under the 8 kHz rule. See [the note below](#a-point-to-check-the-4-khz-drives). [Log](log/2026-09-29_non-israeli-drives-with-open-control-loops.md) |
+| Kinco | FD5P | [Manual](https://aiq-robotics.com/wp-content/uploads/2024/01/Kinco-FD5P-series-AC-servo-system-manual-EN-23125.pdf) | Not in logs | Not in logs | Not in logs | Not in logs | Not in logs | Not in logs | 4 kHz | Not in logs | NP | Fails DRV-08: serial encoders only. See [the 4 kHz drives](#the-4-khz-drives-checked-again). [Log](log/2026-09-29_non-israeli-drives-with-open-control-loops.md) |
 
 ## Low voltage drives, and drives that need their own master
 
@@ -149,7 +158,7 @@ These do not fit one of the rules: we use LinuxCNC as the master, and we do not 
 
 - **Position loop of 4 kHz, left out under the 8 kHz rule of 2026-09-29:** Kollmorgen AKD (first
   generation, USD 250 to 400 used), Copley Xenus Plus, Bosch Rexroth IndraDrive Cs, Schneider Lexium
-  32. See the next section.
+  32. They were checked again on 2026-10-06. See [the 4 kHz drives](#the-4-khz-drives-checked-again).
 - **No usable 1 Vpp input:** Novanta, LinMot C1450, Inovance SV660N, Leadshine EL7-EC, Panasonic MINAS
   A6, Sanyo Denki R 3E, Beckhoff AX1000, Estun ED3L, Dynamikwell DKHDE.
 - **No SSI or BiSS-C input:** Mitsubishi MR-J5.
@@ -167,14 +176,49 @@ These do not fit one of the rules: we use LinuxCNC as the master, and we do not 
   No box turns BiSS-C into SSI. Details in the
   [converter log](log/2026-09-29_encoder-converter-and-ssi-biss-drives.md).
 
-## A point to check: the 4 kHz drives
+## Bode plot tuning (DRV-10)
+
+Checked on 2026-10-06 in the makers' own documents. Sources and pages are in the
+[log entry](log/2026-10-06_drives-checked-for-bode-plot-tuning.md).
+
+| Brand | Model | Software | DRV-10 | What it shows |
+| --- | --- | --- | --- | --- |
+| Servotronix | CDHD2S, CDHD2 | ServoStudio 2 | NC, leans to Fail | Gain of the current command only, no phase |
+| Delta | ASDA-A3 | ASDA-Soft | Pass | Speed open loop Bode plot, and the plant |
+| Kollmorgen | AKD (first generation) | WorkBench | Pass | Plant, open loop, closed loop |
+| Kollmorgen | AKD2G | WorkBench | Pass (brochure only) | Same tool as the AKD |
+| Copley | Xenus Plus XEL | CME | Pass | Sine sweep. Current, velocity and position loops, the plant |
+| KEBA | ServoOne junior | DriveManager 5 | Pass | Speed loop and current loop, noise excitation |
+| Triamec | TSD350 | TAM System Explorer | Pass | Measured open loop |
+| Elmo | Gold Oboe | EASII | Pass (web page only) | Plant, open or closed loop |
+| HIWIN | E2 Advanced | Thunder | Pass | Measured plant |
+| Bosch Rexroth | ctrlX DRIVE | ctrlX DRIVE Engineering | Pass (application note only) | Plant and closed loops |
+| Yaskawa | Sigma-7 | SigmaWin+ | Pass | Plant |
+| Beckhoff | AX8000 | TwinCAT 3 Bode Plot (extra licence) | Pass | Open loop, closed loop, plant |
+| Inovance | SV680N | InoDriverShop | Pass | Plant, speed open and closed loop |
+| Metronix | smartServo BL 4104-C | ServoCommander | Fail | Oscilloscope only |
+| Advanced Motion Controls | DPEANIU-015S400 | DriveWare 7 | Fail | Oscilloscope only |
+| Parker | PSD1-S | PSD ServoManager | NC | Software help not public |
+| Bosch Rexroth | IndraDrive Cs | IndraWorks Ds | NC | Not found |
+| Schneider | Lexium 32 | SoMove | NC | Auto-tuning only in the drive manual |
+| Kinco | FD5P | Kinco software | NC | Oscilloscope only in the manual |
+
+The KEBA ServoOne Device Help also gives a position controller of 125 µs (8 kHz). This confirms
+DRV-09 and DRV-P3 for the ServoOne family.
+
+## The 4 kHz drives, checked again
 
 The first searches asked for a position loop of 8 kHz. On 2026-09-29 the hard limit became 4 kHz
-(DRV-09), and 8 kHz became a preference (DRV-P3). The drives with a 4 kHz position loop were left
-out while the limit was 8 kHz, and no log entry looks at them again. They are the Kollmorgen AKD,
-the Copley Xenus Plus, the Rexroth IndraDrive Cs, the Schneider Lexium 32 and the Kinco FD5P. They
-may still fail on the encoder input, the supply or the price. Check them against DRV-01 to DRV-09
-before we call the list complete.
+(DRV-09). On 2026-10-06 the five drives with a 4 kHz position loop were checked against DRV-01 to
+DRV-10.
+
+| Brand | Model | Result | Notes |
+| --- | --- | --- | --- |
+| Kollmorgen | AKD-x00306, EtherCAT version | **Passes all ten** | 3 / 9 A for 5 s. About 325 V on 230 VAC. Linear motors, Wake and Shake commutation without Hall sensors. 1 Vpp up to 250 kHz with termination resistors. Position loop 250 µs. Price not confirmed: USD 250 to 400 used, new price not found |
+| Copley | Xenus Plus XEL-230-18 | **Passes all ten** | 4.24 / 12.7 A for 1 s. About 325 V on 230 VAC. Phasing without Hall sensors. 1 Vpp up to 230 kHz. Position loop 4 kHz. Price not found |
+| Bosch Rexroth | IndraDrive Cs HCS01, 230 V model | NC | 250 µs only in "Advanced" performance, otherwise 500 µs. Peak current time, thermal model, CiA 402 and DRV-10 not confirmed |
+| Schneider | Lexium 32M with encoder module | **Fail DRV-08** | 1 Vpp input up to 100 kHz only |
+| Kinco | FD5P | **Fail DRV-08** | Serial encoders only, no 1 Vpp |
 
 ## Earlier drives, for the ball screw test bench
 
@@ -211,10 +255,12 @@ Log entries, in date order:
 - [Can the CDHD2S velocity loop run our own controller?](log/2026-09-30_cdhd2s-velocity-loop-custom-filter.md)
 - [Tonghang drives checked against the drive requirements](log/2026-09-30_tonghang-drives-checked-against-the-requirements.md)
 - [Delta ASDA-A3 drives checked against the drive requirements](log/2026-09-30_delta-asda-a3-checked-against-the-requirements.md)
+- [Servo drives checked for a Bode plot tuning tool](log/2026-10-06_drives-checked-for-bode-plot-tuning.md)
 - [Mistake: loop rate taken from a trade article](mistakes/2026-09-29_loop-rate-from-a-trade-article.md)
 
-Every number in the tables was copied from these entries. Nothing was researched again for this
-page, so the maker's links were not opened again. The log entries record which pages were read and
+Every number in the tables was copied from these entries. Up to 2026-10-02 nothing was researched
+again for this page. The sections on DRV-10 and on the 4 kHz drives come from the research of
+2026-10-06, which opened the makers' documents. The log entries record which pages were read and
 which blocked downloads.
 
 </details>
