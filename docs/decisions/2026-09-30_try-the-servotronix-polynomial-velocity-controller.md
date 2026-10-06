@@ -1,7 +1,7 @@
 # 2026-09-30 — Try the Servotronix polynomial velocity controller
 
 - **Date:** 2026-09-30
-- **Status:** Accepted
+- **Status:** Superseded by [Kollmorgen AKD and Copley Xenus Plus are the drive candidates](2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md) on 2026-10-06. Servotronix is rejected because it is an Israeli company.
 
 ## Context
 
