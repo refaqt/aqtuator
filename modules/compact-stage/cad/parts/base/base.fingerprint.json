@@ -59,7 +59,7 @@
       "volume": 0.0
     },
     "Body": {
-      "area": 274017.0,
+      "area": 275267.0,
       "bbox": [
         0.0,
         0.0,
@@ -72,22 +72,50 @@
       "com": [
         219.925,
         105.032,
-        13.6161
+        13.6249
       ],
       "counts": {
-        "edges": 132,
-        "faces": 47,
+        "edges": 168,
+        "faces": 59,
         "shells": 1,
         "solids": 1,
-        "verts": 88
+        "verts": 112
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 1623650.0
+      "volume": 1621980.0
+    },
+    "Hole": {
+      "area": 274121.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.938,
+        105.035,
+        13.6168
+      ],
+      "counts": {
+        "edges": 135,
+        "faces": 48,
+        "shells": 1,
+        "solids": 1,
+        "verts": 90
+      },
+      "label": "Hole",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 1623510.0
     },
     "Part": {
-      "area": 274017.0,
+      "area": 275267.0,
       "bbox": [
         0.0,
         0.0,
@@ -100,19 +128,19 @@
       "com": [
         219.925,
         105.032,
-        13.6161
+        13.6249
       ],
       "counts": {
-        "edges": 132,
-        "faces": 47,
+        "edges": 168,
+        "faces": 59,
         "shells": 1,
         "solids": 1,
-        "verts": 88
+        "verts": 112
       },
       "label": "base001",
       "type": "App::Part",
       "valid": true,
-      "volume": 1623650.0
+      "volume": 1621980.0
     },
     "Pocket": {
       "area": 269076.0,
@@ -281,12 +309,117 @@
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
+    },
+    "Sketch002": {
+      "area": 0.0,
+      "bbox": [
+        67.25,
+        65.25,
+        10.0,
+        72.75,
+        70.75,
+        10.0
+      ],
+      "closed": true,
+      "com": [
+        70.0,
+        68.0,
+        10.0
+      ],
+      "counts": {
+        "edges": 1,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 1
+      },
+      "label": "MotorHoleSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    }
+  },
+  "parametric": {
+    "audited": 11,
+    "objects": {
+      "Block": {
+        "label": "Block",
+        "type": "PartDesign::Pad",
+        "unlinked": [
+          "Length is a typed number: 40"
+        ]
+      },
+      "BlockSketch": {
+        "dof": 0,
+        "label": "BlockSketch",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Length (DistanceX) is a typed number: 440 mm",
+          "Width (DistanceY) is a typed number: 210 mm"
+        ]
+      },
+      "LinearPattern": {
+        "label": "LinearPattern",
+        "type": "PartDesign::LinearPattern",
+        "unlinked": [
+          "Occurrences is a typed number: 6",
+          "Offset is a typed number: 60"
+        ]
+      },
+      "RailHoleSketch": {
+        "dof": 0,
+        "label": "RailHoleSketch",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "hole_dia (Diameter) is a typed number: 4 mm",
+          "first_hole_x (DistanceX) is a typed number: 40 mm",
+          "hole_pitch (DistanceX) is a typed number: 60 mm",
+          "reference_rail_y (DistanceY) is a typed number: 169 mm",
+          "second_rail_y (DistanceY) is a typed number: 41 mm",
+          "AttachmentOffset is typed: (0, 0, 10) mm, 0 deg"
+        ]
+      },
+      "Sketch": {
+        "dof": 0,
+        "label": "Sketch",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Constraint5 (Distance) is a typed number: 10 mm",
+          "Constraint12 (Distance) is a typed number: 164 mm",
+          "Constraint28 (Radius) is a typed number: 6 mm"
+        ]
+      },
+      "Sketch001": {
+        "dof": 0,
+        "label": "Sketch001",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "tool_radius (Radius) is a typed number: 6 mm",
+          "tab_inset (DistanceX) is a typed number: 20 mm",
+          "tab_length (DistanceX) is a typed number: 20 mm",
+          "ref_tab_left_inset (DistanceX) is a typed number: 20 mm",
+          "ref_tab_left_length (DistanceX) is a typed number: 20 mm",
+          "ref_tab_right_inset (DistanceX) is a typed number: 20 mm",
+          "ref_tab_right_length (DistanceX) is a typed number: 20 mm",
+          "second_rail_tab_depth (DistanceY) is a typed number: 10.5 mm",
+          "ref_tab_left_depth (DistanceY) is a typed number: 10.5 mm",
+          "ref_tab_right_depth (DistanceY) is a typed number: 10.5 mm"
+        ]
+      },
+      "Sketch002": {
+        "dof": 0,
+        "label": "MotorHoleSketch",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Constraint3 (Diameter) is a typed number: 5.5 mm"
+        ]
+      }
     }
   },
   "params": {},
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "d5918ccc7b283ce1c1e41e3fc0bfd2a806be1ec4d0596e7aed861a0161cb8933"
+    "base.FCStd": "fcebb31f075fabcd91ed0cf3a683aaceec365abe9da58881d89324a80f32fe07"
   }
 }
