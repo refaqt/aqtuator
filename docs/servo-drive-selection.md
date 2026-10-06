@@ -44,6 +44,7 @@ That file is the source. This table is a copy for reading.
 | DRV-07 | EtherCAT with the CiA 402 drive profile (the master is a PC with LinuxCNC) | Hard |
 | DRV-08 | Reads the stage encoder directly, with no converter box. Today: 1 Vpp at up to 150 kHz (3 m/s divided by 20 µm) | Hard |
 | DRV-09 | Position loop at 4 kHz or faster (250 µs or shorter), read in the maker's manual | Hard |
+| DRV-10 | The maker's setup software has a tuning function that measures the axis and shows Bode plots (gain and phase against frequency) of the transfer function | Hard |
 | DRV-P1 | Our own filters in the loop, best as a free second order filter (a biquad) | Preferred |
 | DRV-P2 | A published block diagram of the control loop | Preferred |
 | DRV-P3 | A position loop faster than 4 kHz. 8 kHz or more is clearly better | Preferred |

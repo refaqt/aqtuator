@@ -117,6 +117,7 @@ package MotorDriveRequirements {
         attribute positionLoopRate : FrequencyValue;
         attribute freeBiquadFilterCount : Natural;
         attribute publishesLoopDiagram : Boolean;
+        attribute tuningToolShowsBodePlot : Boolean;         // in the maker's own setup software
     }
 
     // ---------------------------------------------------------------------
@@ -283,6 +284,31 @@ package MotorDriveRequirements {
             subject drive : MotorDrive;
             require constraint { drive.positionLoopRate >= 4000 [Hz] }
         }
+
+        // --- Tuning --------------------------------------------------------------
+
+        requirement def <'DRV-10'> BodePlotTuning {
+            doc /*
+             * The maker's own setup software for the drive has a tuning
+             * function that shows Bode plots of the transfer function: the
+             * gain and the phase against the frequency.
+             *
+             * The software measures the frequency response on the real
+             * machine. The drive excites the axis itself, for example with
+             * a sine sweep or with noise. The software then shows at least
+             * one loop as a Bode plot: the plant (the mechanics seen from the
+             * current loop), the open loop or the closed loop.
+             *
+             * A frequency response that the software only uses inside an
+             * automatic tuning step, and never shows, does not pass. A plain
+             * oscilloscope view of the signals over time does not pass.
+             *
+             * Read this in the maker's own manual for the software or the
+             * drive.
+             */
+            subject drive : MotorDrive;
+            require constraint { drive.tuningToolShowsBodePlot }
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -355,6 +381,7 @@ package MotorDriveRequirements {
             in part :>> stage = MotorDriveSpecification::stage;
         }
         requirement positionLoopRate : Mandatory::PositionLoopRate;
+        requirement bodePlotTuning : Mandatory::BodePlotTuning;
     }
 
     requirement currentDriveSpecification : MotorDriveSpecification {
