@@ -2,6 +2,7 @@
 
 - **Date:** 2026-09-30
 - **Status:** Accepted
+- **Update 2026-10-06:** Servotronix is rejected. The Delta drive is now the fallback for the Kollmorgen AKD and the Copley Xenus Plus. See [the new decision](2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md).
 
 ## Context
 

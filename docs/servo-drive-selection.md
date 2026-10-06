@@ -9,31 +9,25 @@ Last updated: 2026-10-06. Prices were seen on 2026-09-29 and many are asking pri
 
 ## Short answer
 
-- **Chosen drive:** Servotronix **CDHD2S-0032AEC2** (order code of the CDHD2S-003 with EtherCAT). It
-  passes every hard requirement on paper. See the
-  [decision record](decisions/2026-09-30_try-the-servotronix-polynomial-velocity-controller.md).
+- **Candidates:** the Kollmorgen **AKD-x00306** (first generation, EtherCAT version) and the Copley
+  **Xenus Plus XEL-230-18** (EtherCAT version). Both meet all ten hard requirements in the makers'
+  manuals, including the Bode plot tuning tool (DRV-10). Their prices are not confirmed. See the
+  [decision record](decisions/2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md).
 - **Fallback drive:** Delta **ASD-A3-0421-E** with the Delta **ASD-IF-EN0A20** converter box. It is
   not confirmed. See the
   [decision record](decisions/2026-09-30_delta-asda-a3-as-fallback-drive.md).
-- **New on 2026-10-06: the drive software must show Bode plots (DRV-10).** The chosen CDHD2S does
-  not meet this as documented: its software shows a frequency response with gain only, no phase.
-  The fallback Delta drive meets it. See [DRV-10 for each drive](#bode-plot-tuning-drv-10).
-- **Two drives meet all ten hard requirements in the maker's manuals:** the Kollmorgen **AKD**
-  (first generation, AKD-x00306 with EtherCAT) and the Copley **Xenus Plus XEL-230-18**. Both were
-  left out earlier only because the loop limit was then 8 kHz. Their prices are not confirmed. See
-  the [log entry](log/2026-10-06_drives-checked-for-bode-plot-tuning.md).
+- **Rejected on 2026-10-06:** every Servotronix drive, including the CDHD2S that was chosen on
+  2026-09-30. Servotronix (STXI Motion) is an Israeli company, and we do not buy from Israeli
+  suppliers.
 - **No other drive passes all hard requirements within the budget.** Most others fail on price,
   supply voltage, the encoder input, or a loop rate we cannot confirm.
 - **Nothing is bought yet.** These points must be settled first:
-  1. Servotronix must confirm that the CDHD2S has velocity controller mode 3 (our own controller in
-     the drive) and give its number format.
-  2. The CDHD2S gives a DC bus of about 325 V at 230 VAC. The requirement is at least 320 V. The
-     decision record writes 220 VAC, which gives about 311 V. No log entry closes this point. Check
-     it on the quote.
+  1. Kollmorgen and Copley must give a price and say whether the drives are still made.
+  2. The AKD reads 1 Vpp up to 250 kHz only for encoders that need termination resistors. Check
+     this against the chosen encoder.
   3. Delta must confirm a position loop of 4 kHz or faster, and we must decide whether Delta's own
      converter box is allowed.
   4. MAXWELL must tell us whether the MK21 has Hall sensors and what type its thermal sensor is.
-  5. Servotronix must tell us whether ServoStudio 2 can show the phase and a Bode plot (DRV-10).
 
 ## What the drive must do
 
@@ -63,9 +57,9 @@ Buying rules that are not in the SysML file (they change with each search):
 - New units only. A used unit is fine only if a seller has a large stock of identical units.
 - No drive that we build ourselves.
 - Free filters in the loop are wanted. This is the same wish as DRV-P1.
-- The searches of 2026-09-29 also left out Israeli suppliers. The chosen Servotronix drive comes from
-  STXI Motion, an Israeli company, so the rule was not applied to it. The decision records do not
-  say why. Confirm with the team before you rely on this rule.
+- No Israeli suppliers. The searches of 2026-09-29 already left them out, but the Servotronix drive
+  was chosen without applying the rule. On 2026-10-06 the team confirmed the rule and rejected
+  Servotronix.
 
 The motor values behind DRV-01 to DRV-06 come from the MAXWELL data sheet: 181 N at 2.0 A rms
 continuous, 512 N at 5.9 A rms for 1 s, 670 N at 9.8 A rms for 0.5 s, 30 mm pole pitch, 600 V
@@ -86,11 +80,13 @@ maximum bus.
 - The links in the Datasheet column go to the maker's document, or to a public copy of it when the
   maker's site blocked downloads.
 
-## Chosen drive and fallback
+## Candidates, fallback and the rejected first choice
 
 | Brand | Model | Datasheet | Supply and bus (DRV-04) | Current (DRV-01, 02) | Linear motor and commutation (DRV-05) | Motor temperature input (DRV-06) | EtherCAT CiA 402 (DRV-07) | Encoder input (DRV-08) | Position loop (DRV-09, P3) | Filters and diagram (P1, P2) | Price | Status and notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Servotronix (STXI Motion) | CDHD2S-003, order code CDHD2S-0032AEC2 | [Flyer](https://stxim.com/wp-content/uploads/2025/07/CDHD2S_EC_241220-EN-1.pdf), [manual v1.12](https://e-motors.tech/wp-content/uploads/2024/07/CDHD2S-Manual-V1.12-20231101-en.pdf) | 1 phase 120 to 240 VAC. About 325 V at 230 VAC. Pass, no margin | 3 / 9 A for 2 s. Pass | Yes. Pitch up to 100 000 mm. Phase Find without Hall sensors. Pass | PTC or NTC input. Pass if MAXWELL confirms the type | Yes (EC model). Pass | 1 Vpp up to 300 kHz, ×16 384. BiSS-C up to 26 bit. Pass | 4 kHz linear loop, 8 kHz HD loop. Pass. P3 only with the closed HD loop | Two free biquads and a free polynomial controller in mode 3: NC for the CDHD2S. Diagram: partly | NP. Error table of 1000 points in the drive | **Chosen** (2026-09-30). Order the EC2 version, never "RO" (rotary only). With our own controller the loop is 4 kHz. Mode 3 and its number format must be confirmed. [Log](log/2026-09-30_cdhd2s-velocity-loop-custom-filter.md) |
+| Servotronix (STXI Motion) | CDHD2S-003, order code CDHD2S-0032AEC2 | [Flyer](https://stxim.com/wp-content/uploads/2025/07/CDHD2S_EC_241220-EN-1.pdf), [manual v1.12](https://e-motors.tech/wp-content/uploads/2024/07/CDHD2S-Manual-V1.12-20231101-en.pdf) | 1 phase 120 to 240 VAC. About 325 V at 230 VAC. Pass, no margin | 3 / 9 A for 2 s. Pass | Yes. Pitch up to 100 000 mm. Phase Find without Hall sensors. Pass | PTC or NTC input. Pass if MAXWELL confirms the type | Yes (EC model). Pass | 1 Vpp up to 300 kHz, ×16 384. BiSS-C up to 26 bit. Pass | 4 kHz linear loop, 8 kHz HD loop. Pass. P3 only with the closed HD loop | Two free biquads and a free polynomial controller in mode 3: NC for the CDHD2S. Diagram: partly | NP. Error table of 1000 points in the drive | **Rejected** (2026-10-06): Israeli company. DRV-10 not met as documented (gain only, no phase). Chosen on 2026-09-30. Order the EC2 version, never "RO" (rotary only). With our own controller the loop is 4 kHz. Mode 3 and its number format must be confirmed. [Log](log/2026-09-30_cdhd2s-velocity-loop-custom-filter.md) |
+| Kollmorgen | AKD-x00306, EtherCAT version (for example AKD-P00306-NBEC) | [Installation manual](https://www.kml-technology.com/wp-content/uploads/2024/05/Kollmorgen_AKD_Installation_EN.pdf), [user guide](https://inmoco.co.uk/wp-content/uploads/2022/01/AKD-Servo-Drive-User-Guide.pdf) | 1 or 3 phase 120 to 240 VAC. About 325 V at 230 VAC. Pass | 3 / 9 A for 5 s. Pass | Yes. Wake and Shake commutation without Hall sensors. Pass | Motor thermal input on X10. Pass | Yes. Pass | 1 Vpp up to 250 kHz with termination resistors. Pass | 250 µs (4 kHz). Pass for DRV-09, not P3 | Not checked. Bode plots in WorkBench (DRV-10 pass) | About USD 250 to 400 used. New price not found | **Candidate** (2026-10-06). Older product line. [Log](log/2026-10-06_drives-checked-for-bode-plot-tuning.md) |
+| Copley | Xenus Plus XEL-230-18, EtherCAT version | [Data sheet](https://s3.amazonaws.com/www.motionusa.com/copley/XenusPlus_XEL-ds.pdf), [CME user guide](https://actuation.curtisswright.com/sites/default/files/Resources/CW-CME-User-Guide.pdf) | 100 to 240 VAC. About 325 V at 230 VAC. Pass | 4.24 / 12.7 A for 1 s. Pass | Yes. Phasing without Hall sensors. Pass | Motor temperature input. Pass | Yes. Pass | 1 Vpp up to 230 kHz. Pass | 4 kHz. Pass for DRV-09, not P3 | Not checked. Bode plots in CME (DRV-10 pass) | Not found | **Candidate** (2026-10-06). [Log](log/2026-10-06_drives-checked-for-bode-plot-tuning.md) |
 | Delta | ASD-A3-0421-E with ASD-IF-EN0A20 box | [Manual](https://deltaacdrives.com/Delta-ASDA-A3-Servo-Drive-User-Manual.pdf), [manual 2025 copy](https://www.damencnc.com/userdata/file/7617-5_Delta_ASDA_A3_Manual_English_2025.pdf) | 1 or 3 phase 200 to 230 VAC. About 300 to 325 V. Pass | 2.6 / 10.61 A. Pass | Yes. Pitch 1 to 500 mm. Finds the pole without Hall sensors. Pass | PTC or NTC. Pass if MAXWELL confirms the type | Yes. Pass | 1 Vpp only through the Delta box (500 kHz). **Fail as written** | NP. NC. (The 125 µs EtherCAT cycle is not the loop rate) | Five notch filters, no biquad. Diagrams published | Drive about USD 210 to 225 used. Box price not found. The simpler B3 model is 416.50 euro for 10 or more | **Fallback** (2026-09-30), not confirmed. BiSS-C may not work on units made from week 23 of 2022. [Log](log/2026-09-30_delta-asda-a3-checked-against-the-requirements.md) |
 
 ## Other drives checked against the requirements
@@ -99,7 +95,7 @@ These drives came from the searches. None is chosen. The last column says why.
 
 | Brand | Model | Datasheet | Supply and bus (DRV-04) | Current (DRV-01, 02) | Linear motor and commutation (DRV-05) | Motor temperature input (DRV-06) | EtherCAT CiA 402 (DRV-07) | Encoder input (DRV-08) | Position loop (DRV-09, P3) | Filters and diagram (P1, P2) | Price | Status and notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Servotronix (STXI Motion) | CDHD2-003 (legacy) | [Manual fw 2.38](https://stxim.com/wp-content/uploads/2024/01/CDHD2_User_Manual_fw2.38.x_Rev_2.6-i.pdf), [VarCom fw 2.15](https://stxim.com/wp-content/uploads/2024/01/CDHD2_DDHD_VarCom_fw2.15.x_Rev.1.3.pdf) | 1 phase 120 to 240 VAC. Pass | 3 / 9 A for 2 s. Pass | Yes | Not in logs | Yes | 1 Vpp, ×16 384. Pass | 4 kHz, HD 8 kHz. Pass | Mode 3 with free polynomials is described in this manual | NP | Legacy. Next to check if the CDHD2S has no mode 3. [Log](log/2026-09-29_servotronix-drives-with-a-faster-loop.md) |
+| Servotronix (STXI Motion) | CDHD2-003 (legacy) | [Manual fw 2.38](https://stxim.com/wp-content/uploads/2024/01/CDHD2_User_Manual_fw2.38.x_Rev_2.6-i.pdf), [VarCom fw 2.15](https://stxim.com/wp-content/uploads/2024/01/CDHD2_DDHD_VarCom_fw2.15.x_Rev.1.3.pdf) | 1 phase 120 to 240 VAC. Pass | 3 / 9 A for 2 s. Pass | Yes | Not in logs | Yes | 1 Vpp, ×16 384. Pass | 4 kHz, HD 8 kHz. Pass | Mode 3 with free polynomials is described in this manual | NP | Rejected (2026-10-06): Israeli company. Legacy. [Log](log/2026-09-29_servotronix-drives-with-a-faster-loop.md) |
 | Elmo | Gold Oboe 6/230 | [Product page](https://www.elmomc.com/product/gold-oboe/) | 1 or 3 phase 50 to 270 VAC. Pass | 4.2 / 8.5 A. Pass | Not in logs | Not in logs | Yes | 1 Vpp. Pass | 10 kHz. Pass | Built-in filters only, no free transfer function. NC | Not found | First choice on 2026-09-25. Dropped on 2026-09-29: Israeli supplier. [Log](log/2026-09-25_linear-stage-drive-and-motion-controller-survey.md) |
 | Triamec | TSD350-10 with TP350 supply | [TSD350](https://triamec.com/files/medien/documents/datasheets/HWTSD350_0-2_Datasheet_EP005.pdf), [TP350](https://triamec.com/files/medien/documents/datasheets/HWTP50-TP350_E_Datasheet_EP003.pdf) | TP350: 1 phase 44 to 230 VAC, gives 325 VDC. Pass | 10 / 20 A for 2 s. Pass | Not in logs | Not in logs | Yes. 125 µs cycle from firmware 4.28.0 | 1 Vpp, ×65 536, 500 kHz. Pass | 100 kHz. Pass | Five free biquads. C# code in the drive at 10 kHz. Published | Not found | Best technical fit. Left out: "will be too expensive" (ultra-precision market). Current noise at 2 A not checked. [Log](log/2026-09-29_non-israeli-drives-with-open-control-loops.md) |
 | Kollmorgen | AKD2G-SPE-6V03S-A1F3-0000-A | [Installation manual](https://www.manualslib.com/manual/3154431/Kollmorgen-Akd-2g-S-Series.html?page=34) | 1 or 3 phase 120 to 240 VAC. Pass | 3 / 9 A for 5 s. Pass | Not in logs | Not in logs | Yes (SPE) | 1 Vpp with option F3. Pass | 250 µs (4 kHz). Pass for DRV-09, not P3. Velocity loop 16 kHz | Four free biquads | CHF 1,050.47 (Oxni) | Out: over budget. An earlier entry said 8 kHz from a trade article. That was wrong. [Log](log/2026-09-29_hiwin-delta-kollmorgen-follow-up.md) |

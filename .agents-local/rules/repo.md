@@ -48,6 +48,13 @@ because it works with the ODrive. Keep the existing ODrive code and logs. They s
 measurements. See
 [the decision record](../../docs/decisions/2026-10-02_odrive-is-for-testing-only.md).
 
+## No Israeli suppliers
+
+We do not buy from Israeli suppliers. Do not suggest their drives or other parts, and do not
+choose one as a candidate. This rejected Servotronix (STXI Motion) on 2026-10-06. Elmo, ACS,
+Agito Akribis and Dynamikwell are out for the same reason. See
+[the decision record](../../docs/decisions/2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md).
+
 ## Stack and execution
 
 - **Mixed stack:** Python (`modules/*/software/*`), Arduino/C++ (`modules/*/firmware/*`),
