@@ -22,6 +22,10 @@ that the base got on 6 October.
   bring this in, because aqtuator records one fixed stoq commit. That is on purpose: a library change
   must not reach the machine unless someone records it. The record moved from `2fe6cb5` to
   `bf9eec5`.
+- **aqtuator now also records the newer doqs (`c6fad26` to `a78dd32`), the same one stoq uses.**
+  The new stoq marks the HIWIN guideway file as private, and only the newer doqs accepts that, so
+  the CI check failed without it. The newer doqs also asks for `software/LICENSE`. That file was
+  added with `apply_licenses.py`: the software in `software/` is under GPL-3.0, as `okh.toml` says.
 
 ## Decisions Made
 
