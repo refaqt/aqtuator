@@ -1,11 +1,128 @@
 {
   "document": "compact_stage",
   "errors": [],
-  "objects": {},
+  "objects": {
+    "Assembly": {
+      "area": 331596.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.931,
+        105.029,
+        13.9347
+      ],
+      "counts": {
+        "edges": 1074,
+        "faces": 415,
+        "shells": 3,
+        "solids": 3,
+        "verts": 716
+      },
+      "label": "compact-stage",
+      "type": "Assembly::AssemblyObject",
+      "valid": true,
+      "volume": 1775560.0
+    },
+    "HGR15R418H": {
+      "area": 28164.4,
+      "bbox": [
+        11.0,
+        33.5,
+        10.0,
+        429.0,
+        48.5,
+        25.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        41.0,
+        17.2069
+      ],
+      "counts": {
+        "edges": 453,
+        "faces": 178,
+        "shells": 1,
+        "solids": 1,
+        "verts": 302
+      },
+      "label": "HGR15R418H",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 76787.8
+    },
+    "HGR15R418H001": {
+      "area": 28164.4,
+      "bbox": [
+        11.0,
+        161.5,
+        10.0,
+        429.0,
+        176.5,
+        25.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        169.0,
+        17.2069
+      ],
+      "counts": {
+        "edges": 453,
+        "faces": 178,
+        "shells": 1,
+        "solids": 1,
+        "verts": 302
+      },
+      "label": "HGR15R418H001",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 76787.8
+    },
+    "base": {
+      "area": 275267.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.925,
+        105.032,
+        13.6249
+      ],
+      "counts": {
+        "edges": 168,
+        "faces": 59,
+        "shells": 1,
+        "solids": 1,
+        "verts": 112
+      },
+      "label": "base",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 1621980.0
+    }
+  },
+  "parametric": {
+    "audited": 0,
+    "objects": {}
+  },
   "params": {},
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "5077db094342bc26efbedce7bdfede59764f4f19d0d4e950ab7d513431563788"
+    "compact-stage.FCStd": "3fbda37783da6c0bda63d3e3c44495c8f965952752a162d1f10b1cab08a5410d"
   }
 }
