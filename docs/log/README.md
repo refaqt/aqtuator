@@ -131,3 +131,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-06 | [Best linear encoder on paper, and what the short list costs](2026-10-06_linear-encoder-choice-and-prices.md) | engineering, purchasing |  |
 | 2026-10-07 | [The rails are in the compact-stage assembly](2026-10-07_rails-in-the-compact-stage-assembly.md) | cad |  |
 | 2026-10-07 | [How to mount the encoder scale tape in the pocket of the base](2026-10-07_mounting-the-encoder-scale-tape.md) | engineering, hardware |  |
+| 2026-10-07 | [The rail blocks are in the compact-stage assembly](2026-10-07_rail-blocks-in-the-compact-stage-assembly.md) | cad |  |
