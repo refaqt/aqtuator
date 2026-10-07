@@ -34,11 +34,12 @@
 // a new version (_v2), not an edit of _v1.
 //
 // Bought parts come from the parts library in modules/stoq/. The two guide
-// rails are in this file, with their interface to the base. Not modelled
-// yet: the guide blocks, the motor (magnet track and coil), the encoder, the
-// rollers and the screws. When they enter this file, they bring their own
-// interfaces: for example block to carriage-bottom, magnet track to base,
-// coil to carriage-bottom, and roller to sealing strip.
+// rails and the two magnet tracks (stators) of the linear motor are in this
+// file, with their interfaces to the base. Not modelled yet: the guide
+// blocks, the coil of the motor, the encoder, the rollers and the screws.
+// When they enter this file, they bring their own interfaces: for example
+// block to carriage-bottom, coil to carriage-bottom, and roller to sealing
+// strip.
 //
 // The interfaces below say what joins what. Most hold no dimensions yet.
 // Add a dimension when the CAD fixes it, and keep it the same in both.
@@ -134,6 +135,37 @@ package CompactStage {
         attribute screwLength : LengthValue = 16 [mm];   // M4 x 16
     }
 
+    port def StatorMountInterface_v1 {
+        doc /*
+         * A magnet track (stator) of the linear motor lies with its bottom
+         * face on the floor of the base, between the two guide rails.
+         * Screws go through the 5.5 mm holes of the stator into threaded
+         * M5 holes in the base. The holes go through the 10 mm floor.
+         *
+         * Each stator has two rows of three holes. The rows are 74 mm
+         * apart, on both sides of the centre line of the base. In a row,
+         * the holes are 60 mm apart. The Maxwell data sheet drawing says
+         * "A x 120" here. That is wrong: the holes are 60 mm apart.
+         *
+         * The two stators lie end to end, both with their N end towards
+         * the start of the base. Their ends are cut at a slant, and they
+         * fit into each other. The first hole of the first stator is
+         * 70 mm from the start of the base. The second stator starts
+         * 180 mm further on, the length LC of one stator.
+         *
+         * The stators are aligned with locating pins, not with milled
+         * edges, so that stators of other lengths fit too. The pin holes
+         * are not modelled yet. The screw length is not chosen yet.
+         *
+         * In the CAD, the frame IF_mount_bottom of the stator sits on its
+         * first hole, at the N end, halfway between the rows.
+         */
+        attribute holePitch : LengthValue = 60 [mm];
+        attribute rowSpacing : LengthValue = 74 [mm];
+        attribute holesPerRow : Natural = 3;
+        attribute statorPitch : LengthValue = 180 [mm];
+    }
+
     // ---------------------------------------------------------------------
     // Parts. Each port says which side of an interface a part is on.
     // ---------------------------------------------------------------------
@@ -146,6 +178,8 @@ package CompactStage {
         port clampMountEnd : ClampMountInterface_v1;
         port referenceRailMount : RailMountInterface_v1;
         port secondRailMount : RailMountInterface_v1;
+        port firstStatorMount : StatorMountInterface_v1;
+        port secondStatorMount : StatorMountInterface_v1;
     }
 
     part def GuideRail {
@@ -154,6 +188,15 @@ package CompactStage {
          * the parts library in modules/stoq/. The stage has two.
          */
         port baseMount : ~RailMountInterface_v1;
+    }
+
+    part def MagnetTrack {
+        doc /*
+         * A bought magnet track (stator) of the linear motor: Maxwell
+         * MK2-180, 180 mm long. It comes from the parts library in
+         * modules/stoq/. The stage has two, end to end.
+         */
+        port mountBottom : ~StatorMountInterface_v1;
     }
 
     part def CarriageBottom {
@@ -232,6 +275,8 @@ package CompactStage {
         part sealingClampEnd : SealingClamp;
         part referenceRail : GuideRail;
         part secondRail : GuideRail;
+        part firstStator : MagnetTrack;
+        part secondStator : MagnetTrack;
 
         // Interfaces of the whole stage
         port machineMount : BaseMountInterface_v1;
@@ -252,6 +297,10 @@ package CompactStage {
         // The guide rails
         connect base.referenceRailMount to referenceRail.baseMount;
         connect base.secondRailMount to secondRail.baseMount;
+
+        // The magnet tracks of the linear motor
+        connect base.firstStatorMount to firstStator.mountBottom;
+        connect base.secondStatorMount to secondStator.mountBottom;
     }
 
     // ---------------------------------------------------------------------

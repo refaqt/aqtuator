@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Assembly": {
-      "area": 371353.0,
+      "area": 443230.0,
       "bbox": [
         0.0,
         0.0,
@@ -14,21 +14,21 @@
       ],
       "closed": true,
       "com": [
-        215.734,
-        105.027,
-        14.688
+        216.314,
+        105.024,
+        14.6566
       ],
       "counts": {
-        "edges": 4186,
-        "faces": 1599,
-        "shells": 23,
-        "solids": 7,
-        "verts": 2732
+        "edges": 4474,
+        "faces": 1703,
+        "shells": 25,
+        "solids": 9,
+        "verts": 2924
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 1904030.0
+      "volume": 2150900.0
     },
     "HGL15CAZBC_E001": {
       "area": 9939.18,
@@ -198,6 +198,62 @@
       "valid": true,
       "volume": 76787.8
     },
+    "MK2_180": {
+      "area": 35938.6,
+      "bbox": [
+        39.43,
+        62.0,
+        10.0,
+        222.13,
+        148.0,
+        19.6
+      ],
+      "closed": true,
+      "com": [
+        130.784,
+        105.002,
+        14.4145
+      ],
+      "counts": {
+        "edges": 144,
+        "faces": 52,
+        "shells": 1,
+        "solids": 1,
+        "verts": 96
+      },
+      "label": "MK2-180",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 123436.0
+    },
+    "MK2_181": {
+      "area": 35938.6,
+      "bbox": [
+        219.43,
+        62.0,
+        10.0,
+        402.13,
+        148.0,
+        19.6
+      ],
+      "closed": true,
+      "com": [
+        310.784,
+        105.002,
+        14.4145
+      ],
+      "counts": {
+        "edges": 144,
+        "faces": 52,
+        "shells": 1,
+        "solids": 1,
+        "verts": 96
+      },
+      "label": "MK2-180001",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 123436.0
+    },
     "base": {
       "area": 275267.0,
       "bbox": [
@@ -235,6 +291,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "246aeb1345cbd4d9be8862cddccdbbe82cb39201bbdaabe17fb8e950186af8cb"
+    "compact-stage.FCStd": "7e457a5f438ba498148142aa06f9e05f15ba159267334c59d018abfe920e90c1"
   }
 }
