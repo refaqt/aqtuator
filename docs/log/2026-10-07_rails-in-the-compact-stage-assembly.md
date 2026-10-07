@@ -17,6 +17,16 @@ that the base got on 6 October.
 - **The stored measurements (fingerprints) of the assembly and the base are up to date again.**
   The shape of the base did not change. It was only saved again.
 
+- **aqtuator now uses the newest stoq library.** The HIWIN HGL15 block has its own coordinate
+  system (a rail frame) and the colours from the original STEP file. Running `setup-tooling` did not
+  bring this in, because aqtuator records one fixed stoq commit. That is on purpose: a library change
+  must not reach the machine unless someone records it. The record moved from `2fe6cb5` to
+  `bf9eec5`.
+- **aqtuator now also records the newer doqs (`c6fad26` to `a78dd32`), the same one stoq uses.**
+  The new stoq marks the HIWIN guideway file as private, and only the newer doqs accepts that, so
+  the CI check failed without it. The newer doqs also asks for `software/LICENSE`. That file was
+  added with `apply_licenses.py`: the software in `software/` is under GPL-3.0, as `okh.toml` says.
+
 ## Decisions Made
 
 None.
@@ -38,6 +48,9 @@ None.
   not linked to the Params sheet. They were there before.
 - `modules/stoq/modules/hiwin/modules/hgr-rail/cad/parts/HGR15R418H.FCStd` also changed on disk,
   probably when the assembly was saved. It belongs to the stoq repository and is not in this commit.
+  Later the same day, this local change was stashed in `modules/stoq` (with the deleted
+  `HGL15CA2R760ZBC2-ZZ+E2.step`) before the move to `bf9eec5`. It is still in `git stash list`
+  inside `modules/stoq`.
 - Mistake rules checked: [reverted the tooling update](../mistakes/2026-09-22_reverted-the-tooling-update.md)
   (the tooling folders were left as they are).
 
