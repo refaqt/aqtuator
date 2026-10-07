@@ -128,3 +128,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-02 | [One overview of all servo drives we considered](2026-10-02_servo-drive-selection-overview.md) | engineering, purchasing |  |
 | 2026-10-06 | [Servo drives checked for a Bode plot tuning tool](2026-10-06_drives-checked-for-bode-plot-tuning.md) | engineering, purchasing |  |
 | 2026-10-06 | [The linear encoder table has its own page](2026-10-06_linear-encoder-selection-page.md) | engineering, purchasing |  |
+| 2026-10-07 | [The rails are in the compact-stage assembly](2026-10-07_rails-in-the-compact-stage-assembly.md) | cad |  |
