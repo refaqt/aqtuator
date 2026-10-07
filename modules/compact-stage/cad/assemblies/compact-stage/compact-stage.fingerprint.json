@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Assembly": {
-      "area": 331596.0,
+      "area": 371353.0,
       "bbox": [
         0.0,
         0.0,
@@ -14,21 +14,133 @@
       ],
       "closed": true,
       "com": [
-        219.931,
-        105.029,
-        13.9347
+        215.734,
+        105.027,
+        14.688
       ],
       "counts": {
-        "edges": 1074,
-        "faces": 415,
-        "shells": 3,
-        "solids": 3,
-        "verts": 716
+        "edges": 4186,
+        "faces": 1599,
+        "shells": 23,
+        "solids": 7,
+        "verts": 2732
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 1775560.0
+      "volume": 1904030.0
+    },
+    "HGL15CAZBC_E001": {
+      "area": 9939.18,
+      "bbox": [
+        168.343,
+        152.0,
+        14.3,
+        237.905,
+        186.0,
+        34.0
+      ],
+      "closed": true,
+      "com": [
+        200.861,
+        169.083,
+        25.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "HGL15CAZBC+E001",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
+    },
+    "HGL15CAZBC_E002": {
+      "area": 9939.18,
+      "bbox": [
+        79.5659,
+        24.0,
+        14.3,
+        149.128,
+        58.0,
+        34.0
+      ],
+      "closed": true,
+      "com": [
+        116.609,
+        40.9172,
+        25.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "HGL15CAZBC+E002",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
+    },
+    "HGL15CAZBC_E003": {
+      "area": 9939.18,
+      "bbox": [
+        181.293,
+        24.0,
+        14.3,
+        250.855,
+        58.0,
+        34.0
+      ],
+      "closed": true,
+      "com": [
+        218.336,
+        40.9172,
+        25.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "HGL15CAZBC+E003",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
+    },
+    "HGL15CAZBC_E2": {
+      "area": 9939.18,
+      "bbox": [
+        62.5768,
+        152.0,
+        14.3,
+        132.139,
+        186.0,
+        34.0
+      ],
+      "closed": true,
+      "com": [
+        95.0954,
+        169.083,
+        25.0992
+      ],
+      "counts": {
+        "edges": 778,
+        "faces": 296,
+        "shells": 5,
+        "solids": 1,
+        "verts": 504
+      },
+      "label": "HGL15CAZBC+E2",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 32117.3
     },
     "HGR15R418H": {
       "area": 28164.4,
@@ -123,6 +235,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "3fbda37783da6c0bda63d3e3c44495c8f965952752a162d1f10b1cab08a5410d"
+    "compact-stage.FCStd": "246aeb1345cbd4d9be8862cddccdbbe82cb39201bbdaabe17fb8e950186af8cb"
   }
 }
