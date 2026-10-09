@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 72090.8,
+      "area": 73892.8,
       "bbox": [
         0.0,
         0.0,
@@ -16,22 +16,22 @@
       "com": [
         95.0,
         85.0,
-        6.71852
+        6.82187
       ],
       "counts": {
-        "edges": 264,
-        "faces": 110,
+        "edges": 142,
+        "faces": 68,
         "shells": 1,
         "solids": 1,
-        "verts": 172
+        "verts": 92
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 370145.0
+      "volume": 373837.0
     },
     "Hole": {
-      "area": 77295.5,
+      "area": 80571.1,
       "bbox": [
         0.0,
         0.0,
@@ -44,22 +44,22 @@
       "com": [
         95.0,
         85.0,
-        7.48411
+        7.48491
       ],
       "counts": {
-        "edges": 144,
-        "faces": 66,
+        "edges": 108,
+        "faces": 54,
         "shells": 1,
         "solids": 1,
-        "verts": 96
+        "verts": 72
       },
       "label": "Hole",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 449742.0
+      "volume": 473536.0
     },
-    "Hole001": {
-      "area": 71697.1,
+    "Mirrored": {
+      "area": 75024.5,
       "bbox": [
         0.0,
         0.0,
@@ -72,47 +72,19 @@
       "com": [
         95.0,
         85.0,
-        6.65945
+        6.66896
       ],
       "counts": {
-        "edges": 246,
-        "faces": 104,
+        "edges": 138,
+        "faces": 64,
         "shells": 1,
         "solids": 1,
-        "verts": 160
+        "verts": 92
       },
-      "label": "Hole001",
-      "type": "PartDesign::Hole",
+      "label": "Mirrored",
+      "type": "PartDesign::Mirrored",
       "valid": true,
-      "volume": 376327.0
-    },
-    "Hole002": {
-      "area": 71907.2,
-      "bbox": [
-        0.0,
-        0.0,
-        0.0,
-        190.0,
-        170.0,
-        15.0
-      ],
-      "closed": true,
-      "com": [
-        95.0,
-        85.0141,
-        6.65796
-      ],
-      "counts": {
-        "edges": 256,
-        "faces": 108,
-        "shells": 1,
-        "solids": 1,
-        "verts": 166
-      },
-      "label": "Hole002",
-      "type": "PartDesign::Hole",
-      "valid": true,
-      "volume": 376151.0
+      "volume": 395704.0
     },
     "Pad": {
       "area": 75400.0,
@@ -143,7 +115,7 @@
       "volume": 484500.0
     },
     "Pad001": {
-      "area": 71711.4,
+      "area": 74529.5,
       "bbox": [
         0.0,
         0.0,
@@ -154,24 +126,24 @@
       ],
       "closed": true,
       "com": [
-        95.0,
+        94.6306,
         85.0,
-        6.65909
+        6.64416
       ],
       "counts": {
-        "edges": 226,
-        "faces": 96,
+        "edges": 126,
+        "faces": 60,
         "shells": 1,
         "solids": 1,
-        "verts": 148
+        "verts": 84
       },
       "label": "Pad001",
       "type": "PartDesign::Pad",
       "valid": true,
-      "volume": 376477.0
+      "volume": 394104.0
     },
     "Part": {
-      "area": 72090.8,
+      "area": 73892.8,
       "bbox": [
         0.0,
         0.0,
@@ -184,22 +156,22 @@
       "com": [
         95.0,
         85.0,
-        6.71852
+        6.82187
       ],
       "counts": {
-        "edges": 264,
-        "faces": 110,
+        "edges": 142,
+        "faces": 68,
         "shells": 1,
         "solids": 1,
-        "verts": 172
+        "verts": 92
       },
       "label": "carriage_bottom",
       "type": "App::Part",
       "valid": true,
-      "volume": 370145.0
+      "volume": 373837.0
     },
     "Pocket": {
-      "area": 72124.5,
+      "area": 73892.8,
       "bbox": [
         0.0,
         0.0,
@@ -212,22 +184,22 @@
       "com": [
         95.0,
         85.0,
-        7.5
+        6.82187
       ],
       "counts": {
-        "edges": 48,
-        "faces": 18,
+        "edges": 142,
+        "faces": 68,
         "shells": 1,
         "solids": 1,
-        "verts": 32
+        "verts": 92
       },
       "label": "Pocket",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 460706.0
+      "volume": 373837.0
     },
     "Pocket001": {
-      "area": 71043.9,
+      "area": 74034.6,
       "bbox": [
         0.0,
         0.0,
@@ -240,47 +212,19 @@
       "com": [
         95.0,
         85.0,
-        6.66008
+        6.61916
       ],
       "counts": {
-        "edges": 150,
-        "faces": 68,
+        "edges": 114,
+        "faces": 56,
         "shells": 1,
         "solids": 1,
-        "verts": 100
+        "verts": 76
       },
       "label": "Pocket001",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 375910.0
-    },
-    "Pocket002": {
-      "area": 72090.8,
-      "bbox": [
-        0.0,
-        0.0,
-        0.0,
-        190.0,
-        170.0,
-        15.0
-      ],
-      "closed": true,
-      "com": [
-        95.0,
-        85.0,
-        6.71852
-      ],
-      "counts": {
-        "edges": 264,
-        "faces": 110,
-        "shells": 1,
-        "solids": 1,
-        "verts": 172
-      },
-      "label": "Pocket002",
-      "type": "PartDesign::Pocket",
-      "valid": true,
-      "volume": 370145.0
+      "volume": 392504.0
     },
     "Sketch": {
       "area": 0.0,
@@ -313,10 +257,10 @@
     "Sketch001": {
       "area": 0.0,
       "bbox": [
-        10.75,
+        17.75,
         4.75,
         15.0,
-        179.25,
+        172.25,
         165.25,
         15.0
       ],
@@ -366,77 +310,21 @@
       "valid": true,
       "volume": 0.0
     },
-    "Sketch005": {
+    "Sketch009": {
       "area": 0.0,
       "bbox": [
-        0.0,
         0.0,
         15.0,
-        190.0,
-        170.0,
-        15.0
-      ],
-      "closed": true,
-      "com": [
-        95.0,
-        85.0,
-        15.0
-      ],
-      "counts": {
-        "edges": 20,
-        "faces": 0,
-        "shells": 0,
-        "solids": 0,
-        "verts": 20
-      },
-      "label": "Sketch005",
-      "type": "Sketcher::SketchObject",
-      "valid": true,
-      "volume": 0.0
-    },
-    "Sketch006": {
-      "area": 0.0,
-      "bbox": [
         0.0,
-        9.0,
-        5.0,
-        190.0,
-        161.0,
-        5.0
+        0.0,
+        155.0,
+        15.0
       ],
       "closed": true,
       "com": [
-        95.0,
+        0.0,
         85.0,
-        5.0
-      ],
-      "counts": {
-        "edges": 24,
-        "faces": 0,
-        "shells": 0,
-        "solids": 0,
-        "verts": 24
-      },
-      "label": "Sketch006",
-      "type": "Sketcher::SketchObject",
-      "valid": true,
-      "volume": 0.0
-    },
-    "Sketch007": {
-      "area": 0.0,
-      "bbox": [
-        1.75,
-        14.75,
-        5.0,
-        188.25,
-        155.25,
-        5.0
-      ],
-      "closed": true,
-      "com": [
-        95.0,
-        85.0,
-        5.0
+        7.5
       ],
       "counts": {
         "edges": 4,
@@ -445,54 +333,26 @@
         "solids": 0,
         "verts": 4
       },
-      "label": "Sketch007",
+      "label": "Sketch009",
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
     },
-    "Sketch008": {
-      "area": 0.0,
-      "bbox": [
-        2.0,
-        53.0,
-        15.0,
-        188.0,
-        57.0,
-        15.0
-      ],
-      "closed": true,
-      "com": [
-        95.0,
-        55.0,
-        15.0
-      ],
-      "counts": {
-        "edges": 2,
-        "faces": 0,
-        "shells": 0,
-        "solids": 0,
-        "verts": 2
-      },
-      "label": "Sketch008",
-      "type": "Sketcher::SketchObject",
-      "valid": true,
-      "volume": 0.0
-    },
-    "Sketch009": {
+    "Sketch010": {
       "area": 0.0,
       "bbox": [
         0.0,
-        46.0,
+        0.0,
         0.0,
         190.0,
-        124.0,
-        0.0
+        0.0,
+        8.33333
       ],
       "closed": true,
       "com": [
         95.0,
-        85.0,
-        0.0
+        0.0,
+        4.16667
       ],
       "counts": {
         "edges": 8,
@@ -501,14 +361,14 @@
         "solids": 0,
         "verts": 8
       },
-      "label": "Sketch009",
+      "label": "Sketch010",
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
     }
   },
   "parametric": {
-    "audited": 17,
+    "audited": 11,
     "objects": {
       "Hole": {
         "label": "Hole",
@@ -516,27 +376,6 @@
         "unlinked": [
           "Diameter is a typed number: 4.5",
           "Depth is a typed number: 25"
-        ]
-      },
-      "Hole001": {
-        "label": "Hole001",
-        "type": "PartDesign::Hole",
-        "unlinked": [
-          "Diameter is a typed number: 3.4"
-        ]
-      },
-      "Hole002": {
-        "label": "Hole002",
-        "type": "PartDesign::Hole",
-        "unlinked": [
-          "Depth is a typed number: 10"
-        ]
-      },
-      "LinearPattern": {
-        "label": "LinearPattern",
-        "type": "PartDesign::LinearPattern",
-        "unlinked": [
-          "Occurrences is a typed number: 3"
         ]
       },
       "Pad": {
@@ -550,7 +389,7 @@
         "label": "Pad001",
         "type": "PartDesign::Pad",
         "unlinked": [
-          "Length is a typed number: 2"
+          "Length is a typed number: 8"
         ]
       },
       "Sketch": {
@@ -558,7 +397,7 @@
         "label": "Sketch",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "Constraint9 (Distance) is a typed number: 190 mm",
+          "w_carrier (Distance) is a typed number: 190 mm",
           "Constraint10 (Distance) is a typed number: 170 mm"
         ]
       },
@@ -571,7 +410,7 @@
           "Constraint16 (DistanceY) is a typed number: 26 mm",
           "Constraint62 (DistanceY) is a typed number: 40 mm",
           "Constraint63 (DistanceX) is a typed number: 34 mm",
-          "Constraint64 (Distance) is a typed number: 9 mm"
+          "Constraint64 (Distance) is a typed number: 16 mm"
         ]
       },
       "Sketch003": {
@@ -583,40 +422,12 @@
           "h_block (DistanceY) is a typed number: 5 mm"
         ]
       },
-      "Sketch005": {
+      "Sketch009": {
         "dof": 0,
-        "label": "Sketch005",
+        "label": "Sketch009",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "Constraint11 (DistanceX) is a typed number: 8 mm",
-          "Constraint12 (Radius) is a typed number: 4 mm",
-          "Constraint13 (DistanceY) is a typed number: 50 mm"
-        ]
-      },
-      "Sketch006": {
-        "dof": 0,
-        "label": "Sketch006",
-        "type": "Sketcher::SketchObject",
-        "unlinked": [
-          "Constraint18 (Radius) is a typed number: 4 mm",
-          "Constraint20 (Distance) is a typed number: 17 mm"
-        ]
-      },
-      "Sketch007": {
-        "dof": 0,
-        "label": "Sketch007",
-        "type": "Sketcher::SketchObject",
-        "unlinked": [
-          "Constraint9 (Diameter) is a typed number: 4.5 mm"
-        ]
-      },
-      "Sketch008": {
-        "dof": 0,
-        "label": "Sketch008",
-        "type": "Sketcher::SketchObject",
-        "unlinked": [
-          "top_interface_pitch (Distance) is a typed number: 30 mm",
-          "Constraint7 (Diameter) is a typed number: 4 mm"
+          "Constraint12 (Distance) is a typed number: 15 mm"
         ]
       }
     }
@@ -625,6 +436,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "4c70d670ca844c9f91689a6738d64431052aedcdad98f2a516a59bd19ff4305e"
+    "carriage-bottom.FCStd": "0019abdf2e6ccad7410c130469ccf1468d93370fcdc02eb745b5971a030dde50"
   }
 }
