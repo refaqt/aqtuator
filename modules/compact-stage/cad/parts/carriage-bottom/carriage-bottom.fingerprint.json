@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 72327.6,
+      "area": 72090.8,
       "bbox": [
         0.0,
         0.0,
@@ -16,19 +16,19 @@
       "com": [
         95.0,
         85.0,
-        6.65497
+        6.71852
       ],
       "counts": {
-        "edges": 276,
-        "faces": 116,
+        "edges": 264,
+        "faces": 110,
         "shells": 1,
         "solids": 1,
-        "verts": 178
+        "verts": 172
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 375797.0
+      "volume": 370145.0
     },
     "Hole": {
       "area": 77295.5,
@@ -171,7 +171,7 @@
       "volume": 376477.0
     },
     "Part": {
-      "area": 72327.6,
+      "area": 72090.8,
       "bbox": [
         0.0,
         0.0,
@@ -184,19 +184,19 @@
       "com": [
         95.0,
         85.0,
-        6.65497
+        6.71852
       ],
       "counts": {
-        "edges": 276,
-        "faces": 116,
+        "edges": 264,
+        "faces": 110,
         "shells": 1,
         "solids": 1,
-        "verts": 178
+        "verts": 172
       },
       "label": "carriage_bottom",
       "type": "App::Part",
       "valid": true,
-      "volume": 375797.0
+      "volume": 370145.0
     },
     "Pocket": {
       "area": 72124.5,
@@ -253,6 +253,34 @@
       "type": "PartDesign::Pocket",
       "valid": true,
       "volume": 375910.0
+    },
+    "Pocket002": {
+      "area": 72090.8,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        190.0,
+        170.0,
+        15.0
+      ],
+      "closed": true,
+      "com": [
+        95.0,
+        85.0,
+        6.71852
+      ],
+      "counts": {
+        "edges": 264,
+        "faces": 110,
+        "shells": 1,
+        "solids": 1,
+        "verts": 172
+      },
+      "label": "Pocket002",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 370145.0
     },
     "Sketch": {
       "area": 0.0,
@@ -449,10 +477,38 @@
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
+    },
+    "Sketch009": {
+      "area": 0.0,
+      "bbox": [
+        0.0,
+        46.0,
+        0.0,
+        190.0,
+        124.0,
+        0.0
+      ],
+      "closed": true,
+      "com": [
+        95.0,
+        85.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "Sketch009",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     }
   },
   "parametric": {
-    "audited": 15,
+    "audited": 17,
     "objects": {
       "Hole": {
         "label": "Hole",
@@ -569,6 +625,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "28b7aca623eb014726b6c2bdd5a0747eef90fb9636e24d992f890d30dc26cc0a"
+    "carriage-bottom.FCStd": "4c70d670ca844c9f91689a6738d64431052aedcdad98f2a516a59bd19ff4305e"
   }
 }
