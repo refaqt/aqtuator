@@ -35,3 +35,4 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-09-30 | [Delta ASDA-A3 is the fallback if the Servotronix drive does not work](2026-09-30_delta-asda-a3-as-fallback-drive.md) |
 | 2026-10-02 | [The ODrive is a test drive only. We will not use it in future developments](2026-10-02_odrive-is-for-testing-only.md) |
 | 2026-10-06 | [Kollmorgen AKD and Copley Xenus Plus are the drive candidates. Servotronix is out](2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md) |
+| 2026-10-09 | [Lay the encoder tape with a 3D-printed dummy guide block](2026-10-09_lay-the-encoder-tape-with-a-printed-dummy-block.md) |

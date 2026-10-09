@@ -72,6 +72,10 @@ We looked for a way to lay the whole tape, and for other ways to press it down.
 No decision yet. The dummy carriage with an overhanging applicator is the preferred method. The
 rail-riding applicator is the second choice.
 
+**Update 2026-10-09:** Niels chose another method. The applicator goes on a 3D-printed dummy
+guide block, and the real guide blocks go on after the tape is laid. See
+[the decision](../decisions/2026-10-09_lay-the-encoder-tape-with-a-printed-dummy-block.md).
+
 ## Open Questions
 
 - Which guide blocks does the stage use, and how wide is the gap between a block and the pocket
