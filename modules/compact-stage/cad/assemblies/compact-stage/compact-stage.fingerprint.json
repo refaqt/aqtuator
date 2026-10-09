@@ -14,7 +14,7 @@
       ],
       "closed": true,
       "com": [
-        216.314,
+        214.882,
         105.024,
         14.6566
       ],
@@ -33,16 +33,16 @@
     "HGL15CAZBC_E001": {
       "area": 9939.18,
       "bbox": [
-        168.343,
+        121.0,
         152.0,
         14.3,
-        237.905,
+        190.562,
         186.0,
         34.0
       ],
       "closed": true,
       "com": [
-        200.861,
+        153.519,
         169.083,
         25.0992
       ],
@@ -117,16 +117,16 @@
     "HGL15CAZBC_E2": {
       "area": 9939.18,
       "bbox": [
-        62.5768,
+        14.0527,
         152.0,
         14.3,
-        132.139,
+        83.6147,
         186.0,
         34.0
       ],
       "closed": true,
       "com": [
-        95.0954,
+        46.5712,
         169.083,
         25.0992
       ],
@@ -281,6 +281,34 @@
       "type": "App::Link",
       "valid": true,
       "volume": 1621980.0
+    },
+    "carriage_bottom": {
+      "area": 72327.6,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        190.0,
+        170.0,
+        15.0
+      ],
+      "closed": true,
+      "com": [
+        95.0,
+        85.0,
+        6.65497
+      ],
+      "counts": {
+        "edges": 276,
+        "faces": 116,
+        "shells": 1,
+        "solids": 1,
+        "verts": 178
+      },
+      "label": "carriage-bottom",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 375797.0
     }
   },
   "parametric": {
@@ -291,6 +319,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "7e457a5f438ba498148142aa06f9e05f15ba159267334c59d018abfe920e90c1"
+    "compact-stage.FCStd": "4c0863ad17d0a3010292e4c1a11f6d803b3a2a099fcc6b749520887e78a6ab4d"
   }
 }
