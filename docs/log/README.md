@@ -134,3 +134,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-07 | [The rail blocks are in the compact-stage assembly](2026-10-07_rail-blocks-in-the-compact-stage-assembly.md) | cad |  |
 | 2026-10-09 | [First draft of the bottom carriage](2026-10-09_first-draft-of-the-bottom-carriage.md) | cad |  |
 | 2026-10-09 | [Carriage sides clear the base](2026-10-09_carriage-sides-clear-the-base.md) | cad |  |
+| 2026-10-09 | [Stiffer bottom carriage](2026-10-09_stiffer-bottom-carriage.md) | cad |  |
