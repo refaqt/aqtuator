@@ -135,4 +135,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-09 | [First draft of the bottom carriage](2026-10-09_first-draft-of-the-bottom-carriage.md) | cad |  |
 | 2026-10-09 | [Carriage sides clear the base](2026-10-09_carriage-sides-clear-the-base.md) | cad |  |
 | 2026-10-09 | [Stiffer bottom carriage](2026-10-09_stiffer-bottom-carriage.md) | cad |  |
-| 2026-10-12 | [Linear motor pocket in the bottom carriage](2026-10-12_linear-motor-pocket-in-the-bottom-carriage.md) | cad |  |
+| 2026-10-12 | [Linear motor pocket and cooling channel in the bottom carriage](2026-10-12_linear-motor-pocket-in-the-bottom-carriage.md) | cad |  |
