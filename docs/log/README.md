@@ -139,3 +139,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-12 | [Water cooling fittings, and MK21 heat at 200 N](2026-10-12_water-cooling-fittings-and-mk21-heat-at-200-n.md) | engineering, purchasing |  |
 | 2026-10-12 | [Idea: a path for the motor and reading head cables in the bottom carriage](2026-10-12_motor-cable-path-in-the-bottom-carriage.md) | cad | 2 |
 | 2026-10-12 | [Lubrication of the guide blocks](2026-10-12_lubrication-of-the-guide-blocks.md) | engineering, cad, purchasing |  |
+| 2026-10-13 | [Load and life of the HIWIN QE15 guide blocks](2026-10-13_qe15-guide-blocks-load-and-life.md) | engineering, purchasing |  |
