@@ -18,6 +18,15 @@ Niels asked Saho Robot for these Lamotion parts:
 | ABS-ET-A/B | End clamp for the tape | 2 |
 | ALZ-ASST-ABS | Tool to mount the scale tape | 1 |
 
+### The Lamotion reading head is not too big
+
+- **The Lamotion reading head fits in the stage.** The earlier encoder study said the Lamotion ABS
+  head is too big. It is 16.5 mm wide and 18.4 mm high, and the study marked it as failing two
+  size limits.
+- **Those size limits were wrong.** Niels set them on the idea that the reading head must fit
+  underneath the seal. That is not so. The seal goes up where the reading head sits, so there is
+  more space for the head.
+
 ### The MK21 motor connector
 
 - **We can ask for any connector.** By default, the MK21 motors come with one large D-SUB
@@ -55,8 +64,6 @@ Saho Robot can fit any connector we ask for.
 
 - The sheet gives a cable diameter of 9.3 mm. The MK2 data sheet gives 6.8 ± 1 mm. Which value is
   right for the MK21 cable? Is 9.3 mm perhaps the cable of the encoder or of an extension?
-- The earlier encoder study found the Lamotion ABS head 16.5 mm wide and 18.4 mm high. That fails
-  two of our size limits. Is the AL26B100-05MUL head the same size? Check its data sheet.
 - What does the AL26B100-05MUL head send out (BiSS-C, Panasonic serial or other), and does our
   drive accept it?
 - What will the four encoder parts cost, and when can they arrive?
@@ -66,7 +73,10 @@ Saho Robot can fit any connector we ask for.
 1. Wait for the Saho Robot quote on the four encoder parts.
 2. Ask Saho Robot which cable diameter is right, and ask for a data sheet of the AL26B100-05MUL
    head.
-3. Choose the motor connector: the standard D-SUB 9W4M, or a smaller round connector. Without a
+3. Update the size limits for the reading head in
+   [the linear encoder selection page](../linear-encoder-selection.md). The Lamotion heads should
+   no longer fail on head size.
+4. Choose the motor connector: the standard D-SUB 9W4M, or a smaller round connector. Without a
    Hall sensor, an M15 connector (3 + PE + 5 signal) carries everything. See
    [the round connector note](2026-10-13_mk21-motor-cable-connector.md). Tell Saho Robot the
    choice before they make the motor.
