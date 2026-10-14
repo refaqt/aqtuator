@@ -143,3 +143,8 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-13 | [Smaller QEH15SA blocks and a thicker bottom carriage](2026-10-13_qeh15sa-blocks-and-thicker-bottom-carriage.md) | cad |  |
 | 2026-10-13 | [Other makers for the QEH15SA block and EGR15U rail](2026-10-13_second-source-for-the-qe15-guide-blocks.md) | engineering, purchasing |  |
 | 2026-10-13 | [Round connector for the MK21 motor cable](2026-10-13_mk21-motor-cable-connector.md) | engineering, purchasing |  |
+| 2026-10-14 | [The base has mounting frames for the EGR15U rails](2026-10-14_rail-frames-on-the-base.md) | cad, architecture |  |
+| 2026-10-14 | [The bottom carriage has mounting frames for the guide blocks and the forcer](2026-10-14_block-and-forcer-frames-on-the-bottom-carriage.md) | cad, architecture |  |
+| 2026-10-14 | [The rails in the base are 130 mm apart](2026-10-14_rails-130-mm-apart.md) | cad, architecture |  |
+| 2026-10-14 | [The lower body of the bottom carriage is 2 mm narrower](2026-10-14_narrower-lower-body-of-the-bottom-carriage.md) | cad |  |
+| 2026-10-14 | [The bottom carriage clears the top of the base, and the forcer pocket has a formula](2026-10-14_carriage-clears-the-top-of-the-base.md) | cad |  |

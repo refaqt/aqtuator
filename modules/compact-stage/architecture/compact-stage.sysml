@@ -35,11 +35,15 @@
 //
 // Bought parts come from the parts library in modules/stoq/. The two guide
 // rails and the two magnet tracks (stators) of the linear motor are in this
-// file, with their interfaces to the base. Not modelled yet: the guide
-// blocks, the coil of the motor, the encoder, the rollers and the screws.
-// When they enter this file, they bring their own interfaces: for example
-// block to carriage-bottom, coil to carriage-bottom, and roller to sealing
-// strip.
+// file, with their interfaces to the base. The four guide blocks and the
+// forcer (the coil part of the motor) are in this file, with their
+// interfaces to carriage-bottom. Not modelled yet: the encoder, the rollers
+// and the screws. When they enter this file, they bring their own
+// interfaces: for example roller to sealing strip.
+//
+// Not modelled yet either: the interface between a guide block and its
+// rail. It needs a choice first: which row of blocks (a or b) runs on the
+// reference rail.
 //
 // The interfaces below say what joins what. Most hold no dimensions yet.
 // Add a dimension when the CAD fixes it, and keep it the same in both.
@@ -87,6 +91,56 @@ package CompactStage {
          */
     }
 
+    port def BlockMountInterface_v1 {
+        doc /*
+         * A guide block screws to the bottom face of carriage-bottom. The
+         * block sits in a pocket. Its top face touches the floor of the
+         * pocket. Two M4 screws go down through the carriage into the
+         * threaded holes of the block. Each hole has a counterbore on the
+         * top face of the carriage for the screw head.
+         *
+         * The carriage has four blocks, in two rows along the travel.
+         * Row a is at x = 30 mm in the carriage, row b at x = 160 mm.
+         * "Start" is the end of the carriage where the motor cable leaves
+         * (y = 11 mm), "end" is the other end (y = 169 mm). The names do
+         * not say which row runs on the reference rail.
+         *
+         * The lubrication unit (E2) of each block points out of the
+         * carriage, away from its centre.
+         *
+         * In the CAD, the frames IF_block_a_start_mount,
+         * IF_block_b_start_mount, IF_block_a_end_mount and
+         * IF_block_b_end_mount sit on the floor of each pocket, at the
+         * centre of the two holes. Z points down, into the block. X runs
+         * along the rail, from the end of the carriage towards its
+         * centre. They join the frame IF_mount_top of the block.
+         */
+        attribute holePitch : LengthValue = 26 [mm];        // across the rail
+        attribute holesPerBlock : Natural = 2;
+    }
+
+    port def ForcerMountInterface_v1 {
+        doc /*
+         * The forcer of the linear motor screws to the bottom face of
+         * carriage-bottom. It sits in a pocket in the middle of the
+         * carriage, with its coils facing down, towards the magnet tracks.
+         * Six M4 screws go down through the carriage into the threaded
+         * holes of the forcer. The screw length is not chosen yet.
+         *
+         * The holes are in two rows along the travel. The cable end of
+         * the forcer points to the start of the carriage, where the cable
+         * slot is.
+         *
+         * In the CAD, the frame IF_forcer_mount sits on the floor of the
+         * pocket, on the middle hole, halfway between the rows. Z points
+         * down, into the forcer. X runs along the travel, away from the
+         * cable end. It joins the frame IF_mount_top of the forcer.
+         */
+        attribute holePitch : LengthValue = 35 [mm];        // along the travel
+        attribute rowSpacing : LengthValue = 50 [mm];
+        attribute holesPerRow : Natural = 3;
+    }
+
     port def SlotSealInterface_v1 {
         doc /*
          * The sealing strip lies on the top of the base and closes the slot
@@ -117,20 +171,33 @@ package CompactStage {
          * of the rail, so it never touches the rail end. The rounded
          * corners at the foot of each tab stay 4.5 mm away from the rail.
          *
-         * The reference rail (y = 169 mm) lies against two tabs, one near
+         * The reference rail (y = 170 mm) lies against two tabs, one near
          * each end. The tabs set its position and its direction.
          *
-         * The second rail (y = 41 mm) lies against one tab, near one end.
+         * The second rail (y = 40 mm) lies against one tab, near one end.
          * The tab sets its position at that end only. To set its
          * direction, put the carriage on both rails and move it from end
          * to end while you tighten the screws of the second rail, one after
          * the other. HIWIN calls this "alignment on the reference rail".
          *
          * The y positions are rail centres, measured from the long side of
-         * the base. The first hole is 40 mm from the end of the base.
+         * the base. The rails are 130 mm apart, the same as the rows of
+         * guide blocks in carriage-bottom. The first hole is 40 mm from
+         * the end of the base.
+         *
+         * The pocket between the side walls is 166 mm wide. Each guide
+         * block has 1 mm of space to the wall. The tabs follow the rails:
+         * in the CAD, their depth is a formula of the rail position.
+         *
+         * In the CAD, the base has the frames IF_reference_rail_mount and
+         * IF_second_rail_mount. Each sits on the floor (z = 10 mm), on the
+         * first hole of its rail. X runs along the rail, Z points up. A
+         * Fixed joint to the frame IF_mount_bottom of the rail puts the
+         * rail from x = 11 mm to x = 429 mm.
          */
         attribute holePitch : LengthValue = 60 [mm];
         attribute firstHoleOffset : LengthValue = 40 [mm];
+        attribute railSpacing : LengthValue = 130 [mm];
         attribute holesPerRail : Natural = 7;
         attribute screwLength : LengthValue = 16 [mm];   // M4 x 16
     }
@@ -184,8 +251,9 @@ package CompactStage {
 
     part def GuideRail {
         doc /*
-         * A bought profile rail: HIWIN HGR15R, 418 mm long. It comes from
-         * the parts library in modules/stoq/. The stage has two.
+         * A bought profile rail: HIWIN EGR15U, 418 mm long (EGR15U418H).
+         * It takes the M4 screws of the base. It comes from the parts
+         * library in modules/stoq/. The stage has two.
          */
         port baseMount : ~RailMountInterface_v1;
     }
@@ -202,6 +270,30 @@ package CompactStage {
     part def CarriageBottom {
         doc /* The moving part inside the base. CAD: cad/parts/carriage-bottom/. */
         port carriageJoint : CarriageJointInterface_v1;
+        port blockAStartMount : BlockMountInterface_v1;
+        port blockAEndMount : BlockMountInterface_v1;
+        port blockBStartMount : BlockMountInterface_v1;
+        port blockBEndMount : BlockMountInterface_v1;
+        port forcerMount : ForcerMountInterface_v1;
+    }
+
+    part def GuideBlock {
+        doc /*
+         * A bought guide block: HIWIN QEH15SAZAP+E2, a light load block
+         * with the E2 lubrication unit. It runs on the EGR15U rail. It
+         * comes from the parts library in modules/stoq/. The stage has
+         * four.
+         */
+        port mountTop : ~BlockMountInterface_v1;
+    }
+
+    part def Forcer {
+        doc /*
+         * The bought forcer (the coil part) of the linear motor: Maxwell
+         * MK21. It runs over the MK2 magnet tracks. It comes from the
+         * parts library in modules/stoq/. The stage has one.
+         */
+        port mountTop : ~ForcerMountInterface_v1;
     }
 
     part def CarriageTop {
@@ -277,6 +369,11 @@ package CompactStage {
         part secondRail : GuideRail;
         part firstStator : MagnetTrack;
         part secondStator : MagnetTrack;
+        part blockAStart : GuideBlock;
+        part blockAEnd : GuideBlock;
+        part blockBStart : GuideBlock;
+        part blockBEnd : GuideBlock;
+        part forcer : Forcer;
 
         // Interfaces of the whole stage
         port machineMount : BaseMountInterface_v1;
@@ -301,6 +398,13 @@ package CompactStage {
         // The magnet tracks of the linear motor
         connect base.firstStatorMount to firstStator.mountBottom;
         connect base.secondStatorMount to secondStator.mountBottom;
+
+        // The guide blocks and the forcer, under the carriage
+        connect carriageBottom.blockAStartMount to blockAStart.mountTop;
+        connect carriageBottom.blockAEndMount to blockAEnd.mountTop;
+        connect carriageBottom.blockBStartMount to blockBStart.mountTop;
+        connect carriageBottom.blockBEndMount to blockBEnd.mountTop;
+        connect carriageBottom.forcerMount to forcer.mountTop;
     }
 
     // ---------------------------------------------------------------------

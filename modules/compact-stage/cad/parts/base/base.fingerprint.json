@@ -59,7 +59,7 @@
       "volume": 0.0
     },
     "Body": {
-      "area": 275267.0,
+      "area": 275387.0,
       "bbox": [
         0.0,
         0.0,
@@ -70,9 +70,9 @@
       ],
       "closed": true,
       "com": [
-        219.925,
-        105.032,
-        13.6249
+        219.924,
+        105.033,
+        13.4454
       ],
       "counts": {
         "edges": 168,
@@ -84,10 +84,10 @@
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 1621980.0
+      "volume": 1596780.0
     },
     "Hole": {
-      "area": 274121.0,
+      "area": 274241.0,
       "bbox": [
         0.0,
         0.0,
@@ -98,9 +98,9 @@
       ],
       "closed": true,
       "com": [
-        219.938,
-        105.035,
-        13.6168
+        219.937,
+        105.036,
+        13.4373
       ],
       "counts": {
         "edges": 135,
@@ -112,10 +112,10 @@
       "label": "Hole",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 1623510.0
+      "volume": 1598310.0
     },
     "Part": {
-      "area": 275267.0,
+      "area": 275387.0,
       "bbox": [
         0.0,
         0.0,
@@ -126,9 +126,9 @@
       ],
       "closed": true,
       "com": [
-        219.925,
-        105.032,
-        13.6249
+        219.924,
+        105.033,
+        13.4454
       ],
       "counts": {
         "edges": 168,
@@ -140,10 +140,10 @@
       "label": "base001",
       "type": "App::Part",
       "valid": true,
-      "volume": 1621980.0
+      "volume": 1596780.0
     },
     "Pocket": {
-      "area": 269076.0,
+      "area": 269184.0,
       "bbox": [
         0.0,
         0.0,
@@ -156,7 +156,7 @@
       "com": [
         220.0,
         105.0,
-        13.3731
+        13.2084
       ],
       "counts": {
         "edges": 36,
@@ -168,10 +168,10 @@
       "label": "Pocket",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 1830130.0
+      "volume": 1807450.0
     },
     "Pocket001": {
-      "area": 272805.0,
+      "area": 272925.0,
       "bbox": [
         0.0,
         0.0,
@@ -182,9 +182,9 @@
       ],
       "closed": true,
       "com": [
-        219.925,
-        105.032,
-        13.6097
+        219.924,
+        105.033,
+        13.4303
       ],
       "counts": {
         "edges": 90,
@@ -196,16 +196,16 @@
       "label": "Pocket001",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 1624840.0
+      "volume": 1599640.0
     },
     "RailHoleSketch": {
       "area": 0.0,
       "bbox": [
         38.0,
-        39.0,
+        38.0,
         10.0,
         402.0,
-        171.0,
+        172.0,
         10.0
       ],
       "closed": true,
@@ -227,7 +227,7 @@
       "volume": 0.0
     },
     "RailHoles": {
-      "area": 274017.0,
+      "area": 274137.0,
       "bbox": [
         0.0,
         0.0,
@@ -238,9 +238,9 @@
       ],
       "closed": true,
       "com": [
-        219.925,
-        105.032,
-        13.6161
+        219.924,
+        105.033,
+        13.4366
       ],
       "counts": {
         "edges": 132,
@@ -252,16 +252,16 @@
       "label": "RailHoles",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 1623650.0
+      "volume": 1598450.0
     },
     "Sketch": {
       "area": 0.0,
       "bbox": [
         4.0,
-        23.0,
+        22.0,
         40.0,
         436.0,
-        187.0,
+        188.0,
         40.0
       ],
       "closed": true,
@@ -286,16 +286,16 @@
       "area": 0.0,
       "bbox": [
         4.0,
-        23.0,
+        22.0,
         13.0,
         436.0,
-        187.0,
+        188.0,
         13.0
       ],
       "closed": true,
       "com": [
-        217.705,
-        105.784,
+        217.712,
+        105.794,
         13.0
       ],
       "counts": {
@@ -374,8 +374,8 @@
           "hole_dia (Diameter) is a typed number: 4 mm",
           "first_hole_x (DistanceX) is a typed number: 40 mm",
           "hole_pitch (DistanceX) is a typed number: 60 mm",
-          "reference_rail_y (DistanceY) is a typed number: 169 mm",
-          "second_rail_y (DistanceY) is a typed number: 41 mm",
+          "reference_rail_y (DistanceY) is a typed number: 170 mm",
+          "second_rail_y (DistanceY) is a typed number: 40 mm",
           "AttachmentOffset is typed: (0, 0, 10) mm, 0 deg"
         ]
       },
@@ -385,7 +385,7 @@
         "type": "Sketcher::SketchObject",
         "unlinked": [
           "Constraint5 (Distance) is a typed number: 10 mm",
-          "Constraint12 (Distance) is a typed number: 164 mm",
+          "pocket_w (Distance) is a typed number: 166 mm",
           "Constraint28 (Radius) is a typed number: 6 mm"
         ]
       },
@@ -400,10 +400,7 @@
           "ref_tab_left_inset (DistanceX) is a typed number: 20 mm",
           "ref_tab_left_length (DistanceX) is a typed number: 20 mm",
           "ref_tab_right_inset (DistanceX) is a typed number: 20 mm",
-          "ref_tab_right_length (DistanceX) is a typed number: 20 mm",
-          "second_rail_tab_depth (DistanceY) is a typed number: 10.5 mm",
-          "ref_tab_left_depth (DistanceY) is a typed number: 10.5 mm",
-          "ref_tab_right_depth (DistanceY) is a typed number: 10.5 mm"
+          "ref_tab_right_length (DistanceX) is a typed number: 20 mm"
         ]
       },
       "Sketch002": {
@@ -420,6 +417,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "2d0db05ff9b4a9eefa28382aeab0f8dcac40a97e86223d93d0e323c0b3f9920c"
+    "base.FCStd": "3ab70a753781d613e255a22fa840580c679d7d76e132ea319140f2737feb9469"
   }
 }
