@@ -25,7 +25,7 @@ Numerik Jena LIA, Kit L and the older LIK 21, 22, 23 and 41 parts have no publis
 
 **No Heidenhain encoder meets the requirements.** On 6 October 2026 we read the current Heidenhain documents: the 02/2025 catalogue, the product sheets up to 07/2026, and the 04/2026 brochure on two-axis (Dplus) encoders. Every open Heidenhain encoder, incremental or absolute, fails at least one hard requirement on a number in those documents. Three things block them:
 
-- Heidenhain has no BiSS-C output. Its absolute encoders (LIC) send EnDat or a Japanese serial protocol, which our drive cannot read (ENC-04).
+- Heidenhain has no BiSS-C output. Its absolute encoders (LIC) send EnDat or a Japanese serial protocol. On 6 October this failed ENC-04. Since 19 October, EnDat 2.2 passes ENC-04 if the chosen drive reads it. The Heidenhain rows have not been judged again.
 - Most heads are 16 to 23 mm wide (ENC-06) and 46 or 50 mm long (ENC-08).
 - The heads that are small enough read a glass scale that is too thick or too wide (ENC-09, ENC-10).
 
@@ -45,7 +45,7 @@ That file is the source. This table is a copy for reading. Every error value is 
 | ENC-01 | Resolution finer than 0.2 µm |
 | ENC-02 | Accuracy within +/- 5 µm over 200 mm |
 | ENC-03 | Maximum speed above 3 m/s |
-| ENC-04 | Output is 1 Vpp sine and cosine, or BiSS-C. Incremental and absolute are both allowed |
+| ENC-04 | The chosen servo drive reads the output directly. 1 Vpp sine and cosine, BiSS-C, EnDat 2.2 or another serial protocol are all allowed, if the drive reads it. Incremental and absolute are both allowed. Changed on 2026-10-19: before, only 1 Vpp and BiSS-C were allowed |
 | ENC-05 | Periodic error within +/- 0.3 µm |
 | ENC-06 | Reading head less than 15 mm wide |
 | ENC-07 | Reading head less than 18 mm high |

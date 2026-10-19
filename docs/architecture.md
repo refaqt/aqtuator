@@ -24,7 +24,8 @@ requirements, and five parts we make (base, carriage bottom, carriage top, seali
 sealing clamp) with an interface between every pair of parts that touch. The parts exist in CAD
 but have no geometry yet. All servo drives we considered for it are compared in
 [`servo-drive-selection.md`](servo-drive-selection.md). All linear encoders we considered are compared in
-[`linear-encoder-selection.md`](linear-encoder-selection.md).
+[`linear-encoder-selection.md`](linear-encoder-selection.md). The low-cost displacement sensors for the stage
+error motion test are compared in [`displacement-sensor-selection.md`](displacement-sensor-selection.md).
 
 Folder names say what a stage is, not what it is called on a price list. A commercial name belongs
 in a family's `catalog.toml` when there is one.
