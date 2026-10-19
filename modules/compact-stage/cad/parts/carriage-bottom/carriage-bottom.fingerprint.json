@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 103718.0,
+      "area": 103760.0,
       "bbox": [
         0.0,
         0.0,
@@ -14,21 +14,21 @@
       ],
       "closed": true,
       "com": [
-        105.497,
-        84.9864,
-        14.7081
+        105.313,
+        85.269,
+        14.7235
       ],
       "counts": {
-        "edges": 678,
-        "faces": 248,
+        "edges": 700,
+        "faces": 254,
         "shells": 1,
         "solids": 1,
-        "verts": 448
+        "verts": 464
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 507222.0
+      "volume": 501851.0
     },
     "Hole": {
       "area": 97742.1,
@@ -59,7 +59,7 @@
       "volume": 970132.0
     },
     "Hole001": {
-      "area": 93313.7,
+      "area": 93263.4,
       "bbox": [
         0.0,
         0.0,
@@ -72,22 +72,22 @@
       "com": [
         104.0,
         90.0,
-        13.3523
+        13.3685
       ],
       "counts": {
-        "edges": 426,
+        "edges": 430,
         "faces": 156,
         "shells": 1,
         "solids": 1,
-        "verts": 280
+        "verts": 284
       },
       "label": "Hole001",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 719413.0
+      "volume": 717991.0
     },
     "Hole002": {
-      "area": 102079.0,
+      "area": 102069.0,
       "bbox": [
         0.0,
         0.0,
@@ -98,21 +98,21 @@
       ],
       "closed": true,
       "com": [
-        105.494,
-        85.0772,
-        14.7451
+        105.508,
+        85.4427,
+        14.7824
       ],
       "counts": {
-        "edges": 498,
+        "edges": 502,
         "faces": 187,
         "shells": 1,
         "solids": 1,
-        "verts": 328
+        "verts": 332
       },
       "label": "Hole002",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 510488.0
+      "volume": 508046.0
     },
     "Mirrored": {
       "area": 92388.5,
@@ -128,7 +128,7 @@
       "com": [
         104.0,
         90.0,
-        13.1723
+        13.1936
       ],
       "counts": {
         "edges": 138,
@@ -140,7 +140,7 @@
       "label": "Mirrored",
       "type": "PartDesign::Mirrored",
       "valid": true,
-      "volume": 801629.0
+      "volume": 799549.0
     },
     "Pad": {
       "area": 95056.0,
@@ -184,7 +184,7 @@
       "com": [
         103.783,
         90.0,
-        13.15
+        13.1712
       ],
       "counts": {
         "edges": 126,
@@ -196,10 +196,10 @@
       "label": "Pad001",
       "type": "PartDesign::Pad",
       "valid": true,
-      "volume": 799869.0
+      "volume": 797789.0
     },
     "Part": {
-      "area": 103718.0,
+      "area": 103760.0,
       "bbox": [
         0.0,
         0.0,
@@ -210,21 +210,21 @@
       ],
       "closed": true,
       "com": [
-        105.497,
-        84.9864,
-        14.7081
+        105.313,
+        85.269,
+        14.7235
       ],
       "counts": {
-        "edges": 678,
-        "faces": 248,
+        "edges": 700,
+        "faces": 254,
         "shells": 1,
         "solids": 1,
-        "verts": 448
+        "verts": 464
       },
       "label": "carriage_bottom",
       "type": "App::Part",
       "valid": true,
-      "volume": 507222.0
+      "volume": 501851.0
     },
     "Pocket": {
       "area": 90553.7,
@@ -240,7 +240,7 @@
       "com": [
         104.0,
         90.0,
-        13.4959
+        13.5121
       ],
       "counts": {
         "edges": 150,
@@ -252,7 +252,7 @@
       "label": "Pocket",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 733141.0
+      "volume": 731741.0
     },
     "Pocket001": {
       "area": 91464.2,
@@ -268,7 +268,7 @@
       "com": [
         104.0,
         90.0,
-        13.1275
+        13.1488
       ],
       "counts": {
         "edges": 114,
@@ -280,10 +280,10 @@
       "label": "Pocket001",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 798109.0
+      "volume": 796029.0
     },
     "Pocket002": {
-      "area": 90192.8,
+      "area": 90142.5,
       "bbox": [
         0.0,
         0.0,
@@ -296,22 +296,22 @@
       "com": [
         104.0,
         90.0,
-        13.4951
+        13.5113
       ],
       "counts": {
-        "edges": 158,
+        "edges": 162,
         "faces": 64,
         "shells": 1,
         "solids": 1,
-        "verts": 104
+        "verts": 108
       },
       "label": "Pocket002",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 732987.0
+      "volume": 731565.0
     },
     "Pocket003": {
-      "area": 90145.9,
+      "area": 90095.6,
       "bbox": [
         0.0,
         0.0,
@@ -324,22 +324,22 @@
       "com": [
         104.0,
         90.0,
-        13.4923
+        13.5084
       ],
       "counts": {
-        "edges": 182,
+        "edges": 186,
         "faces": 72,
         "shells": 1,
         "solids": 1,
-        "verts": 120
+        "verts": 124
       },
       "label": "Pocket003",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 732787.0
+      "volume": 731365.0
     },
     "Pocket004": {
-      "area": 92323.7,
+      "area": 92273.4,
       "bbox": [
         0.0,
         0.0,
@@ -352,22 +352,22 @@
       "com": [
         104.0,
         90.0,
-        13.3765
+        13.3926
       ],
       "counts": {
-        "edges": 290,
+        "edges": 294,
         "faces": 108,
         "shells": 1,
         "solids": 1,
-        "verts": 192
+        "verts": 196
       },
       "label": "Pocket004",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 721539.0
+      "volume": 720116.0
     },
     "Pocket005": {
-      "area": 92618.0,
+      "area": 92567.7,
       "bbox": [
         0.0,
         0.0,
@@ -380,22 +380,22 @@
       "com": [
         104.0,
         90.0,
-        13.3557
+        13.3718
       ],
       "counts": {
-        "edges": 386,
+        "edges": 390,
         "faces": 140,
         "shells": 1,
         "solids": 1,
-        "verts": 256
+        "verts": 260
       },
       "label": "Pocket005",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 720019.0
+      "volume": 718597.0
     },
     "Pocket006": {
-      "area": 100298.0,
+      "area": 100282.0,
       "bbox": [
         0.0,
         0.0,
@@ -406,24 +406,24 @@
       ],
       "closed": true,
       "com": [
-        104.997,
-        86.0138,
-        14.9642
+        105.006,
+        86.3113,
+        15.0011
       ],
       "counts": {
-        "edges": 450,
+        "edges": 454,
         "faces": 165,
         "shells": 1,
         "solids": 1,
-        "verts": 296
+        "verts": 300
       },
       "label": "Pocket006",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 540025.0
+      "volume": 537684.0
     },
     "Pocket007": {
-      "area": 101471.0,
+      "area": 101460.0,
       "bbox": [
         0.0,
         0.0,
@@ -434,24 +434,24 @@
       ],
       "closed": true,
       "com": [
-        105.49,
-        85.1377,
-        14.7704
+        105.504,
+        85.4995,
+        14.8077
       ],
       "counts": {
-        "edges": 462,
+        "edges": 466,
         "faces": 169,
         "shells": 1,
         "solids": 1,
-        "verts": 304
+        "verts": 308
       },
       "label": "Pocket007",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 511968.0
+      "volume": 509525.0
     },
     "Pocket008": {
-      "area": 103718.0,
+      "area": 103708.0,
       "bbox": [
         0.0,
         0.0,
@@ -462,21 +462,21 @@
       ],
       "closed": true,
       "com": [
-        105.497,
-        84.9864,
-        14.7081
+        105.511,
+        85.3603,
+        14.7454
       ],
       "counts": {
-        "edges": 678,
+        "edges": 682,
         "faces": 248,
         "shells": 1,
         "solids": 1,
-        "verts": 448
+        "verts": 452
       },
       "label": "Pocket008",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 507222.0
+      "volume": 504780.0
     },
     "Pocket009": {
       "area": 96542.4,
@@ -492,7 +492,7 @@
       "com": [
         104.0,
         90.0,
-        13.8821
+        13.9033
       ],
       "counts": {
         "edges": 84,
@@ -504,7 +504,7 @@
       "label": "Pocket009",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 873782.0
+      "volume": 871702.0
     },
     "Pocket010": {
       "area": 97773.9,
@@ -520,7 +520,7 @@
       "com": [
         104.0,
         90.0,
-        13.8595
+        13.8807
       ],
       "counts": {
         "edges": 108,
@@ -532,7 +532,35 @@
       "label": "Pocket010",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 869933.0
+      "volume": 867853.0
+    },
+    "Pocket011": {
+      "area": 103760.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        26.0
+      ],
+      "closed": true,
+      "com": [
+        105.313,
+        85.269,
+        14.7235
+      ],
+      "counts": {
+        "edges": 700,
+        "faces": 254,
+        "shells": 1,
+        "solids": 1,
+        "verts": 464
+      },
+      "label": "Pocket011",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 501851.0
     },
     "Sketch": {
       "area": 0.0,
@@ -817,17 +845,17 @@
     "Sketch016": {
       "area": 0.0,
       "bbox": [
-        57.0,
-        42.0,
+        57.5,
+        40.0,
         0.0,
-        145.0,
+        144.5,
         162.0,
         0.0
       ],
       "closed": true,
       "com": [
         101.0,
-        102.0,
+        101.0,
         0.0
       ],
       "counts": {
@@ -845,17 +873,17 @@
     "Sketch017": {
       "area": 0.0,
       "bbox": [
-        57.0,
-        42.0,
+        57.5,
+        40.0,
         17.0,
-        135.0,
+        134.5,
         162.0,
         17.0
       ],
       "closed": true,
       "com": [
         96.0,
-        102.0,
+        101.0,
         17.0
       ],
       "counts": {
@@ -874,16 +902,16 @@
       "area": 0.0,
       "bbox": [
         77.0,
-        69.0146,
+        68.0146,
         26.0,
         131.0,
-        142.985,
+        141.985,
         26.0
       ],
       "closed": true,
       "com": [
         104.0,
-        106.0,
+        105.0,
         26.0
       ],
       "counts": {
@@ -902,16 +930,16 @@
       "area": 0.0,
       "bbox": [
         83.8,
-        47.0,
+        46.0,
         20.0,
         124.2,
-        157.0,
+        156.0,
         20.0
       ],
       "closed": true,
       "com": [
         105.004,
-        99.2899,
+        98.2899,
         20.0
       ],
       "counts": {
@@ -981,10 +1009,38 @@
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
+    },
+    "Sketch022": {
+      "area": 0.0,
+      "bbox": [
+        131.5,
+        52.0,
+        17.0,
+        144.5,
+        150.0,
+        17.0
+      ],
+      "closed": true,
+      "com": [
+        137.918,
+        101.0,
+        17.0
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 6
+      },
+      "label": "Sketch022",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     }
   },
   "parametric": {
-    "audited": 38,
+    "audited": 40,
     "objects": {
       "Hole": {
         "label": "Hole",
@@ -1157,14 +1213,16 @@
         "label": "Sketch016",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "forcer_shift_y (DistanceY) is a typed number: 16 mm",
+          "forcer_shift_y (DistanceY) is a typed number: 15 mm",
           "forcer_w (DistanceX) is a typed number: 86 mm",
           "forcer_l (DistanceY) is a typed number: 118 mm",
           "forcer_step_w (DistanceX) is a typed number: 76 mm",
           "forcer_hole_to_cable_side (DistanceX) is a typed number: 46 mm",
           "forcer_hole_to_cable_end (DistanceY) is a typed number: 63 mm",
           "pocket_corner_r (Radius) is a typed number: 3 mm",
-          "pocket_clearance (DistanceX) is a typed number: 1 mm"
+          "pocket_clearance_side (DistanceX) is a typed number: 0.5 mm",
+          "pocket_clearance_top_bottom (DistanceY) is a typed number: 2 mm",
+          "pocket_clearance_depth (DistanceY) is a typed number: 1 mm"
         ]
       },
       "Sketch018": {
@@ -1192,7 +1250,7 @@
         "label": "Sketch020",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "Constraint15 (Distance) is a typed number: 36 mm",
+          "Constraint15 (Distance) is a typed number: 37 mm",
           "Constraint16 (Radius) is a typed number: 4 mm"
         ]
       },
@@ -1203,6 +1261,14 @@
         "unlinked": [
           "Constraint16 (Diameter) is a typed number: 8 mm"
         ]
+      },
+      "Sketch022": {
+        "dof": 0,
+        "label": "Sketch022",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "flange_pad_l (DistanceY) is a typed number: 10 mm"
+        ]
       }
     }
   },
@@ -1210,6 +1276,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "612d3b5abfd487fbc1fe0ab9a0e07fdd2d68f40ef87a86bb56ce416aac337493"
+    "carriage-bottom.FCStd": "21fcc47983c0f68ab789c74c5e278e130487b2cb0684b859e16a6d90f09eb5da"
   }
 }
