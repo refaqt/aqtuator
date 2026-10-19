@@ -150,6 +150,10 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-14 | [The lower body of the bottom carriage is 2 mm narrower](2026-10-14_narrower-lower-body-of-the-bottom-carriage.md) | cad |  |
 | 2026-10-14 | [The bottom carriage clears the top of the base, and the forcer pocket has a formula](2026-10-14_carriage-clears-the-top-of-the-base.md) | cad |  |
 | 2026-10-14 | [The base is 200 mm wide, and the rails are 138 mm apart](2026-10-14_base-200-mm-and-rails-138-mm-apart.md) | cad, architecture |  |
+| 2026-10-19 | [The forcer pocket is smaller and sits 16 mm away from the cable end](2026-10-19_smaller-forcer-pocket-moved-away-from-the-cable.md) | cad, architecture |  |
+| 2026-10-19 | [The base is 210 mm wide, and the bottom carriage is 208 mm wide](2026-10-19_base-210-mm-and-wider-carriage.md) | cad, architecture |  |
+| 2026-10-19 | [The forcer pocket has new clearances, and the forcer touches two short pads](2026-10-19_forcer-pocket-clearances-and-flange-pads.md) | cad |  |
+| 2026-10-19 | [The bottom carriage is 2.5 mm taller, so the cable pocket can be 10 mm deep](2026-10-19_carriage-top-raised-for-10-mm-cable-pocket.md) | cad |  |
 | 2026-10-19 | [DGSMARTWIN AKS drive checked for the MK21 with an EnDat 2.2 encoder](2026-10-19_dgsmartwin-aks-drive-for-mk21-with-endat.md) | engineering, purchasing |  |
 | 2026-10-19 | [DGSMARTWIN SA32 absolute encoder: what to order and what to ask](2026-10-19_dgsmartwin-sa32-endat-encoder-order.md) | engineering, purchasing |  |
 | 2026-10-19 | [Eddy current displacement sensors for the stage error motion test](2026-10-19_eddy-current-sensor-search.md) | engineering, purchasing |  |
