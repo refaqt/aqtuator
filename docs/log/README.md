@@ -151,3 +151,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-14 | [The bottom carriage clears the top of the base, and the forcer pocket has a formula](2026-10-14_carriage-clears-the-top-of-the-base.md) | cad |  |
 | 2026-10-14 | [The base is 200 mm wide, and the rails are 138 mm apart](2026-10-14_base-200-mm-and-rails-138-mm-apart.md) | cad, architecture |  |
 | 2026-10-19 | [DGSMARTWIN AKS drive checked for the MK21 with an EnDat 2.2 encoder](2026-10-19_dgsmartwin-aks-drive-for-mk21-with-endat.md) | engineering, purchasing |  |
+| 2026-10-19 | [DGSMARTWIN SA32 absolute encoder: what to order and what to ask](2026-10-19_dgsmartwin-sa32-endat-encoder-order.md) | engineering, purchasing |  |
