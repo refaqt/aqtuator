@@ -3,32 +3,32 @@
   "errors": [],
   "objects": {
     "Assembly": {
-      "area": 569809.0,
+      "area": 505709.0,
       "bbox": [
         0.0,
         0.0,
         0.0,
         440.0,
         210.0,
-        50.0
+        52.5
       ],
       "closed": true,
       "com": [
-        217.276,
-        104.903,
-        19.9329
+        216.425,
+        104.11,
+        21.0834
       ],
       "counts": {
-        "edges": 4996,
-        "faces": 1900,
-        "shells": 43,
-        "solids": 11,
-        "verts": 3276
+        "edges": 4788,
+        "faces": 1821,
+        "shells": 41,
+        "solids": 9,
+        "verts": 3137
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 2706790.0
+      "volume": 2487760.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -311,32 +311,32 @@
       "volume": 1470960.0
     },
     "carriage_bottom001": {
-      "area": 103760.0,
+      "area": 111538.0,
       "bbox": [
         121.32,
         1.0,
         24.0,
         301.32,
         209.0,
-        50.0
+        52.5
       ],
       "closed": true,
       "com": [
-        216.051,
-        106.313,
-        38.7235
+        213.753,
+        102.559,
+        40.5674
       ],
       "counts": {
-        "edges": 700,
-        "faces": 254,
+        "edges": 780,
+        "faces": 279,
         "shells": 1,
         "solids": 1,
-        "verts": 464
+        "verts": 517
       },
       "label": "carriage_bottom",
       "type": "App::Link",
       "valid": true,
-      "volume": 501851.0
+      "volume": 529696.0
     }
   },
   "parametric": {
