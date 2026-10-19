@@ -26,6 +26,19 @@ used market. All candidates are in
 - The page also lists what to watch in the test: calibration on the straight-edge, the steel
   target, temperature, sag of the straight-edge and target size.
 
+### Update: ACTUSTECH
+
+You asked us to look at ACTUSTECH (Anhui Actus Technology, Hefei, China). We read the maker's own
+manuals for all its eddy current sensors and added them to the page.
+
+- The **E202 controller with the EU1S probe** is the best sensor on paper in the whole search.
+  Resolution 0.02 µm, range 1 mm, error over the full range below ±1 µm, drift below 0.2 µm per
+  degree. It passes every requirement except the price, which is not published.
+- The E202 with larger probes, the ET202 and the E102SGS also pass on resolution. The E101 fails
+  (2 µm). The E302 is a differential sensor and cannot read one face of a straight-edge.
+- ACTUSTECH publishes no prices and has no shop listing we could find. One blog post estimates
+  5,000 to 15,000 yuan (about 600 to 1,800 euro) for "same-spec" products, with no source.
+
 ## Decisions Made
 
 - The straight-edge is steel. You first chose aluminium, then went back to steel, because most
@@ -36,9 +49,15 @@ used market. All candidates are in
 - Unclear shop data counts as "not confirmed", not as a fail. A first draft ruled out the Miran
   ML33 because its shop page contradicts itself. You pointed out that it looks feasible, and it is
   now on the short list.
+- ACTUSTECH is judged on resolution only, as you asked. The range is shown for information.
+- The page first listed the ACTUSTECH E202 as ruled out, with a range of only ±0.2 mm. That
+  number came from a blog post and belongs to another model, the E302-0.2. The maker's manual
+  shows E202 probes from 1 to 8 mm. The row is corrected.
 
 ## Open Questions
 
+- ACTUSTECH: a quote for the E202 controller with an EU1S probe, 1 m or 3 m cable, analog
+  0.5–9.5 V output, calibrated on our steel. Ask for the delivery time and the export terms.
 - Miran: a real data sheet, the bandwidth for the 0.05 µm resolution, temperature drift,
   calibration target, and the price of the 1 mm set with 0–10 V output.
 - Micro-Epsilon: a price quote for the DT3005-U1-M-C1.
