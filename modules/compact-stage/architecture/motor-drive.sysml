@@ -55,6 +55,8 @@ package MotorDriveRequirements {
         doc /* The kinds of encoder signal a drive may have to read. */
         enum sinCos1Vpp;   // 1 Vpp sine and cosine, incremental (analog)
         enum bissC;        // BiSS-C, absolute (digital, serial)
+        enum endat22;      // EnDat 2.2, absolute (digital, serial)
+        enum otherSerial;  // another serial protocol (digital), named in protocol
     }
 
     part def LinearEncoder {
@@ -65,6 +67,7 @@ package MotorDriveRequirements {
          */
         attribute signal : EncoderSignal;
         attribute signalPeriod : LengthValue;  // for sine and cosine: one signal period
+        attribute protocol : String;           // for otherSerial: the name of the protocol
     }
 
     part def LinearMotorStage {
@@ -114,6 +117,8 @@ package MotorDriveRequirements {
         attribute readsSinCos1Vpp : Boolean;
         attribute maxSinCosFrequency : FrequencyValue;       // highest 1 Vpp input frequency
         attribute readsBissC : Boolean;
+        attribute readsEnDat22 : Boolean;
+        attribute readsOtherSerialProtocol : Boolean;        // reads the protocol named in the stage encoder
         attribute positionLoopRate : FrequencyValue;
         attribute freeBiquadFilterCount : Natural;
         attribute publishesLoopDiagram : Boolean;
@@ -251,9 +256,13 @@ package MotorDriveRequirements {
              * - For a 1 Vpp sine and cosine encoder, the drive reads 1 Vpp,
              *   and it accepts the highest signal frequency: the top speed
              *   divided by the signal period. Today that is 150 kHz.
-             * - For a BiSS-C encoder, the drive reads BiSS-C. It must also
-             *   read the full data frame of that encoder. Check this by hand
+             * - For a serial encoder (BiSS-C, EnDat 2.2 or another
+             *   protocol), the drive reads that protocol. It must also read
+             *   the full data frame of that encoder. Check this by hand
              *   against the encoder data sheet.
+             *
+             * The encoder protocol is not fixed to BiSS-C. Any protocol
+             * that the chosen drive reads is allowed (ENC-04).
              *
              * When the encoder changes, change currentStage, not this text.
              */
@@ -265,6 +274,10 @@ package MotorDriveRequirements {
                      drive.maxSinCosFrequency >= stage.maxSpeed / stage.encoder.signalPeriod))
                 and
                 (stage.encoder.signal == EncoderSignal::bissC implies drive.readsBissC)
+                and
+                (stage.encoder.signal == EncoderSignal::endat22 implies drive.readsEnDat22)
+                and
+                (stage.encoder.signal == EncoderSignal::otherSerial implies drive.readsOtherSerialProtocol)
             }
         }
 
