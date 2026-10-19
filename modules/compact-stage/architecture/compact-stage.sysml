@@ -122,8 +122,11 @@ package CompactStage {
     port def ForcerMountInterface_v1 {
         doc /*
          * The forcer of the linear motor screws to the bottom face of
-         * carriage-bottom. It sits in a pocket in the middle of the
-         * carriage, with its coils facing down, towards the magnet tracks.
+         * carriage-bottom. It sits in a pocket between the rows of guide
+         * blocks, with its coils facing down, towards the magnet tracks.
+         * The hole pattern sits 16 mm off the centre of the carriage,
+         * away from the cable end. That leaves room for a slot for the
+         * motor cable.
          * Six M4 screws go down through the carriage into the threaded
          * holes of the forcer. The screw length is not chosen yet.
          *
