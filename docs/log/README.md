@@ -150,3 +150,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-14 | [The lower body of the bottom carriage is 2 mm narrower](2026-10-14_narrower-lower-body-of-the-bottom-carriage.md) | cad |  |
 | 2026-10-14 | [The bottom carriage clears the top of the base, and the forcer pocket has a formula](2026-10-14_carriage-clears-the-top-of-the-base.md) | cad |  |
 | 2026-10-14 | [The base is 200 mm wide, and the rails are 138 mm apart](2026-10-14_base-200-mm-and-rails-138-mm-apart.md) | cad, architecture |  |
+| 2026-10-19 | [The forcer pocket is smaller and sits 16 mm away from the cable end](2026-10-19_smaller-forcer-pocket-moved-away-from-the-cable.md) | cad, architecture |  |
+| 2026-10-19 | [The base is 210 mm wide, and the bottom carriage is 208 mm wide](2026-10-19_base-210-mm-and-wider-carriage.md) | cad, architecture |  |

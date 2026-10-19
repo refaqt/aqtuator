@@ -100,7 +100,7 @@ package CompactStage {
          * top face of the carriage for the screw head.
          *
          * The carriage has four blocks, in two rows along the travel.
-         * Row a is at x = 30 mm in the carriage, row b at x = 168 mm.
+         * Row a is at x = 35 mm in the carriage, row b at x = 173 mm.
          * "Start" is the end of the carriage where the motor cable leaves
          * (y = 11 mm), "end" is the other end (y = 169 mm). The names do
          * not say which row runs on the reference rail.
@@ -174,10 +174,10 @@ package CompactStage {
          * of the rail, so it never touches the rail end. The rounded
          * corners at the foot of each tab stay 4.5 mm away from the rail.
          *
-         * The reference rail (y = 169 mm) lies against two tabs, one near
+         * The reference rail (y = 174 mm) lies against two tabs, one near
          * each end. The tabs set its position and its direction.
          *
-         * The second rail (y = 31 mm) lies against one tab, near one end.
+         * The second rail (y = 36 mm) lies against one tab, near one end.
          * The tab sets its position at that end only. To set its
          * direction, put the carriage on both rails and move it from end
          * to end while you tighten the screws of the second rail, one after
@@ -188,8 +188,9 @@ package CompactStage {
          * guide blocks in carriage-bottom. The first hole is 40 mm from
          * the end of the base.
          *
-         * The pocket between the side walls is 174 mm wide. Each guide
-         * block has 1 mm of space to the wall. The tabs follow the rails:
+         * The base is 210 mm wide. The pocket between the side walls is
+         * 176 mm wide, so each wall is 17 mm thick. Each guide block has
+         * 2 mm of space to the wall. The tabs follow the rails:
          * in the CAD, their depth is a formula of the rail position.
          *
          * In the CAD, the base has the frames IF_reference_rail_mount and
