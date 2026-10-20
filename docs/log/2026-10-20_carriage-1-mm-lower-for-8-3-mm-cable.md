@@ -13,9 +13,11 @@ so the bottom carriage can be lower.
   28.5 mm.
 - **The stage is now 51.5 mm high, down from 52.5 mm.** The limit in the requirements is 60 mm.
 - **The fingerprints of the bottom carriage and the assembly are up to date.**
-- **In the saved assembly, the forcer sits 2.5 mm further along the travel axis, and one carriage
-  block sits 0.5 mm the other way.** This is a position in the assembly, not a change to the
-  parts.
+- **Niels moved the forcer 2.5 mm along the travel axis** in the assembly (towards lower x).
+- **The bottom carriage and its four blocks also moved 0.5 mm along the rails**, all together,
+  towards higher x. This was not done on purpose. The parts did not change shape. Most likely,
+  FreeCAD solved the assembly again and placed the free sliding group at a slightly different
+  spot. So, compared with the carriage, the forcer moved 3 mm, not 2.5 mm.
 
 ## Open Questions
 
