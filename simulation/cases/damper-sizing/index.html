@@ -162,6 +162,7 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
 .choice b { font-weight: 600; }
 .choice small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
 body[data-stop="damper"] .only-bumper, body[data-stop="bumper"] .only-damper { display: none; }
+body:not([data-curve="power"]) .only-power { display: none; }
 </style>
 </head>
 <body data-stop="damper">
@@ -247,13 +248,22 @@ body[data-stop="damper"] .only-bumper, body[data-stop="bumper"] .only-damper { d
           <input id="Ebump" type="number" step="0.5" min="0.01" value="11.5"></div>
         <div class="field"><label for="EbumpMax">Energy for emergency use <small>J, catalog; a rare crash only</small></label>
           <input id="EbumpMax" type="number" step="0.5" min="0.01" value="21.0"></div>
-        <div class="field"><label for="pBump">Shape of the force curve <small>F ∝ xᵖ. 1 = linear spring; above 1 stiffer at the end (solid cylinder); below 1 most energy early (profile damper)</small></label>
+        <div class="field"><label for="bumpCurve">Shape of the force curve <small>ACE TA: steep at first, then nearly flat (from the ACE graph). Constant: full force from the first contact</small></label>
+          <select id="bumpCurve">
+            <option value="ace" selected>ACE TA curve</option>
+            <option value="constant">Constant force</option>
+            <option value="linear">Linear spring</option>
+            <option value="power">Power law, set p</option>
+          </select></div>
+        <div class="field only-power"><label for="pBump">Shape p <small>1 = linear; above 1 stiffer at the end (solid cylinder); below 1 most energy early</small></label>
           <input id="pBump" type="number" step="0.1" min="0.1" max="5" value="1"></div>
         <div class="field"><label for="absorb">Energy turned into heat <small>%, the rest pushes the carriage back</small></label>
           <input id="absorb" type="number" step="1" min="0" max="100" value="60"></div>
         <p class="derived">Defaults: ACE TUBUS TA22-10 from the ACE product page: 11.5 J per stroke, 21.0 J
-          emergency, 10 mm, 58 to 73 % absorbed. ACE gives no force curve for one size, so the shape is an
-          estimate: check it against the maker's force–stroke curve.</p>
+          emergency, 10 mm, 58 to 73 % absorbed. ACE publishes one force curve, for the TA37-16. The ACE TA
+          curve on this page is fitted to it and scaled to the chosen size. Ask ACE for the curve of the size you
+          choose. The range "870 N to 90,000 N" on the ACE page covers the whole family, from the smallest to the
+          largest size. It is not the force of one bumper.</p>
         <div class="derived" id="bumpText"></div>
       </fieldset>
       <div class="status" id="status">Calculating…</div>
@@ -302,10 +312,11 @@ body[data-stop="damper"] .only-bumper, body[data-stop="bumper"] .only-damper { d
           absorber with several orifices that close along the stroke keeps the force close to even. The dashed line
           shows that ideal case: the same energy, spread evenly over the stroke. It gives the lowest peak force a
           stroke can have.</p>
-        <p class="note only-bumper">The bumper force is zero at the moment of impact and highest where the carriage
-          stops. So the peak force sits at the end, the opposite of an oil damper. The dashed line is the even force
-          over the full bumper stroke, the lowest peak force this stroke can have. A short stroke always means a
-          high force: the force goes up as the stroke goes down.</p>
+        <p class="note only-bumper">The bumper force starts at zero (or, for the constant curve, at its full value)
+          and is highest where the carriage stops. So the peak force sits at the end, the opposite of an oil damper.
+          The ACE TA curve rises fast in the first few millimetres and then flattens, so it comes closer to an even
+          force than a linear spring. The dashed line is the even force over the full bumper stroke, the lowest peak
+          force this stroke can have. A short stroke always means a high force.</p>
       </section>
 
       <section class="panel note" aria-labelledby="h-model">
@@ -318,8 +329,10 @@ body[data-stop="damper"] .only-bumper, body[data-stop="bumper"] .only-damper { d
         <p><b>Damper.</b> Along the damper stroke x: m·v·dv/dx = F_motor·(push) − c·vⁿ. The page finds c by bisection
           so that the speed at the end of the stroke is the allowed end speed. Energy balance:
           ½·m·v₀² + W_motor = W_damper + ½·m·v_end². The page shows how far off it is.</p>
-        <p><b>Bumper.</b> The bumper force depends on the compression x only: F = F_full·(x/s)ᵖ, with
-          F_full = (p+1)·E/s, so that the work at the full stroke s is the catalog energy E. The page steps
+        <p><b>Bumper.</b> The bumper force depends on the compression x only: F = F_full·g(x/s). The page sets
+          F_full so that the work at the full stroke s is the catalog energy E. The shape g is one of: the ACE TA
+          curve g(u) = 1 − (1 − u)^1.8, fitted to the ACE force–stroke graph of the TA37-16; a constant force
+          g = 1; a linear spring g = u; or a power law g = uᵖ. The page steps
           m·dv/dt = F_motor·(push) − F(x) in time until the carriage stops or the bumper is fully pressed in. Then metal
           hits metal, and the energy that is left has no stroke to go into. Of the bumper work, the part "turned into
           heat" stays in the bumper. The rest pushes the carriage back: ½·m·v_back² = (1 − absorbed)·W_bumper. Real
@@ -353,6 +366,7 @@ function params() {
   const p = { ...M.DEFAULTS };
   for (const id of ids) p[id] = parseFloat($(id).value) * (SCALE[id] ?? 1);
   p.n = parseInt($("n").value, 10);
+  p.bumpCurve = $("bumpCurve").value;
   p.push = $("push").checked;
   p.stopType = stopRadios.find((r) => r.checked)?.value ?? "damper";
   return p;
@@ -677,6 +691,7 @@ function run() {
   const t0 = performance.now();
   const bumper = p.stopType === "bumper";
   document.body.dataset.stop = p.stopType;
+  document.body.dataset.curve = p.bumpCurve;
   for (const e of document.querySelectorAll(".stopName")) e.textContent = bumper ? "bumper" : "damper";
   const r = bumper ? M.solveBumper(p) : M.solve(p);
   const d = r.damper;
@@ -784,7 +799,7 @@ function run() {
   status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
 }
 
-for (const id of [...ids, "n"]) $(id).addEventListener("input", schedule);
+for (const id of [...ids, "n", "bumpCurve"]) $(id).addEventListener("input", schedule);
 $("push").addEventListener("change", update);
 for (const r of stopRadios) r.addEventListener("change", update);
 update();
