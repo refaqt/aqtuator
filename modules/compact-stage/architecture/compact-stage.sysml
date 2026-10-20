@@ -37,9 +37,10 @@
 // rails and the two magnet tracks (stators) of the linear motor are in this
 // file, with their interfaces to the base. The four guide blocks and the
 // forcer (the coil part of the motor) are in this file, with their
-// interfaces to carriage-bottom. Not modelled yet: the encoder, the rollers
-// and the screws. When they enter this file, they bring their own
-// interfaces: for example roller to sealing strip.
+// interfaces to carriage-bottom. The linear encoder is in this file too: the
+// read head on carriage-bottom, the scale and its end clamps on the base.
+// Not modelled yet: the rollers and the screws. When they enter this file,
+// they bring their own interfaces: for example roller to sealing strip.
 //
 // Not modelled yet either: the interface between a guide block and its
 // rail. It needs a choice first: which row of blocks (a or b) runs on the
@@ -237,6 +238,100 @@ package CompactStage {
         attribute statorPitch : LengthValue = 180 [mm];
     }
 
+    port def ReadheadMountInterface_v1 {
+        doc /*
+         * The read head of the linear encoder screws to the bottom of
+         * carriage-bottom. It hangs in a pocket on the side of the second
+         * rail, with its window facing the side wall of the base. The top
+         * side face of the head touches the ceiling of the pocket.
+         *
+         * The pocket is 16 mm deep, so the 16.5 mm wide head hangs only
+         * 0.5 mm below the carriage. Its bottom stays 1 mm above the top
+         * of the second rail. The pocket is 38 mm long, and the head is
+         * 36 mm long and centred in it: 1 mm of space at each end.
+         *
+         * Two M3 screws go down through the carriage into the side of the
+         * head. Each hole has a counterbore on the top face of the
+         * carriage. The LAMOTION data sheet (page 9) asks for more than
+         * 8 mm of screw in the head, and 0.7 to 0.9 Nm.
+         *
+         * The holes are 26 mm apart, as in the head. Their axes are
+         * 3.2 mm from the step face of the carriage at x = 17 mm. In the
+         * head they are 3 mm from the window face, so the window face sits
+         * 0.2 mm inside the step face. That gives the gap of
+         * ScaleReadInterface_v1. Along the travel, the midpoint of the
+         * holes is 1 mm from the middle of the pocket, because the holes
+         * of the head are 12 mm and 14 mm from its centre (data sheet
+         * page 9). The holes are 3.4 mm, so the head can
+         * move 0.2 mm each way: set the gap with a 0.8 mm feeler gauge
+         * before you tighten the screws.
+         *
+         * In the CAD, the frame IF_readhead_mount sits on the ceiling of
+         * the pocket, midway between the two holes. Z points down, into
+         * the head. X runs along the travel, towards the start of the
+         * carriage. It joins the frame IF_mount_side of the head.
+         */
+        attribute holePitch : LengthValue = 26 [mm];
+        attribute screwCount : Natural = 2;
+    }
+
+    port def ScaleMountInterface_v1 {
+        doc /*
+         * The steel tape scale of the linear encoder sticks with its
+         * adhesive backing to the inside face of the side wall of the
+         * base, on the side of the second rail (y = 17 mm). LAMOTION asks
+         * for its mounting tool, and for 24 hours before calibration
+         * (data sheet page 9).
+         *
+         * In the CAD, the frame IF_scale_mount sits on the wall face, at
+         * the start of the scale. Z points out of the wall, into the
+         * scale. X runs along the travel. It joins the frame
+         * IF_mount_bottom of the scale.
+         *
+         * Two values of the frame follow other parts, and are typed for
+         * now. Change them when those parts change:
+         *
+         * - x = 103 mm: the 270 mm scale is centred on the middle of the
+         *   travel that the guide blocks allow on the rails.
+         * - z = 31.75 mm: the centre line of the head, set by the height
+         *   of the carriage and the depth of its head pocket. The end
+         *   clamps then reach up to z = 39.25 mm, 0.75 mm below the top
+         *   of the wall.
+         */
+    }
+
+    port def ScaleReadInterface_v1 {
+        doc /*
+         * The read head reads the scale without touching it. The LAMOTION
+         * data sheet (page 9) gives the limits:
+         *
+         * - the gap from the top of the scale to the window face of the
+         *   head is 0.8 +/- 0.15 mm;
+         * - the edge of the scale is 4.25 +/- 1 mm from the side face of
+         *   the head;
+         * - roll, pitch and yaw are each within +/- 0.5 degrees.
+         *
+         * In the CAD, the frame IF_scale of the head and the frame
+         * IF_head of the scale have the same height and the same
+         * direction. They differ only along the travel. The assembly
+         * gives a gap of 0.80 mm.
+         */
+        attribute gap : LengthValue = 0.8 [mm];
+        attribute gapTolerance : LengthValue = 0.15 [mm];
+    }
+
+    port def ScaleClampInterface_v1 {
+        doc /*
+         * A pair of end clamps holds the two ends of the scale. Each clamp
+         * lies on the same wall face as the scale, with the scale end in
+         * the notch of its backing. How the clamps fix to the wall is not
+         * confirmed: LAMOTION gives no method in the data sheet.
+         *
+         * In the CAD, the frame IF_scale_start of the clamp pair joins
+         * the frame IF_mount_bottom of the scale.
+         */
+    }
+
     // ---------------------------------------------------------------------
     // Parts. Each port says which side of an interface a part is on.
     // ---------------------------------------------------------------------
@@ -251,6 +346,7 @@ package CompactStage {
         port secondRailMount : RailMountInterface_v1;
         port firstStatorMount : StatorMountInterface_v1;
         port secondStatorMount : StatorMountInterface_v1;
+        port scaleMount : ScaleMountInterface_v1;
     }
 
     part def GuideRail {
@@ -279,6 +375,7 @@ package CompactStage {
         port blockBStartMount : BlockMountInterface_v1;
         port blockBEndMount : BlockMountInterface_v1;
         port forcerMount : ForcerMountInterface_v1;
+        port readheadMount : ReadheadMountInterface_v1;
     }
 
     part def GuideBlock {
@@ -298,6 +395,37 @@ package CompactStage {
          * parts library in modules/stoq/. The stage has one.
          */
         port mountTop : ~ForcerMountInterface_v1;
+    }
+
+    part def ReadHead {
+        doc /*
+         * The bought read head of the linear encoder: LAMOTION
+         * AL32B050-30MUL, absolute, BiSS-C, 50 nm, with a 3 m cable out of
+         * the end. It comes from the parts library in modules/stoq/. The
+         * stage has one.
+         */
+        port carriageMount : ~ReadheadMountInterface_v1;
+        port scaleRead : ~ScaleReadInterface_v1;
+    }
+
+    part def Scale {
+        doc /*
+         * The bought steel tape scale of the linear encoder: LAMOTION
+         * ALZ00270G, 270 mm long, with adhesive backing. It comes from the
+         * parts library in modules/stoq/. The stage has one.
+         */
+        port baseMount : ~ScaleMountInterface_v1;
+        port headRead : ScaleReadInterface_v1;
+        port clamps : ScaleClampInterface_v1;
+    }
+
+    part def ScaleClamps {
+        doc /*
+         * The bought pair of end clamps for the scale: LAMOTION RUS-ET-A-B.
+         * It comes from the parts library in modules/stoq/. The stage has
+         * one pair.
+         */
+        port scale : ~ScaleClampInterface_v1;
     }
 
     part def CarriageTop {
@@ -378,6 +506,9 @@ package CompactStage {
         part blockBStart : GuideBlock;
         part blockBEnd : GuideBlock;
         part forcer : Forcer;
+        part readHead : ReadHead;
+        part scale : Scale;
+        part scaleClamps : ScaleClamps;
 
         // Interfaces of the whole stage
         port machineMount : BaseMountInterface_v1;
@@ -409,6 +540,12 @@ package CompactStage {
         connect carriageBottom.blockBStartMount to blockBStart.mountTop;
         connect carriageBottom.blockBEndMount to blockBEnd.mountTop;
         connect carriageBottom.forcerMount to forcer.mountTop;
+
+        // The linear encoder: the head on the carriage, the scale on the base
+        connect carriageBottom.readheadMount to readHead.carriageMount;
+        connect base.scaleMount to scale.baseMount;
+        connect scale.headRead to readHead.scaleRead;
+        connect scale.clamps to scaleClamps.scale;
     }
 
     // ---------------------------------------------------------------------
