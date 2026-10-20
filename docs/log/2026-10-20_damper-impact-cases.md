@@ -90,11 +90,14 @@ the top speed in the middle.
 
 ## Decisions Made
 
-None yet. The design case for the damper is for the team to choose. The proposal is above.
+- **The stage needs 2 m/s, not 3 m/s.** The user decided this after reading the cases above. The
+  damper sizing page now has a speed limit of the drive, set to 2 m/s by default. At 2 m/s the
+  damper takes 10.0 J, 17 % of the 59 J rating. Set the limit to 0 to see the full runaway again.
+- The stage requirement STG-09 still says 3 m/s. It is not changed yet, because the encoder and
+  drive requirements follow from it.
 
 ## Open Questions
 
-- Does the stage really need 3 m/s (STG-09)? Which speed do the chatter tests use?
 - What does the chosen drive do when the encoder signal is lost: switch off, short the phases, or
   brake under control? Read this in the drive manual. Do not assume it.
 - Does the drive have a true overspeed trip that also acts in torque mode? A speed limit that only
@@ -105,6 +108,9 @@ None yet. The design case for the damper is for the team to choose. The proposal
 
 ## Next Steps
 
+- Lower STG-09 to 2 m/s, and update the requirements that follow from it: the encoder signal
+  frequency (DRV-08, 150 kHz becomes 100 kHz), the encoder speed (ENC-03) and the bus voltage note
+  (DRV-04).
 - Decide the design case for the damper: speed at impact, motor on or off.
 - Add slow end zones and the overspeed trip to the drive requirements in
   `modules/compact-stage/architecture/motor-drive.sysml` once the team agrees.

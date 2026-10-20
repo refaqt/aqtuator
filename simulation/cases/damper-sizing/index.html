@@ -157,7 +157,7 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
   <header>
     <h1>Damper Sizing</h1>
     <p>A linear motor stage runs away from one end at full force and hits the end damper. The page finds the impact
-      speed with the motor's own speed limit, sizes a damper with the force law F = c·vⁿ, and shows how the energy goes
+      speed from the speed limit of the drive or the motor's own top speed, sizes a damper with the force law F = c·vⁿ, and shows how the energy goes
       into the damper along its stroke.</p>
   </header>
 
@@ -171,6 +171,8 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
           <input id="sAcc" type="number" step="1" min="1" value="218"></div>
         <div class="field"><label for="Fmax">Maximum force <small>N, the current limit of the drive</small></label>
           <input id="Fmax" type="number" step="10" min="1" value="670"></div>
+        <div class="field"><label for="vLimit">Speed limit of the drive <small>m/s, top speed of the stage; 0 = no limit (full runaway)</small></label>
+          <input id="vLimit" type="number" step="0.1" min="0" value="2.0"></div>
       </fieldset>
       <fieldset>
         <legend>Motor and drive</legend>
@@ -263,7 +265,8 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
         <p><b>Speed-up.</b> The carriage starts at rest. The motor gives its maximum force until its back voltage uses
           up the drive voltage. Per phase: (E + R/2·I)² + (ω·L/2·I)² ≤ (η·V_dc/√6)², with E = Ke/√3·v and
           ω = 2π·v/τ. The force is k_f·I with the largest current that meets this and the current limit. The page
-          steps m·dv/dt = F(v) in time until the carriage has moved the acceleration stroke.</p>
+          steps m·dv/dt = F(v) in time until the carriage has moved the acceleration stroke. If the drive has a speed
+          limit, the carriage speeds up to it and then rolls on at that speed.</p>
         <p><b>Damper.</b> Along the damper stroke x: m·v·dv/dx = F_motor·(push) − c·vⁿ. The page finds c by bisection
           so that the speed at the end of the stroke is the allowed end speed. Energy balance:
           ½·m·v₀² + W_motor = W_damper + ½·m·v_end². The page shows how far off it is.</p>
@@ -282,7 +285,7 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
 <script>
 const M = window.DamperModel;
 const $ = (id) => document.getElementById(id);
-const ids = ["m", "sAcc", "Fmax", "Vdc", "eta", "kf", "ke", "R", "L", "tau", "sDamp", "vEnd", "cSet", "Erated", "vRated"];
+const ids = ["m", "sAcc", "Fmax", "vLimit", "Vdc", "eta", "kf", "ke", "R", "L", "tau", "sDamp", "vEnd", "cSet", "Erated", "vRated"];
 // Page units to SI.
 const SCALE = { sAcc: 1e-3, L: 1e-3, tau: 1e-3, sDamp: 1e-3 };
 
@@ -294,7 +297,7 @@ function params() {
   return p;
 }
 function valid(p) {
-  return p.m > 0 && p.sAcc > 0 && p.Fmax > 0 && p.Vdc > 0 && p.eta > 0 && p.eta <= 1 && p.kf > 0 && p.ke > 0 &&
+  return p.m > 0 && p.sAcc > 0 && p.Fmax > 0 && p.vLimit >= 0 && p.Vdc > 0 && p.eta > 0 && p.eta <= 1 && p.kf > 0 && p.ke > 0 &&
     p.R >= 0 && p.L >= 0 && p.tau > 0 && p.sDamp > 0 && p.vEnd > 0 && p.cSet >= 0 && p.Erated > 0 && p.vRated > 0 &&
     (p.n === 1 || p.n === 2);
 }
@@ -568,7 +571,8 @@ function run() {
   // Results table.
   const body = $("resBody");
   body.replaceChildren();
-  row(body, "Impact speed", `${sig(r.v0)} m/s`, `after ${sig(r.tAcc * 1e3)} ms. No-load speed ${sig(r.vNoLoad)} m/s.`);
+  row(body, "Impact speed", `${sig(r.v0)} m/s`, `after ${sig(r.tAcc * 1e3)} ms. ` +
+    (r.limited ? "Held by the speed limit of the drive." : `No-load speed ${sig(r.vNoLoad)} m/s.`));
   row(body, "Kinetic energy at impact", `${sig(r.Ek0)} J`, "½·m·v₀²");
   row(body, "Work of the motor in the damper", `${sig(r.Wm)} J`, p.push ? "the motor keeps pushing" : "the motor is off");
   row(body, "Energy per impact", `${sig(r.Etotal)} J`, pct(r.energyUse), rate(r.energyUse));
@@ -617,7 +621,7 @@ function run() {
   const xTipMm = (x) => `${sig(x)} mm`;
   band($("cRunV"), chart($("cRunV"), { xLabel: "position, mm", xTip: xTipMm, xRange: [0, xEnd],
     yRange: [0, Math.max(r.vNoLoad, r.v0) * 1.15],
-    hlines: [{ y: r.vNoLoad, label: "no-load speed" }],
+    hlines: [{ y: r.vNoLoad, label: "no-load speed" }].concat(r.limited ? [{ y: p.vLimit, label: "speed limit" }] : []),
     series: [{ pts: runV, color: "var(--s1)", fmt: (v) => `${sig(v)} m/s` }] }));
   band($("cRunF"), chart($("cRunF"), { xLabel: "position, mm", xTip: xTipMm, xRange: [0, xEnd],
     yRange: [0, p.Fmax * 1.1],
