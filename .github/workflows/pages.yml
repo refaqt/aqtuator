@@ -5,6 +5,7 @@ name: Pages
 # The pages are then at
 #   https://refaqt.github.io/aqtuator/strip-seal/
 #   https://refaqt.github.io/aqtuator/cutting-force/
+#   https://refaqt.github.io/aqtuator/damper/
 
 on:
   push:
@@ -12,6 +13,7 @@ on:
     paths:
       - "simulation/cases/strip-seal-designer/**"
       - "simulation/cases/cutting-force-rejection/**"
+      - "simulation/cases/damper-sizing/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -44,22 +46,27 @@ jobs:
         run: |
           node simulation/cases/strip-seal-designer/check_model.mjs
           node simulation/cases/cutting-force-rejection/check_model.mjs
+          node simulation/cases/damper-sizing/check_model.mjs
 
       - name: Collect the site
         run: |
-          mkdir -p _site/strip-seal _site/cutting-force
+          mkdir -p _site/strip-seal _site/cutting-force _site/damper
           cp simulation/cases/strip-seal-designer/index.html \
              simulation/cases/strip-seal-designer/strip_model.js _site/strip-seal/
           cp simulation/cases/cutting-force-rejection/index.html \
              simulation/cases/cutting-force-rejection/control_model.js _site/cutting-force/
+          cp simulation/cases/damper-sizing/index.html \
+             simulation/cases/damper-sizing/damper_model.js _site/damper/
           # Add the commit to the model address. A browser that still holds the
           # old model file in its cache then fetches the new one, instead of
           # running the new page against the old model.
           v="${GITHUB_SHA:0:12}"
           sed -i "s#from \"./strip_model.js\"#from \"./strip_model.js?v=$v\"#" _site/strip-seal/index.html
           sed -i "s#src=\"./control_model.js\"#src=\"./control_model.js?v=$v\"#" _site/cutting-force/index.html
+          sed -i "s#src=\"./damper_model.js\"#src=\"./damper_model.js?v=$v\"#" _site/damper/index.html
           grep -q "strip_model.js?v=$v" _site/strip-seal/index.html
           grep -q "control_model.js?v=$v" _site/cutting-force/index.html
+          grep -q "damper_model.js?v=$v" _site/damper/index.html
           cat > _site/index.html <<'HTML'
           <!doctype html>
           <meta charset="utf-8">
@@ -71,6 +78,7 @@ jobs:
           <ul>
           <li><a href="strip-seal/">Strip Seal Designer</a></li>
           <li><a href="cutting-force/">Cutting Force Rejection</a></li>
+          <li><a href="damper/">Damper Sizing</a></li>
           </ul>
           HTML
 

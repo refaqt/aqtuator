@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Damper Sizing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f2f4f4;
+  --panel: #ffffff;
+  --ink: #1a2227;
+  --muted: #5d6a72;
+  --line: #d5dcdf;
+  --grid: #e6ebed;
+  --accent: #1d6b74;
+  --digital: #eef4f5;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --ref: #8a959b;
+  --ok: #2f7d4a;
+  --warn: #a86b00;
+  --bad: #b3261e;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cond: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab;
+    --line: #2d3a40; --grid: #233036; --accent: #5cb8c2; --digital: #1f2b30;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --ref: #7d8a91;
+    --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab;
+  --line: #2d3a40; --grid: #233036; --accent: #5cb8c2; --digital: #1f2b30;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --ref: #7d8a91;
+  --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans);
+  padding-inline: 16px; padding-block: 20px 40px;
+}
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font: 600 26px/1.15 var(--cond); margin: 0; letter-spacing: 0.01em; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 80ch; }
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+aside {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; display: grid; gap: 14px; position: sticky; top: 12px;
+}
+@media (max-width: 900px) { aside { position: static; } }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+legend {
+  font: 600 11px/1 var(--sans); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--accent); padding: 0 0 6px;
+}
+.field { display: grid; grid-template-columns: 1fr 96px; gap: 8px; align-items: center; }
+.field small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+input[type="number"] {
+  width: 100%; font: 13px var(--mono); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 4px; padding: 5px 6px; text-align: right;
+}
+input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.check { display: flex; gap: 8px; align-items: flex-start; }
+.check input { margin-top: 3px; accent-color: var(--accent); }
+.check small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+.derived { font: 12px var(--mono); color: var(--muted); }
+
+main { display: grid; gap: 20px; min-width: 0; }
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; min-width: 0;
+}
+.panel h2 {
+  font: 600 16px/1.2 var(--cond); margin: 0 0 10px; letter-spacing: 0.02em;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.panel h2 span { font: 400 12px var(--sans); color: var(--muted); }
+
+.warning { margin: 12px 0 0; padding: 8px 10px; border-left: 3px solid var(--warn); color: var(--ink); font-size: 13px; }
+.warning[hidden] { display: none; }
+
+.scroll { overflow-x: auto; }
+svg { display: block; }
+svg text { font-family: var(--mono); fill: var(--ink); }
+#diagram { width: 100%; min-width: 660px; height: auto; }
+
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1100px) { .three { grid-template-columns: minmax(0, 1fr); } }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 800px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.chart-box { position: relative; }
+.chart { width: 100%; height: auto; touch-action: pan-y; }
+.chart-title { font: 500 13px var(--sans); margin: 0 0 4px; }
+.chart-sub { font: 12px var(--mono); color: var(--muted); margin: 2px 0 0; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+.legend i { display: inline-block; width: 16px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+.legend i.dash { border-top-style: dashed; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 4px; padding: 6px 8px; font: 12px/1.45 var(--mono); white-space: nowrap;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); z-index: 2;
+}
+.tip[hidden] { display: none; }
+.tip b { font-weight: 500; }
+.tip .n { color: var(--muted); }
+.tip i { display: inline-block; width: 12px; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+
+.range-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 8px; font-size: 13px; }
+.range-row input { width: 96px; }
+.note { color: var(--muted); font-size: 13px; }
+.note p, .note ul { max-width: 95ch; }
+.note p { margin: 0 0 8px; }
+.note ul { margin: 0 0 8px; padding-left: 18px; }
+.note code { font: 12px var(--mono); }
+.status { font: 12px var(--mono); color: var(--muted); }
+.status.bad { color: var(--bad); }
+.cases { display: grid; gap: 7px; }
+.key { display: inline-block; width: 16px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 6px; }
+.res-wrap { overflow-x: auto; }
+table.res { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
+table.res th, table.res td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+table.res th:first-child, table.res td:first-child { text-align: left; color: var(--muted); font-weight: 400; }
+table.res thead th { font: 600 12.5px/1.3 var(--sans); border-bottom: 3px solid var(--line); }
+table.res thead th small { display: block; font-weight: 400; color: var(--muted); }
+table.res td .v { display: block; font: 500 15px/1.3 var(--mono); font-variant-numeric: tabular-nums; }
+table.res td .s { display: block; font: 11.5px/1.35 var(--mono); color: var(--muted); }
+table.res td.ok .v { color: var(--ok); }
+table.res td.warn .v { color: var(--warn); }
+table.res td.bad .v { color: var(--bad); }
+#mech { width: 100%; min-width: 660px; height: auto; }
+
+select {
+  width: 100%; font: 13px var(--mono); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 4px; padding: 5px 6px;
+}
+table.res { min-width: 0; }
+table.res td:nth-child(2) { white-space: nowrap; }
+table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Damper Sizing</h1>
+    <p>A linear motor stage runs away from one end at full force and hits the end damper. The page finds the impact
+      speed with the motor's own speed limit, sizes a damper with the force law F = c·vⁿ, and shows how the energy goes
+      into the damper along its stroke.</p>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <fieldset>
+        <legend>Stage</legend>
+        <div class="field"><label for="m">Moving mass <small>kg, carriage, forcer, blocks and load</small></label>
+          <input id="m" type="number" step="0.1" min="0.01" value="5.0"></div>
+        <div class="field"><label for="sAcc">Acceleration stroke <small>mm, from rest to the damper</small></label>
+          <input id="sAcc" type="number" step="1" min="1" value="218"></div>
+        <div class="field"><label for="Fmax">Maximum force <small>N, the current limit of the drive</small></label>
+          <input id="Fmax" type="number" step="10" min="1" value="670"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Motor and drive</legend>
+        <div class="field"><label for="Vdc">DC bus voltage <small>V, 220 VAC gives about 310 V</small></label>
+          <input id="Vdc" type="number" step="10" min="1" value="310"></div>
+        <div class="field"><label for="eta">Usable part of the bus <small>0 to 1</small></label>
+          <input id="eta" type="number" step="0.01" min="0.1" max="1" value="0.95"></div>
+        <div class="field"><label for="kf">Force constant <small>N per A rms</small></label>
+          <input id="kf" type="number" step="0.5" min="0.1" value="92.5"></div>
+        <div class="field"><label for="ke">Back-EMF constant <small>V rms per m/s, line to line</small></label>
+          <input id="ke" type="number" step="0.5" min="0.1" value="53.4"></div>
+        <div class="field"><label for="R">Resistance <small>Ω, line to line; MK21: 13.8 cold, 19.0 hot</small></label>
+          <input id="R" type="number" step="0.1" min="0" value="19.0"></div>
+        <div class="field"><label for="L">Inductance <small>mH, line to line</small></label>
+          <input id="L" type="number" step="1" min="0" value="64"></div>
+        <div class="field"><label for="tau">Pole pitch <small>mm, one electrical period</small></label>
+          <input id="tau" type="number" step="1" min="1" value="30"></div>
+        <p class="derived">Defaults: MAXWELL MK21 data sheet. No field weakening.</p>
+        <div class="derived" id="motorText"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Damper</legend>
+        <div class="field"><label for="sDamp">Damper stroke <small>mm</small></label>
+          <input id="sDamp" type="number" step="1" min="0.1" value="15"></div>
+        <div class="field"><label for="n">Force law F = c·vⁿ <small>n = 2: oil through a fixed orifice; n = 1: linear</small></label>
+          <select id="n"><option value="2" selected>n = 2</option><option value="1">n = 1</option></select></div>
+        <div class="field"><label for="vEnd">Speed allowed at the end <small>m/s, the rest hits the hard stop</small></label>
+          <input id="vEnd" type="number" step="0.05" min="0.001" value="0.1"></div>
+        <div class="field"><label for="cSet">Damping constant by hand <small>N·(s/m)ⁿ; 0 = size it from the end speed</small></label>
+          <input id="cSet" type="number" step="100" min="0" value="0"></div>
+        <label class="check"><input id="push" type="checkbox">
+          <span>The motor keeps pushing in the damper
+            <small>Worst case: nothing switches the drive off before the impact.</small></span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Catalog rating of the damper</legend>
+        <div class="field"><label for="Erated">Energy per impact <small>J; Misumi two-stage M20, 15 mm: 59 (to verify)</small></label>
+          <input id="Erated" type="number" step="1" min="0.01" value="59"></div>
+        <div class="field"><label for="vRated">Highest impact speed <small>m/s</small></label>
+          <input id="vRated" type="number" step="0.5" min="0.01" value="5"></div>
+      </fieldset>
+      <div class="status" id="status">Calculating…</div>
+    </aside>
+
+    <main>
+      <section class="panel" aria-labelledby="h-res">
+        <h2 id="h-res">Results <span id="resHead"></span></h2>
+        <div class="res-wrap"><table class="res"><tbody id="resBody"></tbody></table></div>
+        <p class="warning" id="warnPush" hidden></p>
+        <p class="warning" id="warnLaw" hidden></p>
+        <p class="warning" id="warnStop" hidden></p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-run">
+        <h2 id="h-run">The whole run <span>speed-up, then the damper (grey band)</span></h2>
+        <div class="two">
+          <div class="chart-box"><p class="chart-title">Speed, m/s</p>
+            <svg id="cRunV" class="chart" viewBox="0 0 440 240"></svg></div>
+          <div class="chart-box"><p class="chart-title">Motor force, N</p>
+            <svg id="cRunF" class="chart" viewBox="0 0 440 240"></svg></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-damp">
+        <h2 id="h-damp">Inside the damper <span>against the damper stroke</span></h2>
+        <div class="two">
+          <div class="chart-box"><p class="chart-title">Forces, N</p>
+            <p class="legend"><span><i style="border-color:var(--s1)"></i>damper c·vⁿ</span>
+              <span><i style="border-color:var(--s2)"></i>motor</span>
+              <span><i class="dash" style="border-color:var(--ref)"></i>even-force damper, same energy</span></p>
+            <svg id="cDF" class="chart" viewBox="0 0 440 240"></svg></div>
+          <div class="chart-box"><p class="chart-title">Energy, J</p>
+            <p class="legend"><span><i style="border-color:var(--s1)"></i>taken by the damper</span>
+              <span><i style="border-color:var(--s3)"></i>kinetic energy left</span>
+              <span><i style="border-color:var(--s2)"></i>added by the motor</span></p>
+            <svg id="cDE" class="chart" viewBox="0 0 440 240"></svg></div>
+          <div class="chart-box"><p class="chart-title">Speed, m/s</p>
+            <svg id="cDV" class="chart" viewBox="0 0 440 240"></svg></div>
+          <div class="chart-box"><p class="chart-title">Speed against time, m/s</p>
+            <svg id="cDT" class="chart" viewBox="0 0 440 240"></svg></div>
+        </div>
+        <p class="note">The damper force is highest at the moment of impact and falls with the speed. A catalog shock
+          absorber with several orifices that close along the stroke keeps the force close to even. The dashed line
+          shows that ideal case: the same energy, spread evenly over the stroke. It gives the lowest peak force a
+          stroke can have.</p>
+      </section>
+
+      <section class="panel note" aria-labelledby="h-model">
+        <h2 id="h-model">How this is calculated</h2>
+        <p><b>Speed-up.</b> The carriage starts at rest. The motor gives its maximum force until its back voltage uses
+          up the drive voltage. Per phase: (E + R/2·I)² + (ω·L/2·I)² ≤ (η·V_dc/√6)², with E = Ke/√3·v and
+          ω = 2π·v/τ. The force is k_f·I with the largest current that meets this and the current limit. The page
+          steps m·dv/dt = F(v) in time until the carriage has moved the acceleration stroke.</p>
+        <p><b>Damper.</b> Along the damper stroke x: m·v·dv/dx = F_motor·(push) − c·vⁿ. The page finds c by bisection
+          so that the speed at the end of the stroke is the allowed end speed. Energy balance:
+          ½·m·v₀² + W_motor = W_damper + ½·m·v_end². The page shows how far off it is.</p>
+        <p><b>Catalog check.</b> Catalogs rate a damper by energy per impact E = ½·m·v₀² + thrust × stroke, by the
+          equivalent mass 2·E/v₀², and by the highest impact speed. Check also the return spring force, the body
+          length, and the lowest equivalent mass the damper is made for.</p>
+        <p><b>Limits.</b> One rigid mass. No friction in the guides, which would help a little. No field weakening: a
+          drive that weakens the field can reach a higher speed. A pure c·vⁿ damper never brings the speed to zero.
+          The last part of the energy goes into the hard stop at the end of the damper.</p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="./damper_model.js"></script>
+<script>
+const M = window.DamperModel;
+const $ = (id) => document.getElementById(id);
+const ids = ["m", "sAcc", "Fmax", "Vdc", "eta", "kf", "ke", "R", "L", "tau", "sDamp", "vEnd", "cSet", "Erated", "vRated"];
+// Page units to SI.
+const SCALE = { sAcc: 1e-3, L: 1e-3, tau: 1e-3, sDamp: 1e-3 };
+
+function params() {
+  const p = { ...M.DEFAULTS };
+  for (const id of ids) p[id] = parseFloat($(id).value) * (SCALE[id] ?? 1);
+  p.n = parseInt($("n").value, 10);
+  p.push = $("push").checked;
+  return p;
+}
+function valid(p) {
+  return p.m > 0 && p.sAcc > 0 && p.Fmax > 0 && p.Vdc > 0 && p.eta > 0 && p.eta <= 1 && p.kf > 0 && p.ke > 0 &&
+    p.R >= 0 && p.L >= 0 && p.tau > 0 && p.sDamp > 0 && p.vEnd > 0 && p.cSet >= 0 && p.Erated > 0 && p.vRated > 0 &&
+    (p.n === 1 || p.n === 2);
+}
+
+const sup = (s) => String(s).replace(/./g, (c) => "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"["0123456789-".indexOf(c)] ?? c);
+function sig(v, n = 3) {
+  if (!Number.isFinite(v)) return "–";
+  if (v === 0) return "0";
+  const a = Math.abs(v);
+  if (a >= 1e5 || a < 1e-3) {
+    const e = Math.floor(Math.log10(a));
+    return `${(v / 10 ** e).toFixed(n - 1)}·10${sup(e)}`;
+  }
+  const d = Math.max(0, n - 1 - Math.floor(Math.log10(a)));
+  return v.toFixed(d);
+}
+
+// ----- SVG helpers ---------------------------------------------------------
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function niceTicks(lo, hi, n = 5) {
+  const span = hi - lo || 1;
+  const step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= step0);
+  const out = [];
+  for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9 * span; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(lo, hi) {
+  const out = [];
+  for (let e = Math.ceil(Math.log10(lo) - 1e-9); e <= Math.floor(Math.log10(hi) + 1e-9); e++) out.push(10 ** e);
+  return out;
+}
+function logLabel(v) {
+  const e = Math.round(Math.log10(v));
+  if (e >= -2 && e <= 4) return e >= 3 ? `${10 ** (e - 3)}k` : String(+v.toFixed(Math.max(0, -e)));
+  return `10${sup(e)}`;
+}
+
+// A line chart. Series share one x axis. Hover shows every series at the x
+// under the pointer.
+//   series: [{ pts: [[x, y]], color, dash, label, fmt, dots }]
+//   vlines: [{ x, label, color }], markers: [{ x, y, label, color }]
+//   yFromN: only the first N series set the y range (log axes get a decade
+//   of room on each side).
+function chart(svg, o) {
+  o = { ...o, series: o.series.filter((s) => s.pts.length) };
+  if (!o.series.length) { svg.replaceChildren(); return null; }
+  const [, , W, H] = svg.getAttribute("viewBox").split(" ").map(Number);
+  svg.replaceChildren();
+  const m = { l: 58, r: 14, t: 12, b: o.xLabel ? 36 : 20 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const all = o.series.flatMap((s) => s.pts);
+  const xs = all.map((p) => p[0]), ys = (o.yFromN ? o.series.slice(0, o.yFromN).flatMap((s) => s.pts) : all).map((p) => p[1]).filter((y) => Number.isFinite(y) && (!o.yLog || y > 0));
+  let [x0, x1] = o.xRange ?? [Math.min(...xs), Math.max(...xs)];
+  let [y0, y1] = o.yRange ?? [Math.min(...ys), Math.max(...ys)];
+  if (o.yLog && o.yFromN) { y0 /= 10; y1 *= 10; }
+  if (o.yLog) {
+    y0 = 10 ** Math.floor(Math.log10(y0) + 1e-9); y1 = 10 ** Math.ceil(Math.log10(y1) - 1e-9);
+    if (y1 <= y0) y1 = y0 * 10;
+  } else if (!o.yRange) {
+    const pad = (y1 - y0) * 0.06 || Math.abs(y1) * 0.1 || 1;
+    y0 -= pad; y1 += pad;
+    const t = niceTicks(y0, y1, 5);
+    y0 = Math.min(y0, t[0]); y1 = Math.max(y1, t[t.length - 1]);
+  }
+  const fx = o.xLog ? (x) => (Math.log10(x) - Math.log10(x0)) / (Math.log10(x1) - Math.log10(x0))
+                    : (x) => (x - x0) / (x1 - x0);
+  const fy = o.yLog ? (y) => (Math.log10(y) - Math.log10(y0)) / (Math.log10(y1) - Math.log10(y0))
+                    : (y) => (y - y0) / (y1 - y0);
+  const X = (x) => m.l + pw * fx(x), Y = (y) => m.t + ph * (1 - fy(y));
+  const g = el("g");
+
+  // Grid and axes.
+  const xt = o.xLog ? logTicks(x0, x1) : niceTicks(x0, x1, o.xTicks ?? 6);
+  const yt = o.yTicks === "phase" ? phaseTicks(y0, y1) : o.yLog ? logTicks(y0, y1) : niceTicks(y0, y1, 5);
+  if (o.xLog) {
+    for (let e = Math.floor(Math.log10(x0)); e <= Math.ceil(Math.log10(x1)); e++) {
+      for (let k = 2; k < 10; k++) {
+        const v = k * 10 ** e;
+        if (v > x0 && v < x1) g.append(el("line", { x1: X(v), x2: X(v), y1: m.t, y2: m.t + ph, stroke: "var(--grid)", "stroke-width": 0.5 }));
+      }
+    }
+  }
+  for (const v of xt) {
+    g.append(el("line", { x1: X(v), x2: X(v), y1: m.t, y2: m.t + ph, stroke: "var(--grid)" }));
+    g.append(el("text", { x: X(v), y: m.t + ph + 14, "font-size": 10.5, fill: "var(--muted)",
+      "text-anchor": X(v) > m.l + pw - 16 ? "end" : "middle" },
+      o.xLog ? logLabel(v) : (o.xFmt ?? sig)(v)));
+  }
+  for (const v of yt) {
+    g.append(el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: "var(--grid)" }));
+    g.append(el("text", { x: m.l - 6, y: Y(v) + 3.5, "font-size": 10.5, "text-anchor": "end", fill: "var(--muted)" },
+      o.yLog ? logLabel(v) : (o.yFmt ?? ((t) => sig(t)))(v)));
+  }
+  g.append(el("rect", { x: m.l, y: m.t, width: pw, height: ph, fill: "none", stroke: "var(--line)" }));
+  if (o.xLabel) g.append(el("text", { x: m.l + pw / 2, y: H - 4, "font-size": 11, "text-anchor": "middle", fill: "var(--muted)" }, o.xLabel));
+  if (o.yLabel) g.append(el("text", { x: 12, y: m.t + ph / 2, "font-size": 11, "text-anchor": "middle", fill: "var(--muted)",
+    transform: `rotate(-90 12 ${m.t + ph / 2})` }, o.yLabel));
+
+  const clipId = `clip-${svg.id}`;
+  const defs = el("defs");
+  const cp = el("clipPath", { id: clipId });
+  cp.append(el("rect", { x: m.l, y: m.t, width: pw, height: ph }));
+  defs.append(cp);
+  g.append(defs);
+  const plot = el("g", { "clip-path": `url(#${clipId})` });
+
+  for (const h of o.hlines ?? []) {
+    if (h.y < y0 || h.y > y1) continue;
+    plot.append(el("line", { x1: m.l, x2: m.l + pw, y1: Y(h.y), y2: Y(h.y), stroke: "var(--muted)", "stroke-dasharray": "3 3" }));
+    if (h.label) plot.append(el("text", { x: m.l + pw - 4, y: Y(h.y) - 4, "font-size": 10.5, "text-anchor": "end", fill: "var(--muted)" }, h.label));
+  }
+  for (const v of o.vlines ?? []) {
+    if (v.x < x0 || v.x > x1) continue;
+    plot.append(el("line", { x1: X(v.x), x2: X(v.x), y1: m.t, y2: m.t + ph, stroke: v.color ?? "var(--muted)", "stroke-dasharray": "3 3" }));
+    if (v.label) plot.append(el("text", { x: X(v.x) + (v.left ? -4 : 4), y: m.t + 12 + (v.row ?? 0) * 13, "font-size": 10.5,
+      "text-anchor": v.left ? "end" : "start", fill: v.color ?? "var(--muted)" }, v.label));
+  }
+  for (const s of o.series) {
+    const pts = s.pts.filter((p) => Number.isFinite(p[1]) && (!o.yLog || p[1] > 0));
+    if (!pts.length) continue;
+    const d = pts.map((p, i) => `${i ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
+    plot.append(el("path", { d, fill: "none", stroke: s.color, "stroke-width": s.width ?? 2,
+      "stroke-dasharray": s.dash ? "5 4" : "none", "stroke-linejoin": "round" }));
+    if (s.dots) for (const p of s.dots) {
+      plot.append(el("circle", { cx: X(p[0]), cy: Y(p[1]), r: 2.6, fill: s.color, stroke: "var(--panel)", "stroke-width": 1 }));
+    }
+  }
+  for (const mk of o.markers ?? []) {
+    if (!(mk.x >= x0 && mk.x <= x1 && mk.y >= y0 && mk.y <= y1)) continue;
+    plot.append(el("circle", { cx: X(mk.x), cy: Y(mk.y), r: 4.5, fill: mk.color ?? "var(--ink)", stroke: "var(--panel)", "stroke-width": 2 }));
+    if (mk.label) {
+      const right = X(mk.x) < m.l + pw * 0.62;
+      plot.append(el("text", { x: X(mk.x) + (right ? 8 : -8), y: Y(mk.y) + (mk.below ? 15 : -8), "font-size": 11,
+        "text-anchor": right ? "start" : "end", "font-weight": 500 }, mk.label));
+    }
+  }
+  g.append(plot);
+
+  // Hover: a hairline that snaps to the nearest x, and one tooltip for all series.
+  const hair = el("line", { y1: m.t, y2: m.t + ph, stroke: "var(--muted)", visibility: "hidden" });
+  const dots = o.series.map((s) => el("circle", { r: 3.5, fill: s.color, stroke: "var(--panel)", "stroke-width": 1.5, visibility: "hidden" }));
+  g.append(hair, ...dots);
+  const hit = el("rect", { x: m.l, y: m.t, width: pw, height: ph, fill: "transparent" });
+  g.append(hit);
+  svg.append(g);
+
+  const box = svg.parentElement;
+  let tip = box.querySelector(`.tip[data-for="${svg.id}"]`);
+  if (!tip) {
+    tip = document.createElement("div");
+    tip.className = "tip"; tip.hidden = true; tip.dataset.for = svg.id;
+    box.append(tip);
+  }
+  const nearest = (pts, x) => {
+    let lo = 0, hi = pts.length - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (pts[mid][0] < x) lo = mid; else hi = mid; }
+    return Math.abs(pts[lo][0] - x) <= Math.abs(pts[hi][0] - x) ? pts[lo] : pts[hi];
+  };
+  const inv = (px) => {
+    const u = (px - m.l) / pw;
+    return o.xLog ? 10 ** (Math.log10(x0) + u * (Math.log10(x1) - Math.log10(x0))) : x0 + u * (x1 - x0);
+  };
+  const move = (ev) => {
+    const r = svg.getBoundingClientRect();
+    const px = (ev.clientX - r.left) * W / r.width;
+    const x = inv(Math.min(m.l + pw, Math.max(m.l, px)));
+    const ref = nearest(o.series[0].pts, x);
+    hair.setAttribute("x1", X(ref[0])); hair.setAttribute("x2", X(ref[0]));
+    hair.setAttribute("visibility", "visible");
+    tip.replaceChildren();
+    const head = document.createElement("div");
+    head.className = "n";
+    head.textContent = o.xTip(ref[0]);
+    tip.append(head);
+    o.series.forEach((s, i) => {
+      const p = nearest(s.pts, ref[0]);
+      const ok = Number.isFinite(p[1]) && (!o.yLog || p[1] > 0) && p[1] >= y0 && p[1] <= y1;
+      dots[i].setAttribute("visibility", ok ? "visible" : "hidden");
+      if (ok) { dots[i].setAttribute("cx", X(p[0])); dots[i].setAttribute("cy", Y(p[1])); }
+      const row = document.createElement("div");
+      const key = document.createElement("i");
+      key.style.borderColor = s.color;
+      if (s.dash) key.style.borderTopStyle = "dashed";
+      const val = document.createElement("b");
+      val.textContent = (s.fmt ?? sig)(p[1]);
+      const name = document.createElement("span");
+      name.className = "n";
+      name.textContent = s.label ? `  ${s.label}` : "";
+      row.append(key, val, name);
+      tip.append(row);
+    });
+    tip.hidden = false;
+    const bx = box.getBoundingClientRect();
+    const left = ev.clientX - bx.left, top = ev.clientY - bx.top;
+    const tw = tip.offsetWidth;
+    tip.style.left = `${left + 14 + tw > bx.width ? left - 14 - tw : left + 14}px`;
+    tip.style.top = `${Math.max(0, top - 10 - tip.offsetHeight)}px`;
+  };
+  const leave = () => {
+    tip.hidden = true;
+    hair.setAttribute("visibility", "hidden");
+    dots.forEach((d) => d.setAttribute("visibility", "hidden"));
+  };
+  hit.addEventListener("pointermove", move);
+  hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", leave);
+  return { X, Y };
+}
+function phaseTicks(lo, hi) {
+  const step = hi - lo > 400 ? 180 : hi - lo > 200 ? 90 : 45;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out.push(v);
+  return out;
+}
+
+// ----- Helpers -------------------------------------------------------------
+// At most about 600 points per line.
+const thin = (a) => { const k = Math.max(1, Math.ceil(a.length / 600)); return a.filter((_, i) => i % k === 0 || i === a.length - 1); };
+const unitC = (n) => n === 1 ? "N·s/m" : "N·s²/m²";
+
+function row(body, label, value, note, cls = "") {
+  const tr = document.createElement("tr");
+  const a = document.createElement("td"); a.textContent = label;
+  const b = document.createElement("td"); if (cls) b.className = cls;
+  const v = document.createElement("span"); v.className = "v"; v.textContent = value; b.append(v);
+  const c = document.createElement("td"); c.textContent = note;
+  tr.append(a, b, c); body.append(tr);
+}
+const rate = (u) => u <= 0.85 ? "ok" : u <= 1 ? "warn" : "bad";
+const pct = (u) => `${Math.round(u * 100)} % of the rating`;
+
+// ----- Update --------------------------------------------------------------
+let timer = 0;
+function schedule() { clearTimeout(timer); timer = setTimeout(update, 120); }
+
+// Any error must reach the status line. Otherwise the page keeps saying
+// "Calculating…" and shows nothing, with no hint of what went wrong.
+function update() {
+  try { run(); } catch (e) {
+    console.error(e);
+    const status = $("status");
+    status.textContent = `The calculation stopped: ${e.message}. Reload the page. If that does not help, clear the browser cache.`;
+    status.className = "status bad";
+  }
+}
+
+function run() {
+  const p = params();
+  const status = $("status");
+  if (!valid(p)) {
+    status.textContent = "Check the inputs: all must be positive, the usable part of the bus at most 1.";
+    status.className = "status bad";
+    return;
+  }
+  status.className = "status";
+  const t0 = performance.now();
+  const r = M.solve(p);
+  const d = r.damper;
+  const mm = 1e3;
+
+  $("motorText").textContent = `no-load speed ${sig(r.vNoLoad)} m/s. Without the voltage limit: ${sig(r.vNoVolt)} m/s.`;
+  $("resHead").textContent = `impact at ${sig(r.v0)} m/s`;
+
+  // Results table.
+  const body = $("resBody");
+  body.replaceChildren();
+  row(body, "Impact speed", `${sig(r.v0)} m/s`, `after ${sig(r.tAcc * 1e3)} ms. No-load speed ${sig(r.vNoLoad)} m/s.`);
+  row(body, "Kinetic energy at impact", `${sig(r.Ek0)} J`, "½·m·v₀²");
+  row(body, "Work of the motor in the damper", `${sig(r.Wm)} J`, p.push ? "the motor keeps pushing" : "the motor is off");
+  row(body, "Energy per impact", `${sig(r.Etotal)} J`, pct(r.energyUse), rate(r.energyUse));
+  row(body, "Impact speed against the rating", `${sig(r.v0)} m/s`, pct(r.speedUse), rate(r.speedUse));
+  row(body, "Equivalent mass", `${sig(r.me)} kg`, "2·E/v₀², for the catalog table");
+  row(body, r.manual ? "Damping constant (set by hand)" : "Damping constant c", `${sig(r.c)} ${unitC(p.n)}`,
+    r.none ? "no damper needed for this end speed" : `F = c·v${p.n === 1 ? "" : "²"}`);
+  row(body, "Peak damper force", `${sig(r.FdPeak / 1e3)} kN`, `peak deceleration ${sig(r.aPeakG)} g`);
+  row(body, "Even-force damper, same energy", `${sig(r.Fconst / 1e3)} kN`,
+    `${sig(r.aConstG)} g. ${sig(r.FdPeak / r.Fconst)} × lower peak than c·vⁿ`);
+  row(body, d.stopped ? "Carriage stops inside the damper" : "Speed at the end of the stroke",
+    d.stopped ? `${sig(d.xEnd * mm)} mm` : `${sig(d.vEnd)} m/s`,
+    d.stopped ? "of the damper stroke" : `${sig(r.Ek1)} J goes into the hard stop`);
+  row(body, "Time in the damper", `${sig(d.t * 1e3)} ms`, "");
+  if (p.push) row(body, "Motor force on the hard stop", `${sig(r.FmEnd)} N`, "until the drive switches off");
+  row(body, "Energy balance error", `${sig(Math.abs(r.balance))} J`, "numerical check, should be near 0");
+
+  // Warnings.
+  const wp = $("warnPush");
+  wp.hidden = !p.push;
+  if (p.push) wp.textContent = `The motor keeps pushing. A damper with F = c·vⁿ alone cannot stop the carriage: it only ` +
+    `slows it to the speed where both forces are equal, ${sig(r.vTerminal)} m/s with this c. To reach a low end speed ` +
+    `the damper needs a very high c, and so a very high force at impact. Switch the drive off before the impact (limit ` +
+    `switch to the drive, or safe torque off), so that the motor force is gone.`;
+  const wl = $("warnLaw");
+  wl.hidden = r.FdPeak < 2 * r.Fconst;
+  wl.textContent = `The peak damper force is ${sig(r.FdPeak / r.Fconst)} times the even-force value. A damper with ` +
+    `one fixed orifice brakes hard at first and weakly at the end. A catalog shock absorber with several orifices, or ` +
+    `an adjustable one, comes much closer to the even force.`;
+  const ws = $("warnStop");
+  ws.hidden = !d.stopped;
+  ws.textContent = `The carriage stops after ${sig(d.xEnd * mm)} mm, before the end of the ${sig(p.sDamp * mm)} mm ` +
+    `stroke. The damping constant is higher than needed.`;
+
+  // The whole run: speed-up, then the damper.
+  const runV = thin(r.accTrace).map((q) => [q.x * mm, q.v]).concat(thin(r.trace).map((q) => [(p.sAcc + q.x) * mm, q.v]));
+  const runF = thin(r.accTrace).map((q) => [q.x * mm, q.F]).concat(thin(r.trace).map((q) => [(p.sAcc + q.x) * mm, q.Fm]));
+  const xEnd = (p.sAcc + p.sDamp) * mm;
+  const band = (svg, c) => {
+    if (!c) return;
+    const g = svg.firstChild;
+    const [, , , H] = svg.getAttribute("viewBox").split(" ").map(Number);
+    const x0 = c.X(p.sAcc * mm), x1 = c.X(xEnd);
+    g.insertBefore(el("rect", { x: x0, y: 12, width: Math.max(1, x1 - x0), height: H - 12 - 36, fill: "var(--grid)" }), g.firstChild);
+  };
+  const xTipMm = (x) => `${sig(x)} mm`;
+  band($("cRunV"), chart($("cRunV"), { xLabel: "position, mm", xTip: xTipMm, xRange: [0, xEnd],
+    yRange: [0, Math.max(r.vNoLoad, r.v0) * 1.15],
+    hlines: [{ y: r.vNoLoad, label: "no-load speed" }],
+    series: [{ pts: runV, color: "var(--s1)", fmt: (v) => `${sig(v)} m/s` }] }));
+  band($("cRunF"), chart($("cRunF"), { xLabel: "position, mm", xTip: xTipMm, xRange: [0, xEnd],
+    yRange: [0, p.Fmax * 1.1],
+    series: [{ pts: runF, color: "var(--s2)", fmt: (v) => `${sig(v)} N` }] }));
+
+  // Inside the damper.
+  const tr = thin(r.trace);
+  const xs = (q) => q.x * mm;
+  chart($("cDF"), { xLabel: "damper stroke, mm", xTip: xTipMm, xRange: [0, p.sDamp * mm],
+    series: [
+      { pts: tr.map((q) => [xs(q), q.Fd]), color: "var(--s1)", label: "damper", fmt: (v) => `${sig(v)} N` },
+      { pts: tr.map((q) => [xs(q), q.Fm]), color: "var(--s2)", label: "motor", fmt: (v) => `${sig(v)} N` },
+      { pts: [[0, r.Fconst], [p.sDamp * mm, r.Fconst]], color: "var(--ref)", dash: true, label: "even force",
+        fmt: (v) => `${sig(v)} N` },
+    ] });
+  chart($("cDE"), { xLabel: "damper stroke, mm", xTip: xTipMm, xRange: [0, p.sDamp * mm],
+    series: [
+      { pts: tr.map((q) => [xs(q), q.Wd]), color: "var(--s1)", label: "damper", fmt: (v) => `${sig(v)} J` },
+      { pts: tr.map((q) => [xs(q), q.Ek]), color: "var(--s3)", label: "kinetic", fmt: (v) => `${sig(v)} J` },
+      { pts: tr.map((q) => [xs(q), q.Wm]), color: "var(--s2)", label: "motor", fmt: (v) => `${sig(v)} J` },
+    ] });
+  chart($("cDV"), { xLabel: "damper stroke, mm", xTip: xTipMm, xRange: [0, p.sDamp * mm], yRange: [0, r.v0 * 1.08],
+    hlines: [{ y: p.vEnd, label: "allowed end speed" }],
+    series: [{ pts: tr.map((q) => [xs(q), q.v]), color: "var(--s1)", fmt: (v) => `${sig(v)} m/s` }] });
+  chart($("cDT"), { xLabel: "time in the damper, ms", xTip: (x) => `${sig(x)} ms`, yRange: [0, r.v0 * 1.08],
+    hlines: [{ y: p.vEnd, label: "allowed end speed" }],
+    series: [{ pts: tr.map((q) => [q.t * 1e3, q.v]), color: "var(--s1)", fmt: (v) => `${sig(v)} m/s` }] });
+
+  status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
+}
+
+for (const id of [...ids, "n"]) $(id).addEventListener("input", schedule);
+$("push").addEventListener("change", update);
+update();
+</script>
+</body>
+</html>
