@@ -1,0 +1,45 @@
+# Load case for the bottom carriage of the compact stage.
+# run_fem.py reads this file. Lengths in mm, forces in N, stresses in MPa.
+
+[geometry]
+# Part file, relative to the module folder (modules/compact-stage). The
+# script only reads it.
+part_file = "cad/parts/carriage-bottom/carriage-bottom.FCStd"
+body = "Body"
+
+[material]
+# A FreeCAD material card. 6061-T6 is a stand-in until the alloy is chosen.
+card = "Aluminum-6061-T6"
+youngs_modulus = 69000.0   # MPa
+poisson_ratio = 0.33
+density = 2.7e-6           # kg/mm^3
+
+[fixed]
+# Faces held still: the flat faces that point down at this height.
+# These are the faces where the four QEH15SA guide blocks sit. The size
+# (x by y, outer edges) tells them apart from other faces at that height.
+face_z = 10.0
+face_size = [35.0, 48.0]
+expected_faces = 4
+
+[load]
+# Total force, shared over all load edges. Negative z points down.
+force = 200.0
+direction = [0.0, 0.0, -1.0]
+# Load edges: straight edges on the top face, along x, with this length.
+edge_z = 27.5
+edge_length = 6.0
+expected_edges = 4
+# Stress closer than this to a load edge is not reported as the
+# "away from the load" peak. A load on a line gives a stress peak that
+# grows without limit as the mesh gets finer.
+stress_exclusion_radius = 3.0
+
+[mesh]
+# Gmsh, second order tetrahedra (10 nodes).
+length_max = 5.0
+length_min = 0.5
+# Straight edges on the middle nodes. With curved middle nodes, Gmsh
+# turned some small elements inside out on this part, and CalculiX
+# stopped with "nonpositive jacobian".
+second_order_linear = true

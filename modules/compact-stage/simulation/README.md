@@ -1,0 +1,24 @@
+# Simulation
+
+Design-time analysis of the compact stage: models that predict how its parts behave before we
+build them. Studies that are not about one stage family stay in the repository-wide
+[`simulation/`](../../../simulation/) folder.
+
+| Case | Tool | Question |
+| --- | --- | --- |
+| [`carriage-bottom-deflection`](cases/carriage-bottom-deflection/) | FreeCAD 1.1 (Gmsh, CalculiX) | How much does the bottom carriage bend under a load on its top, and how high is the stress? (Blocks taken as rigid, one load case.) |
+
+Results summaries belong in `results/<case-slug>/summary.md`. Heavy outputs
+(`results/<case>/exports/`) are gitignored.
+
+## Running
+
+Run from the repository root:
+
+```bash
+"C:/Program Files/FreeCAD 1.1/bin/freecadcmd.exe" modules/compact-stage/simulation/cases/carriage-bottom-deflection/run_fem.py
+```
+
+FreeCAD cases run with `freecadcmd`, the FreeCAD program without a window. They read the part file
+and never change it. Do not put an analysis inside a part file in `cad/`. Paths in a case are
+relative to this module folder, so a case still works if the module moves to its own repository.

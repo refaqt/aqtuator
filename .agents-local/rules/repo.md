@@ -18,7 +18,8 @@ double-click `setup-tooling.bat`.
 | --- | --- |
 | Code that runs on the Controllino | `modules/flexure-ball-screw-servo-stage/firmware/<target>/` |
 | Code that runs on a PC | `modules/<family>/software/<project>/src/<package>/` |
-| A model that predicts behaviour | `simulation/cases/<slug>/` |
+| A model that predicts how one stage family behaves | `modules/<family>/simulation/cases/<slug>/` |
+| A model that is not about one stage family | `simulation/cases/<slug>/` |
 | A new stage family | `modules/<family>/` — read `doqs/docs/variants.md` first |
 | A physical test campaign | `modules/<family>/measurement/cases/<slug>/` |
 | A day's work write-up | `docs/log/YYYY-MM-DD_topic.md` |
@@ -58,7 +59,8 @@ Agito Akribis and Dynamikwell are out for the same reason. See
 ## Stack and execution
 
 - **Mixed stack:** Python (`modules/*/software/*`), Arduino/C++ (`modules/*/firmware/*`),
-  Octave (`simulation/cases/*`), FreeCAD (`cad/`).
+  Octave (`simulation/cases/*`), FreeCAD (`cad/`, and stress cases in
+  `modules/*/simulation/cases/*`, run with `freecadcmd`).
 - Run commands from the repository root. The `software/*` folders are installable packages
   (`pip install -e modules/flexure-ball-screw-servo-stage/software/identification`); import them rather than manipulating
   `sys.path`.

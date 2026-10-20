@@ -37,6 +37,11 @@ Every pair of parts that touch has an interface: a `port def` in `compact-stage.
 each part, and a connection in the assembly. The two interfaces of the whole stage (the base on
 the machine, and the load on the carriage) are also listed in [`okh.toml`](okh.toml).
 
+## Simulation
+
+Stress and other predictions for the parts of this stage are in [`simulation/`](simulation/). The
+first case is the bend of the bottom carriage under a load on its top.
+
 ## Next
 
 1. Model the geometry of each part. Add a dimension to its interface when the CAD fixes it.

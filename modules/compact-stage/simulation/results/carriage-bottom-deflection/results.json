@@ -1,0 +1,35 @@
+{
+  "case": "carriage-bottom-deflection",
+  "freecad": "1.1.4",
+  "part_file": "cad/parts/carriage-bottom/carriage-bottom.FCStd",
+  "load_N": 200.0,
+  "fixed_faces": [
+    "Face2",
+    "Face6",
+    "Face50",
+    "Face81"
+  ],
+  "load_edges": [
+    "Edge242",
+    "Edge269",
+    "Edge278",
+    "Edge301"
+  ],
+  "mesh": {
+    "nodes": 145591,
+    "tetrahedra": 83604,
+    "length_max_mm": 5.0,
+    "length_min_mm": 0.5,
+    "second_order_linear": true
+  },
+  "max_displacement_mm": 0.00405,
+  "max_downward_displacement_mm": 0.00373,
+  "max_von_mises_MPa": 17.73,
+  "max_von_mises_at_mm": [
+    206.5,
+    170.0,
+    27.5
+  ],
+  "max_von_mises_away_from_load_MPa": 4.97,
+  "stress_exclusion_radius_mm": 3.0
+}
