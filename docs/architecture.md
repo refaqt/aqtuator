@@ -26,6 +26,8 @@ but have no geometry yet. All servo drives we considered for it are compared in
 [`servo-drive-selection.md`](servo-drive-selection.md). All linear encoders we considered are compared in
 [`linear-encoder-selection.md`](linear-encoder-selection.md). The low-cost displacement sensors for the stage
 error motion test are compared in [`displacement-sensor-selection.md`](displacement-sensor-selection.md).
+Systems that record three or more encoders at the same time are compared in
+[`encoder-recorder-selection.md`](encoder-recorder-selection.md).
 
 Folder names say what a stage is, not what it is called on a price list. A commercial name belongs
 in a family's `catalog.toml` when there is one.
