@@ -5,7 +5,7 @@ requirements. It is an overview. The research is in the log entries and decision
 each row and in [Sources](#sources). If a number here differs from a log entry, the log entry and the
 maker's own manual win. Tell us, and we fix this page.
 
-Last updated: 2026-10-06. Prices were seen on 2026-09-29 and many are asking prices.
+Last updated: 2026-10-20. Prices were seen on 2026-09-29 and many are asking prices.
 
 ## Short answer
 
@@ -115,6 +115,7 @@ These drives came from the searches. None is chosen. The last column says why.
 | Servotronix (Gaochuang) | CD3E-003 | [Quick start guide (Chinese)](https://28526507.s21i.faiusr.com/61/1/ABUIABA9GAAgjqvIwgYo-oP2iQY.pdf) | 1 phase 220 VAC. Pass | 3 / 9 A for 2 s | Not in logs | Not in logs | Not in logs | A/B pulses only. **Fail** | 8 kHz | No dual loop, no error table | NP | Out: no 1 Vpp. [Log](log/2026-09-29_servotronix-drives-with-a-faster-loop.md) |
 | Servotronix (Gaochuang) | LDHD3-006 | [Flyer](https://www.servotronix.cn/en/download/1136) | 1 phase 200 to 240 VAC. Pass | 6 / 18 A | Not in logs | Not in logs | Not in logs | A/B, BiSS-C, Tamagawa. **Fail** | NP | Not in logs | NP | Out: no 1 Vpp. [Log](log/2026-09-29_servotronix-drives-with-a-faster-loop.md) |
 | Kinco | FD5P | [Manual](https://aiq-robotics.com/wp-content/uploads/2024/01/Kinco-FD5P-series-AC-servo-system-manual-EN-23125.pdf) | Not in logs | Not in logs | Not in logs | Not in logs | Not in logs | Not in logs | 4 kHz | Not in logs | NP | Fails DRV-08: serial encoders only. See [the 4 kHz drives](#the-4-khz-drives-checked-again). [Log](log/2026-09-29_non-israeli-drives-with-open-control-loops.md) |
+| Kinco | FD6P, FD5P PRO, FD2S, CD2S, JD, FD3 | [Kinco website](https://www.kincoautomation.com) | 200 to 240 VAC. Pass | FD6P L2R9: 2.9 / 10.61 A. Pass | Not stated | JD only: PTC input | FD6P, FD5P and FD2S: yes. JD and CD2S: no | Kinco serial, 2500 line incremental, resolver, or Hiperface (JD). **Fail** | FD6P 8 kHz. CD2S, FD3 1 kHz | Not stated | NP | Checked 2026-10-20. No series has both EtherCAT and a 1 Vpp input. [Log](log/2026-10-20_kinco-servo-drives-checked.md) |
 
 ## Low voltage drives, and drives that need their own master
 
