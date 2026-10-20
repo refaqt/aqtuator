@@ -16,6 +16,7 @@
 // 8. The constant-force reference holds the same energy as the damper.
 // 9. A damping constant set by hand is used as it is. With the motor pushing,
 //    the speed levels off at the terminal speed, where c·vⁿ = F_motor(v).
+// 10 to 16. The bumper, for each shape of the force curve (see below).
 
 import "./damper_model.js";
 const M = globalThis.DamperModel;
@@ -104,7 +105,7 @@ for (const n of [1, 2]) {
 //     stops at x = v₀·√(m/k) after a quarter period (π/2)·√(m/k), and comes
 //     back at √(1 − absorb)·v₀.
 {
-  const p = { ...M.DEFAULTS, stopType: "bumper", pBump: 1, push: false };
+  const p = { ...M.DEFAULTS, stopType: "bumper", bumpCurve: "power", pBump: 1, push: false };
   const r = M.solveBumper(p);
   const k = 2 * p.Ebump / p.sBump ** 2;
   const xw = r.v0 * Math.sqrt(p.m / k);
@@ -119,7 +120,7 @@ for (const n of [1, 2]) {
 
 // 11. Bumper, p = 2, motor off: ½·m·v₀² = F_full·s/3·(x/s)³.
 {
-  const p = { ...M.DEFAULTS, stopType: "bumper", pBump: 2, push: false };
+  const p = { ...M.DEFAULTS, stopType: "bumper", bumpCurve: "power", pBump: 2, push: false };
   const r = M.solveBumper(p);
   const xw = p.sBump * Math.cbrt(3 * r.Ek0 / (M.bumperFull(p) * p.sBump));
   check(near(r.bumper.xMax, xw, 1e-6), `bumper p = 2: compression ${(r.bumper.xMax * 1e3).toFixed(4)} mm, exact ${(xw * 1e3).toFixed(4)} mm`);
@@ -128,7 +129,7 @@ for (const n of [1, 2]) {
 // 12. Bumper energy balance, with and without the push, for p = 0.5, 1 and 2.
 for (const pBump of [0.5, 1, 2]) {
   for (const push of [false, true]) {
-    const p = { ...M.DEFAULTS, stopType: "bumper", pBump, push, sBump: 0.03, Ebump: 60 };
+    const p = { ...M.DEFAULTS, stopType: "bumper", bumpCurve: "power", pBump, push, sBump: 0.03, Ebump: 60 };
     const r = M.solveBumper(p);
     check(Math.abs(r.balance) <= 1e-4 * r.Etotal, `bumper p = ${pBump}, push ${push}: energy balance off by ` +
       `${r.balance.toExponential(2)} J of ${r.Etotal.toFixed(2)} J`);
@@ -142,6 +143,49 @@ for (const pBump of [0.5, 1, 2]) {
   const r = M.solveBumper(p);
   check(r.bumper.bottomed && near(r.Ek1, r.Ek0 - p.Ebump, 1e-6),
     `bumper bottoms out: ${r.Ek1.toFixed(4)} J left, ${r.Ek0.toFixed(2)} − ${p.Ebump} J = ${(r.Ek0 - p.Ebump).toFixed(4)} J`);
+}
+
+// 14. Bumper with a constant force, motor off: F = E_r/s from the first
+//     contact, so the compression is ½·m·v₀²/F and the time to stop m·v₀/F.
+{
+  const p = { ...M.DEFAULTS, stopType: "bumper", bumpCurve: "constant", push: false };
+  const r = M.solveBumper(p);
+  const F = p.Ebump / p.sBump;
+  check(near(r.Ffull, F, 1e-12) && near(M.bumperForce(0, p), F, 1e-12), `bumper constant: force ${r.Ffull.toFixed(1)} N from contact, E/s = ${F.toFixed(1)} N`);
+  const xw = r.Ek0 / F, tw = p.m * r.v0 / F;
+  check(near(r.bumper.xMax, xw, 1e-6), `bumper constant: compression ${(r.bumper.xMax * 1e3).toFixed(4)} mm, exact ${(xw * 1e3).toFixed(4)} mm`);
+  check(near(r.bumper.t, tw, 1e-6), `bumper constant: time to stop ${(r.bumper.t * 1e3).toFixed(4)} ms, exact ${(tw * 1e3).toFixed(4)} ms`);
+}
+
+// 15. ACE curve: the exact work G matches a numerical integral of the shape g,
+//     the work at the full stroke is the catalog energy, and the compression
+//     matches the root of the exact work.
+{
+  const p = { ...M.DEFAULTS, stopType: "bumper", bumpCurve: "ace", push: false };
+  const sh = M.bumperShape(p);
+  let I = 0;
+  const N = 100000;
+  for (let i = 0; i < N; i++) I += sh.g((i + 0.5) / N) / N;
+  check(near(sh.G(1), I, 1e-8), `bumper ACE: ∫g = ${I.toFixed(6)}, G(1) = ${sh.G(1).toFixed(6)}`);
+  check(near(M.bumperWork(p.sBump, p), p.Ebump, 1e-12), `bumper ACE: work at the full stroke ${M.bumperWork(p.sBump, p).toFixed(4)} J = ${p.Ebump} J`);
+  const r = M.solveBumper(p);
+  let lo = 0, hi = p.sBump;
+  for (let i = 0; i < 100; i++) { const x = (lo + hi) / 2; if (M.bumperWork(x, p) < r.Ek0) lo = x; else hi = x; }
+  check(near(r.bumper.xMax, lo, 1e-6), `bumper ACE: compression ${(r.bumper.xMax * 1e3).toFixed(4)} mm, exact ${(lo * 1e3).toFixed(4)} mm`);
+}
+
+// 16. Bumper energy balance for the ACE and constant curves, with and without
+//     the push. With the push, the hold point has the bumper force equal to the
+//     motor force at rest.
+for (const bumpCurve of ["ace", "constant"]) {
+  for (const push of [false, true]) {
+    const p = { ...M.DEFAULTS, stopType: "bumper", bumpCurve, push, sBump: 0.03, Ebump: 60 };
+    const r = M.solveBumper(p);
+    check(Math.abs(r.balance) <= 1e-4 * r.Etotal, `bumper ${bumpCurve}, push ${push}: energy balance off by ` +
+      `${(Math.abs(r.balance) / r.Etotal * 100).toExponential(2)} %`);
+    if (push && bumpCurve === "ace") check(near(M.bumperForce(r.xHold, p), r.FmEnd, 1e-6),
+      `bumper ACE, push: hold point ${(r.xHold * 1e3).toFixed(3)} mm, force ${M.bumperForce(r.xHold, p).toFixed(1)} N = motor ${r.FmEnd.toFixed(1)} N`);
+  }
 }
 
 if (failed) {

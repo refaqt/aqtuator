@@ -66,7 +66,8 @@ Bumper inputs. The defaults are the ACE TUBUS TA22-10, from the
 | Bumper stroke | 10 mm | TA22-10 |
 | Energy per stroke | 11.5 J | 102 in-lbs per cycle |
 | Energy for emergency use | 21.0 J | 186 in-lbs per cycle, for a rare crash only |
-| Shape of the force curve | p = 1 | F ∝ xᵖ. An estimate: ACE gives no force curve per size |
+| Shape of the force curve | ACE TA curve | Also: constant force, linear spring, power law F ∝ xᵖ |
+| Shape p | 1 | Only for the power law |
 | Energy turned into heat | 60 % | ACE: 58 to 73 % |
 
 ## Model
@@ -91,9 +92,21 @@ the page as a check.
 
 **Bumper.** The force depends on the compression x only:
 
-    F_b(x) = F_full·(x/s)^p,   F_full = (p+1)·E_r/s
+    F_b(x) = F_full·g(x/s),   F_full = E_r/(s·∫₀¹ g)
 
-so the work at the full stroke s is the catalog energy E_r. The page steps
+so the work at the full stroke s is the catalog energy E_r. Choose the shape g(u):
+
+- **ACE TA curve** (default): g = 1 − (1 − u)^1.8. The force rises fast from zero, then flattens
+  out near the top. It is fitted to the only force–stroke graph ACE publishes, for the TA37-16
+  (BIBUS datasheet TUBUS TA, edition 21_22_0045). The work under the fitted curve is 65 J, the
+  catalog value.
+- **Constant force**: g = 1. The full force from the first contact. This is the lowest peak force a
+  stroke can have, so it is an ideal limit.
+- **Linear spring**: g = u.
+- **Power law**: g = uᵖ, with p set by hand.
+
+The "870 N to 90,000 N" on the ACE page is the range of the whole TA family, from the TA12-5 to
+the TA116-48. It is not the force of one bumper. The page steps
 m·dv/dt = F_motor(v)·push − F_b(x) in time (RK4) until the carriage stops, or until the bumper is
 fully pressed in. In that last case metal hits metal, and the page shows the energy that is left.
 With the motor off, the part (1 − absorbed) of the bumper work pushes the carriage back:
@@ -118,11 +131,12 @@ with several orifices comes close to this. It gives the lowest peak force a stro
 - **With the motor still pushing, a damper alone cannot stop the carriage.** A c·vⁿ damper only
   slows it to the speed where both forces are equal. The drive must switch off before the impact.
 
-With the **bumper** at the defaults (TA22-10, linear force curve, impact at 2 m/s, motor off):
+With the **bumper** at the defaults (TA22-10, ACE TA curve, impact at 2 m/s, motor off):
 
-- The bumper is pressed in 9.3 mm of its 10 mm. That uses 87 % of the 11.5 J rating.
-- **Peak force 2.14 kN (43.7 g).** That is lower than the 3.99 kN of a 15 mm oil damper with one
-  fixed orifice, but three times the 0.67 kN of an even-force oil damper.
+- The bumper is pressed in 9.2 mm of its 10 mm. That uses 87 % of the 11.5 J rating.
+- **Peak force 1.77 kN (36.1 g).** A linear curve gives 2.14 kN, a constant force 1.15 kN. That is
+  lower than the 3.99 kN of a 15 mm oil damper with one fixed orifice, but more than twice the
+  0.67 kN of an even-force oil damper.
 - The carriage bounces back at 1.26 m/s with 4.0 J.
 - **At 3 m/s (22.5 J) the bumper is too small.** It is fully pressed in, and 11 J is left for
   metal-on-metal contact.
@@ -148,11 +162,20 @@ With the **bumper** at the defaults (TA22-10, linear force curve, impact at 2 m/
 12. The bumper energy balance closes for p = 0.5, 1 and 2, with and without the push.
 13. A bumper that is too small is fully pressed in, with the impact energy minus the catalog
     energy left.
+14. Bumper with a constant force: the force is E_r/s from the first contact, the compression is
+    ½·m·v₀²/F and the time to stop is m·v₀/F.
+15. ACE TA curve: the exact work matches a numerical integral of the shape, the work at the full
+    stroke is the catalog energy, and the compression matches the exact energy integral.
+16. The energy balance closes for the ACE TA curve and the constant force, with and without the
+    push. With the push, the bumper force at the hold point equals the motor force.
 
 ## Limits
 
 - One rigid mass. No guide friction, which would help a little.
 - No field weakening. A drive that weakens the field can reach a higher speed.
+- The ACE TA curve comes from one size, the TA37-16, scaled to the chosen size. On that graph the
+  catalog energy is reached at about two thirds of the maximum stroke. If the TA22-10 does the same,
+  enter 6.5 mm as the bumper stroke: the peak force at 2 m/s then rises to 2.72 kN.
 - The bumper force depends on the compression only. Real elastomers get stiffer at high impact
   speed and when cold, so the real peak force can be higher. The bounce back assumes no friction.
 - The damper force depends on the speed only. Real shock absorbers also change with the position

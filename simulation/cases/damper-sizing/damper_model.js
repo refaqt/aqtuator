@@ -63,7 +63,10 @@ const DEFAULTS = {
   sBump: 0.010,    // m, usable stroke of the bumper
   Ebump: 11.5,     // J, energy per stroke at the full stroke (catalog)
   EbumpMax: 21.0,  // J, energy for emergency use (catalog)
-  pBump: 1,        // shape of the force curve F = F_full·(x/s)^p; 1 = linear spring
+  // Shape of the force curve: "ace" (the ACE TA curve, steep at first, then
+  // nearly flat), "constant", "linear", or "power" (F ∝ x^p with pBump).
+  bumpCurve: "ace",
+  pBump: 1,        // shape p, used only for bumpCurve "power"
   absorb: 0.6,     // part of the stored energy the bumper turns into heat
 };
 
@@ -230,11 +233,22 @@ function solve(p) {
 // A polyurethane or elastomer bumper pushes back with a force that depends on
 // the compression x only, not on the speed:
 //
-//   F_b(x) = F_full·(x/s)^p,   F_full = (p+1)·E_r/s
+//   F_b(x) = F_full·g(u),   u = x/s,   F_full = E_r/(s·G(1)),   G(u) = ∫₀ᵘ g
 //
-// so that the work up to the full stroke s is the catalog energy E_r. p = 1 is
-// a linear spring. p > 1 gets stiffer as it compresses, like a solid cylinder.
-// p < 1 takes most of the energy early, as ACE says of its TA profile dampers.
+// so that the work up to the full stroke s is the catalog energy E_r. The
+// shape g(u) runs from g(0) to g(1) = 1:
+//
+//   "ace"       g = 1 − (1 − u)^q, q = 1.8. The force rises steeply from zero,
+//               then flattens out near the top. Fitted to the dynamic
+//               force–stroke graph of the ACE TUBUS TA37-16 (BIBUS datasheet
+//               TUBUS TA, edition 21_22_0045): about 31, 57, 78 and 94 % of the
+//               top force at 19, 38, 57 and 76 % of the stroke. With q = 1.8
+//               the work under the curve is 65 J, the catalog value.
+//   "constant"  g = 1. The same force from the first contact to the end, the
+//               lowest peak force a stroke can have. An ideal limit.
+//   "linear"    g = u, a linear spring.
+//   "power"     g = u^p. p > 1 gets stiffer as it compresses, like a solid
+//               cylinder. p < 1 takes most of the energy early.
 //
 // The carriage moves m·dv/dt = F_motor(v)·push − F_b(x) until it stops (v = 0)
 // or the bumper is fully compressed (x = s). Then metal hits metal: whatever
@@ -242,10 +256,34 @@ function solve(p) {
 //
 // The bumper turns a part `absorb` of its work into heat. With the motor off,
 // the rest pushes the carriage back: ½·m·v_r² = (1 − absorb)·W_b.
-const bumperFull = (p) => (p.pBump + 1) * p.Ebump / p.sBump;
-const bumperForce = (x, p) => x <= 0 ? 0 : bumperFull(p) * Math.min(1, x / p.sBump) ** p.pBump;
+const ACE_Q = 1.8;
+// The shape g(u) and its integral G(u), for 0 ≤ u ≤ 1.
+function bumperShape(p) {
+  switch (p.bumpCurve) {
+    case "ace": return { g: (u) => 1 - (1 - u) ** ACE_Q, G: (u) => u - (1 - (1 - u) ** (ACE_Q + 1)) / (ACE_Q + 1) };
+    case "constant": return { g: () => 1, G: (u) => u };
+    case "linear": return { g: (u) => u, G: (u) => u * u / 2 };
+    default: return { g: (u) => u ** p.pBump, G: (u) => u ** (p.pBump + 1) / (p.pBump + 1) };
+  }
+}
+const clamp01 = (u) => Math.min(1, Math.max(0, u));
+const bumperFull = (p) => p.Ebump / (p.sBump * bumperShape(p).G(1));
+const bumperForce = (x, p) => bumperFull(p) * bumperShape(p).g(clamp01(x / p.sBump));
 // Work of the bumper up to compression x (exact).
-const bumperWork = (x, p) => bumperFull(p) * p.sBump / (p.pBump + 1) * Math.min(1, x / p.sBump) ** (p.pBump + 1);
+const bumperWork = (x, p) => bumperFull(p) * p.sBump * bumperShape(p).G(clamp01(x / p.sBump));
+// The smallest compression where the bumper force reaches F (bisection; the
+// force never falls as the compression grows). 0 if the force at contact is
+// already F or more, s if the bumper never reaches F.
+function bumperHold(F, p) {
+  if (bumperForce(0, p) >= F) return 0;
+  if (bumperForce(p.sBump, p) < F) return p.sBump;
+  let lo = 0, hi = p.sBump;
+  for (let i = 0; i < 100; i++) {
+    const x = (lo + hi) / 2;
+    if (bumperForce(x, p) < F) lo = x; else hi = x;
+  }
+  return (lo + hi) / 2;
+}
 
 // In time, RK4 on (x, v, W_m). The last step is cut back to land on v = 0 or
 // on x = s, whichever comes first.
@@ -299,7 +337,7 @@ function solveBumper(p) {
   const Fconst = (Etotal - Ek1) / p.sBump;       // same energy, even force over the full bumper stroke
   const FmEnd = p.push ? motorForce(0, p) : 0;
   // With the motor still pushing, the carriage settles where F_b(x) = F_motor(0).
-  const xHold = p.push ? p.sBump * Math.min(1, FmEnd / bumperFull(p)) ** (1 / p.pBump) : 0;
+  const xHold = p.push ? bumperHold(FmEnd, p) : 0;
   const Eback = p.push || b.bottomed ? 0 : (1 - p.absorb) * b.Wd;
   return {
     stopType: "bumper",
@@ -318,5 +356,5 @@ function solveBumper(p) {
 // The page and the checks both read the functions from this one object.
 globalThis.DamperModel = {
   DEFAULTS, G0, motorForce, noLoadSpeed, accelerate, damp, sizeDamper, terminalSpeed, solve,
-  bumperFull, bumperForce, bumperWork, bump, solveBumper,
+  ACE_Q, bumperShape, bumperFull, bumperForce, bumperWork, bumperHold, bump, solveBumper,
 };
