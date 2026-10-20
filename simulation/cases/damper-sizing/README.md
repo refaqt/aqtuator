@@ -5,6 +5,10 @@ carriage starts at rest at one end, the motor pushes with its full force, and th
 damper at the other end. The page finds the impact speed, sizes a damper with the force law
 F = c·vⁿ, and shows how the energy goes into the damper along its stroke.
 
+This runaway is an upper bound, not the likely case. It needs a drive that ignores its own speed
+limit. The realistic cases, and the energy at each impact speed, are in the
+[log of 2026-10-20](../../../docs/log/2026-10-20_damper-impact-cases.md).
+
 **Open it:** <https://refaqt.github.io/aqtuator/damper/> (after the pull request is merged into
 `main`). No server and no install. It runs in the browser.
 
