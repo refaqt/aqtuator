@@ -89,6 +89,7 @@ main { display: grid; gap: 20px; min-width: 0; }
   display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
 }
 .panel h2 span { font: 400 12px var(--sans); color: var(--muted); }
+.panel h2 strong { font-weight: inherit; }
 
 .warning { margin: 12px 0 0; padding: 8px 10px; border-left: 3px solid var(--warn); color: var(--ink); font-size: 13px; }
 .warning[hidden] { display: none; }
@@ -150,19 +151,46 @@ select {
 table.res { min-width: 0; }
 table.res td:nth-child(2) { white-space: nowrap; }
 table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px; }
+
+.choice { display: grid; gap: 6px; }
+.choice label {
+  display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 4px; background: var(--bg);
+}
+.choice label:has(input:checked) { border-color: var(--accent); background: var(--digital); }
+.choice input { margin-top: 3px; accent-color: var(--accent); }
+.choice b { font-weight: 600; }
+.choice small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+body[data-stop="damper"] .only-bumper, body[data-stop="bumper"] .only-damper { display: none; }
 </style>
 </head>
-<body>
+<body data-stop="damper">
 <div class="wrap">
   <header>
     <h1>Damper Sizing</h1>
-    <p>A linear motor stage runs away from one end at full force and hits the end damper. The page finds the impact
-      speed from the speed limit of the drive or the motor's own top speed, sizes a damper with the force law F = c·vⁿ, and shows how the energy goes
-      into the damper along its stroke.</p>
+    <p>A linear motor stage runs away from one end at full force and hits the end stop. The page finds the impact
+      speed from the speed limit of the drive or the motor's own top speed. Then it calculates one of two kinds of end
+      stop: an oil damper (shock absorber) with the force law F = c·vⁿ, or a short polyurethane bumper whose force
+      depends on how far it is pressed in. Choose the kind under "Type of end stop". The page shows how the energy
+      goes into the end stop along its stroke.</p>
   </header>
 
   <div class="layout">
     <aside>
+      <fieldset>
+        <legend>Type of end stop</legend>
+        <div class="choice" role="radiogroup" aria-label="Type of end stop">
+          <label><input type="radio" name="stopType" value="damper" checked>
+            <span><b>Oil damper</b> (shock absorber)
+              <small>Force depends on the speed, F = c·vⁿ. Long stroke, soft stop, almost no bounce.</small></span></label>
+          <label><input type="radio" name="stopType" value="bumper">
+            <span><b>Polyurethane bumper</b> (elastomer stop)
+              <small>Force depends on how far it is pressed in. Short stroke, harder stop, the carriage bounces back.</small></span></label>
+        </div>
+        <label class="check"><input id="push" type="checkbox">
+          <span>The motor keeps pushing into the end stop
+            <small>Worst case: nothing switches the drive off before the impact.</small></span></label>
+      </fieldset>
       <fieldset>
         <legend>Stage</legend>
         <div class="field"><label for="m">Moving mass <small>kg, carriage, forcer, blocks and load</small></label>
@@ -193,8 +221,8 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
         <p class="derived">Defaults: MAXWELL MK21 data sheet. No field weakening.</p>
         <div class="derived" id="motorText"></div>
       </fieldset>
-      <fieldset>
-        <legend>Damper</legend>
+      <fieldset class="only-damper">
+        <legend>Oil damper</legend>
         <div class="field"><label for="sDamp">Damper stroke <small>mm</small></label>
           <input id="sDamp" type="number" step="1" min="0.1" value="15"></div>
         <div class="field"><label for="n">Force law F = c·vⁿ <small>n = 2: oil through a fixed orifice; n = 1: linear</small></label>
@@ -203,16 +231,30 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
           <input id="vEnd" type="number" step="0.05" min="0.001" value="0.1"></div>
         <div class="field"><label for="cSet">Damping constant by hand <small>N·(s/m)ⁿ; 0 = size it from the end speed</small></label>
           <input id="cSet" type="number" step="100" min="0" value="0"></div>
-        <label class="check"><input id="push" type="checkbox">
-          <span>The motor keeps pushing in the damper
-            <small>Worst case: nothing switches the drive off before the impact.</small></span></label>
       </fieldset>
-      <fieldset>
+      <fieldset class="only-damper">
         <legend>Catalog rating of the damper</legend>
         <div class="field"><label for="Erated">Energy per impact <small>J; Misumi two-stage M20, 15 mm: 59 (to verify)</small></label>
           <input id="Erated" type="number" step="1" min="0.01" value="59"></div>
         <div class="field"><label for="vRated">Highest impact speed <small>m/s</small></label>
           <input id="vRated" type="number" step="0.5" min="0.01" value="5"></div>
+      </fieldset>
+      <fieldset class="only-bumper">
+        <legend>Polyurethane bumper</legend>
+        <div class="field"><label for="sBump">Bumper stroke <small>mm, how far it can be pressed in</small></label>
+          <input id="sBump" type="number" step="0.5" min="0.1" value="10"></div>
+        <div class="field"><label for="Ebump">Energy per stroke <small>J, catalog, at the full stroke</small></label>
+          <input id="Ebump" type="number" step="0.5" min="0.01" value="11.5"></div>
+        <div class="field"><label for="EbumpMax">Energy for emergency use <small>J, catalog; a rare crash only</small></label>
+          <input id="EbumpMax" type="number" step="0.5" min="0.01" value="21.0"></div>
+        <div class="field"><label for="pBump">Shape of the force curve <small>F ∝ xᵖ. 1 = linear spring; above 1 stiffer at the end (solid cylinder); below 1 most energy early (profile damper)</small></label>
+          <input id="pBump" type="number" step="0.1" min="0.1" max="5" value="1"></div>
+        <div class="field"><label for="absorb">Energy turned into heat <small>%, the rest pushes the carriage back</small></label>
+          <input id="absorb" type="number" step="1" min="0" max="100" value="60"></div>
+        <p class="derived">Defaults: ACE TUBUS TA22-10 from the ACE product page: 11.5 J per stroke, 21.0 J
+          emergency, 10 mm, 58 to 73 % absorbed. ACE gives no force curve for one size, so the shape is an
+          estimate: check it against the maker's force–stroke curve.</p>
+        <div class="derived" id="bumpText"></div>
       </fieldset>
       <div class="status" id="status">Calculating…</div>
     </aside>
@@ -224,10 +266,12 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
         <p class="warning" id="warnPush" hidden></p>
         <p class="warning" id="warnLaw" hidden></p>
         <p class="warning" id="warnStop" hidden></p>
+        <p class="warning" id="warnBottom" hidden></p>
+        <p class="warning" id="warnBack" hidden></p>
       </section>
 
       <section class="panel" aria-labelledby="h-run">
-        <h2 id="h-run">The whole run <span>speed-up, then the damper (grey band)</span></h2>
+        <h2 id="h-run">The whole run <span>speed-up, then the <span class="stopName">damper</span> (grey band)</span></h2>
         <div class="two">
           <div class="chart-box"><p class="chart-title">Speed, m/s</p>
             <svg id="cRunV" class="chart" viewBox="0 0 440 240"></svg></div>
@@ -237,15 +281,15 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
       </section>
 
       <section class="panel" aria-labelledby="h-damp">
-        <h2 id="h-damp">Inside the damper <span>against the damper stroke</span></h2>
+        <h2 id="h-damp"><strong>Inside the <strong class="stopName">damper</strong></strong> <span>against its stroke</span></h2>
         <div class="two">
           <div class="chart-box"><p class="chart-title">Forces, N</p>
-            <p class="legend"><span><i style="border-color:var(--s1)"></i>damper c·vⁿ</span>
+            <p class="legend"><span><i style="border-color:var(--s1)"></i><span class="only-damper">damper c·vⁿ</span><span class="only-bumper">bumper F(x)</span></span>
               <span><i style="border-color:var(--s2)"></i>motor</span>
-              <span><i class="dash" style="border-color:var(--ref)"></i>even-force damper, same energy</span></p>
+              <span><i class="dash" style="border-color:var(--ref)"></i>even force, same energy and stroke</span></p>
             <svg id="cDF" class="chart" viewBox="0 0 440 240"></svg></div>
           <div class="chart-box"><p class="chart-title">Energy, J</p>
-            <p class="legend"><span><i style="border-color:var(--s1)"></i>taken by the damper</span>
+            <p class="legend"><span><i style="border-color:var(--s1)"></i>taken by the <span class="stopName">damper</span></span>
               <span><i style="border-color:var(--s3)"></i>kinetic energy left</span>
               <span><i style="border-color:var(--s2)"></i>added by the motor</span></p>
             <svg id="cDE" class="chart" viewBox="0 0 440 240"></svg></div>
@@ -254,10 +298,14 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
           <div class="chart-box"><p class="chart-title">Speed against time, m/s</p>
             <svg id="cDT" class="chart" viewBox="0 0 440 240"></svg></div>
         </div>
-        <p class="note">The damper force is highest at the moment of impact and falls with the speed. A catalog shock
+        <p class="note only-damper">The damper force is highest at the moment of impact and falls with the speed. A catalog shock
           absorber with several orifices that close along the stroke keeps the force close to even. The dashed line
           shows that ideal case: the same energy, spread evenly over the stroke. It gives the lowest peak force a
           stroke can have.</p>
+        <p class="note only-bumper">The bumper force is zero at the moment of impact and highest where the carriage
+          stops. So the peak force sits at the end, the opposite of an oil damper. The dashed line is the even force
+          over the full bumper stroke, the lowest peak force this stroke can have. A short stroke always means a
+          high force: the force goes up as the stroke goes down.</p>
       </section>
 
       <section class="panel note" aria-labelledby="h-model">
@@ -270,6 +318,16 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
         <p><b>Damper.</b> Along the damper stroke x: m·v·dv/dx = F_motor·(push) − c·vⁿ. The page finds c by bisection
           so that the speed at the end of the stroke is the allowed end speed. Energy balance:
           ½·m·v₀² + W_motor = W_damper + ½·m·v_end². The page shows how far off it is.</p>
+        <p><b>Bumper.</b> The bumper force depends on the compression x only: F = F_full·(x/s)ᵖ, with
+          F_full = (p+1)·E/s, so that the work at the full stroke s is the catalog energy E. The page steps
+          m·dv/dt = F_motor·(push) − F(x) in time until the carriage stops or the bumper is fully pressed in. Then metal
+          hits metal, and the energy that is left has no stroke to go into. Of the bumper work, the part "turned into
+          heat" stays in the bumper. The rest pushes the carriage back: ½·m·v_back² = (1 − absorbed)·W_bumper. Real
+          elastomers get stiffer at high impact speed and when cold, so the real peak force can be higher.</p>
+        <p><b>Which one to choose.</b> An oil damper needs a long stroke, but it keeps the force low and stops the
+          carriage with almost no bounce. A bumper saves stroke, but the force is higher for the same energy, and the
+          carriage comes back. A bumper is a good choice when the energy is small: for example, when the drive limits
+          the speed near the ends.</p>
         <p><b>Catalog check.</b> Catalogs rate a damper by energy per impact E = ½·m·v₀² + thrust × stroke, by the
           equivalent mass 2·E/v₀², and by the highest impact speed. Check also the return spring force, the body
           length, and the lowest equivalent mass the damper is made for.</p>
@@ -285,21 +343,25 @@ table.res td:last-child { text-align: left; color: var(--muted); font-size: 12px
 <script>
 const M = window.DamperModel;
 const $ = (id) => document.getElementById(id);
-const ids = ["m", "sAcc", "Fmax", "vLimit", "Vdc", "eta", "kf", "ke", "R", "L", "tau", "sDamp", "vEnd", "cSet", "Erated", "vRated"];
+const ids = ["m", "sAcc", "Fmax", "vLimit", "Vdc", "eta", "kf", "ke", "R", "L", "tau", "sDamp", "vEnd", "cSet", "Erated", "vRated",
+  "sBump", "Ebump", "EbumpMax", "pBump", "absorb"];
 // Page units to SI.
-const SCALE = { sAcc: 1e-3, L: 1e-3, tau: 1e-3, sDamp: 1e-3 };
+const SCALE = { sAcc: 1e-3, L: 1e-3, tau: 1e-3, sDamp: 1e-3, sBump: 1e-3, absorb: 1e-2 };
+const stopRadios = [...document.querySelectorAll('input[name="stopType"]')];
 
 function params() {
   const p = { ...M.DEFAULTS };
   for (const id of ids) p[id] = parseFloat($(id).value) * (SCALE[id] ?? 1);
   p.n = parseInt($("n").value, 10);
   p.push = $("push").checked;
+  p.stopType = stopRadios.find((r) => r.checked)?.value ?? "damper";
   return p;
 }
 function valid(p) {
   return p.m > 0 && p.sAcc > 0 && p.Fmax > 0 && p.vLimit >= 0 && p.Vdc > 0 && p.eta > 0 && p.eta <= 1 && p.kf > 0 && p.ke > 0 &&
     p.R >= 0 && p.L >= 0 && p.tau > 0 && p.sDamp > 0 && p.vEnd > 0 && p.cSet >= 0 && p.Erated > 0 && p.vRated > 0 &&
-    (p.n === 1 || p.n === 2);
+    (p.n === 1 || p.n === 2) &&
+    p.sBump > 0 && p.Ebump > 0 && p.EbumpMax > 0 && p.pBump > 0 && p.absorb >= 0 && p.absorb <= 1;
 }
 
 const sup = (s) => String(s).replace(/./g, (c) => "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"["0123456789-".indexOf(c)] ?? c);
@@ -536,6 +598,58 @@ function row(body, label, value, note, cls = "") {
 const rate = (u) => u <= 0.85 ? "ok" : u <= 1 ? "warn" : "bad";
 const pct = (u) => `${Math.round(u * 100)} % of the rating`;
 
+// The results and warnings for a polyurethane bumper.
+function bumperRows(body, p, r) {
+  const b = r.bumper, mm = 1e3;
+  row(body, "Work of the motor in the bumper", `${sig(r.Wm)} J`, p.push ? "the motor keeps pushing" : "the motor is off");
+  row(body, "Energy per impact", `${sig(r.Etotal)} J`, pct(r.energyUse), rate(r.energyUse));
+  row(body, "Energy against the emergency rating", `${Math.round(r.emergencyUse * 100)} %`,
+    `of ${sig(p.EbumpMax)} J, allowed for a rare crash only`, rate(r.emergencyUse));
+  row(body, b.bottomed ? "Bumper fully pressed in" : "Compression of the bumper", `${sig(b.xMax * mm)} mm`,
+    `${Math.round(r.strokeUse * 100)} % of the ${sig(p.sBump * mm)} mm stroke`, b.bottomed ? "bad" : rate(r.strokeUse));
+  row(body, "Peak bumper force", `${sig(r.FdPeak / 1e3)} kN`,
+    (b.bottomed ? "before metal hits metal; after that much higher. " : "") + `peak deceleration ${sig(r.aPeakG)} g`,
+    b.bottomed ? "bad" : "");
+  row(body, "Even force over the bumper stroke", `${sig(r.Fconst / 1e3)} kN`,
+    `${sig(r.aConstG)} g, the lowest peak this stroke can have`);
+  if (b.bottomed) row(body, "Energy left when the bumper is fully pressed in", `${sig(r.Ek1)} J`,
+    `speed ${sig(b.vEnd)} m/s; this goes into the frame with no stroke`, "bad");
+  row(body, "Time in the bumper", `${sig(b.t * 1e3)} ms`, b.bottomed ? "until it is fully pressed in" : "until the carriage stops");
+  if (p.push) {
+    row(body, "Motor force on the bumper", `${sig(r.FmEnd)} N`, `holds it ${sig(r.xHold * mm)} mm pressed in until the drive switches off`);
+  } else if (!b.bottomed) {
+    row(body, "Energy turned into heat", `${sig(r.Eheat)} J`, `${Math.round(p.absorb * 100)} % of the bumper work`);
+    row(body, "Speed of the bounce back", `${sig(r.vBack)} m/s`, `${sig(r.Eback)} J goes back into the carriage`);
+  }
+  row(body, "Travel lost at each end", `${sig(p.sBump * mm)} mm`, `the bumper stroke; ${sig(p.sDamp * mm)} mm with the oil damper`);
+}
+function bumperWarnings(p, r) {
+  const b = r.bumper, mm = 1e3;
+  const wb = $("warnBottom");
+  if (b.bottomed) {
+    wb.hidden = false;
+    wb.textContent = `The bumper is too small for this impact. It is fully pressed in after ${sig(p.sBump * mm)} mm, and ` +
+      `the carriage still moves at ${sig(b.vEnd)} m/s with ${sig(r.Ek1)} J. Then metal hits metal, and the force is far ` +
+      `above the ${sig(r.FdPeak / 1e3)} kN shown. Lower the impact speed (speed limit near the ends), choose a bigger ` +
+      `bumper, or choose an oil damper.`;
+  } else if (r.energyUse > 1) {
+    wb.hidden = false;
+    wb.textContent = `The impact takes ${Math.round(r.energyUse * 100)} % of the normal energy rating. ` +
+      (r.emergencyUse <= 1 ? "That is allowed for a rare crash only. Check the bumper after each one." :
+        "That is also above the emergency rating. Choose a bigger bumper.");
+  }
+  const wk = $("warnBack");
+  if (p.push) {
+    wk.hidden = false;
+    wk.textContent = `The motor keeps pushing. A bumper can hold the full motor force of ${sig(r.FmEnd)} N, pressed in ` +
+      `${sig(r.xHold * mm)} mm, but it heats up and the motor overheats. Switch the drive off on the limit switch.`;
+  } else if (!b.bottomed && r.vBack > 0) {
+    wk.hidden = false;
+    wk.textContent = `The carriage bounces back at ${sig(r.vBack)} m/s. With the drive off, it rolls back ` +
+      `towards the other end. Guide friction slows it down, but this page does not count friction.`;
+  }
+}
+
 // ----- Update --------------------------------------------------------------
 let timer = 0;
 function schedule() { clearTimeout(timer); timer = setTimeout(update, 120); }
@@ -555,18 +669,24 @@ function run() {
   const p = params();
   const status = $("status");
   if (!valid(p)) {
-    status.textContent = "Check the inputs: all must be positive, the usable part of the bus at most 1.";
+    status.textContent = "Check the inputs: all must be positive, the usable part of the bus at most 1, the energy turned into heat at most 100 %.";
     status.className = "status bad";
     return;
   }
   status.className = "status";
   const t0 = performance.now();
-  const r = M.solve(p);
+  const bumper = p.stopType === "bumper";
+  document.body.dataset.stop = p.stopType;
+  for (const e of document.querySelectorAll(".stopName")) e.textContent = bumper ? "bumper" : "damper";
+  const r = bumper ? M.solveBumper(p) : M.solve(p);
   const d = r.damper;
+  const b = r.bumper;
   const mm = 1e3;
+  const sStop = bumper ? p.sBump : p.sDamp;
 
   $("motorText").textContent = `no-load speed ${sig(r.vNoLoad)} m/s. Without the voltage limit: ${sig(r.vNoVolt)} m/s.`;
-  $("resHead").textContent = `impact at ${sig(r.v0)} m/s`;
+  $("resHead").textContent = `${bumper ? "polyurethane bumper" : "oil damper"}, impact at ${sig(r.v0)} m/s`;
+  if (bumper) $("bumpText").textContent = `full force ${sig(r.Ffull / 1e3)} kN at ${sig(p.sBump * mm)} mm.`;
 
   // Results table.
   const body = $("resBody");
@@ -574,6 +694,8 @@ function run() {
   row(body, "Impact speed", `${sig(r.v0)} m/s`, `after ${sig(r.tAcc * 1e3)} ms. ` +
     (r.limited ? "Held by the speed limit of the drive." : `No-load speed ${sig(r.vNoLoad)} m/s.`));
   row(body, "Kinetic energy at impact", `${sig(r.Ek0)} J`, "½·m·v₀²");
+  if (bumper) bumperRows(body, p, r);
+  else {
   row(body, "Work of the motor in the damper", `${sig(r.Wm)} J`, p.push ? "the motor keeps pushing" : "the motor is off");
   row(body, "Energy per impact", `${sig(r.Etotal)} J`, pct(r.energyUse), rate(r.energyUse));
   row(body, "Impact speed against the rating", `${sig(r.v0)} m/s`, pct(r.speedUse), rate(r.speedUse));
@@ -588,10 +710,15 @@ function run() {
     d.stopped ? "of the damper stroke" : `${sig(r.Ek1)} J goes into the hard stop`);
   row(body, "Time in the damper", `${sig(d.t * 1e3)} ms`, "");
   if (p.push) row(body, "Motor force on the hard stop", `${sig(r.FmEnd)} N`, "until the drive switches off");
+  row(body, "Travel lost at each end", `${sig(p.sDamp * mm)} mm`, "the damper stroke");
+  }
   row(body, "Energy balance error", `${sig(Math.abs(r.balance))} J`, "numerical check, should be near 0");
 
   // Warnings.
   const wp = $("warnPush");
+  for (const id of ["warnPush", "warnLaw", "warnStop", "warnBottom", "warnBack"]) $(id).hidden = true;
+  if (bumper) bumperWarnings(p, r);
+  else {
   wp.hidden = !p.push;
   if (p.push) wp.textContent = `The motor keeps pushing. A damper with F = c·vⁿ alone cannot stop the carriage: it only ` +
     `slows it to the speed where both forces are equal, ${sig(r.vTerminal)} m/s with this c. To reach a low end speed ` +
@@ -606,11 +733,12 @@ function run() {
   ws.hidden = !d.stopped;
   ws.textContent = `The carriage stops after ${sig(d.xEnd * mm)} mm, before the end of the ${sig(p.sDamp * mm)} mm ` +
     `stroke. The damping constant is higher than needed.`;
+  }
 
   // The whole run: speed-up, then the damper.
   const runV = thin(r.accTrace).map((q) => [q.x * mm, q.v]).concat(thin(r.trace).map((q) => [(p.sAcc + q.x) * mm, q.v]));
   const runF = thin(r.accTrace).map((q) => [q.x * mm, q.F]).concat(thin(r.trace).map((q) => [(p.sAcc + q.x) * mm, q.Fm]));
-  const xEnd = (p.sAcc + p.sDamp) * mm;
+  const xEnd = (p.sAcc + sStop) * mm;
   const band = (svg, c) => {
     if (!c) return;
     const g = svg.firstChild;
@@ -627,27 +755,30 @@ function run() {
     yRange: [0, p.Fmax * 1.1],
     series: [{ pts: runF, color: "var(--s2)", fmt: (v) => `${sig(v)} N` }] }));
 
-  // Inside the damper.
+  // Inside the end stop.
   const tr = thin(r.trace);
   const xs = (q) => q.x * mm;
-  chart($("cDF"), { xLabel: "damper stroke, mm", xTip: xTipMm, xRange: [0, p.sDamp * mm],
+  const name = bumper ? "bumper" : "damper";
+  const xLab = `${name} stroke, mm`;
+  chart($("cDF"), { xLabel: xLab, xTip: xTipMm, xRange: [0, sStop * mm],
     series: [
-      { pts: tr.map((q) => [xs(q), q.Fd]), color: "var(--s1)", label: "damper", fmt: (v) => `${sig(v)} N` },
+      { pts: tr.map((q) => [xs(q), q.Fd]), color: "var(--s1)", label: name, fmt: (v) => `${sig(v)} N` },
       { pts: tr.map((q) => [xs(q), q.Fm]), color: "var(--s2)", label: "motor", fmt: (v) => `${sig(v)} N` },
-      { pts: [[0, r.Fconst], [p.sDamp * mm, r.Fconst]], color: "var(--ref)", dash: true, label: "even force",
+      { pts: [[0, r.Fconst], [sStop * mm, r.Fconst]], color: "var(--ref)", dash: true, label: "even force",
         fmt: (v) => `${sig(v)} N` },
     ] });
-  chart($("cDE"), { xLabel: "damper stroke, mm", xTip: xTipMm, xRange: [0, p.sDamp * mm],
+  chart($("cDE"), { xLabel: xLab, xTip: xTipMm, xRange: [0, sStop * mm],
     series: [
-      { pts: tr.map((q) => [xs(q), q.Wd]), color: "var(--s1)", label: "damper", fmt: (v) => `${sig(v)} J` },
+      { pts: tr.map((q) => [xs(q), q.Wd]), color: "var(--s1)", label: name, fmt: (v) => `${sig(v)} J` },
       { pts: tr.map((q) => [xs(q), q.Ek]), color: "var(--s3)", label: "kinetic", fmt: (v) => `${sig(v)} J` },
       { pts: tr.map((q) => [xs(q), q.Wm]), color: "var(--s2)", label: "motor", fmt: (v) => `${sig(v)} J` },
     ] });
-  chart($("cDV"), { xLabel: "damper stroke, mm", xTip: xTipMm, xRange: [0, p.sDamp * mm], yRange: [0, r.v0 * 1.08],
-    hlines: [{ y: p.vEnd, label: "allowed end speed" }],
+  const endLine = bumper ? [] : [{ y: p.vEnd, label: "allowed end speed" }];
+  chart($("cDV"), { xLabel: xLab, xTip: xTipMm, xRange: [0, sStop * mm], yRange: [0, r.v0 * 1.08],
+    hlines: endLine,
     series: [{ pts: tr.map((q) => [xs(q), q.v]), color: "var(--s1)", fmt: (v) => `${sig(v)} m/s` }] });
-  chart($("cDT"), { xLabel: "time in the damper, ms", xTip: (x) => `${sig(x)} ms`, yRange: [0, r.v0 * 1.08],
-    hlines: [{ y: p.vEnd, label: "allowed end speed" }],
+  chart($("cDT"), { xLabel: `time in the ${name}, ms`, xTip: (x) => `${sig(x)} ms`, yRange: [0, r.v0 * 1.08],
+    hlines: endLine,
     series: [{ pts: tr.map((q) => [q.t * 1e3, q.v]), color: "var(--s1)", fmt: (v) => `${sig(v)} m/s` }] });
 
   status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
@@ -655,6 +786,7 @@ function run() {
 
 for (const id of [...ids, "n"]) $(id).addEventListener("input", schedule);
 $("push").addEventListener("change", update);
+for (const r of stopRadios) r.addEventListener("change", update);
 update();
 </script>
 </body>

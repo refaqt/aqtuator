@@ -161,3 +161,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-20 | [A web page to size the end dampers of the compact stage](2026-10-20_damper-sizing-page.md) | engineering, simulation |  |
 | 2026-10-20 | [When can the carriage hit the end damper hard?](2026-10-20_damper-impact-cases.md) | engineering |  |
 | 2026-10-20 | [Systems that record three encoders at the same time](2026-10-20_encoder-recorder-search.md) | engineering, purchasing |  |
+| 2026-10-20 | [The damper page can now calculate a polyurethane bumper](2026-10-20_bumper-on-damper-page.md) | engineering, simulation |  |

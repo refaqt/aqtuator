@@ -100,6 +100,50 @@ for (const n of [1, 2]) {
   check(near(a.t, tw, 1e-5), `speed limit, constant force: time ${(a.t * 1e3).toFixed(4)} ms, exact ${(tw * 1e3).toFixed(4)} ms`);
 }
 
+// 10. Bumper, linear spring (p = 1), motor off: k = 2·E_r/s², the carriage
+//     stops at x = v₀·√(m/k) after a quarter period (π/2)·√(m/k), and comes
+//     back at √(1 − absorb)·v₀.
+{
+  const p = { ...M.DEFAULTS, stopType: "bumper", pBump: 1, push: false };
+  const r = M.solveBumper(p);
+  const k = 2 * p.Ebump / p.sBump ** 2;
+  const xw = r.v0 * Math.sqrt(p.m / k);
+  check(near(r.bumper.xMax, xw, 1e-6) && !r.bumper.bottomed,
+    `bumper p = 1: compression ${(r.bumper.xMax * 1e3).toFixed(4)} mm, exact ${(xw * 1e3).toFixed(4)} mm`);
+  check(near(r.FdPeak, k * xw, 1e-6), `bumper p = 1: peak force ${r.FdPeak.toFixed(1)} N, k·x = ${(k * xw).toFixed(1)} N`);
+  const tw = Math.PI / 2 * Math.sqrt(p.m / k);
+  check(near(r.bumper.t, tw, 1e-4), `bumper p = 1: time to stop ${(r.bumper.t * 1e3).toFixed(4)} ms, exact ${(tw * 1e3).toFixed(4)} ms`);
+  const vb = Math.sqrt(1 - p.absorb) * r.v0;
+  check(near(r.vBack, vb, 1e-6), `bumper p = 1: rebound ${r.vBack.toFixed(4)} m/s, √(1 − absorb)·v₀ = ${vb.toFixed(4)} m/s`);
+}
+
+// 11. Bumper, p = 2, motor off: ½·m·v₀² = F_full·s/3·(x/s)³.
+{
+  const p = { ...M.DEFAULTS, stopType: "bumper", pBump: 2, push: false };
+  const r = M.solveBumper(p);
+  const xw = p.sBump * Math.cbrt(3 * r.Ek0 / (M.bumperFull(p) * p.sBump));
+  check(near(r.bumper.xMax, xw, 1e-6), `bumper p = 2: compression ${(r.bumper.xMax * 1e3).toFixed(4)} mm, exact ${(xw * 1e3).toFixed(4)} mm`);
+}
+
+// 12. Bumper energy balance, with and without the push, for p = 0.5, 1 and 2.
+for (const pBump of [0.5, 1, 2]) {
+  for (const push of [false, true]) {
+    const p = { ...M.DEFAULTS, stopType: "bumper", pBump, push, sBump: 0.03, Ebump: 60 };
+    const r = M.solveBumper(p);
+    check(Math.abs(r.balance) <= 1e-4 * r.Etotal, `bumper p = ${pBump}, push ${push}: energy balance off by ` +
+      `${r.balance.toExponential(2)} J of ${r.Etotal.toFixed(2)} J`);
+  }
+}
+
+// 13. A bumper that is too small bottoms out. With the motor off, the energy
+//     left at full compression is the impact energy minus the catalog energy.
+{
+  const p = { ...M.DEFAULTS, stopType: "bumper", push: false, Ebump: 4 };
+  const r = M.solveBumper(p);
+  check(r.bumper.bottomed && near(r.Ek1, r.Ek0 - p.Ebump, 1e-6),
+    `bumper bottoms out: ${r.Ek1.toFixed(4)} J left, ${r.Ek0.toFixed(2)} − ${p.Ebump} J = ${(r.Ek0 - p.Ebump).toFixed(4)} J`);
+}
+
 if (failed) {
   console.log(`\n${failed} check(s) failed`);
   process.exit(1);

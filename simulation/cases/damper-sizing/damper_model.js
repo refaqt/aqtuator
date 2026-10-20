@@ -38,7 +38,7 @@
 const DEFAULTS = {
   m: 5.0,          // kg, moving mass
   sAcc: 0.218,     // m, stroke over which the motor can speed up the carriage
-  Fmax: 670,       // N, the highest motor force (current limit × force constant)
+  Fmax: 512,       // N, the highest motor force (current limit × force constant)
   vLimit: 2.0,     // m/s, the speed limit of the drive (top speed of the stage); 0 = no limit
   Vdc: 310,        // V, DC bus of the drive
   eta: 0.95,       // the part of the bus voltage the drive can use
@@ -54,6 +54,17 @@ const DEFAULTS = {
   cSet: 0,         // damping constant set by hand, in N·(s/m)ⁿ; 0 = size it
   Erated: 59,      // J, catalog energy per impact of the chosen damper
   vRated: 5,       // m/s, catalog highest impact speed of the chosen damper
+  // Type of end stop: "damper" (oil shock absorber, F = c·vⁿ) or "bumper"
+  // (polyurethane or elastomer block, F depends on the compression only).
+  stopType: "damper",
+  // Bumper defaults: ACE TUBUS TA22-10 (co-polyester elastomer, Shore 55D),
+  // from the ACE product page: 102 in-lbs (11.5 J) per stroke, 186 in-lbs
+  // (21.0 J) for emergency use, 10 mm stroke, 58 to 73 % of the energy absorbed.
+  sBump: 0.010,    // m, usable stroke of the bumper
+  Ebump: 11.5,     // J, energy per stroke at the full stroke (catalog)
+  EbumpMax: 21.0,  // J, energy for emergency use (catalog)
+  pBump: 1,        // shape of the force curve F = F_full·(x/s)^p; 1 = linear spring
+  absorb: 0.6,     // part of the stored energy the bumper turns into heat
 };
 
 const G0 = 9.80665;
@@ -201,6 +212,7 @@ function solve(p) {
   for (const q of tr) { FdPeak = Math.max(FdPeak, q.Fd); aPeak = Math.max(aPeak, -q.a); }
   const Fconst = (Ek0 + dp.Wm - Ek1) / p.sDamp;  // same energy, even force
   return {
+    stopType: "damper",
     v0, tAcc: acc.t, accTrace: acc.trace, vNoLoad: acc.vNoLoad, limited: acc.limited, vNoVolt: Math.sqrt(2 * p.Fmax * p.sAcc / p.m),
     c: sz.c, none: sz.none, manual: !!sz.manual, damper: dp, trace: tr,
     Ek0, Ek1, Wm: dp.Wm, Wd: dp.Wd, Etotal, balance: Ek0 + dp.Wm - dp.Wd - Ek1,
@@ -214,7 +226,97 @@ function solve(p) {
   };
 }
 
+// ----- Bumper ---------------------------------------------------------------
+// A polyurethane or elastomer bumper pushes back with a force that depends on
+// the compression x only, not on the speed:
+//
+//   F_b(x) = F_full·(x/s)^p,   F_full = (p+1)·E_r/s
+//
+// so that the work up to the full stroke s is the catalog energy E_r. p = 1 is
+// a linear spring. p > 1 gets stiffer as it compresses, like a solid cylinder.
+// p < 1 takes most of the energy early, as ACE says of its TA profile dampers.
+//
+// The carriage moves m·dv/dt = F_motor(v)·push − F_b(x) until it stops (v = 0)
+// or the bumper is fully compressed (x = s). Then metal hits metal: whatever
+// kinetic energy is left goes into the frame with no stroke at all.
+//
+// The bumper turns a part `absorb` of its work into heat. With the motor off,
+// the rest pushes the carriage back: ½·m·v_r² = (1 − absorb)·W_b.
+const bumperFull = (p) => (p.pBump + 1) * p.Ebump / p.sBump;
+const bumperForce = (x, p) => x <= 0 ? 0 : bumperFull(p) * Math.min(1, x / p.sBump) ** p.pBump;
+// Work of the bumper up to compression x (exact).
+const bumperWork = (x, p) => bumperFull(p) * p.sBump / (p.pBump + 1) * Math.min(1, x / p.sBump) ** (p.pBump + 1);
+
+// In time, RK4 on (x, v, W_m). The last step is cut back to land on v = 0 or
+// on x = s, whichever comes first.
+function bump(p, v0) {
+  const push = p.push ? 1 : 0;
+  const acc = (x, v) => (push * motorForce(v, p) - bumperForce(x, p)) / p.m;
+  // A linear spring with the same full force gives the time scale.
+  const tScale = Math.min(p.sBump / v0, Math.sqrt(p.m * p.sBump / bumperFull(p)));
+  const dt = tScale / 4000;
+  const point = (t, x, v, Wm) => {
+    const Fb = bumperForce(x, p), Fm = push * motorForce(v, p);
+    return { x, v, t, Fd: Fb, Fm, Wd: bumperWork(x, p), Wm, Ek: 0.5 * p.m * v * v, a: (Fm - Fb) / p.m };
+  };
+  let t = 0, x = 0, v = v0, Wm = 0;
+  const trace = [point(t, x, v, Wm)];
+  let end = "";
+  for (let i = 1; ; i++) {
+    const f = (s) => [s[1], acc(s[0], s[1]), push * motorForce(s[1], p) * s[1]];
+    const s = [x, v, Wm];
+    const add = (a, k, h) => a.map((y, j) => y + h * k[j]);
+    const k1 = f(s), k2 = f(add(s, k1, dt / 2)), k3 = f(add(s, k2, dt / 2)), k4 = f(add(s, k3, dt));
+    const sn = s.map((y, j) => y + dt / 6 * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]));
+    // Cut the step back to the first of v = 0 and x = s.
+    const uStop = sn[1] <= 0 ? v / (v - sn[1]) : Infinity;
+    const uFull = sn[0] >= p.sBump ? (p.sBump - x) / (sn[0] - x) : Infinity;
+    if (uStop <= 1 || uFull <= 1) {
+      const u = Math.min(uStop, uFull);
+      t += u * dt; x += u * (sn[0] - x); v += u * (sn[1] - v); Wm += u * (sn[2] - Wm);
+      if (uFull < uStop) { x = p.sBump; end = "full"; } else { v = 0; end = "stopped"; }
+      trace.push(point(t, x, v, Wm));
+      break;
+    }
+    t += dt; [x, v, Wm] = sn;
+    if (i % 4 === 0) trace.push(point(t, x, v, Wm));
+    if (i > 5e6) throw new Error("the bumper calculation does not converge");
+  }
+  return { xMax: x, vEnd: v, bottomed: end === "full", t, Wd: bumperWork(x, p), Wm, trace };
+}
+
+// Everything the page shows for a bumper.
+function solveBumper(p) {
+  const acc = accelerate(p);
+  const v0 = acc.v0;
+  const b = bump(p, v0);
+  const Ek0 = 0.5 * p.m * v0 * v0;
+  const Ek1 = 0.5 * p.m * b.vEnd * b.vEnd;      // left for metal-on-metal contact
+  const Etotal = Ek0 + b.Wm;
+  let aPeak = 0;
+  for (const q of b.trace) aPeak = Math.max(aPeak, -q.a);
+  const FbPeak = bumperForce(b.xMax, p);
+  const Fconst = (Etotal - Ek1) / p.sBump;       // same energy, even force over the full bumper stroke
+  const FmEnd = p.push ? motorForce(0, p) : 0;
+  // With the motor still pushing, the carriage settles where F_b(x) = F_motor(0).
+  const xHold = p.push ? p.sBump * Math.min(1, FmEnd / bumperFull(p)) ** (1 / p.pBump) : 0;
+  const Eback = p.push || b.bottomed ? 0 : (1 - p.absorb) * b.Wd;
+  return {
+    stopType: "bumper",
+    v0, tAcc: acc.t, accTrace: acc.trace, vNoLoad: acc.vNoLoad, limited: acc.limited, vNoVolt: Math.sqrt(2 * p.Fmax * p.sAcc / p.m),
+    bumper: b, trace: b.trace, Ffull: bumperFull(p),
+    Ek0, Ek1, Wm: b.Wm, Wd: b.Wd, Etotal, balance: Ek0 + b.Wm - b.Wd - Ek1,
+    FdPeak: FbPeak, aPeakG: aPeak / G0, Fconst, aConstG: (Fconst - FmEnd) / p.m / G0,
+    FmEnd, xHold,
+    Eheat: p.absorb * b.Wd, Eback, vBack: Math.sqrt(2 * Eback / p.m),
+    energyUse: Etotal / p.Ebump, emergencyUse: Etotal / p.EbumpMax, strokeUse: b.xMax / p.sBump,
+  };
+}
+
 // A plain script, not a module. Browsers refuse to load a module for a page
 // opened straight from disk (file://), so the page would never calculate.
 // The page and the checks both read the functions from this one object.
-globalThis.DamperModel = { DEFAULTS, G0, motorForce, noLoadSpeed, accelerate, damp, sizeDamper, terminalSpeed, solve };
+globalThis.DamperModel = {
+  DEFAULTS, G0, motorForce, noLoadSpeed, accelerate, damp, sizeDamper, terminalSpeed, solve,
+  bumperFull, bumperForce, bumperWork, bump, solveBumper,
+};
