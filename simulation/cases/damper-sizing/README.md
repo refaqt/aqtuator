@@ -1,9 +1,14 @@
 # damper-sizing
 
-A web page that sizes the end damper of a linear motor stage. The worst case is a runaway: the
-carriage starts at rest at one end, the motor pushes with its full force, and the carriage hits the
-damper at the other end. The page finds the impact speed, sizes a damper with the force law
+A web page that sizes the end damper of a linear motor stage. The carriage starts at rest at one
+end, the motor pushes with its full force up to the speed limit of the drive, and the carriage hits
+the damper at the other end. The page finds the impact speed, sizes a damper with the force law
 F = c·vⁿ, and shows how the energy goes into the damper along its stroke.
+
+The default speed limit is 2 m/s, the top speed the team chose on 2026-10-20. Set the speed limit to
+0 to see the full runaway, where only the motor's own top speed limits the carriage. That case
+needs a drive that ignores its own speed limit. The realistic cases, and the energy at each impact
+speed, are in the [log of 2026-10-20](../../../docs/log/2026-10-20_damper-impact-cases.md).
 
 **Open it:** <https://refaqt.github.io/aqtuator/damper/> (after the pull request is merged into
 `main`). No server and no install. It runs in the browser.
@@ -27,6 +32,7 @@ Log: [2026-10-20](../../../docs/log/2026-10-20_damper-sizing-page.md).
 | Moving mass | 5.0 kg | Solid aluminium carriage 30 × 208 × 210 mm (3.54 kg), MK21 forcer (1.1 kg), 4 × QEH15SA (0.36 kg) |
 | Acceleration stroke | 218 mm | From rest to the damper |
 | Maximum force | 670 N | MK21 limiting force for 0.5 s |
+| Speed limit of the drive | 2.0 m/s | Top speed of the stage. 0 means no limit (full runaway) |
 | DC bus voltage | 310 V | DGSMARTWIN AKS on 220 VAC |
 | Usable part of the bus | 0.95 | |
 | Force constant | 92.5 N/A rms | MK21 |
@@ -50,7 +56,9 @@ Per phase, with the line-to-line data sheet values:
     (E + R/2·I)² + (ω·L/2·I)² ≤ (η·V_dc/√6)²,   E = Ke/√3·v,   ω = 2π·v/τ
 
 The force is k_f·I, with the largest current that meets this and the current limit F_max/k_f. The
-page steps m·dv/dt = F(v) in time (RK4) until the carriage has moved the acceleration stroke.
+page steps m·dv/dt = F(v) in time (RK4) until the carriage has moved the acceleration stroke. If the
+drive has a speed limit, the carriage speeds up to it and rolls on at that speed for the rest of
+the stroke.
 
 **Damper.** Along the damper stroke x:
 
@@ -68,12 +76,14 @@ with several orifices comes close to this. It gives the lowest peak force a stro
 
 ## What it shows at the defaults
 
-- **Impact speed 3.80 m/s**, after 78 ms. The motor's no-load speed is 3.90 m/s. Without the
-  voltage limit the speed would be 7.64 m/s.
-- **36.1 J at impact**, 61 % of the 59 J rating. Equivalent mass 5.0 kg.
-- **A pure v² damper brakes very hard at first.** Peak force 17.5 kN (357 g), against 2.4 kN (49 g)
-  for the even-force damper with the same stroke. This is why catalog shock absorbers use several
-  orifices.
+- **Impact speed 2.00 m/s**, held by the speed limit. The carriage reaches it after 18 mm, and hits
+  the damper after 117 ms.
+- **10.0 J at impact**, 17 % of the 59 J rating. Equivalent mass 5.0 kg.
+- **A pure v² damper brakes very hard at first.** Peak force 3.99 kN (81.5 g), against 0.67 kN
+  (13.6 g) for the even-force damper with the same stroke. This is why catalog shock absorbers use
+  several orifices.
+- **With no speed limit** the carriage hits at 3.80 m/s with 36.1 J. The motor's no-load speed is
+  3.90 m/s. Without the voltage limit the speed would be 7.64 m/s.
 - **With the motor still pushing, a damper alone cannot stop the carriage.** A c·vⁿ damper only
   slows it to the speed where both forces are equal. The drive must switch off before the impact.
 
@@ -86,7 +96,9 @@ with several orifices comes close to this. It gives the lowest peak force a stro
 3. n = 2, no push: c = m·ln(v₀/v_end)/stroke.
 4. The energy balance closes for n = 1 and 2, with and without the push.
 5. The motor force is zero just above the no-load speed η·V_dc/(√2·Ke).
-6. The defaults give 3.80 m/s, as the hand simulation of 2026-10-19 did.
+6. With no speed limit, the defaults give 3.80 m/s, as the hand simulation of 2026-10-19 did. With
+   the default speed limit, the impact speed is 2 m/s, and the time matches the exact value for a
+   constant force.
 7. The sized damper gives the allowed end speed.
 8. The even-force reference holds the same energy as the damper.
 9. A hand-set c is used as it is, and with the push the speed levels off at the terminal speed.

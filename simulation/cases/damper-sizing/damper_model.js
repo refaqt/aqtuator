@@ -2,7 +2,9 @@
 //
 //   1. Runaway. The carriage starts at rest at one end. The motor pushes with
 //      its full force over the acceleration stroke. Its back voltage lowers
-//      the force as the speed grows, so the speed levels off.
+//      the force as the speed grows, so the speed levels off. If the drive
+//      has a speed limit, the carriage speeds up to that limit and then
+//      rolls on at it.
 //   2. Damper. The carriage hits the damper with the impact speed. The damper
 //      pushes back with F_d = c·vⁿ, so its force falls as the speed falls. The
 //      motor may keep pushing (worst case). The page picks c so that the speed
@@ -37,6 +39,7 @@ const DEFAULTS = {
   m: 5.0,          // kg, moving mass
   sAcc: 0.218,     // m, stroke over which the motor can speed up the carriage
   Fmax: 670,       // N, the highest motor force (current limit × force constant)
+  vLimit: 2.0,     // m/s, the speed limit of the drive (top speed of the stage); 0 = no limit
   Vdc: 310,        // V, DC bus of the drive
   eta: 0.95,       // the part of the bus voltage the drive can use
   kf: 92.5,        // N per A rms
@@ -72,7 +75,9 @@ function motorForce(v, p) {
 const noLoadSpeed = (p) => p.eta * p.Vdc / Math.sqrt(2) / p.ke;
 
 // Phase 1, in time (the speed starts at zero). RK4 on (x, v), then the last
-// step is cut back to land on the end of the stroke.
+// step is cut back to land on the end of the stroke. When the speed reaches
+// the speed limit of the drive, the step is cut back to land on it, and the
+// carriage rolls on at that speed with no motor force.
 function accelerate(p) {
   const tGuess = Math.sqrt(2 * p.sAcc * p.m / p.Fmax);
   const vCap = noLoadSpeed(p);
@@ -89,6 +94,17 @@ function accelerate(p) {
     const k4v = f(v + dt * k3v), k4x = v + dt * k3v;
     const xn = x + dt / 6 * (k1x + 2 * k2x + 2 * k3x + k4x);
     const vn = v + dt / 6 * (k1v + 2 * k2v + 2 * k3v + k4v);
+    if (p.vLimit > 0 && vn >= p.vLimit) {
+      const u = (p.vLimit - v) / (vn - v);
+      const xl = x + u * (xn - x);
+      if (xl < p.sAcc) {
+        t += u * dt; x = xl; v = p.vLimit;
+        trace.push({ t, x, v, F: motorForce(v, p) }, { t, x, v, F: 0 });
+        t += (p.sAcc - x) / v; x = p.sAcc;
+        trace.push({ t, x, v, F: 0 });
+        break;
+      }
+    }
     if (xn >= p.sAcc) {
       const u = (p.sAcc - x) / (xn - x);
       t += u * dt; v += u * (vn - v); x = p.sAcc;
@@ -99,7 +115,7 @@ function accelerate(p) {
     if (i % every === 0) trace.push({ t, x, v, F: motorForce(v, p) });
     if (i > 5e6) throw new Error("the carriage does not reach the end of the acceleration stroke");
   }
-  return { v0: v, t, trace, vNoLoad: vCap };
+  return { v0: v, t, trace, vNoLoad: vCap, limited: p.vLimit > 0 && v >= p.vLimit };
 }
 
 // Phase 2 along x for a damping constant c. State s = [v, W_d, W_m, t].
@@ -185,7 +201,7 @@ function solve(p) {
   for (const q of tr) { FdPeak = Math.max(FdPeak, q.Fd); aPeak = Math.max(aPeak, -q.a); }
   const Fconst = (Ek0 + dp.Wm - Ek1) / p.sDamp;  // same energy, even force
   return {
-    v0, tAcc: acc.t, accTrace: acc.trace, vNoLoad: acc.vNoLoad, vNoVolt: Math.sqrt(2 * p.Fmax * p.sAcc / p.m),
+    v0, tAcc: acc.t, accTrace: acc.trace, vNoLoad: acc.vNoLoad, limited: acc.limited, vNoVolt: Math.sqrt(2 * p.Fmax * p.sAcc / p.m),
     c: sz.c, none: sz.none, manual: !!sz.manual, damper: dp, trace: tr,
     Ek0, Ek1, Wm: dp.Wm, Wd: dp.Wd, Etotal, balance: Ek0 + dp.Wm - dp.Wd - Ek1,
     me: 2 * Etotal / (v0 * v0),

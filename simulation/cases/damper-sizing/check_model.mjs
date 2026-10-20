@@ -9,8 +9,9 @@
 // 4. The energy balance ½·m·v₀² + W_m = W_d + ½·m·v_end² closes, for n = 1
 //    and n = 2, with and without the motor push.
 // 5. With no current, the voltage limit gives the no-load speed η·V_dc/(√2·Ke).
-// 6. The defaults (MK21, 5 kg, 218 mm, 310 V, hot coil) give about 3.80 m/s,
-//    the value of the hand simulation of 2026-10-19.
+// 6. With no speed limit, the defaults (MK21, 5 kg, 218 mm, 310 V, hot coil)
+//    give about 3.80 m/s, the value of the hand simulation of 2026-10-19.
+//    With the default speed limit of 2 m/s, the impact speed is 2 m/s.
 // 7. The sized damper gives the allowed end speed.
 // 8. The constant-force reference holds the same energy as the damper.
 // 9. A damping constant set by hand is used as it is. With the motor pushing,
@@ -28,7 +29,7 @@ const near = (got, want, tol) => Math.abs(got / want - 1) <= tol;
 
 // 1. Constant force.
 {
-  const p = { ...M.DEFAULTS, Vdc: 1e9 };
+  const p = { ...M.DEFAULTS, Vdc: 1e9, vLimit: 0 };
   const a = M.accelerate(p);
   const want = Math.sqrt(2 * p.Fmax * p.sAcc / p.m);
   check(near(a.v0, want, 1e-6), `constant force: impact speed ${a.v0.toFixed(5)} m/s, √(2Fs/m) = ${want.toFixed(5)} m/s`);
@@ -83,11 +84,20 @@ for (const n of [1, 2]) {
     `${M.motorForce(vt, p).toFixed(2)} N`);
 }
 
-// 6. The defaults.
+// 6. The defaults, with and without the speed limit.
 {
-  const r = M.solve({ ...M.DEFAULTS });
-  check(Math.abs(r.v0 - 3.80) < 0.03, `defaults: impact speed ${r.v0.toFixed(3)} m/s, hand simulation 3.80 m/s`);
-  check(r.v0 < r.vNoLoad, `defaults: impact speed below the no-load speed ${r.vNoLoad.toFixed(3)} m/s`);
+  const r = M.solve({ ...M.DEFAULTS, vLimit: 0 });
+  check(Math.abs(r.v0 - 3.80) < 0.03, `no speed limit: impact speed ${r.v0.toFixed(3)} m/s, hand simulation 3.80 m/s`);
+  check(r.v0 < r.vNoLoad && !r.limited, `no speed limit: impact speed below the no-load speed ${r.vNoLoad.toFixed(3)} m/s`);
+  const d = M.solve({ ...M.DEFAULTS });
+  check(d.limited && Math.abs(d.v0 - M.DEFAULTS.vLimit) < 1e-12,
+    `defaults: impact speed ${d.v0.toFixed(3)} m/s, speed limit ${M.DEFAULTS.vLimit} m/s, ${d.Ek0.toFixed(1)} J`);
+  // Full force from rest to the limit, then the rest of the stroke at the limit.
+  const p = { ...M.DEFAULTS, Vdc: 1e9 };
+  const a = M.accelerate(p);
+  const s1 = p.m * p.vLimit ** 2 / (2 * p.Fmax);
+  const tw = p.m * p.vLimit / p.Fmax + (p.sAcc - s1) / p.vLimit;
+  check(near(a.t, tw, 1e-5), `speed limit, constant force: time ${(a.t * 1e3).toFixed(4)} ms, exact ${(tw * 1e3).toFixed(4)} ms`);
 }
 
 if (failed) {
