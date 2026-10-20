@@ -157,3 +157,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-19 | [DGSMARTWIN AKS drive checked for the MK21 with an EnDat 2.2 encoder](2026-10-19_dgsmartwin-aks-drive-for-mk21-with-endat.md) | engineering, purchasing |  |
 | 2026-10-19 | [DGSMARTWIN SA32 absolute encoder: what to order and what to ask](2026-10-19_dgsmartwin-sa32-endat-encoder-order.md) | engineering, purchasing |  |
 | 2026-10-19 | [Eddy current displacement sensors for the stage error motion test](2026-10-19_eddy-current-sensor-search.md) | engineering, purchasing |  |
+| 2026-10-20 | [The bottom carriage is 1 mm lower, because the MK21 cable is only 8.3 mm thick](2026-10-20_carriage-1-mm-lower-for-8-3-mm-cable.md) | cad |  |
