@@ -38,7 +38,7 @@
 const DEFAULTS = {
   m: 5.0,          // kg, moving mass
   sAcc: 0.218,     // m, stroke over which the motor can speed up the carriage
-  Fmax: 670,       // N, the highest motor force (current limit × force constant)
+  Fmax: 512,       // N, the highest motor force (current limit × force constant)
   vLimit: 2.0,     // m/s, the speed limit of the drive (top speed of the stage); 0 = no limit
   Vdc: 310,        // V, DC bus of the drive
   eta: 0.95,       // the part of the bus voltage the drive can use
