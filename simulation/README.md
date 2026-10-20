@@ -15,6 +15,7 @@ counterpart lives in [`modules/flexure-ball-screw-servo-stage/measurement/`](../
 | [`strip-seal-preload`](cases/strip-seal-preload/) | Python (`numpy`, `scipy`) | Which radius does a 0.25 mm strip really take over 10 mm rollers, how does the pull change it, and can 304 replace 301? (Layout read off a sketch; confirm against CAD.) |
 | [`strip-seal-designer`](cases/strip-seal-designer/) | HTML + JavaScript (Node for checks) | How does the strip bend over the rollers, what force does each roller carry, and how much screw travel gives how much preload? Web page on GitHub Pages. (Magnet strip stiffness is an estimate.) |
 | [`cutting-force-rejection`](cases/cutting-force-rejection/) | HTML + JavaScript (Node for checks) | How much does the stage move under a milling force? Compares a linear motor with a ball-screw servo, read at the motor or at the stage. Web page on GitHub Pages. (Coupling and axial stiffness, one sine force.) |
+| [`damper-sizing`](cases/damper-sizing/) | HTML + JavaScript (Node for checks) | How fast does the stage hit its end damper after a runaway, and what damper stops it? Shows force, speed and energy along the damper stroke. Web page on GitHub Pages. (One rigid mass, no field weakening, damper force c·vⁿ.) |
 
 Results summaries belong in `results/<case-slug>/summary.md`. Heavy outputs
 (`results/<case>/exports/`) are gitignored.
@@ -29,6 +30,7 @@ python3 simulation/cases/encoder-stray-field/stray_field.py
 python3 simulation/cases/strip-seal-preload/strip_seal_preload.py
 node simulation/cases/strip-seal-designer/check_model.mjs
 node simulation/cases/cutting-force-rejection/check_model.mjs
+node simulation/cases/damper-sizing/check_model.mjs
 ```
 
 Octave cases need `pkg load control` and `pkg load symbolic`.
