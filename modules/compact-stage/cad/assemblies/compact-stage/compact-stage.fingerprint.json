@@ -5,16 +5,16 @@
     "AL32B050_30MUL": {
       "area": 5657.01,
       "bbox": [
-        195.061,
+        195.059,
         18.2,
         23.5,
-        247.606,
+        247.603,
         36.6,
         40.0
       ],
       "closed": true,
       "com": [
-        229.139,
+        229.136,
         27.5042,
         31.7439
       ],
@@ -30,33 +30,61 @@
       "valid": true,
       "volume": 10482.2
     },
+    "ALZ00270G": {
+      "area": 8322.0,
+      "bbox": [
+        103.0,
+        17.0,
+        27.75,
+        373.0,
+        17.4,
+        35.75
+      ],
+      "closed": true,
+      "com": [
+        238.0,
+        17.2067,
+        31.75
+      ],
+      "counts": {
+        "edges": 24,
+        "faces": 12,
+        "shells": 2,
+        "solids": 2,
+        "verts": 16
+      },
+      "label": "ALZ00270G",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 810.0
+    },
     "Assembly": {
-      "area": 513681.0,
+      "area": 627943.0,
       "bbox": [
         0.0,
         0.0,
         0.0,
         440.0,
         210.0,
-        51.5
+        60.0
       ],
       "closed": true,
       "com": [
-        216.749,
-        104.53,
-        20.5781
+        215.957,
+        104.567,
+        25.7099
       ],
       "counts": {
-        "edges": 5121,
-        "faces": 1950,
-        "shells": 46,
-        "solids": 14,
-        "verts": 3356
+        "edges": 5475,
+        "faces": 2090,
+        "shells": 51,
+        "solids": 19,
+        "verts": 3586
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 2441030.0
+      "volume": 2892020.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -117,16 +145,16 @@
     "MK21": {
       "area": 31715.6,
       "bbox": [
-        138.606,
+        138.603,
         59.0,
         20.3,
-        306.606,
+        306.603,
         145.0,
         44.0
       ],
       "closed": true,
       "com": [
-        198.595,
+        198.593,
         100.869,
         31.9203
       ],
@@ -201,16 +229,16 @@
     "QEH15SAZAP_E001": {
       "area": 8739.46,
       "bbox": [
-        256.057,
+        256.054,
         157.0,
         14.0,
-        312.055,
+        312.053,
         191.0,
         34.0
       ],
       "closed": true,
       "com": [
-        283.716,
+        283.714,
         173.945,
         24.898
       ],
@@ -229,16 +257,16 @@
     "QEH15SAZAP_E002": {
       "area": 8739.46,
       "bbox": [
-        111.156,
+        111.154,
         19.0,
         14.0,
-        167.155,
+        167.152,
         53.0,
         34.0
       ],
       "closed": true,
       "com": [
-        139.495,
+        139.492,
         36.0549,
         24.898
       ],
@@ -257,16 +285,16 @@
     "QEH15SAZAP_E003": {
       "area": 8739.46,
       "bbox": [
-        256.057,
+        256.054,
         19.0,
         14.0,
-        312.055,
+        312.053,
         53.0,
         34.0
       ],
       "closed": true,
       "com": [
-        283.716,
+        283.714,
         35.9451,
         24.898
       ],
@@ -285,16 +313,16 @@
     "QEH15SAZAP_E2": {
       "area": 8739.46,
       "bbox": [
-        111.156,
+        111.154,
         157.0,
         14.0,
-        167.155,
+        167.152,
         191.0,
         34.0
       ],
       "closed": true,
       "com": [
-        139.495,
+        139.492,
         174.055,
         24.898
       ],
@@ -309,6 +337,34 @@
       "type": "App::Link",
       "valid": true,
       "volume": 29025.2
+    },
+    "RUS_ET_A_B": {
+      "area": 2019.23,
+      "bbox": [
+        85.0,
+        17.0,
+        24.25,
+        391.0,
+        17.5,
+        39.25
+      ],
+      "closed": true,
+      "com": [
+        238.0,
+        17.2616,
+        31.75
+      ],
+      "counts": {
+        "edges": 72,
+        "faces": 28,
+        "shells": 2,
+        "solids": 2,
+        "verts": 48
+      },
+      "label": "RUS-ET-A-B",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 386.966
     },
     "base": {
       "area": 276005.0,
@@ -339,32 +395,60 @@
       "volume": 1470960.0
     },
     "carriage_bottom001": {
-      "area": 113853.0,
+      "area": 114430.0,
       "bbox": [
-        121.606,
+        121.603,
         1.0,
         24.0,
-        301.606,
+        301.603,
         209.0,
         51.5
       ],
       "closed": true,
       "com": [
-        216.121,
-        106.24,
-        40.0792
+        216.123,
+        106.241,
+        40.0738
       ],
       "counts": {
-        "edges": 855,
-        "faces": 304,
+        "edges": 885,
+        "faces": 316,
         "shells": 1,
         "solids": 1,
-        "verts": 567
+        "verts": 585
       },
       "label": "carriage_bottom",
       "type": "App::Link",
       "valid": true,
-      "volume": 472486.0
+      "volume": 472079.0
+    },
+    "carriage_top": {
+      "area": 103343.0,
+      "bbox": [
+        106.603,
+        1.0,
+        40.5,
+        316.603,
+        209.0,
+        60.0
+      ],
+      "closed": true,
+      "com": [
+        211.603,
+        105.0,
+        53.5385
+      ],
+      "counts": {
+        "edges": 228,
+        "faces": 88,
+        "shells": 1,
+        "solids": 1,
+        "verts": 148
+      },
+      "label": "carriage-top",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 450192.0
     }
   },
   "parametric": {
@@ -375,6 +459,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "bc8cf75a5d45f6a415f015b26378b40af5447b031a893d1362e6b340c54e7a84"
+    "compact-stage.FCStd": "ed753cde4e2e7d5b2ffd84ee57fe11dae2d98e8335f91224d41f3bfeb64853d0"
   }
 }
