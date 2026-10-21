@@ -89,7 +89,33 @@ package CompactStage {
          * half, so the strip has no interface with them. Only the rollers
          * in the carriage touch the strip. They are bought parts and come
          * later.
+         *
+         * The two side strips of carriage-bottom (11 mm wide) sit in the
+         * two side pockets under carriage-top. The top of each strip
+         * touches the ceiling of its pocket. Over the middle of
+         * carriage-bottom, carriage-top stays 2 mm higher. The ends of
+         * carriage-top stay 0.5 mm above the base.
+         *
+         * Six M4 screws go down through carriage-top into carriage-bottom:
+         * three in the middle of each side strip, 74.1 mm apart along the
+         * travel, the middle one at the centre of the carriage. Each hole
+         * in carriage-top has a counterbore for the screw head. In
+         * carriage-bottom the holes are threaded and blind, 9 mm deep,
+         * because the base is only 0.5 mm under the strips. Use M4x12
+         * screws (ISO 4762): about 8 mm of the screw goes into the thread.
+         * A screw longer than 12 mm can touch the bottom of the hole.
+         *
+         * There is no screw in the middle of the carriage. The sealing
+         * strip runs there, in the 2 mm gap between the two halves.
+         *
+         * In the CAD, the frame IF_carriage_joint sits on the contact
+         * plane, at the centre of the carriage, in both parts. Z points
+         * up, from carriage-bottom into carriage-top. X runs along the
+         * travel, towards the start of the carriage. The two frames are
+         * the same place, so the joint needs no offset.
          */
+        attribute holePitch : LengthValue = 74.1 [mm];      // along the travel
+        attribute screwCount : Natural = 6;
     }
 
     port def BlockMountInterface_v1 {
