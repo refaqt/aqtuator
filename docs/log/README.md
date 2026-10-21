@@ -164,3 +164,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-20 | [The damper page can now calculate a polyurethane bumper](2026-10-20_bumper-on-damper-page.md) | engineering, simulation |  |
 | 2026-10-20 | [The linear encoder is in the compact stage assembly](2026-10-20_encoder-in-the-compact-stage-assembly.md) | cad, architecture |  |
 | 2026-10-21 | [The two carriage halves screw together in the compact stage](2026-10-21_carriage-halves-screwed-together.md) | cad, architecture |  |
+| 2026-10-21 | [Where the end bumpers fit in the compact stage](2026-10-21_space-for-end-bumpers.md) | engineering, cad | 1 |
