@@ -169,3 +169,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-22 | [Kollmorgen AKD2G checked as a replacement for the AKD, for a price request to DynamicDrives](2026-10-22_akd2g-instead-of-the-akd-for-dynamicdrives.md) | engineering, purchasing |  |
 | 2026-10-22 | [Four ACE TA17-7 end stop dampers on the carriage](2026-10-22_end-stop-dampers.md) | engineering, cad, architecture | 1 |
 | 2026-10-22 | [Guide blocks 10 mm closer together, and the travel check](2026-10-22_guide-blocks-10-mm-closer.md) | cad, engineering |  |
+| 2026-10-22 | [Damper pockets in the end walls, and the guide blocks 20 mm closer](2026-10-22_damper-pockets-in-the-end-walls.md) | cad, engineering, architecture |  |
+| 2026-10-22 | [Roller pockets back on the slope edge, and thicker walls at the read head](2026-10-22_roller-pockets-on-the-slope-edge.md) | cad |  |
