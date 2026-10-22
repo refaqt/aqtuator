@@ -165,4 +165,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-20 | [The linear encoder is in the compact stage assembly](2026-10-20_encoder-in-the-compact-stage-assembly.md) | cad, architecture |  |
 | 2026-10-21 | [The two carriage halves screw together in the compact stage](2026-10-21_carriage-halves-screwed-together.md) | cad, architecture |  |
 | 2026-10-21 | [Where the end bumpers fit in the compact stage](2026-10-21_space-for-end-bumpers.md) | engineering, cad | 1 |
+| 2026-10-22 | [Cheap inductive limit switches with a plug, and their cables](2026-10-22_inductive-limit-switches.md) | engineering, purchasing |  |
 | 2026-10-22 | [Kollmorgen AKD2G checked as a replacement for the AKD, for a price request to DynamicDrives](2026-10-22_akd2g-instead-of-the-akd-for-dynamicdrives.md) | engineering, purchasing |  |
