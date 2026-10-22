@@ -129,7 +129,7 @@ package CompactStage {
          * The carriage has four blocks, in two rows along the travel.
          * Row a is at x = 35 mm in the carriage, row b at x = 173 mm.
          * "Start" is the end of the carriage where the motor cable leaves
-         * (y = 11 mm), "end" is the other end (y = 169 mm). The names do
+         * (y = 16 mm), "end" is the other end (y = 164 mm). The names do
          * not say which row runs on the reference rail.
          *
          * The lubrication unit (E2) of each block points out of the
