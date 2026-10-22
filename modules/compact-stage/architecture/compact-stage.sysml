@@ -129,7 +129,7 @@ package CompactStage {
          * The carriage has four blocks, in two rows along the travel.
          * Row a is at x = 35 mm in the carriage, row b at x = 173 mm.
          * "Start" is the end of the carriage where the motor cable leaves
-         * (y = 11 mm), "end" is the other end (y = 169 mm). The names do
+         * (y = 21 mm), "end" is the other end (y = 159 mm). The names do
          * not say which row runs on the reference rail.
          *
          * The lubrication unit (E2) of each block points out of the
@@ -317,8 +317,9 @@ package CompactStage {
          * Two values of the frame follow other parts, and are typed for
          * now. Change them when those parts change:
          *
-         * - x = 103 mm: the 270 mm scale is centred on the middle of the
-         *   travel that the guide blocks allow on the rails.
+         * - x = Params.scale_start_x (95.3 mm): over the travel, the read
+         *   window of the head runs on the middle of the clean part of the
+         *   scale (14 mm to 256 mm from its start).
          * - z = 31.75 mm: the centre line of the head, set by the height
          *   of the carriage and the depth of its head pocket. The end
          *   clamps then reach up to z = 39.25 mm, 0.75 mm below the top
@@ -366,6 +367,21 @@ package CompactStage {
          */
     }
 
+    port def DamperStopInterface_v1 {
+        doc /*
+         * The impact face of one TA17-7 damper hits the back face of a
+         * pocket in an end wall of the base. Each pocket is milled from the
+         * top of the base: 7 mm deep into the 10 mm wall, 24 mm wide (the
+         * damper grows to 22 mm across when fully pressed, ACE manual page
+         * 3), inside corners R4 mm, floor at z = 17.5 mm. The sizes are in
+         * the Params sheet of the base.
+         *
+         * In the CAD, the frames IF_damper_a_start_stop and so on sit on
+         * the back face of each pocket, on the damper axis. Z points out of
+         * the wall, towards the damper.
+         */
+    }
+
     // ---------------------------------------------------------------------
     // Parts. Each port says which side of an interface a part is on.
     // ---------------------------------------------------------------------
@@ -381,6 +397,10 @@ package CompactStage {
         port firstStatorMount : StatorMountInterface_v1;
         port secondStatorMount : StatorMountInterface_v1;
         port scaleMount : ScaleMountInterface_v1;
+        port damperAStartStop : DamperStopInterface_v1;
+        port damperBStartStop : DamperStopInterface_v1;
+        port damperAEndStop : DamperStopInterface_v1;
+        port damperBEndStop : DamperStopInterface_v1;
     }
 
     part def GuideRail {
@@ -594,6 +614,12 @@ package CompactStage {
         connect carriageBottom.damperBStartMount to damperBStart.mount;
         connect carriageBottom.damperAEndMount to damperAEnd.mount;
         connect carriageBottom.damperBEndMount to damperBEnd.mount;
+
+        // DamperStop: each damper hits a pocket in an end wall of the base
+        connect base.damperAStartStop to damperAStart.stop;
+        connect base.damperBStartStop to damperBStart.stop;
+        connect base.damperAEndStop to damperAEnd.stop;
+        connect base.damperBEndStop to damperBEnd.stop;
     }
 
     part def EndStopDamper {
@@ -602,6 +628,7 @@ package CompactStage {
          * library in modules/stoq/.
          */
         port mount : ~DamperMountInterface_v1;
+        port stop : ~DamperStopInterface_v1;
     }
 
     // ---------------------------------------------------------------------

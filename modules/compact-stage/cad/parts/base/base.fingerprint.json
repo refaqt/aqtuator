@@ -59,7 +59,7 @@
       "volume": 0.0
     },
     "Body": {
-      "area": 276005.0,
+      "area": 276956.0,
       "bbox": [
         0.0,
         0.0,
@@ -70,21 +70,77 @@
       ],
       "closed": true,
       "com": [
-        219.91,
-        105.041,
-        12.4554
+        219.909,
+        105.042,
+        12.2932
       ],
       "counts": {
-        "edges": 168,
-        "faces": 59,
+        "edges": 240,
+        "faces": 83,
         "shells": 1,
         "solids": 1,
-        "verts": 112
+        "verts": 160
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 1470960.0
+      "volume": 1456460.0
+    },
+    "DamperPocket": {
+      "area": 276956.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.909,
+        105.042,
+        12.2932
+      ],
+      "counts": {
+        "edges": 240,
+        "faces": 83,
+        "shells": 1,
+        "solids": 1,
+        "verts": 160
+      },
+      "label": "DamperPocket",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 1456460.0
+    },
+    "DamperPocketSketch": {
+      "area": 0.0,
+      "bbox": [
+        3.0,
+        52.5,
+        40.0,
+        437.0,
+        157.5,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        40.0
+      ],
+      "counts": {
+        "edges": 24,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 24
+      },
+      "label": "DamperPocketSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     },
     "Hole": {
       "area": 274859.0,
@@ -115,7 +171,7 @@
       "volume": 1472490.0
     },
     "Part": {
-      "area": 276005.0,
+      "area": 276956.0,
       "bbox": [
         0.0,
         0.0,
@@ -126,21 +182,21 @@
       ],
       "closed": true,
       "com": [
-        219.91,
-        105.041,
-        12.4554
+        219.909,
+        105.042,
+        12.2932
       ],
       "counts": {
-        "edges": 168,
-        "faces": 59,
+        "edges": 240,
+        "faces": 83,
         "shells": 1,
         "solids": 1,
-        "verts": 112
+        "verts": 160
       },
       "label": "base001",
       "type": "App::Part",
       "valid": true,
-      "volume": 1470960.0
+      "volume": 1456460.0
     },
     "Pocket": {
       "area": 269724.0,
@@ -340,7 +396,7 @@
     }
   },
   "parametric": {
-    "audited": 16,
+    "audited": 22,
     "objects": {
       "Block": {
         "label": "Block",
@@ -384,7 +440,7 @@
         "label": "Sketch",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "Constraint5 (Distance) is a typed number: 10 mm",
+          "end_wall_t (Distance) is a typed number: 10 mm",
           "pocket_w (Distance) is a typed number: 176 mm",
           "Constraint28 (Radius) is a typed number: 6 mm"
         ]
@@ -417,6 +473,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "2799fd76b65ea49be20f901001bc9bf7ce6b72727ac027acc89d40d9762785ef"
+    "base.FCStd": "73c44d9ccd6ba1a9406cc495e0c390f587b57db0a62ce8d5f02b18e45cc52458"
   }
 }
