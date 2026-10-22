@@ -10,7 +10,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -122,7 +122,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -150,7 +150,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -262,7 +262,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -682,7 +682,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -710,7 +710,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -738,7 +738,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -766,7 +766,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -794,7 +794,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -846,10 +846,10 @@
       "area": 0.0,
       "bbox": [
         20.0,
-        19.0,
+        19.0146,
         27.5,
         188.0,
-        161.0,
+        160.985,
         27.5
       ],
       "closed": true,
@@ -1041,10 +1041,10 @@
     "Sketch014": {
       "area": 0.0,
       "bbox": [
-        15.0,
+        15.0292,
         33.0,
         27.5,
-        193.0,
+        192.971,
         147.0,
         27.5
       ],
@@ -1070,10 +1070,10 @@
       "area": 0.0,
       "bbox": [
         19.0,
-        35.5,
+        35.5109,
         23.0,
         189.0,
-        144.5,
+        144.489,
         23.0
       ],
       "closed": true,
@@ -1154,10 +1154,10 @@
       "area": 0.0,
       "bbox": [
         77.0,
-        71.0,
+        71.0146,
         27.5,
         131.0,
-        145.0,
+        144.985,
         27.5
       ],
       "closed": true,
@@ -1238,10 +1238,10 @@
       "area": 0.0,
       "bbox": [
         18.0,
-        17.0,
+        17.0292,
         27.5,
         190.0,
-        163.0,
+        162.971,
         27.5
       ],
       "closed": true,
@@ -1325,7 +1325,7 @@
         4.5,
         0.0,
         156.25,
-        71.5,
+        71.4672,
         0.0
       ],
       "closed": true,
@@ -1350,9 +1350,9 @@
       "area": 0.0,
       "bbox": [
         147.25,
-        65.0,
+        65.0328,
         27.5,
-        212.5,
+        212.467,
         119.0,
         27.5
       ],
@@ -1434,9 +1434,9 @@
       "area": 0.0,
       "bbox": [
         33.0,
-        111.0,
+        111.02,
         27.5,
-        211.0,
+        210.978,
         127.0,
         27.5
       ],
@@ -1462,10 +1462,10 @@
       "area": 0.0,
       "bbox": [
         18.7,
-        64.5,
+        64.5109,
         27.5,
         21.7,
-        93.5,
+        93.4891,
         27.5
       ],
       "closed": true,
@@ -1490,10 +1490,10 @@
       "area": 0.0,
       "bbox": [
         3.5,
-        13.9,
+        13.9146,
         27.5,
         204.5,
-        166.1,
+        166.085,
         27.5
       ],
       "closed": true,
@@ -1517,10 +1517,10 @@
     "Sketch033": {
       "area": 0.0,
       "bbox": [
-        55.0,
+        55.0255,
         0.0,
         0.0,
-        153.0,
+        152.974,
         180.0,
         0.0
       ],
@@ -1719,11 +1719,11 @@
         "label": "Sketch013",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "Constraint23 (Radius) is a typed number: 4 mm",
-          "Constraint32 (DistanceY) is a typed number: 10 mm",
-          "Constraint35 (Distance) is a typed number: 0.5 mm",
-          "Constraint36 (Distance) is a typed number: 3 mm",
-          "Constraint37 (DistanceX) is a typed number: 20 mm"
+          "roller_pocket_r (Radius) is a typed number: 4 mm",
+          "roller_d (DistanceY) is a typed number: 10 mm",
+          "roller_side_gap (Distance) is a typed number: 0.5 mm",
+          "roller_end_gap (Distance) is a typed number: 3 mm",
+          "roller_l (DistanceX) is a typed number: 20 mm"
         ]
       },
       "Sketch014": {
@@ -1732,7 +1732,7 @@
         "type": "Sketcher::SketchObject",
         "unlinked": [
           "Constraint11 (Distance) is a typed number: 4 mm",
-          "Constraint48 (Distance) is a typed number: 1 mm"
+          "axle_offset (Distance) is a typed number: 1 mm"
         ]
       },
       "Sketch015": {
@@ -1744,7 +1744,7 @@
           "Constraint11 (Diameter) is a typed number: 6 mm",
           "Constraint13 (Angle) is a typed number: 135 deg",
           "Constraint16 (Distance) is a typed number: 0.5 mm",
-          "Constraint38 (DistanceY) is a typed number: 3 mm"
+          "axle_screw_dy (DistanceY) is a typed number: 3 mm"
         ]
       },
       "Sketch016": {
@@ -1917,6 +1917,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "7de05c5cabb4aadb16663b890632665bb39d5ea45c6e97b9d6fe9d6c60bda5d5"
+    "carriage-bottom.FCStd": "f1e39dd207932b7b28f3b3641cacef77d4bf4327642e6f012d1aa0ec34b409d2"
   }
 }
