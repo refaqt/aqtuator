@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 114430.0,
+      "area": 115762.0,
       "bbox": [
         0.0,
         0.0,
@@ -14,21 +14,21 @@
       ],
       "closed": true,
       "com": [
-        105.241,
-        85.4806,
-        16.0738
+        105.252,
+        85.4398,
+        16.1784
       ],
       "counts": {
-        "edges": 885,
-        "faces": 316,
+        "edges": 981,
+        "faces": 348,
         "shells": 1,
         "solids": 1,
-        "verts": 585
+        "verts": 649
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 472079.0
+      "volume": 467850.0
     },
     "Hole": {
       "area": 99075.7,
@@ -255,7 +255,7 @@
       "volume": 844588.0
     },
     "Part": {
-      "area": 114430.0,
+      "area": 115762.0,
       "bbox": [
         0.0,
         0.0,
@@ -266,21 +266,21 @@
       ],
       "closed": true,
       "com": [
-        105.241,
-        85.4806,
-        16.0738
+        105.252,
+        85.4398,
+        16.1784
       ],
       "counts": {
-        "edges": 885,
-        "faces": 316,
+        "edges": 981,
+        "faces": 348,
         "shells": 1,
         "solids": 1,
-        "verts": 585
+        "verts": 649
       },
       "label": "carriage_bottom",
       "type": "App::Part",
       "valid": true,
-      "volume": 472079.0
+      "volume": 467850.0
     },
     "Pocket": {
       "area": 91547.9,
@@ -785,6 +785,34 @@
       "type": "PartDesign::Pocket",
       "valid": true,
       "volume": 472839.0
+    },
+    "Pocket020": {
+      "area": 115762.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        105.252,
+        85.4398,
+        16.1784
+      ],
+      "counts": {
+        "edges": 981,
+        "faces": 348,
+        "shells": 1,
+        "solids": 1,
+        "verts": 649
+      },
+      "label": "Pocket020",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 467850.0
     },
     "Sketch": {
       "area": 0.0,
@@ -1485,10 +1513,38 @@
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
+    },
+    "Sketch033": {
+      "area": 0.0,
+      "bbox": [
+        55.0255,
+        0.0,
+        0.0,
+        152.974,
+        180.0,
+        0.0
+      ],
+      "closed": true,
+      "com": [
+        104.0,
+        90.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 32,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 32
+      },
+      "label": "Sketch033",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     }
   },
   "parametric": {
-    "audited": 58,
+    "audited": 64,
     "objects": {
       "Hole": {
         "label": "Hole",
@@ -1841,6 +1897,19 @@
           "Constraint1 (Diameter) is a typed number: 4 mm",
           "joint_hole_pitch (DistanceY) is a typed number: 74.1 mm"
         ]
+      },
+      "Sketch033": {
+        "dof": 0,
+        "label": "Sketch033",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Constraint8 (Distance) is a typed number: 23 mm",
+          "Constraint9 (Distance) is a typed number: 10 mm",
+          "Constraint28 (Distance) is a typed number: 7 mm",
+          "Constraint29 (DistanceY) is a typed number: 2 mm",
+          "Constraint30 (DistanceX) is a typed number: 10 mm",
+          "Constraint32 (Distance) is a typed number: 4.5 mm"
+        ]
       }
     }
   },
@@ -1848,6 +1917,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "148507962d8777564487fd6cfbdfa3c307bba23f2989581fe55fca1063d13548"
+    "carriage-bottom.FCStd": "a377f05c84bc482da4e4f30ceb5bc4f867b330ac534c8c21a81483e660026c8a"
   }
 }

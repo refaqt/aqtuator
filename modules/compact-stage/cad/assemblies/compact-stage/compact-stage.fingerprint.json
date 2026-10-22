@@ -59,7 +59,7 @@
       "volume": 810.0
     },
     "Assembly": {
-      "area": 627943.0,
+      "area": 636212.0,
       "bbox": [
         0.0,
         0.0,
@@ -70,21 +70,21 @@
       ],
       "closed": true,
       "com": [
-        215.957,
-        104.567,
-        25.7099
+        215.947,
+        104.568,
+        25.7201
       ],
       "counts": {
-        "edges": 5475,
-        "faces": 2090,
-        "shells": 51,
-        "solids": 19,
-        "verts": 3586
+        "edges": 5907,
+        "faces": 2286,
+        "shells": 59,
+        "solids": 23,
+        "verts": 3850
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 2892020.0
+      "volume": 2898650.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -232,7 +232,7 @@
         256.054,
         157.0,
         14.0,
-        312.053,
+        312.052,
         191.0,
         34.0
       ],
@@ -288,7 +288,7 @@
         256.054,
         19.0,
         14.0,
-        312.053,
+        312.052,
         53.0,
         34.0
       ],
@@ -366,6 +366,118 @@
       "valid": true,
       "volume": 386.966
     },
+    "TA17_7_a_end": {
+      "area": 1734.26,
+      "bbox": [
+        105.603,
+        56.0403,
+        21.0403,
+        125.603,
+        72.9597,
+        37.9597
+      ],
+      "closed": true,
+      "com": [
+        114.193,
+        64.5,
+        29.5
+      ],
+      "counts": {
+        "edges": 84,
+        "faces": 41,
+        "shells": 2,
+        "solids": 1,
+        "verts": 50
+      },
+      "label": "TA17-7_a_end",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 2716.57
+    },
+    "TA17_7_a_start": {
+      "area": 1734.26,
+      "bbox": [
+        297.603,
+        56.0403,
+        21.0403,
+        317.603,
+        72.9597,
+        37.9597
+      ],
+      "closed": true,
+      "com": [
+        309.013,
+        64.5,
+        29.5
+      ],
+      "counts": {
+        "edges": 84,
+        "faces": 41,
+        "shells": 2,
+        "solids": 1,
+        "verts": 50
+      },
+      "label": "TA17-7_a_start",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 2716.57
+    },
+    "TA17_7_b_end": {
+      "area": 1734.26,
+      "bbox": [
+        105.603,
+        137.04,
+        21.0403,
+        125.603,
+        153.96,
+        37.9597
+      ],
+      "closed": true,
+      "com": [
+        114.193,
+        145.5,
+        29.5
+      ],
+      "counts": {
+        "edges": 84,
+        "faces": 41,
+        "shells": 2,
+        "solids": 1,
+        "verts": 50
+      },
+      "label": "TA17-7_b_end",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 2716.57
+    },
+    "TA17_7_b_start": {
+      "area": 1734.26,
+      "bbox": [
+        297.603,
+        137.04,
+        21.0403,
+        317.603,
+        153.96,
+        37.9597
+      ],
+      "closed": true,
+      "com": [
+        309.013,
+        145.5,
+        29.5
+      ],
+      "counts": {
+        "edges": 84,
+        "faces": 41,
+        "shells": 2,
+        "solids": 1,
+        "verts": 50
+      },
+      "label": "TA17-7_b_start",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 2716.57
+    },
     "base": {
       "area": 276005.0,
       "bbox": [
@@ -395,7 +507,7 @@
       "volume": 1470960.0
     },
     "carriage_bottom001": {
-      "area": 114430.0,
+      "area": 115762.0,
       "bbox": [
         121.603,
         1.0,
@@ -406,21 +518,21 @@
       ],
       "closed": true,
       "com": [
-        216.123,
-        106.241,
-        40.0738
+        216.163,
+        106.252,
+        40.1784
       ],
       "counts": {
-        "edges": 885,
-        "faces": 316,
+        "edges": 981,
+        "faces": 348,
         "shells": 1,
         "solids": 1,
-        "verts": 585
+        "verts": 649
       },
       "label": "carriage_bottom",
       "type": "App::Link",
       "valid": true,
-      "volume": 472079.0
+      "volume": 467850.0
     },
     "carriage_top": {
       "area": 103343.0,
@@ -459,6 +571,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "ed753cde4e2e7d5b2ffd84ee57fe11dae2d98e8335f91224d41f3bfeb64853d0"
+    "compact-stage.FCStd": "d9938426cacdee4972ad5004f9fd40ce511b25ca83a2a212c8affa87596d18e2"
   }
 }
