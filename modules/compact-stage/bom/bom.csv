@@ -1,3 +1,4 @@
 id,name,spec,category,qty,unit,unit_mass_g,equiv_class,brand,brand_pn,part,notes
 SW-001,Limit Switch,"Inductive sensor M8x1, PNP, normally closed, 2 mm flush, 10-30 V DC, built-in M8 3-pin plug",electrical,2,pc,,IND-M8-PNP-NC-2MM-M8PLUG,autosen,AI052,,One limit switch at each end of travel. Mass not yet checked against the datasheet.
 ELC-001,Limit Switch Cable,"M8 3-pin A-coded socket, straight, to open ends, 2 m, PVC, rated for drag chains",electrical,2,pc,,M8-3P-SOCKET-OPEN-2M-DRAGCHAIN,autosen,AA068,,One cable per limit switch. Mass not yet checked against the datasheet.
+MEC-001,End Stop Damper,stroke 7 mm; length 16 mm; body 17 mm; impact face 15 mm; 22 mm when fully compressed; M4 stud 4 mm long; 1.7 Nm max; 6 Nm per stroke (9 Nm emergency stop),mechanical,4,pc,4,,ACE,TA17-7,stoq:ace/ta-damper#TA17-7,One damper at each corner of the carriage ends. Each is held by an M4 square nut in a slot in carriage-bottom.

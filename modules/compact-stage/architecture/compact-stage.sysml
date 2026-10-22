@@ -358,6 +358,14 @@ package CompactStage {
          */
     }
 
+    port def DamperMountInterface_v1 {
+        doc /*
+         * End face of carriage-bottom where one TA17-7 damper screws on. M4
+         * stud through a 4.5 mm slot into an M4 square nut. The damper axis is
+         * Params.damper_axis_z above the bottom face.
+         */
+    }
+
     // ---------------------------------------------------------------------
     // Parts. Each port says which side of an interface a part is on.
     // ---------------------------------------------------------------------
@@ -402,6 +410,10 @@ package CompactStage {
         port blockBEndMount : BlockMountInterface_v1;
         port forcerMount : ForcerMountInterface_v1;
         port readheadMount : ReadheadMountInterface_v1;
+        port damperAStartMount : DamperMountInterface_v1;
+        port damperBStartMount : DamperMountInterface_v1;
+        port damperAEndMount : DamperMountInterface_v1;
+        port damperBEndMount : DamperMountInterface_v1;
     }
 
     part def GuideBlock {
@@ -535,6 +547,10 @@ package CompactStage {
         part readHead : ReadHead;
         part scale : Scale;
         part scaleClamps : ScaleClamps;
+        part damperAStart : EndStopDamper;
+        part damperBStart : EndStopDamper;
+        part damperAEnd : EndStopDamper;
+        part damperBEnd : EndStopDamper;
 
         // Interfaces of the whole stage
         port machineMount : BaseMountInterface_v1;
@@ -572,6 +588,20 @@ package CompactStage {
         connect base.scaleMount to scale.baseMount;
         connect scale.headRead to readHead.scaleRead;
         connect scale.clamps to scaleClamps.scale;
+
+        // DamperMount: one TA17-7 damper at each corner of the carriage ends
+        connect carriageBottom.damperAStartMount to damperAStart.mount;
+        connect carriageBottom.damperBStartMount to damperBStart.mount;
+        connect carriageBottom.damperAEndMount to damperAEnd.mount;
+        connect carriageBottom.damperBEndMount to damperBEnd.mount;
+    }
+
+    part def EndStopDamper {
+        doc /*
+         * End Stop Damper, bought: stoq:ace/ta-damper#TA17-7. From the parts
+         * library in modules/stoq/.
+         */
+        port mount : ~DamperMountInterface_v1;
     }
 
     // ---------------------------------------------------------------------
