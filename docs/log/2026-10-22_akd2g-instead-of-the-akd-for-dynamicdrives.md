@@ -15,13 +15,21 @@ AKD2G to ask for, and compare it with the AKD.
 
 - **Ask for the AKD2G-SPE-6V03S-A1F3-0000-A.** It is the single axis, 3 A, 230 VAC model with
   EtherCAT, simple safe torque off (STO), the extra X23 encoder connector (option F3), and the
-  mating connectors.
+  mating connectors. The Kollmorgen catalog confirms every part of this code (see below).
+- **The "-A" connector set does not include the plug for X23.** The catalog says "with connectors
+  (except X1/X2 and X23)". X23 is a 15-pin D-sub socket. We must buy or make the encoder cable
+  with a 15-pin D-sub plug ourselves.
 - **The F3 option is a must.** Without it the drive has only the X1 connector, which reads
   Kollmorgen's own two-wire motor feedback (SFD3 and HIPERFACE DSL). Only X23 reads a 1 Vpp
   sine and cosine encoder, EnDat 2.2 or BiSS-C.
 - **On paper the AKD2G meets the hard requirements, like the AKD.** Current, bus voltage and the
-  250 µs position loop are the same. Two points are not confirmed: the highest 1 Vpp signal
-  frequency on X23, and the Bode plot tool (only the brochure says so).
+  250 µs position loop are the same. One point is not confirmed: the highest 1 Vpp signal
+  frequency on X23. The Bode plot tool is named in the catalog and in the brochure.
+- **Kollmorgen gives two different position loop rates.** The catalog (June 2021) says 125 µs
+  (8 kHz). The installation manual says 250 µs (4 kHz), in the 2018 and the June 2023 editions.
+  Both are Kollmorgen documents. We count 250 µs, because the newer and more technical document
+  says so. DRV-09 passes either way. DRV-P3 (8 kHz) stays "not confirmed" until Kollmorgen
+  answers in writing.
 - **The AKD2G is better in one way and worse in one way.** Better: it has four free second-order
   filters (DRV-P1), and it is a current product. Worse: it costs about CHF 1,050 per axis, which
   is about twice the budget of about 500 euro per axis.
@@ -39,24 +47,31 @@ AKD2G to ask for, and compare it with the AKD.
 | DRV-07 | EtherCAT with CiA 402 | "E" in SPE: EtherCAT | Pass |
 | DRV-08 | Reads the stage encoder directly | X23 reads sine encoders (1 Vpp), EnDat 2.2 and BiSS-C | Pass for EnDat 2.2 and BiSS-C. For 1 Vpp the highest signal frequency is not in the manual: **not confirmed** for 150 kHz |
 | DRV-09 | Position loop 4 kHz or faster | 250 µs (4 kHz) | Pass |
-| DRV-10 | Bode plots in the setup software | WorkBench, "advanced Bode Plot tool" | Pass, but only from the brochure |
+| DRV-10 | Bode plots in the setup software | WorkBench, "advanced Bode plot tool" | Pass, from the catalog and the brochure. Gain and phase not named |
 | DRV-P1 | Free second-order filters | Four free biquad filters in the 16 kHz velocity loop | Pass |
 | DRV-P2 | Block diagram of the loop | Not checked | Not checked |
-| DRV-P3 | Position loop 8 kHz or faster | 250 µs | Fail |
+| DRV-P3 | Position loop 8 kHz or faster | Manual: 250 µs. Catalog: 125 µs | Not confirmed. The two documents disagree |
 
 ### What each part of the order code means
 
-| Part | Meaning | Why this one |
+Checked against the type key in the Kollmorgen catalog, page 174.
+
+| Part | Meaning in the catalog | Why this one |
 | --- | --- | --- |
-| SP | Position indexer | The standard AKD2G model |
-| E | EtherCAT | DRV-07 |
-| 6V | 120 to 240 VAC, 1 or 3 phase | The 7V model (up to 480 VAC) has a 620 VDC bus. That breaks the 600 V limit of the MK21 |
-| 03 | 3 A rms continuous, 9 A rms for 5 s | The smallest size. 06 and 12 are too large |
-| S | Single axis | D is two axes in one box |
-| A1 | Hardware revision A, safety option 1: STO by wired inputs | A2 (safety over EtherCAT) and A3 (more safety functions) are not needed |
-| F3 | Extra X23 encoder connector | Needed for our encoder |
-| 0000 | Standard boards, no coating | |
-| -A | Mating connectors included | Ask DynamicDrives if their code includes this |
+| S | Servo drive, IP20 | The only format |
+| P | Position indexer with motion tasks | The only drive version |
+| E | EtherCAT. Others: N analog, C CANopen, P PROFINET IRT, I Ethernet/IP | DRV-07 |
+| 6V | 120/240 VAC, 1 or 3 phase. 7V is 240/480 VAC, 3 phase | The 7V model has a 620 VDC bus. That breaks the 600 V limit of the MK21 |
+| 03 | 3 A rms continuous, 9 A rms peak. Also 06 and 12 | The smallest size. 06 and 12 are too large |
+| S | Single axis. D is dual axis | One stage per drive |
+| A | Platform revision A | The only revision |
+| 1 | Functional safety 1: STO, dual channel (SIL2, PLd) | 2 adds SS1, SDB, SBC and safety over EtherCAT (FSoE). 3 adds many more safety functions. We do not need them |
+| F3 | X23 (feedback 3). Others: 00 standard, IO adds X22, DX adds X22 and X23 | Needed for our encoder. DX also works, but adds I/O we do not need |
+| 0000 | Standard. A000 is coated boards | |
+| -A | With connectors, except X1/X2 and X23 | Gives the power, I/O and STO plugs. The X23 encoder plug is not in it |
+
+The catalog type key prints the voltage as "06"/"07" and the current as "003", but its own
+model tables and the dealers use "6V" and "03", as in AKD2G-SPx-6V03S. We use the table form.
 
 ### AKD2G compared with the AKD chosen before
 
@@ -64,10 +79,10 @@ AKD2G to ask for, and compare it with the AKD.
 | --- | --- | --- |
 | Current | 3 / 9 A rms for 5 s | 3 / 9 A rms for 5 s |
 | Supply and bus | 120 to 240 VAC, about 325 V | 100 to 240 VAC, rated 310 V |
-| Position loop | 250 µs (4 kHz) | 250 µs (4 kHz) |
+| Position loop | 250 µs (4 kHz) | 250 µs (4 kHz) in the manual. The catalog says 125 µs |
 | Velocity loop | 62.5 µs (16 kHz) | 62.5 µs (16 kHz) |
 | Free filters (DRV-P1) | Not checked | Four free biquads |
-| Encoder connector | X10, built in | X23, only with option F3. Same pin layout as the AKD X10 |
+| Encoder connector | X10, built in | X23 (15-pin D-sub), only with option F3. Same pin layout as the AKD X10. Plug not included |
 | 1 Vpp highest frequency | 250 kHz, with termination resistors | Not in the manual |
 | Second axis | One drive per axis | A two-axis model exists (6V03D-A1F3) |
 | Product state | Older line. Not on the DynamicDrives web site | Current line. Oxni gives about 4 weeks delivery |
@@ -91,7 +106,10 @@ Ask DynamicDrives:
 3. Can they still supply the AKD-P00306-NBEC new, and at what price?
 4. What is the highest sine and cosine (1 Vpp) signal frequency on X23? We need 150 kHz.
 5. Does WorkBench for the AKD2G measure and show Bode plots (gain and phase) of the speed loop?
-6. Which cables and connectors come with the "-A" code, and what does WorkBench cost?
+6. Is the position loop 125 µs (catalog, 2021) or 250 µs (installation manual, 2023)? Please
+   answer in writing.
+7. Can they supply a 15-pin D-sub plug or a cable for X23? The "-A" set does not include it.
+8. What does WorkBench cost?
 
 ## Next Steps
 
@@ -102,6 +120,11 @@ Ask DynamicDrives:
 <details>
 <summary>Sources</summary>
 
+- Kollmorgen "Automation and Motion Control" catalog, KM_CA_000246 Rev G, June 2021, supplied by
+  the user: [`docs/documentation/AMC-KM_CA_000246_RevG_EN-mobile.pdf`](../documentation/AMC-KM_CA_000246_RevG_EN-mobile.pdf).
+  Page numbers are the PDF pages, which match the printed numbers. Loop rates and Bode plot
+  tool: page 29. Model table (3 / 9 A) and the 15-pin D-sub feedback option: page 30. Type key:
+  page 174.
 - Kollmorgen AKD2G-S installation manual, Safety 1, beta edition December 2018, public copy:
   <https://servostar.ru/_uploads/offers/2c62531152/_pdf/AKD2G%20Installation%20Manual%20with%20FS1%20EN%20REV%20BETA.pdf>.
   Order code and options: page 31. Loop rates: pages 32 and 34. Supply and bus: page 35.
