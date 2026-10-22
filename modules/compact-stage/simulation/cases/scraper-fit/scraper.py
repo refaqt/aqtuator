@@ -21,7 +21,16 @@ GAP = 0.15                      # lip tip above the strip
 Z_TIP = Z_STRIP_TOP + GAP       # 40.40
 LIPS = [(0.0, 1.0), (2.0, 3.0)] # x ranges from the end face
 SCREW_X = 6.5
-SCREW_Y = [13.0, 59.0, 105.0, 151.0, 197.0]
+SCREW_Y = [11.0, 60.0, 105.0, 150.0, 199.0]
+# Sealing strip rollers in carriage-top: Ø10 x 20 mm, centre on the low edge of the slanted
+# face (x = 118.77), 1.5 mm below the underside, 70.5 mm each side of the centre line.
+ROLLER_X, ROLLER_Z, ROLLER_R, ROLLER_L = 118.77, 44.0, 5.0, 20.0
+ROLLER_Y = [105.0 - 70.5, 105.0 + 70.5]
+# Around each roller and its axle slot (y = 16 to 53 mm) the scraper is shorter.
+NOTCHES = [(15.0, 54.0), (156.0, 195.0)]
+NOTCH_LEN = 6.4                 # scraper length there, from the end face
+CUTTER_R = 2.0                  # end mill radius for the pocket corners
+SCRAPER_R = 2.5                 # rounded scraper corners, so they clear the milled ones
 # ISO 14581 M3 (Torx countersunk): dk 5.5, k 1.65, 90 deg
 DK, K, RECESS, D_CLR = 5.6, 1.65, 0.3, 3.4
 
@@ -36,9 +45,51 @@ def vol(s):
 def dist(a,b):
     d=BRepExtrema_DistShapeShape(a,b); d.Perform(); return d.Value()
 
+from OCP.BRepFilletAPI import BRepFilletAPI_MakeFillet
+from OCP.BRep import BRep_Tool as _BT
+from OCP.TopAbs import TopAbs_VERTEX
+from OCP.TopExp import TopExp
+
+def round_vertical_edges(shape, corners, r):
+    """Round the vertical edges that pass through the (x, y) points in corners."""
+    f = BRepFilletAPI_MakeFillet(shape); n = 0; seen = set()
+    ex = TopExp_Explorer(shape, TopAbs_EDGE)
+    while ex.More():
+        e = TopoDS.Edge(ex.Current()); ex.Next()
+        a = _BT.Pnt_s(TopExp.FirstVertex_s(e)); b = _BT.Pnt_s(TopExp.LastVertex_s(e))
+        if abs(a.X()-b.X()) < 1e-6 and abs(a.Y()-b.Y()) < 1e-6 and abs(a.Z()-b.Z()) > 1e-3:
+            key = (round(a.X(), 3), round(a.Y(), 3))
+            if key not in seen and any(abs(a.X()-x) < 1e-3 and abs(a.Y()-y) < 1e-3 for x, y in corners):
+                seen.add(key); f.Add(r, e); n += 1
+    f.Build()
+    return f.Shape(), n
+
+def outline(x_end, notch_x_end, grow):
+    """Plan shape of the scraper (grow = 0) or of the pocket (grow = CLR), as boxes."""
+    y0, y1 = P_Y0 + CLR - grow, P_Y1 - CLR + grow
+    parts = []; y = y0
+    for a, b in NOTCHES:
+        parts += [(y, a + grow, x_end), (a + grow, b - grow, notch_x_end)]; y = b - grow
+    parts.append((y, y1, x_end))
+    return parts
+
+def scraper_plate():
+    parts = outline(X0+P_LEN-CLR, X0+NOTCH_LEN, 0.0)
+    s = None
+    for ya, yb, xe in parts:
+        b = box(X0, ya, Z_PLATE_UNDER, xe, yb, Z_TOP_UNDER+P_DEPTH)
+        s = b if s is None else fuse(s, b)
+    xe = X0+P_LEN-CLR
+    corners = [(xe, P_Y0+CLR), (xe, P_Y1-CLR)] + [(xe, y) for a, b in NOTCHES for y in (a, b)]
+    from OCP.ShapeUpgrade import ShapeUpgrade_UnifySameDomain
+    u = ShapeUpgrade_UnifySameDomain(s, True, True, True); u.Build(); s = u.Shape()
+    s, n = round_vertical_edges(s, corners, SCRAPER_R)
+    assert n == len(corners), n
+    return s
+
 def scraper():
     y0,y1 = P_Y0+CLR, P_Y1-CLR
-    s = box(X0, y0, Z_PLATE_UNDER, X0+P_LEN-CLR, y1, Z_TOP_UNDER+P_DEPTH)
+    s = scraper_plate()
     for a,b in LIPS:
         s = fuse(s, box(X0+a, y0, Z_TIP, X0+b, y1, Z_PLATE_UNDER+0.01))
     for y in SCREW_Y:
@@ -50,7 +101,16 @@ def scraper():
     return s
 
 def pocket_cut():
-    p = box(X0-1, P_Y0, Z_TOP_UNDER-1, X0+P_LEN, P_Y1, Z_TOP_UNDER+P_DEPTH)
+    p = None
+    for ya, yb, xe in outline(X0+P_LEN, X0+NOTCH_LEN+CLR, CLR):
+        b = box(X0-1, ya, Z_TOP_UNDER-1, xe, yb, Z_TOP_UNDER+P_DEPTH)
+        p = b if p is None else fuse(p, b)
+    from OCP.ShapeUpgrade import ShapeUpgrade_UnifySameDomain
+    u = ShapeUpgrade_UnifySameDomain(p, True, True, True); u.Build(); p = u.Shape()
+    xe = X0+P_LEN
+    corners = [(xe, P_Y0), (xe, P_Y1)] + [(xe, y) for a, b in NOTCHES for y in (a+CLR, b-CLR)]
+    p, n = round_vertical_edges(p, corners, CUTTER_R)
+    assert n == len(corners), n
     for y in SCREW_Y:  # tap drill 2.5 mm, 10 mm deep from the pocket ceiling
         p = fuse(p, cyl(X0+SCREW_X, y, Z_TOP_UNDER+P_DEPTH-0.1, 1.25, 10.1))
     return p
@@ -63,3 +123,8 @@ def screws():
         h=fuse(h, cyl(x,y,zc+1.65,1.5,10-1.65))
         out.append(h)
     return out
+
+def rollers():
+    """The two top rollers at the start end, as plain cylinders along y."""
+    return [BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(ROLLER_X, y-ROLLER_L/2, ROLLER_Z), gp_Dir(0,1,0)),
+                                     ROLLER_R, ROLLER_L).Shape() for y in ROLLER_Y]

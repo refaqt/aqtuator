@@ -10,6 +10,9 @@ that screw up into the underside of carriage-top. Check that they fit.
 
 ## Short answer
 
+- **Version 2, later the same day, keeps clear of the new top rollers.** It has a cut-out at
+  each roller and keeps 0.77 mm to it. See the update below. The points here are for version 1
+  unless the update changes them.
 - **The scraper fits, with no collision.** It sits in a new pocket, 10 mm long, 198 mm wide and
   4.5 mm deep, cut up into the underside of carriage-top at each end. The pocket is open at the
   end face.
@@ -90,9 +93,42 @@ carriage-top CAD file yet.
 - **Are the magnet strips there?** If the magnets hold the strip less flat than assumed, the lips
   may touch. The plastic then wears in by itself. Check the strip for a track after the first run.
 
+## Update, later on 2026-10-22: version 2, clear of the top rollers
+
+Niels added pockets for the top rollers to carriage-top. The first scraper would have hit two
+rollers at each end. Version 2 keeps clear of them.
+
+- **How far the rollers stick out.** Each top roller is Ø10 × 20 mm. Its centre is on the low
+  edge of the slanted face, 12.2 mm from the carriage end face. It sticks out 1.5 mm below
+  carriage-top, so its lowest point is at z = 39.0 mm. That is 1.0 mm below the top of the base,
+  and 1.25 mm below the top of the strip where the strip lies flat. In plan, the roller starts
+  7.2 mm from the end face. The first scraper reached 9.8 mm, so it would have hit the roller.
+- **The scraper now has a cut-out at each roller.** Over y = 15 to 54 mm and 156 to 195 mm
+  (the roller and its axle slot), the scraper is 6.4 mm long instead of 9.8 mm. It keeps
+  0.77 mm to each roller. It may reach under the roller pockets, but not the rollers.
+- **The pocket in carriage-top follows the same shape.** It is 10 mm long, and 6.6 mm long at
+  the cut-outs. There it runs into the roller pocket, which is allowed. Next to the axle slot,
+  4.6 mm of aluminium stays. The inside corners have a radius of 2 mm, for a 4 mm end mill. The
+  scraper has a radius of 2.5 mm on the matching corners, so it fits past them.
+- **The screws moved away from the rollers**, to y = 11, 60, 105, 150 and 199 mm. They keep
+  10.8 mm to the nearest roller.
+- **The lips did not change.** They are 3 mm from the end face, in front of the roller pockets.
+- The 4.2 mm wall between the end face and each roller pocket is now cut away up to 4.5 mm
+  above the underside, under the scraper. The wall above it stays.
+
+![Section through a top roller](../../modules/compact-stage/simulation/results/scraper-fit/section-D-D_y34.5_roller.png)
+
+### New open question
+
+- **The top rollers reach 1.25 mm below the flat strip.** So each roller presses the strip down
+  into the slot of the base, next to where the strip rests on the base walls. Is that what you
+  want? If not, the roller must move up by at least 1.25 mm. The scraper is not affected,
+  because the strip then moves away from the lips.
+
 ## Next Steps
 
-- [ ] Add the pocket and the five M3 threaded holes to carriage-top in FreeCAD, at both ends.
+- [ ] Add the pocket (with the cut-outs at the rollers) and the five M3 threaded holes to
+      carriage-top in FreeCAD, at both ends.
 - [ ] Add the scraper as a part in CAD, and add it and the 10 screws to the parts list.
 - [ ] Design the sealing clamp so it stays out of the path of the scrapers.
 - [ ] Print one scraper in PETG with PTFE and check the gap on the real strip.
@@ -107,9 +143,17 @@ carriage-top CAD file yet.
   x = 121.6 to 301.6 mm.
 - The sealing strip part has no shape in its file. The case uses a box y = 12 to 198 mm,
   z = 40 to 40.25 mm.
-- Pocket (start end, assembly coordinates): x = 106.6 to 116.6, y = 6 to 204, z = 40.5 to 45.0.
-  Scraper: x = 106.6 to 116.4, y = 6.2 to 203.8, z = 40.40 to 45.0. Screws at x = 113.1,
-  y = 13, 59, 105, 151, 197.
+- Version 1 (before the roller pockets): pocket x = 106.6 to 116.6, y = 6 to 204,
+  z = 40.5 to 45.0; screws at x = 113.1, y = 13, 59, 105, 151, 197.
+- Version 2: the same pocket, but only to x = 113.2 at y = 15.2 to 53.8 and 156.2 to 194.8;
+  inside corners R 2 mm. Scraper x = 106.6 to 116.4 (to 113.0 at y = 15 to 54 and 156 to 195),
+  y = 6.2 to 203.8, z = 40.40 to 45.0, corners R 2.5 mm. Screws at x = 113.1, y = 11, 60, 105,
+  150, 199.
+- Top roller model: cylinder Ø10 × 20 mm along y, axis at x = 118.77, z = 44.0,
+  y = 34.5 ± 10 and 175.5 ± 10. Read from carriage-top: roller pocket x = 110.77 to 126.77,
+  y = 24 to 45, 11 mm deep; axle slot x = 117.77 to 125.77, y = 16 to 53, 4.5 mm deep. The
+  slot starts 1 mm on the end side of the roller centre, and the roller sticks out 1.5 mm, as
+  in the log of the roller pockets.
 - ISO 14581 M3: head 5.5 mm, head height 1.65 mm. The screw model is simplified.
 - Strip lift point: estimated with a circular bend of R 35 to 60 mm onto the 19.4° slope of
   carriage-bottom. R 35 mm is the tightest radius from the seal strip designer page; R 60 mm is

@@ -23,6 +23,11 @@ checks = [
     ('scraper to base [mm]', dist(sc, base), None),
     ('lip tip to strip [mm]', dist(sc, strip), None),
     ('screw head to strip [mm]', min(dist(s, strip) for s in screws()), None),
+    ('rollers overlap carriage-top (roller model check) [mm3]', sum(vol(common(r, top)) for r in rollers()), 0.0),
+    ('roller to carriage-bottom (log of 2026-10-22: 0.32) [mm]', min(dist(r, bot) for r in rollers()), None),
+    ('scraper overlaps the rollers [mm3]', sum(vol(common(sc, r)) for r in rollers()), 0.0),
+    ('scraper to the rollers [mm]', min(dist(sc, r) for r in rollers()), None),
+    ('screws to the rollers [mm]', min(dist(s, r) for s in screws() for r in rollers()), None),
 ]
 for name, value, must in checks:
     print(f'{name:50s} {value:8.3f}')

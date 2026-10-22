@@ -30,3 +30,16 @@ for a in axs: a.set_xlabel('y [mm] (across the stage)'); a.set_ylabel('z [mm]')
 axs[1].annotate('strip edge (strip 186 mm wide assumed)',(12,40.25),(18,40.9),arrowprops=dict(arrowstyle='->'),fontsize=8)
 axs[0].legend(loc='upper center',bbox_to_anchor=(0.5,-0.32),fontsize=8,ncol=5)
 fig.tight_layout(); fig.savefig(OUT+'/section-B-B_C-C_x.png',dpi=150)
+
+# 3) Section at y = 34.5 (through a top roller): x-z view
+fig,axs=plt.subplots(2,1,figsize=(11,9))
+y=ROLLER_Y[0]
+sec_plot(axs[0],(0,y,0),(0,1,0),0,2,(100,160),(36,62),f'Section D-D at y = {y} mm (through a top roller), side view x-z. The strip is drawn flat; the roller presses it down.')
+sec_plot(axs[1],(0,y,0),(0,1,0),0,2,(104.5,125.5),(38.4,50),'Section D-D, detail: the scraper is shorter here and keeps 0.77 mm to the roller')
+a=axs[1]; kw=dict(arrowprops=dict(arrowstyle='->',lw=.7),fontsize=8)
+a.annotate('roller pocket in carriage-top',(124,49),(119.8,49.3),**kw)
+a.annotate('roller bottom z = 39.0 mm:\n1.5 mm below carriage-top,\n1.0 mm below the base top',(118.77,39.0),(119.6,46.6),**kw)
+a.annotate('scraper ends 6.4 mm\nfrom the end face',(113.0,43),(107.3,46.6),**kw)
+a.set_xlabel('x [mm] (travel direction)'); a.set_ylabel('z [mm]')
+axs[0].legend(loc='upper right',fontsize=8)
+fig.tight_layout(); fig.savefig(OUT+'/section-D-D_y34.5_roller.png',dpi=150)

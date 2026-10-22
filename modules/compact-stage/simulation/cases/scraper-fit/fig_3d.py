@@ -34,20 +34,24 @@ def show(ax,items,elev,azim,lims):
     ax.set_xlim(x0,x1);ax.set_ylim(y0,y1);ax.set_zlim(z0,z1); ax.set_box_aspect((x1-x0,y1-y0,z1-z0))
     ax.view_init(elev,azim); ax.set_xlabel('x');ax.set_ylabel('y');ax.set_zlabel('z')
 
-# A: one end of the scraper from below, and from above
-seg=common(sc,box(100,0,30,130,62,61))
-fig=plt.figure(figsize=(13,6))
-for k,(el,az,t) in enumerate([(-35,-60,'from below: the two lips and the countersunk screw holes'),(35,-60,'from above: the flat face that rests on the pocket ceiling')]):
-    ax=fig.add_subplot(1,2,k+1,projection='3d')
-    show(ax,[(seg,'#e8833a',1)],el,az,((104,120),(5,62),(39,47)))
-    ax.set_axis_off(); ax.set_title('Scraper, first 55 mm, '+t,fontsize=9)
-fig.suptitle('Printed scraper (one part per carriage end, 197.6 x 9.8 x 4.6 mm)',fontsize=11)
-fig.tight_layout(); fig.savefig(OUT+'/3d_scraper_from_below.png',dpi=150)
+from raster import render
+def rgb(c): return matplotlib.colors.to_rgb(c)
+def picture(items, elev, azim, title, path, size=(1400, 900)):
+    img = render([(tris(sh), rgb(c)) for sh, c in items], elev, azim, size)
+    fig = plt.figure(figsize=(size[0]/150, size[1]/150+0.5)); ax = fig.add_axes([0, 0, 1, size[1]/(size[1]+75)])
+    ax.imshow(img); ax.axis('off'); fig.suptitle(title, fontsize=10); fig.savefig(path, dpi=150); plt.close(fig)
 
-# B: cut-away of the carriage corner from below: x 100..140, y 0..45
-clipbox=box(95,-1,30,140,45,61)
-items=[(common(top2,clipbox),'#b9c9a8',1),(common(bot,clipbox),'#9fb7d9',1),(common(sc,clipbox),'#e8833a',1)]+[(common(s,clipbox),'#7a5c99',1) for s in scr[:1]]
-fig=plt.figure(figsize=(11,8)); ax=fig.add_subplot(111,projection='3d')
-show(ax,items,-30,-50,((100,140),(0,45),(30,61))); ax.set_axis_off()
-ax.set_title('Carriage corner at the start end, seen from below (base and strip hidden).\nThe scraper sits in a pocket in carriage-top; carriage-bottom (blue) starts 5 mm behind it.',fontsize=10)
-fig.tight_layout(); fig.savefig(OUT+'/3d_corner_from_below.png',dpi=150)
+# A: one end of the scraper from below and from above
+seg = common(sc, box(100, 0, 30, 130, 70, 61))
+picture([(seg, '#e8833a')], -40, -125, 'Scraper v2, first 64 mm, from below: two lips, countersunk screw holes, and the cut-out at the roller',
+        OUT+'/3d_scraper_from_below.png')
+picture([(seg, '#e8833a')], 40, -125, 'Scraper v2, first 64 mm, from above: the flat face that rests on the pocket ceiling',
+        OUT+'/3d_scraper_from_above.png')
+
+# B: carriage-top corner with the scraper and the top roller, from below
+clipbox = box(95, -1, 30, 140, 58, 61)
+items = [(common(top2, clipbox), '#b9c9a8'), (sc_clip := common(sc, clipbox), '#e8833a'), (rol[0], '#1f5fa8')] + \
+        [(common(s, clipbox), '#7a5c99') for s in scr[:2]]
+picture(items, -40, -125, 'Carriage-top corner at the start end, from below (base, strip and carriage-bottom hidden).\n'
+        'Orange: scraper. Blue: top roller in its pocket. Purple: screws. The scraper is shorter where it passes the roller.',
+        OUT+'/3d_corner_from_below.png')
