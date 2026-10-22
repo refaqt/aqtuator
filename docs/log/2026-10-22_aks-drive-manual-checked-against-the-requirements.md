@@ -78,12 +78,17 @@ The AKS reads both, so the drive does not decide the encoder. Two points to weig
 
 ## Decisions Made
 
-No purchase decision. The AKS-4D52AECAB is the drive to ask a price for. It is still
-"not confirmed" on DRV-09 and DRV-P3.
+No purchase decision. On paper, the AKS-4D52AECAB is the AKS drive to ask a price for. It is
+still "not confirmed" on DRV-09 and DRV-P3.
+
+Later the same day, the user put DGSMARTWIN on hold. We do not send the price request or the
+questions below for now. Reason: their emails and their documents are not clear. Examples are the
+missing loop rates, the frequency sweep marked "not supported" in one place and shown in another,
+and pages with broken text. The user sees this as a warning sign about the supplier.
 
 ## Open Questions
 
-Send these with the price request:
+Send these with the price request, if the user takes DGSMARTWIN off hold:
 
 1. What are the current, speed and position loop rates of the AKS-4D52AECAB?
 2. Is the speed loop frequency sweep (section 9.6.1) available in the current Drive Studio?
@@ -95,8 +100,10 @@ Send these with the price request:
 
 ## Next Steps
 
-- Ask DGSMARTWIN (win@dgsmartwin.com) for a price for the AKS-4D52AECAB, with the questions above.
-- Count the drive as a pass only after a written position loop rate of 4 kHz or more.
+- On hold: no request to DGSMARTWIN for now.
+- Look at the other drive candidates on the [servo drive selection page](../servo-drive-selection.md).
+- If DGSMARTWIN comes back into play, count the drive as a pass only after a written position
+  loop rate of 4 kHz or more.
 
 <details>
 <summary>Sources</summary>
