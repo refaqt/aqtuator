@@ -369,11 +369,11 @@
     "Sketch002": {
       "area": 0.0,
       "bbox": [
-        67.25,
-        65.25,
+        67.2589,
+        65.2522,
         10.0,
         72.75,
-        70.75,
+        70.7478,
         10.0
       ],
       "closed": true,
@@ -473,6 +473,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "d11131ed8d7c5159305632b21db14819649567ffcd9c5583c849372d1d581c56"
+    "base.FCStd": "fe742e235f1d7a7bc819a3ccfb5ce79b8cba2818ff03cfc6ab4087f54e8122f7"
   }
 }

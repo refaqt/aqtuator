@@ -331,10 +331,11 @@ package CompactStage {
          * They follow other parts, so change them when those parts
          * change:
          *
-         * - x = Params.scale_start_x (351 mm): centres the 220 mm
+         * - x = Params.scale_start_x (361 mm): centres the 240 mm
          *   measuring length on the path of the head sensor between the
          *   two damper contacts (x = 120.8 to 342.8 mm). The tape then
-         *   lies from x = 111 to 351 mm.
+         *   lies from x = 101 to 361 mm, and the measuring length from
+         *   x = 111.8 to 351.8 mm.
          * - z = Params.scale_centre_z (34 mm): the sensor line of the
          *   head, 6 mm below the ceiling of its pocket in the carriage.
          *   The tape lies from z = 30 to 38 mm, under the top of the wall
@@ -358,13 +359,13 @@ package CompactStage {
          * assembly gives a gap of 0.55 mm and no sideways offset.
          *
          * Over the travel between the two damper contacts (222 mm), the
-         * sensor runs 1 mm past each end of the 220 mm measuring length.
-         * With the dampers fully pressed, it is 8 mm. Keep the working
-         * travel inside the measuring length with the limit switches.
+         * sensor stays 9 mm inside each end of the 240 mm measuring
+         * length. With the dampers fully pressed (236 mm), it stays 2 mm
+         * inside each end. The head reads over the full travel.
          */
         attribute gap : LengthValue = 0.55 [mm];
         attribute gapTolerance : LengthValue = 0.25 [mm];
-        attribute measuringLength : LengthValue = 220 [mm];
+        attribute measuringLength : LengthValue = 240 [mm];
     }
 
     port def DamperMountInterface_v1 {
@@ -477,8 +478,8 @@ package CompactStage {
     part def Scale {
         doc /*
          * The bought steel tape scale of the linear encoder: RSF MC 15 MK,
-         * 220 mm measuring length, 240 mm long, with adhesive tape.
-         * Bought: stoq:rsf/mc15-mk-scale#MB-MC15-MK-ML220. The stage has
+         * 240 mm measuring length, 260 mm long, with adhesive tape.
+         * Bought: stoq:rsf/mc15-mk-scale#MB-MC15-MK-ML240. The stage has
          * one.
          */
         port baseMount : ~ScaleMountInterface_v2;
