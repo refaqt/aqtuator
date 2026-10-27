@@ -59,7 +59,10 @@ and no parts may touch.
 ## Next Steps
 
 1. Set the limit switches so the carriage stays inside the 220 mm measuring length. Or order a
-   longer tape, if the full 222 mm must be measured.
+   longer tape, if the full 222 mm must be measured. Closed on 27 October 2026. The stage now
+   uses the 240 mm tape, which covers the full travel. The limit switches no longer need to stop
+   the carriage inside the measuring length. See
+   [the 240 mm tape log](2026-10-27_rsf-ml240-tape.md).
 2. Ask RSF for the ID number of the head with a 0.5 m cable (still open from the library work).
 3. The sealing strip and the two sealing clamps have no geometry yet, so the collision check
    could not include them. Check them when they are drawn.
