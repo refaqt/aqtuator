@@ -173,3 +173,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-22 | [Roller pockets back on the slope edge, and thicker walls at the read head](2026-10-22_roller-pockets-on-the-slope-edge.md) | cad |  |
 | 2026-10-22 | [Roller pockets in the top carriage, linked to the bottom carriage](2026-10-22_roller-pockets-in-the-top-carriage.md) | cad |  |
 | 2026-10-22 | [A printed scraper at each end of the carriage](2026-10-22_scraper-at-the-carriage-ends.md) | cad, engineering | 1 |
+| 2026-10-27 | [The RSF MC 15 encoder replaces the LAMOTION encoder in the compact stage](2026-10-27_rsf-encoder-in-the-compact-stage.md) | cad, architecture |  |

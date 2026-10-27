@@ -38,7 +38,7 @@
 // file, with their interfaces to the base. The four guide blocks and the
 // forcer (the coil part of the motor) are in this file, with their
 // interfaces to carriage-bottom. The linear encoder is in this file too: the
-// read head on carriage-bottom, the scale and its end clamps on the base.
+// read head on carriage-bottom, the scale on the base.
 // Not modelled yet: the rollers and the screws. When they enter this file,
 // they bring their own interfaces: for example roller to sealing strip.
 //
@@ -264,99 +264,107 @@ package CompactStage {
         attribute statorPitch : LengthValue = 180 [mm];
     }
 
-    port def ReadheadMountInterface_v1 {
+    port def ReadheadMountInterface_v2 {
         doc /*
          * The read head of the linear encoder screws to the bottom of
          * carriage-bottom. It hangs in a pocket on the side of the second
-         * rail, with its window facing the side wall of the base. The top
-         * side face of the head touches the ceiling of the pocket.
+         * rail, with its scanning face towards the side wall of the base.
+         * The 13.5 mm side face of the head touches the ceiling of the
+         * pocket. The cable leaves the head towards the end of the base
+         * (-X), the way the pocket leaves room for it.
          *
-         * The pocket is 16 mm deep, so the 16.5 mm wide head hangs only
-         * 0.5 mm below the carriage. Its bottom stays 1 mm above the top
-         * of the second rail. The pocket is 38 mm long, and the head is
-         * 36 mm long and centred in it: 1 mm of space at each end.
+         * The pocket is 16 mm deep and the head is 13.5 mm, so the head
+         * sits 2.5 mm inside the carriage. It stays 1 mm away from the
+         * base and 4 mm away from the second rail. The pocket is 38 mm
+         * long, and the head is 36 mm long and centred in it: 1 mm of
+         * space at each end.
          *
-         * Two M3 screws go down through the carriage into the side of the
-         * head. Each hole has a counterbore on the top face of the
-         * carriage. The LAMOTION data sheet (page 9) asks for more than
-         * 8 mm of screw in the head, and 0.7 to 0.9 Nm.
+         * Two M3 screws go down through the carriage into the head. The
+         * two holes of the head are M3 threads through its full 13.5 mm.
+         * Each hole in the carriage has a counterbore on its top face.
+         * The screw passes 8.1 mm of carriage, so an M3 x 16 screw has
+         * about 7.9 mm of thread in the head. RSF allows at most 1.2 Nm
+         * (AK MC 15 mounting instructions, page 9). The parts library
+         * reads at least 4 mm of thread from page 10; that page is a
+         * drawing and was not checked again here.
          *
-         * The holes are 26 mm apart, as in the head. Their axes are
-         * 3.2 mm from the step face of the carriage at x = 17 mm. In the
-         * head they are 3 mm from the window face, so the window face sits
-         * 0.2 mm inside the step face. That gives the gap of
-         * ScaleReadInterface_v1. Along the travel, the midpoint of the
+         * The holes are 26 mm apart, as in the head (RSF drawing
+         * D1158017-04). Their axes are 3.0 mm from the step face of the
+         * carriage at x = 17 mm (Sketch031 readhead_hole_inset). In the
+         * head they are 3 mm from the scanning face, so the scanning face
+         * is flush with the step face. That gives the gap of
+         * ScaleReadInterface_v2. Along the travel, the midpoint of the
          * holes is 1 mm from the middle of the pocket, because the holes
-         * of the head are 12 mm and 14 mm from its centre (data sheet
-         * page 9). The holes are 3.4 mm, so the head can
-         * move 0.2 mm each way: set the gap with a 0.8 mm feeler gauge
-         * before you tighten the screws.
+         * are 4 mm and 6 mm from the two ends of the head. The holes are
+         * 3.4 mm, so the head can move 0.2 mm each way: set the gap with
+         * the 0.55 mm gap foil that comes with the head before you
+         * tighten the screws.
          *
          * In the CAD, the frame IF_readhead_mount sits on the ceiling of
          * the pocket, midway between the two holes. Z points down, into
          * the head. X runs along the travel, towards the start of the
-         * carriage. It joins the frame IF_mount_side of the head.
+         * carriage. It joins the frame IF_mount_top of the head, with the
+         * joint turned 180 degrees about Z, so the cable points to -X.
          */
         attribute holePitch : LengthValue = 26 [mm];
         attribute screwCount : Natural = 2;
     }
 
-    port def ScaleMountInterface_v1 {
+    port def ScaleMountInterface_v2 {
         doc /*
          * The steel tape scale of the linear encoder sticks with its
-         * adhesive backing to the inside face of the side wall of the
-         * base, on the side of the second rail (y = 17 mm). LAMOTION asks
-         * for its mounting tool, and for 24 hours before calibration
-         * (data sheet page 9).
+         * adhesive tape to the inside face of the side wall of the base,
+         * on the side of the second rail (y = 17 mm). It needs no end
+         * clamps. Stick it on with the RSF TMT Mx 15 MK mounting tool.
+         * The wall face must be flat within 0.1 mm and parallel to the
+         * guide rails within 0.2 mm (RSF drawing D1158017-04).
+         *
+         * The tape runs towards -X: its ascending positions point to the
+         * end of the base, the same way as the head cable.
          *
          * In the CAD, the frame IF_scale_mount sits on the wall face, at
-         * the start of the scale. Z points out of the wall, into the
-         * scale. X runs along the travel. It joins the frame
-         * IF_mount_bottom of the scale.
+         * the start of the tape. Z points out of the wall, into the
+         * scale. X points to -X. It joins the frame IF_mount_bottom of
+         * the scale.
          *
-         * Two values of the frame follow other parts, and are typed for
-         * now. Change them when those parts change:
+         * Two values of the frame are in the Params sheet of the base.
+         * They follow other parts, so change them when those parts
+         * change:
          *
-         * - x = Params.scale_start_x (95.3 mm): over the travel, the read
-         *   window of the head runs on the middle of the clean part of the
-         *   scale (14 mm to 256 mm from its start).
-         * - z = 31.75 mm: the centre line of the head, set by the height
-         *   of the carriage and the depth of its head pocket. The end
-         *   clamps then reach up to z = 39.25 mm, 0.75 mm below the top
-         *   of the wall.
+         * - x = Params.scale_start_x (351 mm): centres the 220 mm
+         *   measuring length on the path of the head sensor between the
+         *   two damper contacts (x = 120.8 to 342.8 mm). The tape then
+         *   lies from x = 111 to 351 mm.
+         * - z = Params.scale_centre_z (34 mm): the sensor line of the
+         *   head, 6 mm below the ceiling of its pocket in the carriage.
+         *   The tape lies from z = 30 to 38 mm, under the top of the wall
+         *   at 40 mm.
          */
     }
 
-    port def ScaleReadInterface_v1 {
+    port def ScaleReadInterface_v2 {
         doc /*
-         * The read head reads the scale without touching it. The LAMOTION
-         * data sheet (page 9) gives the limits:
+         * The read head reads the scale without touching it. The RSF
+         * drawing D1158017-04 gives the limits:
          *
-         * - the gap from the top of the scale to the window face of the
-         *   head is 0.8 +/- 0.15 mm;
-         * - the edge of the scale is 4.25 +/- 1 mm from the side face of
-         *   the head;
-         * - roll, pitch and yaw are each within +/- 0.5 degrees.
+         * - the air gap from the top of the tape to the scanning face of
+         *   the head is 0.55 +/- 0.25 mm;
+         * - the sideways offset of the tape is within +/- 1 mm;
+         * - roll, pitch and yaw are each within +/- 20 mrad.
          *
-         * In the CAD, the frame IF_scale of the head and the frame
-         * IF_head of the scale have the same height and the same
-         * direction. They differ only along the travel. The assembly
-         * gives a gap of 0.80 mm.
+         * In the CAD, the frame IF_scale of the head and the frames
+         * IF_ml_start and IF_ml_end of the scale have the same height and
+         * the same direction. They differ only along the travel. The
+         * assembly gives a gap of 0.55 mm and no sideways offset.
+         *
+         * Over the travel between the two damper contacts (222 mm), the
+         * sensor runs 1 mm past each end of the 220 mm measuring length.
+         * With the dampers fully pressed, it is 8 mm. Keep the working
+         * travel inside the measuring length with the limit switches.
          */
-        attribute gap : LengthValue = 0.8 [mm];
-        attribute gapTolerance : LengthValue = 0.15 [mm];
-    }
-
-    port def ScaleClampInterface_v1 {
-        doc /*
-         * A pair of end clamps holds the two ends of the scale. Each clamp
-         * lies on the same wall face as the scale, with the scale end in
-         * the notch of its backing. How the clamps fix to the wall is not
-         * confirmed: LAMOTION gives no method in the data sheet.
-         *
-         * In the CAD, the frame IF_scale_start of the clamp pair joins
-         * the frame IF_mount_bottom of the scale.
-         */
+        attribute gap : LengthValue = 0.55 [mm];
+        attribute gapTolerance : LengthValue = 0.25 [mm];
+        attribute measuringLength : LengthValue = 220 [mm];
     }
 
     port def DamperMountInterface_v1 {
@@ -396,7 +404,7 @@ package CompactStage {
         port secondRailMount : RailMountInterface_v1;
         port firstStatorMount : StatorMountInterface_v1;
         port secondStatorMount : StatorMountInterface_v1;
-        port scaleMount : ScaleMountInterface_v1;
+        port scaleMount : ScaleMountInterface_v2;
         port damperAStartStop : DamperStopInterface_v1;
         port damperBStartStop : DamperStopInterface_v1;
         port damperAEndStop : DamperStopInterface_v1;
@@ -429,7 +437,7 @@ package CompactStage {
         port blockBStartMount : BlockMountInterface_v1;
         port blockBEndMount : BlockMountInterface_v1;
         port forcerMount : ForcerMountInterface_v1;
-        port readheadMount : ReadheadMountInterface_v1;
+        port readheadMount : ReadheadMountInterface_v2;
         port damperAStartMount : DamperMountInterface_v1;
         port damperBStartMount : DamperMountInterface_v1;
         port damperAEndMount : DamperMountInterface_v1;
@@ -457,33 +465,24 @@ package CompactStage {
 
     part def ReadHead {
         doc /*
-         * The bought read head of the linear encoder: LAMOTION
-         * AL32B050-30MUL, absolute, BiSS-C, 50 nm, with a 3 m cable out of
-         * the end. It comes from the parts library in modules/stoq/. The
-         * stage has one.
+         * The bought read head of the linear encoder: RSF AK MC 15 B,
+         * absolute, BiSS C, 0.1 um, 36 x 13.5 x 14.8 mm, with a 0.5 m
+         * cable out of the end and a 15-pin D-sub connector. Bought:
+         * stoq:rsf/mc15-readhead#AK-MC15-B-0.5M-SUBD15. The stage has one.
          */
-        port carriageMount : ~ReadheadMountInterface_v1;
-        port scaleRead : ~ScaleReadInterface_v1;
+        port carriageMount : ~ReadheadMountInterface_v2;
+        port scaleRead : ~ScaleReadInterface_v2;
     }
 
     part def Scale {
         doc /*
-         * The bought steel tape scale of the linear encoder: LAMOTION
-         * ALZ00270G, 270 mm long, with adhesive backing. It comes from the
-         * parts library in modules/stoq/. The stage has one.
+         * The bought steel tape scale of the linear encoder: RSF MC 15 MK,
+         * 220 mm measuring length, 240 mm long, with adhesive tape.
+         * Bought: stoq:rsf/mc15-mk-scale#MB-MC15-MK-ML220. The stage has
+         * one.
          */
-        port baseMount : ~ScaleMountInterface_v1;
-        port headRead : ScaleReadInterface_v1;
-        port clamps : ScaleClampInterface_v1;
-    }
-
-    part def ScaleClamps {
-        doc /*
-         * The bought pair of end clamps for the scale: LAMOTION RUS-ET-A-B.
-         * It comes from the parts library in modules/stoq/. The stage has
-         * one pair.
-         */
-        port scale : ~ScaleClampInterface_v1;
+        port baseMount : ~ScaleMountInterface_v2;
+        port headRead : ScaleReadInterface_v2;
     }
 
     part def CarriageTop {
@@ -566,7 +565,6 @@ package CompactStage {
         part forcer : Forcer;
         part readHead : ReadHead;
         part scale : Scale;
-        part scaleClamps : ScaleClamps;
         part damperAStart : EndStopDamper;
         part damperBStart : EndStopDamper;
         part damperAEnd : EndStopDamper;
@@ -607,7 +605,6 @@ package CompactStage {
         connect carriageBottom.readheadMount to readHead.carriageMount;
         connect base.scaleMount to scale.baseMount;
         connect scale.headRead to readHead.scaleRead;
-        connect scale.clamps to scaleClamps.scale;
 
         // DamperMount: one TA17-7 damper at each corner of the carriage ends
         connect carriageBottom.damperAStartMount to damperAStart.mount;
