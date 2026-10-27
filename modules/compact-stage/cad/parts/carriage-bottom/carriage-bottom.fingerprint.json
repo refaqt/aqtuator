@@ -1461,16 +1461,16 @@
     "Sketch031": {
       "area": 0.0,
       "bbox": [
-        18.7,
+        18.5,
         64.5109,
         27.5,
-        21.7,
+        21.5,
         93.4891,
         27.5
       ],
       "closed": true,
       "com": [
-        20.2,
+        20.0,
         79.0,
         27.5
       ],
@@ -1885,7 +1885,7 @@
         "type": "Sketcher::SketchObject",
         "unlinked": [
           "Constraint4 (DistanceY) is a typed number: 26 mm",
-          "Constraint6 (Distance) is a typed number: 3.2 mm",
+          "readhead_hole_inset (Distance) is a typed number: 3 mm",
           "Constraint9 (Diameter) is a typed number: 3 mm"
         ]
       },
@@ -1917,6 +1917,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "f1e39dd207932b7b28f3b3641cacef77d4bf4327642e6f012d1aa0ec34b409d2"
+    "carriage-bottom.FCStd": "4990537e9af3d29397e0684eb1b47ec333cdeee1ce19a72d618524f8de0a1b4f"
   }
 }

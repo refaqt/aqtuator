@@ -2,64 +2,36 @@
   "document": "compact_stage",
   "errors": [],
   "objects": {
-    "AL32B050_30MUL": {
-      "area": 5657.01,
+    "AK_MC15_B_0_5M_SUBD15": {
+      "area": 2791.11,
       "bbox": [
-        187.059,
-        18.2,
-        23.5,
+        186.503,
+        18.0,
+        26.5,
         239.603,
-        36.6,
+        32.8,
         40.0
       ],
       "closed": true,
       "com": [
-        221.136,
-        27.5042,
-        31.7439
+        220.864,
+        25.5089,
+        33.2493
       ],
       "counts": {
-        "edges": 258,
-        "faces": 104,
-        "shells": 5,
-        "solids": 5,
-        "verts": 169
+        "edges": 266,
+        "faces": 103,
+        "shells": 1,
+        "solids": 1,
+        "verts": 172
       },
-      "label": "AL32B050-30MUL",
+      "label": "AK-MC15-B-0.5M-SUBD15",
       "type": "App::Link",
       "valid": true,
-      "volume": 10482.2
-    },
-    "ALZ00270G": {
-      "area": 8322.0,
-      "bbox": [
-        97.3,
-        17.0,
-        27.75,
-        367.3,
-        17.4,
-        35.75
-      ],
-      "closed": true,
-      "com": [
-        232.3,
-        17.2067,
-        31.75
-      ],
-      "counts": {
-        "edges": 24,
-        "faces": 12,
-        "shells": 2,
-        "solids": 2,
-        "verts": 16
-      },
-      "label": "ALZ00270G",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 810.0
+      "volume": 7010.7
     },
     "Assembly": {
-      "area": 642170.0,
+      "area": 635906.0,
       "bbox": [
         0.0,
         0.0,
@@ -70,21 +42,21 @@
       ],
       "closed": true,
       "com": [
-        216.099,
-        104.543,
-        25.557
+        216.09,
+        104.646,
+        25.5528
       ],
       "counts": {
-        "edges": 6235,
-        "faces": 2396,
-        "shells": 59,
-        "solids": 23,
-        "verts": 4066
+        "edges": 6171,
+        "faces": 2367,
+        "shells": 53,
+        "solids": 17,
+        "verts": 4021
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 2850830.0
+      "volume": 2846930.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -141,6 +113,34 @@
       "type": "App::Link",
       "valid": true,
       "volume": 66577.0
+    },
+    "MB_MC15_MK_ML220": {
+      "area": 6942.4,
+      "bbox": [
+        111.0,
+        17.0,
+        30.0,
+        351.0,
+        17.45,
+        38.0
+      ],
+      "closed": true,
+      "com": [
+        231.0,
+        17.2406,
+        34.0
+      ],
+      "counts": {
+        "edges": 24,
+        "faces": 12,
+        "shells": 2,
+        "solids": 2,
+        "verts": 16
+      },
+      "label": "MB-MC15-MK-ML220",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 768.0
     },
     "MK21": {
       "area": 31715.6,
@@ -337,34 +337,6 @@
       "type": "App::Link",
       "valid": true,
       "volume": 29025.2
-    },
-    "RUS_ET_A_B": {
-      "area": 2019.23,
-      "bbox": [
-        79.3,
-        17.0,
-        24.25,
-        385.3,
-        17.5,
-        39.25
-      ],
-      "closed": true,
-      "com": [
-        232.3,
-        17.2616,
-        31.75
-      ],
-      "counts": {
-        "edges": 72,
-        "faces": 28,
-        "shells": 2,
-        "solids": 2,
-        "verts": 48
-      },
-      "label": "RUS-ET-A-B",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 386.966
     },
     "TA17_7_a_end": {
       "area": 1734.26,
@@ -571,6 +543,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "0cbfc512af49c7fedbd54d68ba8870236127f0434c3d13b96e6b52b65dc94521"
+    "compact-stage.FCStd": "17f3e63a95db9715cda03aa6bad535ba0c7a797453bbf461f4f9191b96cfc9a7"
   }
 }
