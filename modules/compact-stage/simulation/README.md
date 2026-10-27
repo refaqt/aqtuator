@@ -7,6 +7,7 @@ build them. Studies that are not about one stage family stay in the repository-w
 | Case | Tool | Question |
 | --- | --- | --- |
 | [`carriage-bottom-deflection`](cases/carriage-bottom-deflection/) | FreeCAD 1.1 (Gmsh, CalculiX) | How much does the bottom carriage bend under a load on its top, and how high is the stress? (Blocks taken as rigid, one load case.) |
+| [`scraper-fit`](cases/scraper-fit/) | Python with cadquery-ocp (no FreeCAD) | Does a printed scraper with M3 countersunk screws fit at each end of carriage-top, and how close does it come to the seal strip? |
 
 Results summaries belong in `results/<case-slug>/summary.md`. Heavy outputs
 (`results/<case>/exports/`) are gitignored.
