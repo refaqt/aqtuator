@@ -179,3 +179,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-28 | [How to close the gap at the sides of the carriage](2026-10-28_side-seal-of-the-carriage.md) | engineering, cad | 2 |
 | 2026-10-28 | [Seal strip page updated to the current carriage, with the channel and friction](2026-10-28_strip-seal-designer-current-layout.md) | engineering, simulation, software |  |
 | 2026-10-28 | [Seal strip page: the plastic strip on the ceiling is now a short pad](2026-10-28_strip-seal-short-ceiling-pad.md) | engineering, simulation, software |  |
+| 2026-10-28 | [Seal strip rollers on flanged ball bearings, in the assembly](2026-10-28_seal-strip-rollers-in-the-assembly.md) | engineering, cad, architecture, purchasing |  |

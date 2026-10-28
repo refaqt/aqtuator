@@ -1,0 +1,6 @@
+alias,value,unit,basis,source,description
+roller_d,10,mm,design,docs/decisions/2026-10-28_seal-strip-rollers-on-flanged-ball-bearings.md,Outside diameter of a seal strip roller. The same as roller_d in carriage-bottom Sketch013
+roller_l,20,mm,design,docs/decisions/2026-10-28_seal-strip-rollers-on-flanged-ball-bearings.md,Length of a seal strip roller over the two bearing flanges. The same as roller_l in carriage-bottom Sketch013
+bearing_d_out,6,mm,catalogue,stoq:nsk/miniature-flanged-metric#F692ZZ outer_d,Outside diameter of the F692ZZ bearing: the hole of the sleeve
+bearing_flange_w,0.8,mm,catalogue,stoq:nsk/miniature-flanged-metric#F692ZZ flange_c1,Width of the F692ZZ flange. The flange rests on the end of the sleeve
+sleeve_l,=roller_l - 2 * bearing_flange_w,mm,,,Length of the sleeve: the roller length without the two flanges

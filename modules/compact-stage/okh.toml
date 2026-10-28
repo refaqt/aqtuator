@@ -47,3 +47,23 @@ source = ["cad/parts/sealing-clamp/sealing-clamp.FCStd"]
 bom   = "MEC-001"
 part  = "stoq:ace/ta-damper#TA17-7"
 sysml = "EndStopDamper"
+
+[[part]]
+name   = "Roller Sleeve"
+source = ["cad/parts/roller-sleeve/roller-sleeve.FCStd"]
+sysml  = "RollerSleeve"
+
+[[bought-part]]
+bom   = "MEC-002"
+part  = "stoq:nsk/miniature-flanged-metric#F692ZZ"
+sysml = "RollerBearing"
+
+[[bought-part]]
+bom   = "MEC-003"
+part  = "stoq:iso/iso-8734#2X28-A"
+sysml = "RollerAxle"
+
+[[bought-part]]
+bom   = "MEC-004"
+part  = "stoq:iso/iso-7092#2-200HV-A2"
+sysml = "RollerWasher"

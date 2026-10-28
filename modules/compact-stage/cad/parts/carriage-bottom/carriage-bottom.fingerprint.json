@@ -10,7 +10,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -262,7 +262,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -822,7 +822,7 @@
         0.0,
         208.0,
         180.0,
-        27.5006
+        27.5
       ],
       "closed": true,
       "com": [
@@ -1600,7 +1600,7 @@
     }
   },
   "parametric": {
-    "audited": 66,
+    "audited": 70,
     "objects": {
       "Hole": {
         "label": "Hole",
@@ -1975,6 +1975,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "c2844053b10bc871940f21a0d361f317abed9b1f4938aed0185dfad4ec310e16"
+    "carriage-bottom.FCStd": "298eba60b9b64a555852a229034e5282638463d0fe93e3cf409d34ca5a50f272"
   }
 }
