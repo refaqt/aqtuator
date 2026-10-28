@@ -175,3 +175,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-22 | [A printed scraper at each end of the carriage](2026-10-22_scraper-at-the-carriage-ends.md) | cad, engineering | 1 |
 | 2026-10-27 | [The RSF MC 15 encoder replaces the LAMOTION encoder in the compact stage](2026-10-27_rsf-encoder-in-the-compact-stage.md) | cad, architecture |  |
 | 2026-10-27 | [The compact stage uses the 240 mm RSF tape](2026-10-27_rsf-ml240-tape.md) | cad, architecture |  |
+| 2026-10-28 | [New shape for the roller pockets, with R 3.5 corners](2026-10-28_roller-pocket-shape.md) | cad |  |
