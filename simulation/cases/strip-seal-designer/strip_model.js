@@ -45,13 +45,14 @@ export const MATERIALS = {
 };
 
 export const DEFAULTS = {
-  t: 0.25,          // mm, strip thickness
+  // Roller places from the compact-stage CAD of 2026-10-28.
+  t: 0.15,          // mm, strip thickness
   D: 10,            // mm, roller diameter
-  a: 26.2,          // mm, roller 1 to 2 (and 3 to 4)
-  b: 119,           // mm, roller 2 to 3
-  dz: -4.25,        // mm, centre of 2/3 minus centre of 1/4 (lift 6 mm)
+  a: 36.83,         // mm, roller 1 to 2 (and 3 to 4)
+  b: 112,           // mm, roller 2 to 3
+  dz: 2.85,         // mm, centre of 2/3 minus centre of 1/4 (lift 13 mm)
   material: "301",
-  width: 150,       // mm
+  width: 186,       // mm, the widest strip through the carriage
   length: 1000,     // mm, strip length between the clamps
   u: 0.5,           // mm, screw travel after the strip lies without pull
   plate: false,     // plate factor 1/(1 - nu^2) on the bending stress
@@ -138,6 +139,12 @@ function boundedQP(h0, h1, h2, f, lb, ub, y) {
     lo[i] = close(y[i], lb[i]) ? 1 : 0;
     hi[i] = !lo[i] && close(y[i], ub[i]) ? 1 : 0;
   }
+  const flip = (i, yi) => {
+    if (lo[i]) lo[i] = 0;
+    else if (hi[i]) hi[i] = 0;
+    else if (yi < lb[i]) lo[i] = 1;
+    else hi[i] = 1;
+  };
   for (let it = 0; it < 1000; it++) {
     const out = new Float64Array(n);
     const free = [];
@@ -166,19 +173,21 @@ function boundedQP(h0, h1, h2, f, lb, ub, y) {
     }
     const g = bandMul(h0, h1, h2, out);
     for (let i = 0; i < n; i++) g[i] += f[i];
-    let changed = false;
+    // Change every wrong set at once. If that keeps going round in a circle,
+    // change only the worst one per step, which cannot cycle the same way.
+    let changed = false, worst = -1, worstV = 0;
     for (let i = 0; i < n; i++) {
-      if (lo[i]) {
-        if (g[i] < -1e-9) { lo[i] = 0; changed = true; }
-      } else if (hi[i]) {
-        if (g[i] > 1e-9) { hi[i] = 0; changed = true; }
-      } else if (out[i] < lb[i] - 1e-12) {
-        lo[i] = 1; changed = true;
-      } else if (out[i] > ub[i] + 1e-12) {
-        hi[i] = 1; changed = true;
-      }
+      let v = 0;
+      if (lo[i]) v = -g[i] - 1e-9;
+      else if (hi[i]) v = g[i] - 1e-9;
+      else v = Math.max(lb[i] - 1e-12 - out[i], out[i] - ub[i] - 1e-12);
+      if (v <= 0) continue;
+      changed = true;
+      if (v > worstV) { worst = i; worstV = v; }
+      if (it < 200) flip(i, out[i]);
     }
     if (!changed) return { y: out, g, lo, hi };
+    if (it >= 200) flip(worst, out[worst]);
   }
   throw new Error("contact solver did not settle");
 }

@@ -29,14 +29,14 @@ Earlier cases: [`strip-seal-preload`](../strip-seal-preload/) (the solver this p
 | Input | Default | Note |
 | --- | --- | --- |
 | Material | SS 301 | 301 is Alleima 11R51, measured. 304 fatigue is an estimate range |
-| Thickness | 0.25 mm | |
-| Width | 150 mm | Forces are per mm of width, times this |
+| Thickness | 0.15 mm | |
+| Width | 186 mm | The widest strip that fits through the carriage. Forces are per mm of width, times this |
 | Length between clamps | 1000 mm | Only used for the steel stretch |
 | Roller diameter | 10 mm | |
-| Distance 1–2 and 3–4 | 26.2 mm | Centre to centre, along the strip |
-| Distance 2–3 | 119 mm | Centre to centre |
-| Height 2/3 above 1/4 | −4.25 mm | Centre to centre. Negative: 2/3 sit lower. The strip lift is this plus D plus t, so 6 mm |
-| Carriage underside | 15.75 mm | Above the profile. Only drawn, to see if the arch touches it |
+| Distance 1–2 and 3–4 | 36.83 mm | Centre to centre, along the strip. From the CAD, see below |
+| Distance 2–3 | 112 mm | Centre to centre. From the CAD |
+| Height 2/3 above 1/4 | 2.85 mm | Centre to centre. The strip lift is this plus D plus t, so 13 mm |
+| Carriage underside | 13.5 mm | Above the profile. Only drawn, to see if the arch touches it |
 | Magnet strip stiffness | 20 N/mm³ | Estimate. See below |
 | Magnet pull | 0.005 N/mm² | Estimate |
 | Screw travel | 0.5 mm | How far the strip end moves after it lies on the rollers with no pull |
@@ -73,36 +73,59 @@ Fatigue: rainflow of the bending stress one point sees in one carriage crossing,
 to the mean, Goodman, and the Basquin line through 0.9 Rm at 10³ and the fatigue limit at 2·10⁶,
 as in `strip-seal-fatigue`.
 
+## Where the defaults come from
+
+The roller places come from the compact-stage CAD of 2026-10-28 (carriage-bottom and carriage-top,
+placed as in the assembly). Rollers 1 and 4 sit in carriage-top, rollers 2 and 3 in
+carriage-bottom.
+
+| Size | Value | From |
+| --- | --- | --- |
+| Roller 1 and 4, along the travel | 92.83 mm from the carriage middle | On the low edge of the slanted faces of carriage-top |
+| Roller 2 and 3, along the travel | 56 mm from the carriage middle | On the slope edge of carriage-bottom, 34 mm from its ends |
+| Top of rollers 2 and 3 | 13 mm above the top of the base | Carriage-bottom top at 11.5 mm, roller sticks out 1.5 mm |
+| Carriage-top ceiling over the strip | 13.5 mm above the top of the base | 2 mm gap between the two carriage halves |
+| Strip width | 186 mm | The widest strip through the slope opening of the carriage |
+
+- **The roller heights are an assumption.** The rollers and their axles have no part in CAD yet.
+  As in the scraper and roller pocket work, each roller centre is taken 3.5 mm inside its
+  carriage half, so each roller sticks out 1.5 mm.
+- **The page puts roller 1 and 4 on the strip, with the strip on the base.** The CAD
+  assumption puts the top rollers 1.15 mm lower than that. The page cannot show this.
+- **The strip length of 1000 mm is the old value.** The clamps have no part in CAD yet. The
+  length hardly changes the result: 3.26 mm of screw travel for 54 N at 440 mm, 3.28 mm at
+  2000 mm.
+
 ## Results at the defaults
 
-301, 0.25 mm, 150 mm wide, 1000 mm between the clamps, magnet stiffness 20 N/mm³:
+301, 0.15 mm, 186 mm wide, 1000 mm between the clamps, magnet stiffness 20 N/mm³:
 
 | Screw travel | Pull | Arch height ¹ | Tightest radius | Highest stress | Roller 1 | Roller 2 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0 mm | 0 N | 8.85 mm | 39.7 mm | 583 MPa | 371 N | 46 N |
-| 0.5 mm | 17 N | 7.30 mm | 37.8 mm | 612 MPa | 397 N | 55 N |
-| 1.0 mm | 51 N | 5.42 mm | 35.3 mm | 657 MPa | 437 N | 70 N |
-| 1.25 mm | 87 N | 4.30 mm | 33.5 mm | 692 MPa | 470 N | 83 N |
-| 1.5 mm | 169 N | 2.99 mm | 31.0 mm | 750 MPa | 529 N | 110 N |
-| 1.75 mm | 439 N | 1.58 mm | 26.7 mm | 877 MPa | 656 N | 190 N |
+| 0 mm | 0 N | 12.10 mm | 35.5 mm | 391 MPa | 155 N | 11 N |
+| 1 mm | 4 N | 10.10 mm | 33.2 mm | 417 MPa | 167 N | 13 N |
+| 2 mm | 12 N | 7.54 mm | 30.2 mm | 460 MPa | 179 N | 18 N |
+| 3 mm | 35 N | 4.50 mm | 25.9 mm | 537 MPa | 220 N | 29 N |
+| 3.27 mm | 54 N | 3.44 mm | 23.8 mm | 584 MPa | 245 N | 38 N |
 
 ¹ From a straight edge on the tops of rollers 2 and 3 to the underside of the strip, at its
 highest point. Zero when the strip runs flat over the two rollers.
 
-- **About 1 mm of screw travel gives the 54 N target.** The strip length hardly matters: 1.03 mm
-  at 500 mm and 1.04 mm at 2000 mm. The arch takes almost all the travel, the steel stretch very
-  little.
-- **Past about 1.3 mm the pull rises fast,** because the arch is nearly flat and the steel has to
-  stretch. The screw travel must stop well before that.
-- **The arch height is a good gauge.** Near 54 N it drops about 0.4 mm per 10 N. A depth gauge
-  on a straight edge across the tops of rollers 2 and 3 can read that.
-- **The arch comes close to the carriage.** At zero pull its top is 14.98 mm above the profile,
-  0.77 mm under the carriage underside.
-- **Rollers 1 and 4 carry the most force, and it comes from the pinch, not the pull.** At 54 N it
-  is 310 N at 5 N/mm³, 440 N at 20 N/mm³ and 1140 N at 1000 N/mm³. Rollers 2 and 3 carry about
-  70 N.
-- **Fatigue life has no limit at 54 N** for 301 at 0.25 mm (660 MPa against 775 MPa). With the
-  plate factor it is about 725 MPa, still under.
+- **The free arch does not fit under carriage-top.** There is only 0.35 mm between the top of
+  rollers 2 and 3 and the ceiling of carriage-top. At 54 N the arch wants to rise 3.44 mm. The
+  strip will press on the ceiling of carriage-top over the middle of the carriage. To keep the
+  arch under 0.35 mm, the pull must be about 1750 N, which is not practical. The model has no
+  ceiling, so the shape and forces between rollers 2 and 3 are not real while it touches.
+- **About 3.3 mm of screw travel gives the 54 N target** (was about 1 mm with the old layout).
+  The higher lift and the thinner strip make the arch take more travel.
+- **Rollers 1 and 4 carry about 250 N at 54 N, rollers 2 and 3 about 38 N.** As before, the
+  large force comes from the pinch on the magnets: 176 N at 5 N/mm³ and 610 N at 1000 N/mm³.
+- **Fatigue life has no limit at 54 N** for 301 at 0.15 mm: 584 MPa (641 MPa with the plate
+  factor). The fatigue limit at 0.15 mm, 903 MPa, is an extrapolation below the measured
+  0.25 mm. The highest stress is also under the measured 775 MPa at 0.25 mm.
+
+Results for the old layout (26.2 mm, 119 mm, lift 6 mm, 0.25 mm × 150 mm) are in the
+[2026-09-28 log](../../../docs/log/2026-09-28_strip-seal-designer.md).
 
 ## What the model leaves out
 
@@ -111,6 +134,9 @@ highest point. Zero when the strip runs flat over the two rollers.
 - Friction on the rollers.
 - Measured magnet stiffness and pull. Both are estimates. Measure them, or use the range.
 - Measured fatigue data for 304 strip. No maker publishes it.
+- The ceiling of carriage-top and the top of carriage-bottom. The strip can pass through both.
+- What is under the strip at rollers 1 and 4. The page assumes magnet strips there. In the CAD,
+  the top rollers sit over the slot of the base, where nothing supports the strip.
 
 ## GitHub Pages setup
 
