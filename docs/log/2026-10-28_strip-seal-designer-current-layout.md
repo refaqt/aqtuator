@@ -1,56 +1,65 @@
-# 2026-10-28 — Seal strip page updated to the current roller places
+# 2026-10-28 — Seal strip page updated to the current carriage, with the channel and friction
 
 **Role(s):** engineering, simulation, software
 
 ## Goal
 
 Niels Bosmans asked to update the seal strip design page with the current roller places from
-the CAD, the current strip width, and a strip 0.15 mm thick.
+the CAD, the current strip width, and a strip 0.15 mm thick. After the first results he asked to
+add the ceiling of carriage-top to the model, with a plastic strip on it, and the friction from
+this contact for several plastics. The rollers stick out only 0.5 mm from each carriage half.
 
 ## Short answer
 
-- **The page now starts with the current layout.** Rollers 1–2 are 36.83 mm apart, rollers 2–3
-  are 112 mm apart, and rollers 2 and 3 lift the strip 13 mm (was 6 mm). The strip is 0.15 mm
-  thick and 186 mm wide.
-- **The free arch does not fit under the top carriage.** Only 0.35 mm of room is left above
-  rollers 2 and 3. At 54 N the strip wants to rise 3.4 mm. So the strip will press on the
-  ceiling of the top carriage over the middle of the carriage. The page shows this in red.
-- **About 3.3 mm of screw travel gives 54 N** (was about 1 mm).
-- **At 54 N, rollers 1 and 4 carry about 250 N, rollers 2 and 3 about 38 N.**
-- **No fatigue limit is reached at 54 N.** The highest stress is 584 MPa. The thinner strip
-  bends with less stress.
-- **The solver no longer stops at very high pulls.** It failed at about 5600 N with the new
-  layout. Normal pulls gave the same results before and after the fix.
+- **The page now models the real path of the strip.** The strip runs in a 2 mm channel between
+  the two carriage halves, over the slopes and under the flat ceiling. Rollers 1–2 are 36.83 mm
+  apart, rollers 2–3 112 mm. Rollers 2 and 3 lift the strip 12 mm. The strip is 0.15 mm thick
+  and 186 mm wide.
+- **The strip lies against the plastic strip on the ceiling at every useful pull.** With 0.5 mm
+  of plastic, it presses on it with about 29 N at 54 N.
+- **The friction on the carriage is small with PTFE: 2 to 7 N at 54 N.** UHMW-PE gives 5 to
+  10 N, POM-C 10 to 14 N, PA6 12 to 18 N. With no pull it is higher (11 to 16 N with PTFE),
+  because the strip then also presses on the bottom carriage.
+- **A thinner plastic strip presses less.** At 54 N the normal force is 20 N at 0.25 mm, 29 N at
+  0.5 mm, 73 N at 1 mm.
+- **The screw now sets the pull with almost no travel.** 0.03 mm gives 54 N, and 0.27 mm gives
+  400 N. The channel holds the strip, so tightening the screw mostly stretches the steel. The arch
+  height can no longer be the gauge for the pull.
+- **No fatigue limit is reached at 54 N.** The highest stress is 586 MPa.
+- **The contact solver is now robust.** It stopped in some cases with the new layout. A slower
+  method now takes over when the fast one goes round in a circle.
 
 ## Work Done
 
-- Read the roller places from carriage-bottom and carriage-top, placed as in the assembly.
-- Set the new defaults in the page and in the model. Updated the case README with the new
-  results and where each number comes from.
+- Read the roller places and the shape of both carriage surfaces from carriage-bottom and
+  carriage-top, placed as in the assembly.
+- Added the channel to the model: the slopes and the flat top of carriage-bottom, the slope and
+  the flat ceiling of carriage-top, and a plastic strip of a chosen thickness on the ceiling.
+- Added the friction on the carriage, with friction values from data sheets for four plastics.
+  The page shows it in a new tile and in the force table.
+- Updated the case README with the new inputs, the sources and the results.
 
-Full table: [case README](../../simulation/cases/strip-seal-designer/README.md#results-at-the-defaults).
+Full tables: [case README](../../simulation/cases/strip-seal-designer/README.md#results-at-the-defaults).
 
 ## Decisions Made
 
-No design decision.
+No design decision. The 0.5 mm plastic strip and PTFE are only the starting values on the page.
 
 ## Open Questions
 
-- **How should the strip pass between the two carriage halves?** The gap is 2 mm, and the strip
-  arch is much higher than the room above the rollers. Options: lower rollers 2 and 3, a higher
-  ceiling in the top carriage, or accept that the strip slides on the ceiling.
+- **How should the pull be set and checked?** 54 N needs only 0.03 mm of screw travel, which is
+  too little to set by turning a screw. A spring or a force gauge at the clamp may be needed.
+- **Which plastic, and how thick?** PTFE gives the lowest friction. A thinner strip presses less.
+  The friction values come from tests at much higher pressure, so measure them on a sample.
 - **What holds the strip down at rollers 1 and 4?** The page assumes magnet strips under the
-  strip there. In the CAD, the top rollers sit over the slot of the base, where nothing supports
-  the strip.
-- **How high do the rollers sit?** The rollers and axles have no part yet. This work assumes
-  each roller sticks out 1.5 mm from its carriage half, as in earlier CAD work. With that
-  assumption, the top rollers sit 1.15 mm lower than the strip on the base.
+  strip there. In the CAD, the top rollers sit over the slot of the base.
 
 ## Next Steps
 
-- [ ] Choose how the strip passes between the carriage halves.
-- [ ] Draw the rollers and axles, so their height is known.
-- [ ] If the strip may touch the top carriage, add that ceiling to the model.
+- [ ] Choose the plastic and its thickness, and draw it in carriage-top.
+- [ ] Choose how to set the pull: screw, spring or force gauge.
+- [ ] Measure the friction of the strip on a plastic sample.
+- [ ] Draw the rollers and axles in CAD.
 
 <details>
 <summary>Technical notes</summary>
@@ -61,18 +70,29 @@ No design decision.
 - Top rollers (carriage-top `Pocket003`, `Pocket006`): x = 118.77 and 304.44 mm. Bottom rollers
   (carriage-bottom `Sketch013` `roller_y` = 34 mm): x = 155.60 and 267.60 mm. So a = 36.833 mm,
   b = 112 mm.
-- Heights: base top z = 40, carriage-bottom top z = 51.5, carriage-top ceiling z = 53.5.
-  Roller centres 3.5 mm inside each part: bottom z = 48, top z = 44. Bottom roller top
-  z = 53, so lift = 13 mm and dz = 13 − D − t = 2.85 mm. Carriage underside input 13.5 mm.
-- Strip width 186 mm: the slope opening of the carriage, as in the scraper-fit case.
-- `boundedQP()` in `strip_model.js`: after 200 steps that change every wrong set at once, it
-  changes only the worst one per step. Before 200 steps it works as before, so all old results
-  stay the same. It cycled at 30 N/mm in the screw curve.
-- `node simulation/cases/strip-seal-designer/check_model.mjs`: all checks pass. The page was
-  loaded in Chromium: no errors, 54.3 N at 3.27 mm.
-- Length between clamps stays 1000 mm; the clamps have no geometry. 440 mm gives 3.26 mm for
-  54 N, 2000 mm gives 3.28 mm.
-- Mistake rules checked: the fatigue mistake (the 903 MPa limit at 0.15 mm is marked as an
-  extrapolation), the page mistakes (no server, no cached model), the tooling update rule.
+- Surfaces, sampled across y = 13 to 197 mm: carriage-top underside z = 40.5 + 0.353 (x − 118.77)
+  from x = 118.77 to 147.15, then a step to the flat ceiling at z = 53.5. Carriage-bottom top
+  z = 51.5 − 0.353 (155.6 − x) up to x = 155.6, then flat at 51.5. Base top z = 40. Slope
+  12/34 = 19.44°.
+- Roller stick-out 0.5 mm: roller 2 top z = 52, so lift = 12 mm and dz = 12 − D − t = 1.85 mm.
+- `strip_model.js`: `channel(p)` gives the ceiling and floor heights; `shape()` adds them as
+  bounds (owners 4 carriage-top bare, 5 liner, 6 carriage-bottom) and returns `carriageForces`
+  with the normal force; `carriageFriction()` sums mu × N × width. `LINERS` and `MU_ALU` hold
+  the friction values and sources.
+- `boundedQP()`: 200 steps of the old all-at-once active set method, then `boundedQPSafe()`, a
+  primal active set method with a step length. It keeps a bound that its release would put
+  straight back (a rounding effect), and its force tolerance is 1e-12 times the largest diagonal
+  of the matrix.
+- Contact forces on a 0.05 mm grid: 29.0 N on the plastic and 2.4 N on carriage-bottom, against
+  28.9 N and 1.9 N on the 0.1 mm grid.
+- `node simulation/cases/strip-seal-designer/check_model.mjs`: all checks pass, with new checks
+  that the strip stays in the channel and that the forces add up to zero. The page was loaded in
+  Chromium with no errors.
+- Friction sources: Engineering ToolBox (PTFE on steel 0.05–0.2; aluminium on mild steel 0.47
+  kinetic); mcam data sheets, ISO 7148-2 pin-on-disk at 3 MPa and 0.33 m/s: TIVAR 1000 0.15–0.30,
+  Acetron C POM-C 0.3–0.45, Ertalon 6 SA PA6 0.4–0.6.
+- Mistake rules checked: the fatigue mistake (no material value without a source; the 903 MPa
+  limit at 0.15 mm is marked as an extrapolation), the page mistakes (no server, no cached model),
+  the tooling update rule.
 
 </details>

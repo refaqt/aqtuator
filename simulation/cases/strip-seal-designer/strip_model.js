@@ -44,17 +44,43 @@ export const MATERIALS = {
   },
 };
 
+// Plastic strips (liners) on the ceiling of carriage-top, sliding on the
+// steel strip. Dynamic friction against steel, dry. The mcam values are
+// pin-on-disk at 3 MPa and 0.33 m/s, much faster and harder pressed than
+// here, so they are a guide only.
+export const LINERS = {
+  PTFE: { name: "PTFE, unfilled", mu: [0.05, 0.20],
+    source: "Engineering ToolBox, PTFE on steel, clean and dry: 0.05-0.2." },
+  UHMW: { name: "UHMW-PE (TIVAR 1000)", mu: [0.15, 0.30],
+    source: "mcam TIVAR 1000 data sheet, ISO 7148-2: 0.15-0.30 (0.12 by QTM 55007)." },
+  POM: { name: "POM-C (Acetron C)", mu: [0.30, 0.45],
+    source: "mcam Acetron C data sheet, ISO 7148-2: 0.3-0.45 (0.25 by QTM 55007)." },
+  PA6: { name: "PA6 (Ertalon 6 SA)", mu: [0.40, 0.60],
+    source: "mcam Ertalon 6 SA data sheet, ISO 7148-2: 0.4-0.6." },
+};
+// Steel strip on bare aluminium (the slopes of both carriage halves).
+// Engineering ToolBox, aluminium on mild steel, clean and dry, kinetic.
+export const MU_ALU = 0.47;
+
 export const DEFAULTS = {
   // Roller places from the compact-stage CAD of 2026-10-28.
   t: 0.15,          // mm, strip thickness
   D: 10,            // mm, roller diameter
   a: 36.83,         // mm, roller 1 to 2 (and 3 to 4)
   b: 112,           // mm, roller 2 to 3
-  dz: 2.85,         // mm, centre of 2/3 minus centre of 1/4 (lift 13 mm)
+  dz: 1.85,         // mm, centre of 2/3 minus centre of 1/4 (lift 12 mm)
+  // The strip runs in a channel between the two carriage halves.
+  carriage: true,   // false: free strip, no carriage surfaces
+  stick: 0.5,       // mm, how far each roller sticks out of its carriage half
+  slope: 19.44,     // degrees, slopes of both halves (12 mm over 34 mm)
+  ceilOut: 8.45,    // mm, flat ceiling starts this far outside rollers 2 and 3
+  clear: 13.5,      // mm, flat ceiling of carriage-top above the profile
+  liner: 0.5,       // mm, plastic strip on the flat ceiling
+  linerMat: "PTFE",
   material: "301",
   width: 186,       // mm, the widest strip through the carriage
   length: 1000,     // mm, strip length between the clamps
-  u: 0.5,           // mm, screw travel after the strip lies without pull
+  u: 0.03,          // mm, screw travel after the strip lies without pull
   plate: false,     // plate factor 1/(1 - nu^2) on the bending stress
   k: 20,            // N/mm^3, stiffness of the magnet strips under the strip
   q: 0.005,         // N/mm^2 (MPa), pull of the magnet strips on the strip
@@ -129,8 +155,48 @@ function hAt(h0, h1, h2, i, j) {
   return 0;
 }
 
+// Lowest 0.5 y'Hy + f'y over the free points, with the points in lo and hi
+// held on their bound. Returns all points.
+function solveFixed(h0, h1, h2, f, lb, ub, lo, hi) {
+  const n = lb.length;
+  const out = new Float64Array(n);
+  const free = [];
+  for (let i = 0; i < n; i++) {
+    if (lo[i]) out[i] = lb[i];
+    else if (hi[i]) out[i] = ub[i];
+    else free.push(i);
+  }
+  const m = free.length;
+  if (m) {
+    const d0 = new Float64Array(m), d1 = new Float64Array(m), d2 = new Float64Array(m);
+    const r = new Float64Array(m);
+    for (let k = 0; k < m; k++) {
+      const i = free[k];
+      d0[k] = h0[i];
+      if (k + 1 < m && free[k + 1] - i <= 2) d1[k] = hAt(h0, h1, h2, i, free[k + 1]);
+      if (k + 2 < m && free[k + 2] - i <= 2) d2[k] = hAt(h0, h1, h2, i, free[k + 2]);
+      let v = -f[i];
+      for (let j = Math.max(0, i - 2); j <= Math.min(n - 1, i + 2); j++) {
+        if (lo[j] || hi[j]) v -= hAt(h0, h1, h2, i, j) * out[j];
+      }
+      r[k] = v;
+    }
+    const z = solvePenta(d0, d1, d2, r);
+    for (let k = 0; k < m; k++) out[free[k]] = z[k];
+  }
+  return out;
+}
+
+function gradient(h0, h1, h2, f, y) {
+  const g = bandMul(h0, h1, h2, y);
+  for (let i = 0; i < y.length; i++) g[i] += f[i];
+  return g;
+}
+
 // Lowest 0.5 y'Hy + f'y with lb <= y <= ub, by the same active set method as
-// _bounded_qp() in the Python case. y is the start.
+// _bounded_qp() in the Python case. y is the start. That method changes every
+// wrong set at once and is fast, but in a narrow channel it can go round in a
+// circle. Then the slower method below takes over.
 function boundedQP(h0, h1, h2, f, lb, ub, y) {
   const n = y.length;
   const lo = new Uint8Array(n), hi = new Uint8Array(n);
@@ -139,55 +205,77 @@ function boundedQP(h0, h1, h2, f, lb, ub, y) {
     lo[i] = close(y[i], lb[i]) ? 1 : 0;
     hi[i] = !lo[i] && close(y[i], ub[i]) ? 1 : 0;
   }
-  const flip = (i, yi) => {
-    if (lo[i]) lo[i] = 0;
-    else if (hi[i]) hi[i] = 0;
-    else if (yi < lb[i]) lo[i] = 1;
-    else hi[i] = 1;
-  };
-  for (let it = 0; it < 1000; it++) {
-    const out = new Float64Array(n);
-    const free = [];
+  for (let it = 0; it < 200; it++) {
+    const out = solveFixed(h0, h1, h2, f, lb, ub, lo, hi);
+    const g = gradient(h0, h1, h2, f, out);
+    let changed = false;
     for (let i = 0; i < n; i++) {
-      if (lo[i]) out[i] = lb[i];
-      else if (hi[i]) out[i] = ub[i];
-      else free.push(i);
-    }
-    const m = free.length;
-    if (m) {
-      const d0 = new Float64Array(m), d1 = new Float64Array(m), d2 = new Float64Array(m);
-      const r = new Float64Array(m);
-      for (let k = 0; k < m; k++) {
-        const i = free[k];
-        d0[k] = h0[i];
-        if (k + 1 < m && free[k + 1] - i <= 2) d1[k] = hAt(h0, h1, h2, i, free[k + 1]);
-        if (k + 2 < m && free[k + 2] - i <= 2) d2[k] = hAt(h0, h1, h2, i, free[k + 2]);
-        let v = -f[i];
-        for (let j = Math.max(0, i - 2); j <= Math.min(n - 1, i + 2); j++) {
-          if (lo[j] || hi[j]) v -= hAt(h0, h1, h2, i, j) * out[j];
-        }
-        r[k] = v;
+      if (lo[i]) {
+        if (g[i] < -1e-9) { lo[i] = 0; changed = true; }
+      } else if (hi[i]) {
+        if (g[i] > 1e-9) { hi[i] = 0; changed = true; }
+      } else if (out[i] < lb[i] - 1e-12) {
+        lo[i] = 1; changed = true;
+      } else if (out[i] > ub[i] + 1e-12) {
+        hi[i] = 1; changed = true;
       }
-      const z = solvePenta(d0, d1, d2, r);
-      for (let k = 0; k < m; k++) out[free[k]] = z[k];
-    }
-    const g = bandMul(h0, h1, h2, out);
-    for (let i = 0; i < n; i++) g[i] += f[i];
-    // Change every wrong set at once. If that keeps going round in a circle,
-    // change only the worst one per step, which cannot cycle the same way.
-    let changed = false, worst = -1, worstV = 0;
-    for (let i = 0; i < n; i++) {
-      let v = 0;
-      if (lo[i]) v = -g[i] - 1e-9;
-      else if (hi[i]) v = g[i] - 1e-9;
-      else v = Math.max(lb[i] - 1e-12 - out[i], out[i] - ub[i] - 1e-12);
-      if (v <= 0) continue;
-      changed = true;
-      if (v > worstV) { worst = i; worstV = v; }
-      if (it < 200) flip(i, out[i]);
     }
     if (!changed) return { y: out, g, lo, hi };
-    if (it >= 200) flip(worst, out[worst]);
+  }
+  return boundedQPSafe(h0, h1, h2, f, lb, ub, y);
+}
+
+// Primal active set method: it stays inside the bounds, walks towards the
+// best point until it meets a new bound, and lets go of one bound at a time.
+// The energy goes down at every step, so it cannot circle.
+function boundedQPSafe(h0, h1, h2, f, lb, ub, start) {
+  const n = start.length;
+  const y = new Float64Array(n);
+  const lo = new Uint8Array(n), hi = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    y[i] = Math.min(Math.max(start[i], lb[i]), ub[i]);
+    lo[i] = y[i] <= lb[i] ? 1 : 0;
+    hi[i] = !lo[i] && y[i] >= ub[i] ? 1 : 0;
+  }
+  // A bound whose release only puts it straight back is a rounding effect:
+  // keep it. The force tolerance follows the size of the matrix.
+  const keep = new Uint8Array(n);
+  let tol = 0;
+  for (let i = 0; i < n; i++) tol = Math.max(tol, h0[i]);
+  tol *= 1e-12;
+  let released = -1;
+  for (let it = 0; it < 50000; it++) {
+    const out = solveFixed(h0, h1, h2, f, lb, ub, lo, hi);
+    let alpha = 1, block = -1, toLo = false;
+    for (let i = 0; i < n; i++) {
+      if (lo[i] || hi[i]) continue;
+      const d = out[i] - y[i];
+      if (d < 0 && out[i] < lb[i]) {
+        const s = (lb[i] - y[i]) / d;
+        if (s < alpha) { alpha = s; block = i; toLo = true; }
+      } else if (d > 0 && out[i] > ub[i]) {
+        const s = (ub[i] - y[i]) / d;
+        if (s < alpha) { alpha = s; block = i; toLo = false; }
+      }
+    }
+    if (block >= 0) {
+      if (block === released && alpha < 1e-9) keep[block] = 1;
+      released = -1;
+      for (let i = 0; i < n; i++) if (!(lo[i] || hi[i])) y[i] += alpha * (out[i] - y[i]);
+      if (toLo) { lo[block] = 1; y[block] = lb[block]; } else { hi[block] = 1; y[block] = ub[block]; }
+      continue;
+    }
+    y.set(out);
+    const g = gradient(h0, h1, h2, f, y);
+    let worst = -1, worstV = tol;
+    for (let i = 0; i < n; i++) {
+      if (keep[i]) continue;
+      const v = lo[i] ? -g[i] : hi[i] ? g[i] : 0;
+      if (v > worstV) { worst = i; worstV = v; }
+    }
+    if (worst < 0) return { y, g, lo, hi };
+    lo[worst] = 0; hi[worst] = 0;
+    released = worst;
   }
   throw new Error("contact solver did not settle");
 }
@@ -202,6 +290,36 @@ export function layout(p) {
   const rollers = [0, p.a, p.a + p.b, 2 * p.a + p.b];
   const centres = rollers.map((xc, k) => [xc, k === 0 || k === 3 ? rho : lift - rho]);
   return { rho, lift, rollers, centres };
+}
+
+// The channel between the carriage halves, as heights above the profile
+// (the top of the base), against x. Rollers 1 and 4 sit in carriage-top, on
+// the low edge of its slope. Rollers 2 and 3 sit in carriage-bottom, on the
+// high edge of its slope. Each roller sticks out p.stick from its half.
+//   ceiling(x): underside of carriage-top, or of the liner on its flat part
+//   floor(x):   top of carriage-bottom
+// Returns null where a surface does not reach. kind: "liner" or "alu".
+export function channel(p) {
+  const tan = Math.tan((p.slope ?? 0) * Math.PI / 180);
+  const { lift, rollers } = layout(p);
+  const xm = rollers[3] / 2;
+  const xs = p.a - p.ceilOut;           // end of the sloped ceiling
+  const ceiling = (x) => {
+    if (x < 0 || x > rollers[3]) return null;
+    const d = Math.min(x, rollers[3] - x);
+    if (d < xs) return { h: p.t + p.stick + tan * d, kind: "alu", slope: true };
+    return { h: p.clear - p.liner, kind: p.liner > 0 ? "liner" : "alu", slope: false };
+  };
+  const floor = (x) => {
+    if (x < 0 || x > rollers[3]) return null;
+    const d = Math.min(x, rollers[3] - x);
+    if (d < p.a) {
+      const h = lift - p.stick - tan * (p.a - d);
+      return h < 0 ? null : { h, kind: "alu", slope: true };   // below the base: no carriage there
+    }
+    return { h: lift - p.stick, kind: "alu", slope: false };
+  };
+  return { ceiling, floor, tan, xm };
 }
 
 // Shape of the strip centre line under a pull in N per mm of width.
@@ -230,7 +348,8 @@ export function shape(p, pull, opts = {}) {
   const x = new Float64Array(n);
   for (let i = 0; i < n; i++) x[i] = x0 + i * dx;
 
-  // Bounds, and which support sets each bound: -1 profile, 0..3 roller.
+  // Bounds, and which support sets each bound: -1 profile, 0..3 roller,
+  // 4 carriage-top bare, 5 liner, 6 carriage-bottom.
   const k = p.k ?? Infinity;
   const rigid = profile && !(k < Infinity);
   const bed = profile && !rigid;
@@ -251,6 +370,17 @@ export function shape(p, pull, opts = {}) {
         const v = lift - rho + h;
         if (v > lb[i]) { lb[i] = v; lbOwner[i] = k; }
       }
+    }
+  }
+  // The channel. The strip centre line is t/2 above its underside, and the
+  // profile is at y = -t/2, so a surface at height h above the profile
+  // bounds the centre line at h - t (ceiling) or h (floor).
+  const ch = profile && p.carriage ? channel(p) : null;
+  if (ch) {
+    for (let i = 0; i < n; i++) {
+      const c = ch.ceiling(x[i]), f = ch.floor(x[i]);
+      if (c && c.h - p.t < ub[i]) { ub[i] = c.h - p.t; ubOwner[i] = c.kind === "liner" ? 5 : 4; }
+      if (f && f.h > lb[i]) { lb[i] = f.h; lbOwner[i] = 6; }
     }
   }
   const q = profile ? (p.q ?? 0) : 0;
@@ -356,6 +486,8 @@ export function shape(p, pull, opts = {}) {
   const g = res.g, yr = res.y;
   const supports = [0, 1, 2, 3].map(() => ({ fx: 0, fy: 0 }));
   const profileF = [0, 0];     // left and right of the carriage middle
+  // Carriage surfaces: force on the strip, and the normal force for friction.
+  const contacts = { 4: { fx: 0, fy: 0, n: 0 }, 5: { fx: 0, fy: 0, n: 0 }, 6: { fx: 0, fy: 0, n: 0 } };
   const xm = rollers[3] / 2;
   let sumFy = 0, endF = 0;
   for (let i = 0; i < n; i++) {
@@ -375,7 +507,16 @@ export function shape(p, pull, opts = {}) {
     }
     const owner = res.lo[i] ? lbOwner[i] : ubOwner[i];
     sumFy += g[i];
-    if (owner >= 0) {
+    if (owner >= 4) {
+      // A surface pushes along its normal. On a slope the normal leans
+      // towards the carriage middle (floor) or away from it (ceiling).
+      const sf = owner === 6 ? ch.floor(x[i]) : ch.ceiling(x[i]);
+      const tn = sf.slope ? ch.tan : 0;
+      const fx = (x[i] < xm ? -1 : 1) * g[i] * tn;
+      contacts[owner].fy += g[i];
+      contacts[owner].fx += fx;
+      contacts[owner].n += Math.hypot(fx, g[i]);
+    } else if (owner >= 0) {
       const [xc, yc] = centres[owner];
       const nx = x[i] - xc, ny = yr[i] - yc;
       supports[owner].fy += g[i];
@@ -412,10 +553,30 @@ export function shape(p, pull, opts = {}) {
     archTop, archAt, archMid: y[iMid], archHeight: archTop - lift,
     // Force ON THE ROLLER is minus the force on the strip.
     rollerForces: supports.map((s) => ({ fx: -s.fx, fy: -s.fy })),
+    // Forces ON the carriage surfaces, per mm of width; n is the normal force.
+    carriageForces: [
+      { name: "Carriage-top slopes", mu: [MU_ALU, MU_ALU], ...onPart(contacts[4]) },
+      { name: "Ceiling liner", mu: LINERS[p.linerMat]?.mu ?? [MU_ALU, MU_ALU], ...onPart(contacts[5]) },
+      { name: "Carriage-bottom", mu: [MU_ALU, MU_ALU], ...onPart(contacts[6]) },
+    ],
     profileForces: profileF.map((f) => -f),
     sumFy, endF,
     layout: { rho, lift, rollers, centres },
   };
+}
+
+const onPart = (c) => ({ fx: -c.fx, fy: -c.fy, n: c.n });
+
+// Friction on the carriage when it moves, in N for the whole width: the sum
+// of mu times the normal force over the sliding contacts. The rollers roll
+// and add none. Returns [low, high] from the friction range of each contact.
+export function carriageFriction(p, s) {
+  const out = [0, 0];
+  for (const c of s.carriageForces) {
+    out[0] += c.mu[0] * c.n * p.width;
+    out[1] += c.mu[1] * c.n * p.width;
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------

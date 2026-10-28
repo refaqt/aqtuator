@@ -1,7 +1,8 @@
 # strip-seal-designer
 
-A web page to design the seal strip: how it bends over the four carriage rollers, the force on
-each roller, the stress, the fatigue life, and what the countersunk preload screw does.
+A web page to design the seal strip: how it bends over the four carriage rollers and through the
+channel between the two carriage halves, the force on each roller, the friction on the carriage,
+the stress, the fatigue life, and what the countersunk preload screw does.
 
 **Open it:** <https://refaqt.github.io/aqtuator/strip-seal/> (after the one-time Pages setup
 below). No server and no install. It runs in the browser.
@@ -20,7 +21,8 @@ python3 -m http.server -d simulation/cases/strip-seal-designer 8000
 # then open http://localhost:8000
 ```
 
-Log: [2026-09-28](../../../docs/log/2026-09-28_strip-seal-designer.md).
+Logs: [2026-09-28](../../../docs/log/2026-09-28_strip-seal-designer.md),
+[2026-10-28](../../../docs/log/2026-10-28_strip-seal-designer-current-layout.md).
 Earlier cases: [`strip-seal-preload`](../strip-seal-preload/) (the solver this page ports) and
 [`strip-seal-fatigue`](../strip-seal-fatigue/) (materials, rainflow and fatigue rules).
 
@@ -35,11 +37,17 @@ Earlier cases: [`strip-seal-preload`](../strip-seal-preload/) (the solver this p
 | Roller diameter | 10 mm | |
 | Distance 1–2 and 3–4 | 36.83 mm | Centre to centre, along the strip. From the CAD, see below |
 | Distance 2–3 | 112 mm | Centre to centre. From the CAD |
-| Height 2/3 above 1/4 | 2.85 mm | Centre to centre. The strip lift is this plus D plus t, so 13 mm |
-| Carriage underside | 13.5 mm | Above the profile. Only drawn, to see if the arch touches it |
+| Height 2/3 above 1/4 | 1.85 mm | Centre to centre. The strip lift is this plus D plus t, so 12 mm |
+| Strip runs between the carriage halves | on | Off: a free strip, as before 2026-10-28 |
+| Roller stick-out | 0.5 mm | How far each roller sticks out of its carriage half |
+| Slope of the halves | 19.44° | 12 mm over 34 mm, the same on both halves |
+| Carriage-top ceiling | 13.5 mm | Above the profile |
+| Flat ceiling starts | 8.45 mm | Outside rollers 2 and 3. Between there and roller 1 the ceiling is the slope |
+| Plastic strip on the ceiling | 0.5 mm | Thickness. 0 means bare aluminium |
+| Plastic | PTFE | PTFE, UHMW-PE, POM-C or PA6. Sets the friction, see below |
 | Magnet strip stiffness | 20 N/mm³ | Estimate. See below |
 | Magnet pull | 0.005 N/mm² | Estimate |
-| Screw travel | 0.5 mm | How far the strip end moves after it lies on the rollers with no pull |
+| Screw travel | 0.03 mm | How far the strip end moves after it lies on the rollers with no pull |
 
 ## What the model does
 
@@ -66,8 +74,36 @@ Two things are new compared with the Python case:
   the answer off them.
 
 Forces on each roller come from the contact reactions of the solver, split along the line from
-the roller centre to the contact point. The vertical forces of the rollers and the magnets add up
-to zero, which the check script tests.
+the roller centre to the contact point. The vertical forces of the rollers, the magnets and the
+carriage add up to zero, which the check script tests.
+
+**The carriage channel.** Between rollers 1 and 4 the strip runs between the two carriage halves.
+The top of carriage-bottom (its slope, then its flat top) is a floor. The underside of
+carriage-top (its slope, then its flat ceiling with the plastic strip) is a ceiling. The strip
+may touch them but not pass through them, in the same way as it touches the rollers. The force
+of each surface on the strip is along the surface normal.
+
+**Friction.** The rollers roll and add no friction. Where the strip touches a carriage surface,
+it slides when the carriage moves. The friction is the friction coefficient times the normal
+force, added over all the contacts and both sides of the carriage. The page gives a range from
+the range of the coefficient.
+
+| Surface | Friction on steel, dry | Source |
+| --- | --- | --- |
+| PTFE, unfilled | 0.05–0.20 | [Engineering ToolBox](https://engineeringtoolbox.com/friction-coefficients-d_778.html), PTFE on steel, clean and dry |
+| UHMW-PE (TIVAR 1000) | 0.15–0.30 | [mcam data sheet](https://mcam.com/mam/51243/Bronymec-PE-TIVAR%C2%AE%201000%20UHMW-PE%20colors_en_US.pdf), ISO 7148-2 (0.12 by QTM 55007) |
+| POM-C (Acetron C) | 0.30–0.45 | [mcam data sheet](https://www.mcam.com/mam/54384/GEP-Acetron%E2%84%A2%20C%20Sterra%E2%84%A2%20POM-C%20_en_US.pdf), ISO 7148-2 (0.25 by QTM 55007) |
+| PA6 (Ertalon 6 SA) | 0.40–0.60 | [mcam data sheet](https://mcam.com/mam/51011/Bronymec-GEP-Ertalon%C2%AE%206%20SA%20PA6_en_US.pdf), ISO 7148-2 |
+| Bare aluminium (the slopes) | 0.47 | [Engineering ToolBox](https://engineeringtoolbox.com/friction-coefficients-d_778.html), aluminium on mild steel, kinetic |
+
+The mcam values come from a pin-on-disk test at 3 MPa and 0.33 m/s. The strip presses on the
+plastic far more lightly than that, so the real value can differ. Measure it before you rely on
+it.
+
+**The solver.** The contact solver changes every wrong contact at once. That is fast, but in
+the narrow channel it can go round in a circle. Then a slower method takes over. It moves only
+as far as the first new contact and lets go of one contact at a time, so it always ends. A
+solve takes up to about a second.
 
 Fatigue: rainflow of the bending stress one point sees in one carriage crossing, the pull added
 to the mean, Goodman, and the Basquin line through 0.9 Rm at 10³ and the fatigue limit at 2·10⁶,
@@ -81,46 +117,53 @@ carriage-bottom.
 
 | Size | Value | From |
 | --- | --- | --- |
-| Roller 1 and 4, along the travel | 92.83 mm from the carriage middle | On the low edge of the slanted faces of carriage-top |
-| Roller 2 and 3, along the travel | 56 mm from the carriage middle | On the slope edge of carriage-bottom, 34 mm from its ends |
-| Top of rollers 2 and 3 | 13 mm above the top of the base | Carriage-bottom top at 11.5 mm, roller sticks out 1.5 mm |
-| Carriage-top ceiling over the strip | 13.5 mm above the top of the base | 2 mm gap between the two carriage halves |
+| Roller 1 and 4, along the travel | 92.83 mm from the carriage middle | On the low edge of the slope of carriage-top |
+| Roller 2 and 3, along the travel | 56 mm from the carriage middle | On the high edge of the slope of carriage-bottom, 34 mm from its ends |
+| Roller stick-out | 0.5 mm | Niels Bosmans, 2026-10-28. The rollers have no part in CAD yet |
+| Top of rollers 2 and 3 | 12 mm above the top of the base | Carriage-bottom top at 11.5 mm, plus 0.5 mm |
+| Slopes | 19.44°, 2 mm apart vertically | Both halves, measured in the CAD |
+| Carriage-top ceiling | 13.5 mm above the top of the base | Flat from 8.45 mm outside rollers 2 and 3. There the slope stops with a 3 mm step |
 | Strip width | 186 mm | The widest strip through the slope opening of the carriage |
 
-- **The roller heights are an assumption.** The rollers and their axles have no part in CAD yet.
-  As in the scraper and roller pocket work, each roller centre is taken 3.5 mm inside its
-  carriage half, so each roller sticks out 1.5 mm.
-- **The page puts roller 1 and 4 on the strip, with the strip on the base.** The CAD
-  assumption puts the top rollers 1.15 mm lower than that. The page cannot show this.
-- **The strip length of 1000 mm is the old value.** The clamps have no part in CAD yet. The
-  length hardly changes the result: 3.26 mm of screw travel for 54 N at 440 mm, 3.28 mm at
-  2000 mm.
+- **The page puts rollers 1 and 4 on the strip, with the strip on the base.** In the CAD their
+  bottom is at the top of the base, so 0.15 mm (one strip thickness) lower. The page cannot show
+  this.
+- **The plastic strip is 0.5 mm thick here as an example.** It is an input. It leaves 0.85 mm of
+  room above rollers 2 and 3.
+- **The strip length of 1000 mm is the old value.** The clamps have no part in CAD yet. It hardly
+  matters for the pull: 0.024 mm of screw travel for 54 N at 440 mm, 0.040 mm at 2000 mm.
 
 ## Results at the defaults
 
-301, 0.15 mm, 186 mm wide, 1000 mm between the clamps, magnet stiffness 20 N/mm³:
+301, 0.15 mm, 186 mm wide, 1000 mm between the clamps, magnet stiffness 20 N/mm³, 0.5 mm PTFE on
+the ceiling:
 
-| Screw travel | Pull | Arch height ¹ | Tightest radius | Highest stress | Roller 1 | Roller 2 |
-| --- | --- | --- | --- | --- | --- | --- |
-| 0 mm | 0 N | 12.10 mm | 35.5 mm | 391 MPa | 155 N | 11 N |
-| 1 mm | 4 N | 10.10 mm | 33.2 mm | 417 MPa | 167 N | 13 N |
-| 2 mm | 12 N | 7.54 mm | 30.2 mm | 460 MPa | 179 N | 18 N |
-| 3 mm | 35 N | 4.50 mm | 25.9 mm | 537 MPa | 220 N | 29 N |
-| 3.27 mm | 54 N | 3.44 mm | 23.8 mm | 584 MPa | 245 N | 38 N |
+| Pull | Screw travel | Tightest radius | Highest stress | Roller 1 | Roller 2 | Normal force on the plastic | Normal force on carriage-bottom | Friction, PTFE |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 N | 0 mm | 24.8 mm | 559 MPa | 226 N | 32 N | 33 N | 19 N | 10.7–15.6 N |
+| 20 N | 0.012 mm | 24.4 mm | 569 MPa | 234 N | 39 N | 32 N | 13 N | — |
+| 54 N | 0.030 mm | 23.8 mm | 586 MPa | 247 N | 52 N | 29 N | 2 N | 2.3–6.7 N |
+| 100 N | 0.074 mm | 21.7 mm | 642 MPa | 284 N | 66 N | 24 N | 0 N | — |
+| 200 N | 0.155 mm | 18.6 mm | 754 MPa | 345 N | 97 N | 14 N | 0 N | — |
+| 400 N | 0.268 mm | 15.2 mm | 924 MPa | 474 N | 161 N | 0 N | 0 N | — |
 
-¹ From a straight edge on the tops of rollers 2 and 3 to the underside of the strip, at its
-highest point. Zero when the strip runs flat over the two rollers.
+Friction at 54 N, by plastic: PTFE 2.3–6.7 N, UHMW-PE 5.2–9.5 N, POM-C 9.5–13.9 N, PA6
+12.4–18.2 N. Of this, about 0.9 N comes from the light contact with carriage-bottom.
 
-- **The free arch does not fit under carriage-top.** There is only 0.35 mm between the top of
-  rollers 2 and 3 and the ceiling of carriage-top. At 54 N the arch wants to rise 3.44 mm. The
-  strip will press on the ceiling of carriage-top over the middle of the carriage. To keep the
-  arch under 0.35 mm, the pull must be about 1750 N, which is not practical. The model has no
-  ceiling, so the shape and forces between rollers 2 and 3 are not real while it touches.
-- **About 3.3 mm of screw travel gives the 54 N target** (was about 1 mm with the old layout).
-  The higher lift and the thinner strip make the arch take more travel.
-- **Rollers 1 and 4 carry about 250 N at 54 N, rollers 2 and 3 about 38 N.** As before, the
-  large force comes from the pinch on the magnets: 176 N at 5 N/mm³ and 610 N at 1000 N/mm³.
-- **Fatigue life has no limit at 54 N** for 301 at 0.15 mm: 584 MPa (641 MPa with the plate
+- **The strip lies against the plastic strip at every useful pull.** It presses on it with about
+  29 N at 54 N. It only lifts off at about 400 N.
+- **The friction is small for PTFE: 2 to 7 N at 54 N.** PA6 gives 12 to 18 N. The friction is
+  higher with no pull (11 to 16 N with PTFE), because the strip then also presses on carriage-bottom.
+- **A thicker plastic strip presses harder.** At 54 N: 20 N of normal force at 0.25 mm, 29 N at
+  0.5 mm, 43 N at 0.75 mm, 73 N at 1 mm. With no plastic strip the steel slides on bare aluminium
+  and gives about 10.5 N of friction.
+- **The screw now sets the pull with very little travel.** 54 N needs only 0.03 mm, and 0.27 mm
+  gives 400 N. The channel holds the strip, so tightening the screw mostly stretches the steel.
+  The arch can no longer be the gauge for the pull, because it stays on the ceiling. Set the pull
+  another way, for example with a spring or a force gauge at the clamp.
+- **Rollers 1 and 4 carry about 250 N at 54 N, rollers 2 and 3 about 52 N.** The force on rollers
+  1 and 4 comes from the pinch on the magnets: 175 N at 5 N/mm³ and 670 N at 1000 N/mm³.
+- **Fatigue life has no limit at 54 N** for 301 at 0.15 mm: 586 MPa (643 MPa with the plate
   factor). The fatigue limit at 0.15 mm, 903 MPa, is an extrapolation below the measured
   0.25 mm. The highest stress is also under the measured 775 MPa at 0.25 mm.
 
@@ -134,7 +177,10 @@ Results for the old layout (26.2 mm, 119 mm, lift 6 mm, 0.25 mm × 150 mm) are i
 - Friction on the rollers.
 - Measured magnet stiffness and pull. Both are estimates. Measure them, or use the range.
 - Measured fatigue data for 304 strip. No maker publishes it.
-- The ceiling of carriage-top and the top of carriage-bottom. The strip can pass through both.
+- How friction on the carriage changes the pull along the strip. The pull is taken as the same
+  on both sides of the carriage.
+- The roller pockets in the carriage surfaces. The strip is wide, so the surfaces next to the
+  pockets hold it.
 - What is under the strip at rollers 1 and 4. The page assumes magnet strips there. In the CAD,
   the top rollers sit over the slot of the base, where nothing supports the strip.
 
