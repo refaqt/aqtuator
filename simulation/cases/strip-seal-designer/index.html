@@ -189,6 +189,8 @@ td { font: 13px var(--mono); }
           <input id="ceilOut" type="number" step="0.05" min="0" value="8.45"></div>
         <div class="field"><label for="liner">Plastic strip on the ceiling <small>mm thick, 0 = none</small></label>
           <input id="liner" type="number" step="0.05" min="0" value="0.5"></div>
+        <div class="field"><label for="linerWidth">Width of the plastic strip <small>mm, centred between rollers 2 and 3</small></label>
+          <input id="linerWidth" type="number" step="1" min="0" value="10"></div>
         <div class="field"><label for="linerMat">Plastic</label>
           <select id="linerMat">
             <option value="PTFE">PTFE</option>
@@ -310,7 +312,7 @@ import * as M from "./strip_model.js";
 
 const $ = (id) => document.getElementById(id);
 const ids = ["material", "t", "width", "length", "D", "a", "b", "dz", "stick", "slope", "clear", "ceilOut",
-  "liner", "linerMat", "k", "q"];
+  "liner", "linerWidth", "linerMat", "k", "q"];
 const text = new Set(["material", "linerMat"]);
 let ve = 1;
 let curve = null, curveKey = "", lastShape = null;
@@ -434,13 +436,14 @@ function drawLayout(p, s) {
     };
     svg.append(el("path", { d: path(ch.ceiling, 0), fill: "none", stroke: "var(--muted)", "stroke-width": 1.5 }));
     svg.append(el("path", { d: path(ch.floor, 0), fill: "none", stroke: "var(--muted)", "stroke-width": 1.5 }));
-    if (p.liner > 0) {
+    if (M.hasLiner(p)) {
       const y = Y(p.clear - p.t / 2), h = p.liner * scale * ve;
-      const x0 = p.a - p.ceilOut;
-      svg.append(el("rect", { x: X(x0), y, width: X(rollers[3] - x0) - X(x0), height: h, fill: "var(--accent)", opacity: 0.35 }));
+      const x0 = ch.xm - p.linerWidth / 2;
+      svg.append(el("rect", { x: X(x0), y, width: X(x0 + p.linerWidth) - X(x0), height: h, fill: "var(--accent)", opacity: 0.6 }));
     }
     svg.append(el("text", { x: X(rollers[1] + 4), y: Y(p.clear - p.t / 2) - 5, "font-size": 11, fill: "var(--muted)" },
-      `carriage-top ceiling ${fmt(p.clear, 2)} mm` + (p.liner > 0 ? `, ${fmt(p.liner, 2)} mm ${M.LINERS[p.linerMat].name}` : "")));
+      `carriage-top ceiling ${fmt(p.clear, 2)} mm` + (M.hasLiner(p)
+        ? `, ${fmt(p.liner, 2)} × ${fmt(p.linerWidth, 0)} mm ${M.LINERS[p.linerMat].name} in the middle` : "")));
   } else {
     svg.append(el("line", { x1: X(-R - 4), x2: X(rollers[3] + R + 4), y1: Y(p.clear), y2: Y(p.clear),
       stroke: "var(--muted)", "stroke-dasharray": "6 4" }));
@@ -546,7 +549,7 @@ function update() {
     return;
   }
   const key = JSON.stringify([p.material, p.t, p.length, p.D, p.a, p.b, p.dz, p.k, p.q, p.plate,
-    p.carriage, p.stick, p.slope, p.clear, p.ceilOut, p.liner]);
+    p.carriage, p.stick, p.slope, p.clear, p.ceilOut, p.liner, p.linerWidth]);
   try {
     if (key !== curveKey) { curve = M.screwCurve(p); curveKey = key; lastShape = null; }
     const T = M.pullForTravel(p, curve, p.u);
@@ -566,8 +569,17 @@ function render(p, mat, s, st, T) {
   const N = T * p.width;
   tile("tPull", `${fmtN(N)} N`, `${fmt(T, 3)} N/mm · ${fmt(st.membrane, 1)} MPa`);
   // The strip top is t above its centre line height; the ceiling height is above the profile.
-  const ceil = p.clear - (p.carriage ? p.liner : 0);
-  const room = ceil - s.archTop - p.t;
+  // Room: the smallest gap between the strip and the ceiling, from roller 2 to roller 3.
+  const ceil = p.clear;
+  let room = ceil - s.archTop - p.t;
+  if (p.carriage) {
+    const ch = M.channel(p), { rollers } = M.layout(p);
+    for (let i = 0; i < s.x.length; i++) {
+      if (s.x[i] < rollers[1] || s.x[i] > rollers[2]) continue;
+      const c = ch.ceiling(s.x[i]);
+      if (c) room = Math.min(room, c.h - p.t - s.y[i]);
+    }
+  }
   tile("tArch", `${fmt(s.archHeight, 2)} mm`,
     `above the tops of rollers 2 and 3 · ` + (room <= 1e-3
       ? (p.carriage ? "the strip touches the ceiling" : "the strip would hit the carriage")
@@ -576,7 +588,7 @@ function render(p, mat, s, st, T) {
   const [fLo, fHi] = M.carriageFriction(p, s);
   const liner = M.LINERS[p.linerMat];
   tile("tFric", p.carriage ? (fHi - fLo < 0.05 ? `${fmtN(fLo)} N` : `${fmtN(fLo)}–${fmtN(fHi)} N`) : "–",
-    p.carriage ? `strip sliding on the carriage · ${p.liner > 0 ? liner.name + " liner" : "no liner"}, aluminium ${M.MU_ALU}`
+    p.carriage ? `strip sliding on the carriage · ${M.hasLiner(p) ? liner.name + " liner" : "no liner"}, aluminium ${M.MU_ALU}`
       : "free strip, no carriage");
   tile("tRadius", `${fmt(s.rMin, 1)} mm`, `near roller ${s.at}`);
   const ratio = st.peak / mat.Rp02;

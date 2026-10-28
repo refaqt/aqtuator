@@ -44,6 +44,7 @@ Earlier cases: [`strip-seal-preload`](../strip-seal-preload/) (the solver this p
 | Carriage-top ceiling | 13.5 mm | Above the profile |
 | Flat ceiling starts | 8.45 mm | Outside rollers 2 and 3. Between there and roller 1 the ceiling is the slope |
 | Plastic strip on the ceiling | 0.5 mm | Thickness. 0 means bare aluminium |
+| Width of the plastic strip | 10 mm | Along the strip, centred between rollers 2 and 3. 0 means bare aluminium |
 | Plastic | PTFE | PTFE, UHMW-PE, POM-C or PA6. Sets the friction, see below |
 | Magnet strip stiffness | 20 N/mm³ | Estimate. See below |
 | Magnet pull | 0.005 N/mm² | Estimate |
@@ -79,7 +80,9 @@ carriage add up to zero, which the check script tests.
 
 **The carriage channel.** Between rollers 1 and 4 the strip runs between the two carriage halves.
 The top of carriage-bottom (its slope, then its flat top) is a floor. The underside of
-carriage-top (its slope, then its flat ceiling with the plastic strip) is a ceiling. The strip
+carriage-top (its slope, then its flat ceiling) is a ceiling. The plastic strip is a short pad
+on that flat ceiling, in the middle between rollers 2 and 3. It hangs down by its thickness and
+pushes the strip down there. Beside the pad the ceiling is bare aluminium. The strip
 may touch them but not pass through them, in the same way as it touches the rollers. The force
 of each surface on the strip is along the surface normal.
 
@@ -128,42 +131,46 @@ carriage-bottom.
 - **The page puts rollers 1 and 4 on the strip, with the strip on the base.** In the CAD their
   bottom is at the top of the base, so 0.15 mm (one strip thickness) lower. The page cannot show
   this.
-- **The plastic strip is 0.5 mm thick here as an example.** It is an input. It leaves 0.85 mm of
-  room above rollers 2 and 3.
+- **The plastic strip is 0.5 mm thick and 10 mm wide here as an example.** Both are inputs. It
+  leaves 0.85 mm of room above rollers 2 and 3. A pad thicker than 1.85 mm leaves less room than
+  the strip thickness above carriage-bottom, so it clamps the strip.
 - **The strip length of 1000 mm is the old value.** The clamps have no part in CAD yet. It hardly
   matters for the pull: 0.024 mm of screw travel for 54 N at 440 mm, 0.040 mm at 2000 mm.
 
 ## Results at the defaults
 
-301, 0.15 mm, 186 mm wide, 1000 mm between the clamps, magnet stiffness 20 N/mm³, 0.5 mm PTFE on
-the ceiling:
+301, 0.15 mm, 186 mm wide, 1000 mm between the clamps, magnet stiffness 20 N/mm³, a PTFE pad of
+0.5 mm × 10 mm on the ceiling:
 
-| Pull | Screw travel | Tightest radius | Highest stress | Roller 1 | Roller 2 | Normal force on the plastic | Normal force on carriage-bottom | Friction, PTFE |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 0 N | 0 mm | 24.8 mm | 559 MPa | 226 N | 32 N | 33 N | 19 N | 10.7–15.6 N |
-| 20 N | 0.012 mm | 24.4 mm | 569 MPa | 234 N | 39 N | 32 N | 13 N | — |
-| 54 N | 0.030 mm | 23.8 mm | 586 MPa | 247 N | 52 N | 29 N | 2 N | 2.3–6.7 N |
-| 100 N | 0.074 mm | 21.7 mm | 642 MPa | 284 N | 66 N | 24 N | 0 N | — |
-| 200 N | 0.155 mm | 18.6 mm | 754 MPa | 345 N | 97 N | 14 N | 0 N | — |
-| 400 N | 0.268 mm | 15.2 mm | 924 MPa | 474 N | 161 N | 0 N | 0 N | — |
+| Pull | Screw travel | Tightest radius | Highest stress | Roller 1 | Roller 2 | Normal force on the pad | Normal force on bare carriage-top | Normal force on carriage-bottom | Friction, PTFE |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 N | 0 mm | 24.5 mm | 566 MPa | 229 N | 23 N | 2 N | 18 N | 26 N | 21.0–21.3 N |
+| 20 N | 0.010 mm | 24.2 mm | 575 MPa | 237 N | 29 N | 3 N | 15 N | 20 N | 16.3–16.8 N |
+| 54 N | 0.027 mm | 23.5 mm | 591 MPa | 250 N | 41 N | 4 N | 9 N | 8 N | 8.5–9.1 N |
+| 100 N | 0.064 mm | 22.1 mm | 631 MPa | 278 N | 55 N | 6 N | 2 N | 0 N | 1.0–1.9 N |
+| 200 N | 0.187 mm | 18.7 mm | 751 MPa | 342 N | 90 N | 4 N | 0 N | 0 N | 0.2–0.9 N |
+| 400 N | 0.325 mm | 15.2 mm | 924 MPa | 472 N | 158 N | 0 N | 0 N | 0 N | 0.0 N |
 
-Friction at 54 N, by plastic: PTFE 2.3–6.7 N, UHMW-PE 5.2–9.5 N, POM-C 9.5–13.9 N, PA6
-12.4–18.2 N. Of this, about 0.9 N comes from the light contact with carriage-bottom.
+Friction at 54 N, by plastic: PTFE 8.5–9.1 N, UHMW-PE 8.9–9.5 N, POM-C 9.5–10.1 N, PA6
+9.9–10.8 N. The plastic matters little, because most of the friction is steel on aluminium.
 
-- **The strip lies against the plastic strip at every useful pull.** It presses on it with about
-  29 N at 54 N. It only lifts off at about 400 N.
-- **The friction is small for PTFE: 2 to 7 N at 54 N.** PA6 gives 12 to 18 N. The friction is
-  higher with no pull (11 to 16 N with PTFE), because the strip then also presses on carriage-bottom.
-- **A thicker plastic strip presses harder.** At 54 N: 20 N of normal force at 0.25 mm, 29 N at
-  0.5 mm, 43 N at 0.75 mm, 73 N at 1 mm. With no plastic strip the steel slides on bare aluminium
-  and gives about 10.5 N of friction.
-- **The screw now sets the pull with very little travel.** 54 N needs only 0.03 mm, and 0.27 mm
+- **A 0.5 mm pad does not keep the strip off the aluminium.** The arch between rollers 2 and 3
+  wants to rise about 11 mm, and the ceiling stops it at 1.35 mm. At 54 N the strip touches the
+  pad at its two edges, and also the bare ceiling about 18 mm in from rollers 2 and 3
+  (9 N), and carriage-bottom (8 N).
+- **A thicker pad takes over the ceiling contact.** At 54 N, with a 10 mm wide pad, the bare
+  ceiling carries 9 N at 0.5 mm, 4 N at 1 mm, 2 N at 1.25 mm and nothing from 1.5 mm. Then the
+  PTFE friction is 4.8 to 6.4 N. From about 1.8 mm the pad starts to pinch the strip on carriage-bottom.
+- **The width of the pad matters less than its thickness.** At 54 N and 0.5 mm, the friction is
+  8.6 to 9.2 N at 5 mm wide, 8.0 to 8.7 N at 20 mm and 5.4 to 6.9 N at 40 mm. With no pad it is
+  10.5 N.
+- **The screw sets the pull with very little travel.** 54 N needs only 0.027 mm, and 0.33 mm
   gives 400 N. The channel holds the strip, so tightening the screw mostly stretches the steel.
-  The arch can no longer be the gauge for the pull, because it stays on the ceiling. Set the pull
+  The arch can not be the gauge for the pull, because it stays on the ceiling. Set the pull
   another way, for example with a spring or a force gauge at the clamp.
-- **Rollers 1 and 4 carry about 250 N at 54 N, rollers 2 and 3 about 52 N.** The force on rollers
+- **Rollers 1 and 4 carry about 250 N at 54 N, rollers 2 and 3 about 41 N.** The force on rollers
   1 and 4 comes from the pinch on the magnets: 175 N at 5 N/mm³ and 670 N at 1000 N/mm³.
-- **Fatigue life has no limit at 54 N** for 301 at 0.15 mm: 586 MPa (643 MPa with the plate
+- **Fatigue life has no limit at 54 N** for 301 at 0.15 mm: 591 MPa (650 MPa with the plate
   factor). The fatigue limit at 0.15 mm, 903 MPa, is an extrapolation below the measured
   0.25 mm. The highest stress is also under the measured 775 MPa at 0.25 mm.
 

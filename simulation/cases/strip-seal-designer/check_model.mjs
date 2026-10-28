@@ -11,6 +11,7 @@
 // 4. The screw curve starts at zero and rises.
 // 5. With the carriage channel, the strip stays between the two carriage
 //    halves, and the forces still add up to zero.
+// 6. The plastic pad on the ceiling sits only in the middle, as wide as set.
 
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -78,6 +79,17 @@ for (const pull of [0, 0.29, 2]) {
   const fy = [...s.rollerForces, ...s.carriageForces].map((r) => Math.abs(r.fy));
   check(Math.abs(s.sumFy) < 1e-4 * Math.max(...fy),
     `with the channel, vertical forces add to zero at ${pull} N/mm: rest ${s.sumFy.toExponential(1)} N/mm`);
+}
+// The plastic pad: only in the middle, and as wide as set.
+for (const w of [10, 30]) {
+  const p = { ...DEFAULTS, linerWidth: w };
+  const c = channel(p);
+  let lo = Infinity, hi = -Infinity;
+  for (let x = 0; x <= 2 * p.a + p.b; x += 0.05) {
+    if (c.ceiling(x)?.kind === "liner") { lo = Math.min(lo, x); hi = Math.max(hi, x); }
+  }
+  check(Math.abs(hi - lo - w) < 0.1 && Math.abs((hi + lo) / 2 - c.xm) < 0.1,
+    `plastic pad ${w} mm wide: from ${lo.toFixed(2)} to ${hi.toFixed(2)} mm, middle ${c.xm.toFixed(2)} mm`);
 }
 const s54 = shape(DEFAULTS, 54 / DEFAULTS.width);
 const [fLo, fHi] = carriageFriction(DEFAULTS, s54);
