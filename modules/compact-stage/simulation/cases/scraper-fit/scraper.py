@@ -10,7 +10,7 @@ from OCP.BRepExtrema import BRepExtrema_DistShapeShape
 
 X0 = 106.6          # end face of carriage-top (start end)
 Z_TOP_UNDER = 40.5  # underside of carriage-top
-Z_STRIP_TOP = 40.25 # 0.25 mm strip on the base top at z = 40
+Z_STRIP_TOP = 40.15 # 0.15 mm strip on the base top at z = 40
 # pocket in carriage-top
 P_LEN, P_Y0, P_Y1, P_DEPTH = 10.0, 6.0, 204.0, 4.5
 # scraper
@@ -18,7 +18,7 @@ CLR = 0.2                       # side play in the pocket (y and x inner end)
 PLATE_T = 3.5                   # plate: z 41.5 .. 45.0
 Z_PLATE_UNDER = Z_TOP_UNDER + P_DEPTH - PLATE_T   # 41.5
 GAP = 0.15                      # lip tip above the strip
-Z_TIP = Z_STRIP_TOP + GAP       # 40.40
+Z_TIP = Z_STRIP_TOP + GAP       # 40.30
 LIPS = [(0.0, 1.0), (2.0, 3.0)] # x ranges from the end face
 SCREW_X = 6.5
 SCREW_Y = [11.0, 60.0, 105.0, 150.0, 199.0]

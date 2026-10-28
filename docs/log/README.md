@@ -177,6 +177,7 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-27 | [The compact stage uses the 240 mm RSF tape](2026-10-27_rsf-ml240-tape.md) | cad, architecture |  |
 | 2026-10-28 | [New shape for the roller pockets, with R 3.5 corners](2026-10-28_roller-pocket-shape.md) | cad |  |
 | 2026-10-28 | [How to close the gap at the sides of the carriage](2026-10-28_side-seal-of-the-carriage.md) | engineering, cad | 2 |
+| 2026-10-28 | [Clamping the seal strip ends and setting the pull, together with the scraper](2026-10-28_strip-end-clamp-and-preload.md) | engineering, cad | 2 |
 | 2026-10-28 | [Seal strip page updated to the current carriage, with the channel and friction](2026-10-28_strip-seal-designer-current-layout.md) | engineering, simulation, software |  |
 | 2026-10-28 | [Seal strip page: the plastic strip on the ceiling is now a short pad](2026-10-28_strip-seal-short-ceiling-pad.md) | engineering, simulation, software |  |
 | 2026-10-28 | [Seal strip rollers on flanged ball bearings, in the assembly](2026-10-28_seal-strip-rollers-in-the-assembly.md) | engineering, cad, architecture, purchasing |  |

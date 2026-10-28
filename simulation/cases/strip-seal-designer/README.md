@@ -74,6 +74,10 @@ Two things are new compared with the Python case:
   The page samples the pull T on a grid, builds the curves u → T and T → arch height, and reads
   the answer off them.
 
+Walls can be added as obstacles (`opts.walls`), for example the faces of the two carriage halves
+around the strip. Their forces on the strip come back in `wallF`. The page does not use them yet.
+The [`strip-pull`](../../../modules/compact-stage/simulation/cases/strip-pull/) case does.
+
 Forces on each roller come from the contact reactions of the solver, split along the line from
 the roller centre to the contact point. The vertical forces of the rollers, the magnets and the
 carriage add up to zero, which the check script tests.

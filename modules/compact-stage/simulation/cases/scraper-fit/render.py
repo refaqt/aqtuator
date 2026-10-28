@@ -9,9 +9,9 @@ from scraper import *
 
 top=placed('carriage-top','carriage_top'); bot=placed('carriage-bottom','carriage_bottom001'); base=placed('base','base')
 top2=cut(top,pocket_cut()); sc=scraper(); scr=screws(); rol=rollers()
-strip=box(0,12,40,440,198,40.25)
+strip=box(0,12,40,440,198,Z_STRIP_TOP)
 PARTS=[('base',base,'#c9ced6'),('carriage-bottom',bot,'#9fb7d9'),('carriage-top (with new pocket)',top2,'#b9c9a8'),
-       ('seal strip 0.25 mm',strip,'#555555'),('scraper',sc,'#e8833a')]+[('M3x10 ISO 14581',s,'#7a5c99') for s in scr]+[('top roller 10 x 20 mm',r,'#1f5fa8') for r in rol]
+       ('seal strip 0.15 mm',strip,'#555555'),('scraper',sc,'#e8833a')]+[('M3x10 ISO 14581',s,'#7a5c99') for s in scr]+[('top roller 10 x 20 mm',r,'#1f5fa8') for r in rol]
 
 def loops(segs,ax0,ax1,tol=1e-3):
     segs=[[(p[ax0],p[ax1]) for p in s] for s in segs]
