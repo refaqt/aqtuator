@@ -24,16 +24,23 @@ The rules from Niels Bosmans, collected during the day:
   each strip end, one near each side edge. Each insert sits in a hole in the strip, with no thread
   and no nut. A countersunk screw presses it into the hole. The screw hole in the base sits a
   little off the centre of the countersink, so tightening the screw pulls the strip.
-- **The concept is feasible, best with the insert sunk flush with the strip.** The groove, the
-  tapped hole and the magnet pockets are all made from the top and stay in solid material. A flush
-  insert clears carriage-top, carriage-bottom, the scraper and the top rollers, even in a crash,
-  with no change to the carriage. As drawn, 1.05 mm above the strip, the insert is hit by the
-  scraper lips and carriage-top at the end of the usable travel. It then needs the stepped lips
-  of the drawing and a longer scraper pocket in carriage-top at the insert.
+- **The concept is feasible as drawn, with the insert above the strip.** A flush insert is not
+  possible, Niels Bosmans says. The carriage passes over the insert on its way to the end of the
+  travel, so carriage-top and the scraper need room for it:
+  - a corner pocket in carriage-top, 1 mm deep and 12 mm long from the end face (19.5 mm to also
+    survive a crash);
+  - scraper lips that step back behind the insert, as drawn, to about 11.3 mm from the end face.
+- **The insert moves over the strip ear and gets a little smaller.** The lip behind it must stay
+  off the strip where the strip rises towards the carriage slope. So the insert moves from 13.2 to
+  8.5 mm from the base side, and goes from Ø7.5 with M2.5 to Ø6 with M2.
+- **A spring at one strip end sets the pull by force.** The two inserts of that end sit on
+  sliders, pushed by springs in pockets milled from the top into the side wall. Then 0.1 mm of
+  travel changes the pull by about 2.3 N instead of 50 to 100 N. Hole tolerances, temperature,
+  settling and creep then hardly change the pull.
 - **Under the carriage the pull is even across the width,** although it enters at the four
-  corners. Only with the carriage at the end of its travel does the first bottom roller see an
-  uneven pull: 71 % of the average in the strip middle, 156 % at the edges. Within 30 mm of the
-  strip ends the middle of the strip carries almost no pull, so the magnets must hold it flat.
+  corners. With the carriage at the end of its travel, the first bottom roller sees 68 % of the
+  average pull in the strip middle and 164 % at the edges. Within 30 mm of the strip ends the
+  middle of the strip carries almost no pull, so the magnets must hold it flat.
 - **Little travel is needed for 125 N.** Both strip ends together must move only 0.11 to 0.24 mm
   from hand-tight to 125 N.
 - **But the travel sets the pull far too sharply.** Near 125 N, 0.1 mm more travel adds 50 to
@@ -91,37 +98,50 @@ the drawing comes from the 74.1 mm pitch of the carriage-top screws in it: 3.44 
 Laid over the CAD at that scale, the half-round pocket, the damper pocket and the carriage screws
 of the drawing fall on the CAD.
 
-![The drawing laid over the CAD, and the modelled parts](../../modules/compact-stage/simulation/results/strip-end-insert/overlay.png)
+![The drawing laid over the CAD, and the modelled fixed end](../../modules/compact-stage/simulation/results/strip-end-insert/overlay.png)
 
-| Part | Size used, read from the drawing or chosen |
+**Why the carriage hits the insert.** The carriage comes from the middle of the stage. Every part
+of carriage-top and the scraper that ends up beyond the insert at the end of the travel has
+passed over it on the way. The underside of carriage-top is only 0.35 mm above the strip, and the
+insert stands 0.75 mm above it. The scraper pocket in carriage-top reaches 10 mm from the end face,
+and the insert reaches 11 mm. The first check of this concept looked at three carriage positions
+only and missed this. The check now uses the insert drawn out towards the base end: everything
+the carriage passes over.
+
+**A corner pocket in carriage-top solves it.** It is 1 mm deep, over 7 mm of width around the
+insert. At 12 mm long from the end face it clears the insert up to the first damper touch, with
+0.3 mm to spare. At 19.5 mm long it also clears it in a crash. It takes away about 25 mm³ of
+aluminium.
+
+**The scraper lips must step back, as drawn.** A lip that passes over the insert hits it. So in
+front of the insert there is no lip, and a lip behind it, 11.3 mm or more from the end face,
+catches the chips instead. The scraper then grows into a deeper corner pocket in carriage-top,
+4.5 mm deep like the scraper pocket. The check found one limit: from about 10 mm behind the end
+face, the strip proper (12 mm and more from the base side) rises towards the carriage slope. A lip
+there would touch it. So the lip behind the insert, and the insert, must sit beside the strip
+proper, over the ear. That is why the insert moves.
+
+| Part | Size used |
 | --- | --- |
-| Insert | Ø7.5 mm, centred 11.6 mm from the base end and 13.2 mm from the base side, so over the side wall. Two flat faces 6 mm apart. 1.7 mm high: the M2.5 countersink (1.5 mm) plus 0.2 mm. |
-| Screw | ISO 14581 M2.5 × 6, countersunk. The insert can travel 0.25 mm before it is centred. |
-| Groove | 6.1 mm wide, milled from the top along the travel, with round ends. Two depths checked: 0.5 mm (insert as drawn, 1.05 mm above the strip) and 1.55 mm (insert top flush with the strip top). |
-| Strip corner | Strip end 1.5 mm from the base end. The ear reaches 6.5 mm from the base side. Ø7.6 mm hole for the insert. |
-| Magnets | At 5.8 mm from the base end, 39.4 and 81.2 mm from the base side. Ø6 × 2 mm, top flush, assumed. |
+| Insert | Ø6 mm, 1.4 mm high, 0.75 mm above the strip, at 12.0 mm from the base end and 8.5 mm from the base side (drawing: Ø7.5 at 11.6 and 13.2 mm). Two flat faces 5 mm apart. |
+| Screw | ISO 14581 M2 × 5, countersunk, straight down into the side wall. The insert can travel 0.25 mm before it is centred. |
+| Groove | 5.1 mm wide, 0.5 mm deep, milled from the top along the travel, with round ends. |
+| Strip corner | Strip end 1.5 mm from the base end. The ear reaches 4 mm from the base side. Ø6.1 mm hole for the insert. |
+| Magnets | At 5.8 mm from the base end, 39.4 and 81.2 mm from the base side, as drawn. Ø6 × 2 mm assumed. |
+| Carriage-top | Corner pocket 1 mm deep, 12 mm long (19.5 mm for a crash). Under the stepped scraper, the scraper pocket grows into the corner, 4.5 mm deep, up to 12.6 mm from the end face. It keeps 3.2 mm to the roller pocket and the slope opening. |
+| Scraper | No lips in front of the insert, over 7 mm of width. A lip behind it, 11.4 to 12.4 mm from the end face. |
 
-![Sections through the insert](../../modules/compact-stage/simulation/results/strip-end-insert/sections_insert.png)
+![Sections through the insert at the fixed end](../../modules/compact-stage/simulation/results/strip-end-insert/sections_insert.png)
 
 What the fit check found:
 
-- **The base can carry it.** The groove, the tapped hole and the magnet pockets stay in solid
-  material, at both depths. The groove keeps only 0.75 mm of wall to the half-round pocket in the
-  corner of the base. Moving the insert 0.5 mm towards the base side would make that 1.25 mm. The
-  outer magnet pocket keeps 1.7 mm to the damper pocket.
-- **A flush insert clears everything.** At the end of the usable travel, at the first damper
-  touch and with the dampers fully pressed in, nothing touches the insert or the screw. The scraper
-  lips pass 0.15 mm above it, as above the strip.
-- **An insert as drawn is hit.** At the end of the usable travel the second scraper lip touches it
-  and carriage-top overlaps it by 3 mm³. The scraper pocket in carriage-top ends just short of the
-  insert. To make it work: step the lips back around the insert, as in the drawing, and make the
-  scraper pocket in carriage-top longer at the insert, about 12 mm instead of 10 mm for normal
-  travel, or about 19 mm to survive a crash.
-- **Carriage-bottom and the top rollers never touch it,** at either height.
-
-One point on the flush insert: the strip then bears on only the top 0.15 mm of the insert side.
-Keep the top edge of the insert sharp and the hole a close fit, so the strip cannot ride up over
-it. If it does, let the insert stand 0.1 to 0.2 mm proud and step the lips back only there.
+- **The base can carry it.** The groove, the tapped hole and the magnet pockets are made from the
+  top and stay in solid material. The groove keeps 5.95 mm of wall. The magnet pockets keep only
+  1.1 mm to the inside face of the end wall; moving them 0.5 mm towards the base end gives 1.6 mm.
+- **With the corner pockets and the stepped scraper, nothing touches the insert** up to the first
+  damper touch. Carriage-bottom and the top rollers never touch it.
+- **In a crash, the stepped lip hits the insert** (3.6 mm³). A lip of soft material (TPU) would
+  bend and survive. A lip further back does not fit beside the slope opening.
 
 ### How the pull spreads from four corner inserts
 
@@ -134,9 +154,9 @@ whole width, from the strip model). Friction and magnets are left out.
 
 | Place | Carriage at the end of the travel: middle / highest | Carriage in the middle: middle / highest |
 | --- | ---: | ---: |
-| 15 mm from the strip end | 0.00 / 8.9 | 0.00 / 8.8 |
-| 30 mm from the strip end | 0.26 / 4.3 | 0.03 / 5.3 |
-| First bottom roller | 0.71 / 1.56 | 0.99 / 1.01 |
+| 15 mm from the strip end | 0.06 / 8.1 | 0.00 / 8.0 |
+| 30 mm from the strip end | 0.24 / 5.3 | 0.00 / 6.3 |
+| First bottom roller | 0.68 / 1.64 | 0.99 / 1.01 |
 | Middle of the arch | 1.02 / 1.02 | 1.00 / 1.00 |
 
 Values are shares of the average pull stress, 4.5 MPa at 125 N.
@@ -146,11 +166,62 @@ Values are shares of the average pull stress, 4.5 MPa at 125 N.
 - With the carriage at the end of the travel, the first bottom roller sees an uneven pull. The
   strip middle may then bow a little higher there than the edges.
 - Near the strip ends the middle carries almost no pull, and beside the inserts the strip is
-  squeezed sideways by up to 6.7 MPa. A free 50 mm wide panel of 0.15 mm steel buckles at about
+  squeezed sideways by up to 10 MPa. A free 50 mm wide panel of 0.15 mm steel buckles at about
   6 MPa, so the strip may wrinkle there. The base under it and the magnets of the drawing must
   hold it flat. A test piece will show it.
 - The strip itself is not loaded hard anywhere. The bearing stress in the insert hole is about
-  55 MPa, and the stress on the strip edge beside the insert about 40 MPa.
+  68 MPa, and the stress on the strip edge beside the insert about 36 MPa.
+
+### Creep, and setting the pull by force
+
+The pull is set by travel: where the holes in the strip and in the base end up. Near 125 N, 0.1 mm
+of travel changes the pull by 50 to 100 N. So anything that changes the length by a few
+hundredths of a millimetre changes the pull a lot:
+
+| Cause | Size | Pull change, set by travel | With the springs |
+| --- | --- | ---: | ---: |
+| Hole positions in the strip and the base, typical laser or drilling tolerance | ±0.05 to 0.1 mm | ±25 to 100 N | ±1 to 2.5 N |
+| Temperature, aluminium base and steel strip, 10 °C | 0.03 mm | 15 to 30 N | 0.7 N |
+| Settling of the contacts: insert, groove, countersink | about 0.01 mm | 5 to 10 N | 0.2 N |
+
+The temperature row assumes an aluminium base. Its material is not chosen yet.
+
+Creep of the steel itself is not the problem. The pull gives only 4.5 MPa on average and about
+36 MPa next to the inserts, far below the stresses at which steel at room temperature creeps.
+What does change the length: temperature, settling of the contacts, wear, and a strip that takes a
+small permanent bend at a parking position.
+
+**The fix is a spring in series with the strip, much softer than the arch.** Then the spring sets
+the pull, and a change in length only moves the spring a little.
+
+- **Where:** at one strip end only. The other end stays as drawn, with the eccentric screw. At the
+  spring end, each insert is screwed onto a slider instead of into the base. A compression spring
+  pushes the slider towards the base end. Each slider and spring sit in a pocket milled from the
+  top into the side wall: 8.5 mm wide, 30 mm long, 8.5 mm deep, with 4.25 mm of wall around it. The
+  strip ear grows to 35 mm long and covers the pocket, so chips cannot get in and users cannot
+  reach the spring.
+- **Spring:** stainless spring wire Ø1.2 mm, mean Ø6.3 mm, 6 active turns, 20 mm free length:
+  about 12 N/mm, 62.5 N at 5.2 mm compression, 63 N more before it is solid. Two springs at one end
+  give 24 N/mm, against 500 to 1000 N/mm for the arch. The wire stress is about 750 MPa, which
+  stainless spring wire takes under a steady load. These are typical wire values: take the real
+  spring from a maker's catalogue.
+- **Hold-down:** the strip pulls the insert 4 mm above the spring axis, so the slider wants to
+  tip. An M2 screw with a sleeve, in a slot at the front of the slider, holds it down and still
+  lets it slide.
+- **Setting the pull:** the spring length sets it. The position of the slider in its pocket shows
+  the spring length, so a mark on the slider is a gauge of the pull at fitting and at every
+  inspection.
+- **Fitting:** hold the slider back with a pin or a tool while the strip is laid and the screws
+  go in, then let go.
+
+![The spring end](../../modules/compact-stage/simulation/results/strip-end-insert/spring_end.png)
+
+A simpler option without a spring: pull the strip with a known force at fitting (a spring scale on
+the insert), then clamp the insert. That takes away the hole tolerance, but the temperature and
+settling rows still apply.
+
+One limit stays with any method: the strip rubs on the magnets. That friction can hold different
+pulls in different parts of the strip until the carriage moves it. The model leaves friction out.
 
 ### Is there enough travel for 125 N?
 
@@ -218,8 +289,9 @@ limit of the 301 strip at 0.15 mm is about 900 MPa, extrapolated from Alleima's 
 - The seal strip is 0.15 mm thick. Niels Bosmans decided this. See
   [the decision record](../decisions/2026-10-28_seal-strip-0-15-mm.md).
 - Versions 1 and 2 of the clamp are dropped.
-- Version 3 is the concept of Niels Bosmans. It is checked against the CAD and is feasible. No
-  decision yet on the insert height.
+- Version 3 is the concept of Niels Bosmans. It is checked against the CAD and is feasible.
+- The insert stands above the strip. Niels Bosmans ruled out a flush insert.
+- No decision yet on the spring end.
 
 ## Open Questions
 
@@ -227,13 +299,15 @@ limit of the 301 strip at 0.15 mm is about 900 MPa, extrapolated from Alleima's 
   contact with tape? This decides the pull and the friction.
 - **How proud do the bottom rollers stand?** The 0.35 mm of room assumes 1.5 mm, the same as the
   top rollers. No roller is in the CAD yet. Every number in the table above depends on it.
-- **Insert height.** Flush, with no change to the carriage, or as drawn, with stepped lips and a
-  longer scraper pocket in carriage-top?
+- **Spring end or not?** With a spring at one end, the pull hardly depends on hole tolerances,
+  temperature or settling. Without it, the pull must be set by force at fitting and will drift.
+- **Corner pocket length.** 12 mm for normal travel, or 19.5 mm so that carriage-top survives a
+  crash. The stepped scraper lip hits the insert in a crash either way, unless it is made of a
+  soft material.
+- **Insert position.** Is moving it over the strip ear (from 13.2 to 8.5 mm from the base side,
+  Ø6 instead of Ø7.5) acceptable?
 - **Does the strip end stay flat?** Its middle carries almost no pull near the ends, and it is
   squeezed sideways beside the inserts. The magnets must hold it. Check on a test piece.
-- **The travel sets the pull sharply.** With the screw offset fixed by the drawing, small errors
-  in the hole positions change the pull by tens of newtons. How will the pull be checked at
-  fitting?
 - **The top rollers** still reach 1.15 mm below the top of the strip, and hit the end wall when
   the dampers press in fully. They must move up.
 
@@ -242,8 +316,10 @@ limit of the 301 strip at 0.15 mm is about 900 MPa, extrapolated from Alleima's 
 - [ ] Decide on the ceiling or the bottom roller height.
 - [ ] Put the bottom and top rollers in the CAD, so the room around the strip can be measured.
 - [ ] Choose the target pull again once the ceiling is decided.
-- [ ] Choose the insert height.
-- [ ] Draw the inserts, the grooves, the screws and the magnet pockets in the CAD.
+- [ ] Decide on the spring end and the corner pocket length.
+- [ ] Choose a real spring from a catalogue, and check its force tolerance.
+- [ ] Draw the inserts, the grooves, the screws, the magnet pockets, the corner pockets in
+      carriage-top, the stepped scraper and the spring pockets in the CAD.
 - [ ] Make a test piece of the strip corner with an insert. Check that the strip does not slip or
       wrinkle.
 
@@ -258,6 +334,13 @@ limit of the 301 strip at 0.15 mm is about 900 MPa, extrapolated from Alleima's 
   stress elements of 1 mm (scipy). The soft band has 2 990 MPa along the travel and steel values
   across and in shear. The 6 MPa buckling value is the plate formula with k = 4 for a 50 mm
   panel, as an order of size.
+- Sweep check: the insert is extended towards the base end (x down to -10 mm) and checked against
+  carriage-top and the scraper at the end positions of the carriage. That covers every position
+  on the way.
+- Spring: k = G d⁴ / (8 D³ n) with G = 70 000 MPa; shear stress 8 F D / (π d³) times the Wahl
+  factor (1.29 at index 5.25). The arch stiffness of 500 to 1000 N/mm comes from the strip-pull
+  case. Thermal: (23 − 16) × 10⁻⁶ per °C over 430 mm, typical expansion values for aluminium and
+  1.4310.
 - Images 03 and 04: the drawing of Niels Bosmans, and the same drawing with notes. The notes were
   added with a short matplotlib script that is not in the repository.
 - `strip_model.js` got an `opts.walls` option (straight walls as upper or lower bounds) and

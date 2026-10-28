@@ -1,222 +1,198 @@
-[
- [
-  "as drawn",
-  "groove, tapped hole and magnet pockets outside solid base material [mm3]",
-  0.0
+{
+ "checks": [
+  [
+   "fixed end: groove, tapped hole and magnet pockets outside solid base material [mm3]",
+   0.0
+  ],
+  [
+   "fixed end: insert overlaps the base, set and loose [mm3]",
+   0.0
+  ],
+  [
+   "fixed end: insert overlaps the strip, set and loose [mm3]",
+   0.0
+  ],
+  [
+   "fixed end: screw overlaps the strip or the insert [mm3]",
+   0.0
+  ],
+  [
+   "fixed end: thinnest wall from the groove and its tapped hole to a hollow of the base [mm]",
+   5.95
+  ],
+  [
+   "magnet pocket 1: thinnest wall to a hollow of the base [mm]",
+   1.1
+  ],
+  [
+   "magnet pocket 2: thinnest wall to a hollow of the base [mm]",
+   1.1
+  ],
+  [
+   "insert top above the strip top [mm]",
+   0.75
+  ],
+  [
+   "usable travel end: carriage-top, no corner pocket, passes over the insert, overlap [mm3]",
+   1.417
+  ],
+  [
+   "usable travel end: carriage-top, corner pocket 12 mm, passes over the insert, overlap [mm3]",
+   0.0
+  ],
+  [
+   "usable travel end: carriage-top, corner pocket 19.5 mm, passes over the insert, overlap [mm3]",
+   0.0
+  ],
+  [
+   "usable travel end: scraper lips as they are, pass over the insert, overlap [mm3]",
+   6.36
+  ],
+  [
+   "usable travel end: carriage-bottom overlaps insert [mm3]",
+   0.0
+  ],
+  [
+   "usable travel end: top rollers overlap insert [mm3]",
+   0.0
+  ],
+  [
+   "usable travel end: scraper lips must step back to this distance from the end face [mm]",
+   10.3
+  ],
+  [
+   "first damper touch: carriage-top, no corner pocket, passes over the insert, overlap [mm3]",
+   3.165
+  ],
+  [
+   "first damper touch: carriage-top, corner pocket 12 mm, passes over the insert, overlap [mm3]",
+   0.0
+  ],
+  [
+   "first damper touch: carriage-top, corner pocket 19.5 mm, passes over the insert, overlap [mm3]",
+   0.0
+  ],
+  [
+   "first damper touch: scraper lips as they are, pass over the insert, overlap [mm3]",
+   6.36
+  ],
+  [
+   "first damper touch: carriage-bottom overlaps insert [mm3]",
+   0.0
+  ],
+  [
+   "first damper touch: top rollers overlap insert [mm3]",
+   0.0
+  ],
+  [
+   "first damper touch: scraper lips must step back to this distance from the end face [mm]",
+   11.3
+  ],
+  [
+   "dampers fully pressed: carriage-top, no corner pocket, passes over the insert, overlap [mm3]",
+   17.54
+  ],
+  [
+   "dampers fully pressed: carriage-top, corner pocket 12 mm, passes over the insert, overlap [mm3]",
+   10.397
+  ],
+  [
+   "dampers fully pressed: carriage-top, corner pocket 19.5 mm, passes over the insert, overlap [mm3]",
+   0.0
+  ],
+  [
+   "dampers fully pressed: scraper lips as they are, pass over the insert, overlap [mm3]",
+   6.36
+  ],
+  [
+   "dampers fully pressed: carriage-bottom overlaps insert [mm3]",
+   0.0
+  ],
+  [
+   "dampers fully pressed: top rollers overlap insert [mm3]",
+   0.0
+  ],
+  [
+   "dampers fully pressed: scraper lips must step back to this distance from the end face [mm]",
+   18.3
+  ],
+  [
+   "corner pocket removes from carriage-top, normal length [mm3]",
+   24.855
+  ],
+  [
+   "stepped scraper overlaps carriage-top with its corner pockets [mm3]",
+   0.0
+  ],
+  [
+   "stepped scraper overlaps the top rollers [mm3]",
+   0.0
+  ],
+  [
+   "deeper corner pocket to the top roller pockets and the slope opening [mm]",
+   3.2
+  ],
+  [
+   "usable travel end: stepped scraper passes over the insert, overlap [mm3]",
+   0.0
+  ],
+  [
+   "usable travel end: carriage-top with deeper corner pocket passes over the insert, overlap [mm3]",
+   0.0
+  ],
+  [
+   "first damper touch: stepped scraper passes over the insert, overlap [mm3]",
+   0.0
+  ],
+  [
+   "first damper touch: carriage-top with deeper corner pocket passes over the insert, overlap [mm3]",
+   0.0
+  ],
+  [
+   "dampers fully pressed: stepped scraper passes over the insert, overlap [mm3]",
+   3.6
+  ],
+  [
+   "spring end: spring pocket and tapped hole outside solid base material [mm3]",
+   0.0
+  ],
+  [
+   "spring end: thinnest wall from the spring pocket to a hollow of the base [mm]",
+   4.25
+  ],
+  [
+   "spring end: slider, spring, screws overlap the base [mm3]",
+   0.0
+  ],
+  [
+   "spring end: slider overlaps spring, insert or hold-down screw [mm3]",
+   0.0
+  ],
+  [
+   "spring end: strip overlaps the slider, spring or insert [mm3]",
+   0.0
+  ],
+  [
+   "spring end: pocket length along the travel [mm]",
+   29.932
+  ]
  ],
- [
-  "as drawn",
-  "insert overlaps the base, set and loose [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "insert overlaps the strip, set and loose [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "screw overlaps the strip or the insert [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "insert top above the strip top [mm]",
-  1.05
- ],
- [
-  "as drawn",
-  "groove to the half-round pocket in the corner [mm]",
-  0.75
- ],
- [
-  "as drawn",
-  "magnet pocket to the damper pocket [mm]",
-  1.682
- ],
- [
-  "as drawn",
-  "usable travel end: carriage-top overlaps insert or screw [mm3]",
-  3.013
- ],
- [
-  "as drawn",
-  "usable travel end: scraper overlaps insert or screw [mm3]",
-  0.19
- ],
- [
-  "as drawn",
-  "usable travel end: scraper lips to the insert [mm]",
-  0.0
- ],
- [
-  "as drawn",
-  "usable travel end: carriage-bottom overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "usable travel end: top rollers overlap insert or screw [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "first damper touch: carriage-top overlaps insert or screw [mm3]",
-  6.721
- ],
- [
-  "as drawn",
-  "first damper touch: scraper overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "first damper touch: scraper lips to the insert [mm]",
-  0.3
- ],
- [
-  "as drawn",
-  "first damper touch: carriage-bottom overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "first damper touch: top rollers overlap insert or screw [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "dampers fully pressed: carriage-top overlaps insert or screw [mm3]",
-  13.298
- ],
- [
-  "as drawn",
-  "dampers fully pressed: scraper overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "dampers fully pressed: scraper lips to the insert [mm]",
-  1.124
- ],
- [
-  "as drawn",
-  "dampers fully pressed: carriage-bottom overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "as drawn",
-  "dampers fully pressed: top rollers overlap insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "groove, tapped hole and magnet pockets outside solid base material [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "insert overlaps the base, set and loose [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "insert overlaps the strip, set and loose [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "screw overlaps the strip or the insert [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "insert top above the strip top [mm]",
-  0.0
- ],
- [
-  "flush",
-  "groove to the half-round pocket in the corner [mm]",
-  0.75
- ],
- [
-  "flush",
-  "magnet pocket to the damper pocket [mm]",
-  1.682
- ],
- [
-  "flush",
-  "usable travel end: carriage-top overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "usable travel end: scraper overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "usable travel end: scraper lips to the insert [mm]",
-  0.15
- ],
- [
-  "flush",
-  "usable travel end: carriage-bottom overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "usable travel end: top rollers overlap insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "first damper touch: carriage-top overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "first damper touch: scraper overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "first damper touch: scraper lips to the insert [mm]",
-  0.863
- ],
- [
-  "flush",
-  "first damper touch: carriage-bottom overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "first damper touch: top rollers overlap insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "dampers fully pressed: carriage-top overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "dampers fully pressed: scraper overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "dampers fully pressed: scraper lips to the insert [mm]",
-  1.731
- ],
- [
-  "flush",
-  "dampers fully pressed: carriage-bottom overlaps insert or screw [mm3]",
-  0.0
- ],
- [
-  "flush",
-  "dampers fully pressed: top rollers overlap insert or screw [mm3]",
-  0.0
- ]
-]
+ "spring": {
+  "rate_N_per_mm": 12.093726379440668,
+  "compression_mm": 5.167968749999999,
+  "working_length_mm": 14.83203125,
+  "solid_length_mm": 9.6,
+  "reserve_to_solid_N": 63.27475434618293,
+  "shear_stress_MPa": 750.6223020700482,
+  "index": 5.25,
+  "pull_change_per_0p1mm_N": [
+   2.3071377072819037,
+   2.361623616236163
+  ],
+  "pull_change_per_0p1mm_without_spring_N": [
+   50.0,
+   100.0
+  ],
+  "thermal_mm_per_10K": 0.030100000000000002
+ }
+}
