@@ -12,9 +12,7 @@ The rules from Niels Bosmans, collected during the day:
 - The base is machined from the top only. Slots are preferred, like the slots for the damper nuts.
 - Few parts, no open pockets where chips can fall in, and a mechanism users cannot reach.
 - The strip is now 0.15 mm thick.
-- Check his concept: one insert at each strip end, with a flange on top of the strip and a nut
-  below it. A countersunk screw pulls the insert by centring its countersink. The nut has flat
-  sides in a groove, so it cannot turn. The scraper steps back where the insert is.
+- Record his concept for the strip ends, shown in his own drawing below.
 - Is there enough travel for 125 N? He expects that pull to keep the strip down, so that it does
   not hit carriage-top between the bottom rollers.
 
@@ -22,29 +20,24 @@ The rules from Niels Bosmans, collected during the day:
 
 - **The strip is now 0.15 mm thick everywhere it is set.** It is in the requirements model and
   in a new decision record. The scraper check uses it too.
-- **The insert concept fits.** The base needs only a groove and one tapped hole at each end, both
-  from the top. The flange stands 1 mm above the strip. The scraper lips step back 6.5 mm around
-  the insert. Carriage-top needs no change for normal use.
-- **There is enough travel for 125 N.** Both strip ends together must move only 0.11 to 0.24 mm
-  from hand-tight to 125 N. The countersink gives 0.15 mm at each end.
+- **The concept of Niels Bosmans is recorded in his own drawing, with notes.** Two inserts at
+  each strip end, one near each side edge. Each insert sits in a hole in the strip, with no thread
+  and no nut. A countersunk screw presses it into the hole. The screw hole in the base sits a
+  little off the centre of the countersink, so tightening the screw pulls the strip.
+- **Little travel is needed for 125 N.** Both strip ends together must move only 0.11 to 0.24 mm
+  from hand-tight to 125 N.
 - **But the travel sets the pull far too sharply.** Near 125 N, 0.1 mm more travel adds 50 to
   100 N. So the positions of the holes in the strip and the base decide the pull, to a few
-  hundredths of a millimetre. The fix is a set of inserts with different countersink offsets,
-  chosen at fitting.
+  hundredths of a millimetre.
 - **125 N does not keep the strip off carriage-top.** The strip bows about 2 mm above the bottom
   rollers, and the room there is only 0.35 mm. It presses on carriage-top with about 186 N at any
   pull up to 250 N. Tape under carriage-top would turn that into a friction force of 9 to 37 N
   (typical friction values, not measured), against 180 N of continuous motor force.
 - **A ceiling 1.5 to 2 mm higher solves it.** The force on carriage-top then drops to 2 to 16 N,
   and a lower pull is enough.
-- **In a crash, carriage-top and the scraper lips hit the insert.** A 15 mm pocket in carriage-top
-  at the insert, instead of 10 mm, clears carriage-top. The lips must then move back into it.
+![The concept of Niels Bosmans, with notes](images/2026-10-28-04.png)
 
-![Sections through the insert](../../modules/compact-stage/simulation/results/strip-end-clamp/sections_insert.png)
-
-![Base end from above, and the scraper lips](../../modules/compact-stage/simulation/results/strip-end-clamp/top_view.png)
-
-![Strip model](../../modules/compact-stage/simulation/results/strip-end-clamp/strip_model.png)
+![Strip model](../../modules/compact-stage/simulation/results/strip-pull/strip_model.png)
 
 ## Work Done
 
@@ -57,30 +50,26 @@ The rules from Niels Bosmans, collected during the day:
   beside the tabs may tear; the sharp 90° bend of a hard strip needs high forces; it has many
   parts; chips fall into the open steps; and users can reach the mechanism.
 
-### Version 3: the insert
+### Version 3: the concept of Niels Bosmans
 
-| Part | What it is |
-| --- | --- |
-| Base, each end | A groove 9.1 mm wide (y = 100.45 to 109.55 mm) and 3.2 mm deep, milled from the top, from x = 1 mm to the inside face of the end wall. Corners R 1 mm (2 mm end mill). One M2.5 tapped hole, 6 mm deep, drilled straight down into its floor at x = 5.4 mm. The end wall is 10 mm thick there. |
-| Insert | Steel. Flange Ø9 × 1 mm on top of the strip. Body Ø6 mm through a Ø6.2 mm hole in the strip, with an M6 × 0.5 thread. A 90° countersink for the screw, 0.2 mm off the insert axis, towards the stage middle. |
-| Nut | Steel, 9 × 8 × 3 mm, threaded M6 × 0.5, corners rounded R 1.5 mm. Its flat sides slide in the groove with 0.05 mm of play, so it cannot turn. It floats 0.2 mm above the groove floor. |
-| Screw | ISO 14581 M2.5 × 8, Torx countersunk. The head sits flush in the flange. |
-| Strip, each end | Ends flat on the end wall, 0.3 mm from the end face. One Ø6.2 mm hole on the centre line. No bend, no cut tabs. |
-| Scraper | Over 14 mm of width around the insert, the lips step back to 6.5 to 9.5 mm behind the carriage end face. Two short side lips close the step. The scraper plate still clears the flange by 0.35 mm. |
+The drawing above is his, unchanged. The numbers and the text beside it are notes added to it.
+His original drawing is kept as [image 03](images/2026-10-28-03.png).
 
-The insert sits on the centre line of the stage. That is the only place on the end wall that is
-clear of the top roller lanes and the damper pockets.
+- Each strip end has two inserts, one near each side edge. The drawing shows one side; the
+  other side is the mirror image.
+- The insert has no thread and no nut. It sits in a hole in the strip. A countersunk (sunken
+  head) screw presses it into that hole.
+- The screw hole in the base sits a little off the centre of the countersunk hole in the insert.
+  Tightening the screw centres the hole, so the insert, and the strip with it, move towards the
+  base end. That sets the pull. The insert spreads the pull into the strip, so the screw head
+  does not press on the strip.
+- Two flat faces on the insert slide in a small groove in the base, so the insert cannot turn.
+- Near the insert the strip is a little wider, so the insert sits on a corner of the strip.
+- The scraper lips turn back at an angle at the insert, so they pass behind it.
+- Magnets in pockets in the base hold the strip down.
 
-How it works:
-
-1. Before fitting, clamp each strip end between an insert and its nut.
-2. Lay the strip. Drop each nut into its groove.
-3. Put in the countersunk screw. Its hole in the base is 0.15 mm nearer the stage middle than
-   the countersink. As the head goes down, its cone pulls the insert, and the strip, 0.15 mm
-   towards the base end, until the countersink is centred.
-
-The strip is held by friction between the flange and the nut, around the hole. No hole edge
-carries the pull, so there is no point load on the strip.
+A first reading of this concept on the same day put one insert, with a flange and a nut, on the
+centre line. That was a misreading, and it is removed.
 
 ### Is there enough travel for 125 N?
 
@@ -95,17 +84,11 @@ carriage faces around the strip as walls. The strip is 0.15 mm thick and 186 mm 
 | Ceiling 1 mm higher | 0.13 mm |
 | Ceiling 2 mm higher | 0.24 mm |
 
-The countersink gives 0.15 mm at each end, so 0.30 mm together. That is enough.
-
 The difficulty is the other way round. Near 125 N, 0.1 mm more travel adds 50 to 100 N. The
 travel is fixed by where the holes are: the two holes in the strip, the two holes in the base, and
-the countersink offsets. A laser cut hole is typically placed to about ±0.05 to 0.1 mm. That alone
+the screw offsets. A laser cut hole is typically placed to about ±0.05 to 0.1 mm. That alone
 can move the pull by tens of newtons. Temperature adds a little: the aluminium base grows about
 0.03 mm more than the steel strip per 10 °C over 430 mm.
-
-The fix: make the inserts in a set, with countersink offsets in steps of 0.05 mm. At fitting,
-clamp the first end. At the second end, pull the strip with a spring scale to the target and
-measure how far the strip hole lies from the base hole. Choose the insert that matches.
 
 ### Does 125 N keep the strip off carriage-top?
 
@@ -154,7 +137,7 @@ limit of the 301 strip at 0.15 mm is about 900 MPa, extrapolated from Alleima's 
 - The seal strip is 0.15 mm thick. Niels Bosmans decided this. See
   [the decision record](../decisions/2026-10-28_seal-strip-0-15-mm.md).
 - Versions 1 and 2 of the clamp are dropped.
-- No decision yet on version 3. It is a proposal for Niels Bosmans.
+- Version 3 is the concept of Niels Bosmans. It is recorded, not yet checked against the CAD.
 
 ## Open Questions
 
@@ -162,28 +145,29 @@ limit of the 301 strip at 0.15 mm is about 900 MPa, extrapolated from Alleima's 
   contact with tape? This decides the pull and the friction.
 - **How proud do the bottom rollers stand?** The 0.35 mm of room assumes 1.5 mm, the same as the
   top rollers. No roller is in the CAD yet. Every number in the table above depends on it.
-- **One insert pulls only the middle of a 186 mm strip.** Near the ends the strip edges get less
-  pull. Near the insert the strip is squeezed sideways, and a 0.15 mm strip may wrinkle there. The
-  magnets help to hold it flat. Check on a test piece. A second insert per end does not fit beside
-  the top roller lanes.
-- **The crash case.** Accept that a full crash may break the printed lips, or make the pocket in
-  carriage-top 15 mm long at the insert and move the lips back into it?
+- **The travel sets the pull sharply.** With the screw offset fixed by the drawing, small errors
+  in the hole positions change the pull by tens of newtons. How will the pull be checked at
+  fitting?
 - **The top rollers** still reach 1.15 mm below the top of the strip, and hit the end wall when
-  the dampers press in fully. They must move up. This is not caused by the clamp.
+  the dampers press in fully. They must move up.
 
 ## Next Steps
 
 - [ ] Decide on the ceiling or the bottom roller height.
 - [ ] Put the bottom and top rollers in the CAD, so the room around the strip can be measured.
 - [ ] Choose the target pull again once the ceiling is decided.
-- [ ] Draw the groove and the tapped hole in the base, and the insert, nut and screw as parts.
-- [ ] Make a test piece: strip, insert, nut, groove. Check that the strip does not slip or wrinkle.
+- [ ] Draw the inserts, the grooves, the screws and the scraper step in the CAD, and check the fit.
+- [ ] Make a test piece of the strip corner with an insert. Check that the strip does not slip or
+      wrinkle.
 
 <details>
 <summary>Technical notes</summary>
 
-- Case: `modules/compact-stage/simulation/cases/strip-end-clamp/`. It reuses `fcstd_shapes.py`,
-  `scraper.py` and `render.py` from `scraper-fit`, and `strip_model.js` from the designer page.
+- Strip model: `modules/compact-stage/simulation/cases/strip-pull/`. It uses `strip_model.js`
+  from the designer page. The clamp geometry of versions 1 to 3 is no longer in the repository;
+  it is in the git history of this branch.
+- Images 03 and 04: the drawing of Niels Bosmans, and the same drawing with notes. The notes were
+  added with a short matplotlib script that is not in the repository.
 - `strip_model.js` got an `opts.walls` option (straight walls as upper or lower bounds) and
   returns `wallF`. The contact solver may now take up to 50 000 steps instead of 1 000. The
   designer page checks still pass. Some points with the ceiling raised 2 mm do not settle (70 and

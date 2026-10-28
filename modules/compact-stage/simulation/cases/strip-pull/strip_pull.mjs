@@ -6,7 +6,7 @@ import { DEFAULTS, shape, stressAndLife } from "../../../../../simulation/cases/
 
 const W = 186;                 // strip width, mm
 const t = 0.15;                // strip thickness, mm
-const L = 430;                 // strip length between the inserts, mm
+const L = 430;                 // strip length between the two strip ends, mm
 const E = 185000;
 const h = t / 2, z0 = 40 + h;  // strip centre line on the base
 // Read from the CAD at y = 105 (assembly coordinates, carriage as placed in the assembly):

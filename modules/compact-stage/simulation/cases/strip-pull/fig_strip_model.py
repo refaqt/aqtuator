@@ -1,7 +1,11 @@
 """Plots of the strip model for the 0.15 mm strip in the real carriage."""
-from fig_common import *  # noqa: F401,F403
+import os
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
-# model comes from run.py
+# model and OUT come from run.py
+C = dict(clash='#d62728', roller='#1f5fa8')
 fig, axs = plt.subplots(1, 3, figsize=(17, 5.6))
 ax = axs[0]
 fr = model['free']

@@ -67,7 +67,7 @@ Two things are new compared with the Python case:
 
 Walls can be added as obstacles (`opts.walls`), for example the faces of the two carriage halves
 around the strip. Their forces on the strip come back in `wallF`. The page does not use them yet.
-The [`strip-end-clamp`](../../../modules/compact-stage/simulation/cases/strip-end-clamp/) case does.
+The [`strip-pull`](../../../modules/compact-stage/simulation/cases/strip-pull/) case does.
 
 Forces on each roller come from the contact reactions of the solver, split along the line from
 the roller centre to the contact point. The vertical forces of the rollers and the magnets add up
