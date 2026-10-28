@@ -24,7 +24,7 @@ the faces of both carriage halves as walls. Data: [`strip_pull.json`](strip_pull
 | Pull | Bow above the bottom rollers, nothing above | Force on carriage-top, ceiling as drawn | Same, ceiling 2 mm higher | Tightest radius | Highest stress |
 | ---: | ---: | ---: | ---: | ---: | ---: |
 | 10 N | 8.00 mm | 196 N | 12 N | 30.8 mm | 451 MPa |
-| 50 N | 3.62 mm | 187 N | — | 24.2 mm | 575 MPa |
+| 50 N | 3.62 mm | 187 N | 6 N | 24.2 mm | 575 MPa |
 | 125 N | 1.96 mm | 186 N | 2 N | 19.7 mm | 707 MPa |
 | 250 N | 1.23 mm | 178 N | 21 N | 16.3 mm | 858 MPa |
 | 500 N | 0.78 mm | — | — | 13.2 mm | 1066 MPa |

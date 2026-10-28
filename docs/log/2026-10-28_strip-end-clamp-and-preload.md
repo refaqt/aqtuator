@@ -344,9 +344,11 @@ limit of the 301 strip at 0.15 mm is about 900 MPa, extrapolated from Alleima's 
 - Images 03 and 04: the drawing of Niels Bosmans, and the same drawing with notes. The notes were
   added with a short matplotlib script that is not in the repository.
 - `strip_model.js` got an `opts.walls` option (straight walls as upper or lower bounds) and
-  returns `wallF`. The contact solver may now take up to 50 000 steps instead of 1 000. The
-  designer page checks still pass. Some points with the ceiling raised 2 mm do not settle (70 and
-  50 N); they are left out.
+  returns `wallF`. Later the same day, main got a new solver that models the carriage channel
+  itself, with the rollers 0.5 mm proud. The merge keeps that solver and adds `opts.walls` to it.
+  The strip-pull case switches the new channel off (`carriage: false`) and keeps its own walls,
+  with the rollers 1.5 mm proud. Its results did not change; the new solver also settles the two
+  points at 50 and 70 N with the ceiling 2 mm higher, which the old one could not.
 - Carriage faces at y = 105 mm, assembly coordinates: carriage-top flat underside z = 40.5 to
   x = 118.77, slope to (147.1, 50.5), ceiling z = 53.5 from x = 147.1 to 276.1. Carriage-bottom
   slope (121.6, 39.5) to (155.6, 51.5), flat top z = 51.5 to x = 267.6.

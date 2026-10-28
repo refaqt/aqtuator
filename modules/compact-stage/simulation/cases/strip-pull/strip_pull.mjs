@@ -14,7 +14,7 @@ const h = t / 2, z0 = 40 + h;  // strip centre line on the base
 // carriage-bottom slope (121.6, 39.5) to (155.6, 51.5), flat top 51.5, bottom roller on the
 // slope edge at x 155.6. The bottom roller sticks out 1.5 mm, like the top roller: axis z 48.0.
 // The top roller is taken as raised, so it just touches the strip.
-const p = { ...DEFAULTS, t, a: 155.6 - 118.77, b: 112.0, width: W, length: L };
+const p = { ...DEFAULTS, t, a: 155.6 - 118.77, b: 112.0, width: W, length: L, carriage: false };   // own walls below
 p.dz = 48.0 - (40 + t + 5);
 const X = (x) => x - 118.77, Y = (z) => z - z0;
 const CEILING = 53.5;

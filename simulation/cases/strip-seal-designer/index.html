@@ -143,7 +143,8 @@ td { font: 13px var(--mono); }
     <h1>Strip Seal Designer</h1>
     <p>A spring steel strip over the four carriage rollers. Set the layout and the screw travel.
       The page solves the true shape of the strip, the force on each roller, the stress and the
-      fatigue life. Rollers 1 and 4 press the strip on the magnet strips. Rollers 2 and 3 lift it.</p>
+      fatigue life. Rollers 1 and 4 press the strip on the magnet strips. Rollers 2 and 3 lift it.
+      Between the rollers the strip runs in a narrow channel between the two carriage halves.</p>
   </header>
 
   <div class="layout">
@@ -156,9 +157,9 @@ td { font: 13px var(--mono); }
             <option value="304">SS 304</option>
           </select></div>
         <div class="field"><label for="t">Thickness <small>mm</small></label>
-          <input id="t" type="number" step="0.01" min="0.03" max="1" value="0.25"></div>
+          <input id="t" type="number" step="0.01" min="0.03" max="1" value="0.15"></div>
         <div class="field"><label for="width">Width <small>mm</small></label>
-          <input id="width" type="number" step="1" min="1" value="150"></div>
+          <input id="width" type="number" step="1" min="1" value="186"></div>
         <div class="field"><label for="length">Length between clamps <small>mm</small></label>
           <input id="length" type="number" step="10" min="50" value="1000"></div>
       </fieldset>
@@ -167,17 +168,39 @@ td { font: 13px var(--mono); }
         <div class="field"><label for="D">Roller diameter <small>mm</small></label>
           <input id="D" type="number" step="0.5" min="1" value="10"></div>
         <div class="field"><label for="a">Distance 1–2 and 3–4 <small>mm, centre to centre</small></label>
-          <input id="a" type="number" step="0.1" min="5" value="26.2"></div>
+          <input id="a" type="number" step="0.01" min="5" value="36.83"></div>
         <div class="field"><label for="b">Distance 2–3 <small>mm, centre to centre</small></label>
-          <input id="b" type="number" step="1" min="10" value="119"></div>
+          <input id="b" type="number" step="1" min="10" value="112"></div>
         <div class="field"><label for="dz">Height 2/3 above 1/4 <small>mm, centre to centre</small></label>
-          <input id="dz" type="number" step="0.05" value="-4.25"></div>
+          <input id="dz" type="number" step="0.05" value="1.85"></div>
         <div class="derived" id="liftText"></div>
       </fieldset>
       <fieldset>
-        <legend>Carriage and magnets</legend>
-        <div class="field"><label for="clear">Carriage underside <small>mm above the profile</small></label>
-          <input id="clear" type="number" step="0.25" min="0" value="15.75"></div>
+        <legend>Carriage channel</legend>
+        <label class="check"><input id="carriage" type="checkbox" checked>
+          <span>Strip runs between the carriage halves <small class="derived">off: free strip</small></span></label>
+        <div class="field"><label for="stick">Roller stick-out <small>mm, out of each half</small></label>
+          <input id="stick" type="number" step="0.05" min="0" value="0.5"></div>
+        <div class="field"><label for="slope">Slope of the halves <small>degrees</small></label>
+          <input id="slope" type="number" step="0.1" min="0" max="60" value="19.44"></div>
+        <div class="field"><label for="clear">Carriage-top ceiling <small>mm above the profile</small></label>
+          <input id="clear" type="number" step="0.25" min="0" value="13.5"></div>
+        <div class="field"><label for="ceilOut">Flat ceiling starts <small>mm outside rollers 2 and 3</small></label>
+          <input id="ceilOut" type="number" step="0.05" min="0" value="8.45"></div>
+        <div class="field"><label for="liner">Plastic strip on the ceiling <small>mm thick, 0 = none</small></label>
+          <input id="liner" type="number" step="0.05" min="0" value="0.5"></div>
+        <div class="field"><label for="linerWidth">Width of the plastic strip <small>mm, centred between rollers 2 and 3</small></label>
+          <input id="linerWidth" type="number" step="1" min="0" value="10"></div>
+        <div class="field"><label for="linerMat">Plastic</label>
+          <select id="linerMat">
+            <option value="PTFE">PTFE</option>
+            <option value="UHMW">UHMW-PE</option>
+            <option value="POM">POM-C</option>
+            <option value="PA6">PA6</option>
+          </select></div>
+      </fieldset>
+      <fieldset>
+        <legend>Magnets</legend>
         <div class="field"><label for="k">Magnet strip stiffness <small>N/mm³, estimate</small></label>
           <input id="k" type="number" step="1" min="0.5" value="20"></div>
         <div class="field"><label for="q">Magnet pull <small>N/mm², estimate</small></label>
@@ -192,8 +215,8 @@ td { font: 13px var(--mono); }
       <section class="panel" aria-labelledby="h-screw">
         <h2 id="h-screw">Screw preload <span>fit the strip loose, then tighten the countersunk screw</span></h2>
         <div class="screw-row">
-          <input id="uRange" type="range" min="0" max="3" step="0.01" value="0.5" aria-label="Screw travel">
-          <div class="field" style="grid-template-columns: 1fr"><input id="u" type="number" step="0.01" min="0" value="0.5" aria-label="Screw travel in mm"></div>
+          <input id="uRange" type="range" min="0" max="3" step="0.001" value="0.03" aria-label="Screw travel">
+          <div class="field" style="grid-template-columns: 1fr"><input id="u" type="number" step="0.005" min="0" value="0.03" aria-label="Screw travel in mm"></div>
         </div>
         <p class="status" style="margin:6px 0 12px">Screw travel in mm: how far the end of the strip moves after the strip lies on the rollers with no pull.</p>
         <div class="tiles">
@@ -203,6 +226,7 @@ td { font: 13px var(--mono); }
           <div class="tile" id="tStress"><span class="k">Highest stress</span><span class="v">–</span><span class="s">–</span></div>
           <div class="tile" id="tYield"><span class="k">Yield / tensile strength</span><span class="v">–</span><span class="s">–</span></div>
           <div class="tile" id="tLife"><span class="k">Fatigue life</span><span class="v">–</span><span class="s">–</span></div>
+          <div class="tile" id="tFric"><span class="k">Carriage friction</span><span class="v">–</span><span class="s">–</span></div>
         </div>
       </section>
 
@@ -218,13 +242,15 @@ td { font: 13px var(--mono); }
         <div class="scroll"><svg id="drawing" role="img" aria-label="Strip over the four rollers, with force arrows"></svg></div>
         <div class="scroll" style="margin-top:10px">
           <table id="forces">
-            <thead><tr><th>Force on</th><th>Horizontal N</th><th>Vertical N</th><th>Total N</th><th>Direction</th><th>Per mm width</th></tr></thead>
+            <thead><tr><th>Force on</th><th>Horizontal N</th><th>Vertical N</th><th>Total N</th><th>Direction</th><th>Per mm width</th><th>Friction N</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <p class="note" style="margin-top:8px">Forces act on the part, from the strip. Horizontal is positive to the right,
           vertical positive up, direction in degrees from the right, counter clockwise. The magnet strips carry the
-          reaction of rollers 1 and 4: the strip is pinched there and bends like a clamped beam.</p>
+          reaction of rollers 1 and 4: the strip is pinched there and bends like a clamped beam. The carriage rows
+          add both sides of the carriage. Friction is the friction coefficient times the normal force; the rollers
+          roll and add none.</p>
       </section>
 
       <section class="panel" aria-labelledby="h-curves">
@@ -251,7 +277,9 @@ td { font: 13px var(--mono); }
         <p>The strip is a thin beam under a pull. The page finds the shape with the lowest energy: bending energy plus
           the work of the pull, with the exact curvature. Rollers 1 and 4 hold the strip down, rollers 2 and 3 hold it
           up, and the magnet strips are an elastic bed that pushes, plus a small magnetic pull near the strip. Nothing
-          forces the strip onto the rollers, so the radius comes out of the solution. This is the solver from
+          forces the strip onto the rollers, so the radius comes out of the solution. The carriage halves are
+          bounds too: the strip may touch the slopes of both halves and the ceiling of carriage-top, but not pass
+          through them. This is the solver from
           <code>simulation/cases/strip-seal-preload/</code>, ported to JavaScript and checked against it.</p>
         <p><b>Screw preload.</b> The strip is fitted with loose screws and lies over the rollers with no pull. A screw
           travel <i>u</i> must then be taken up by a flatter arch and by stretching the steel:
@@ -268,6 +296,8 @@ td { font: 13px var(--mono); }
           <li>The pull is the same along the whole strip: it slides on the magnets while the screw is tightened.</li>
           <li>The carriage is far from both clamps. Near a clamp the pull can change.</li>
           <li>The rollers turn freely. No friction.</li>
+          <li>Friction on the carriage does not change the pull along the strip.</li>
+          <li id="linerNote"></li>
           <li>Magnet strip stiffness and pull are estimates. The stiffness sets the force on rollers 1 and 4 and
             changes the tightest radius, so measure it or try the range 5 to 1000 N/mm³.</li>
           <li id="matNote"></li>
@@ -281,14 +311,17 @@ td { font: 13px var(--mono); }
 import * as M from "./strip_model.js";
 
 const $ = (id) => document.getElementById(id);
-const ids = ["material", "t", "width", "length", "D", "a", "b", "dz", "clear", "k", "q"];
+const ids = ["material", "t", "width", "length", "D", "a", "b", "dz", "stick", "slope", "clear", "ceilOut",
+  "liner", "linerWidth", "linerMat", "k", "q"];
+const text = new Set(["material", "linerMat"]);
 let ve = 1;
 let curve = null, curveKey = "", lastShape = null;
 
 function params() {
   const p = { ...M.DEFAULTS };
-  for (const id of ids) p[id] = id === "material" ? $(id).value : parseFloat($(id).value);
+  for (const id of ids) p[id] = text.has(id) ? $(id).value : parseFloat($(id).value);
   p.plate = $("plate").checked;
+  p.carriage = $("carriage").checked;
   p.u = parseFloat($("u").value) || 0;
   return p;
 }
@@ -390,11 +423,33 @@ function drawLayout(p, s) {
   // Magnet strips and profile.
   svg.append(el("rect", { x: 0, y: Y(-p.t / 2), width: W, height: Math.max(3, 1.5 * scale * ve), fill: "var(--magnet)" }));
   svg.append(el("text", { x: 6, y: Y(-p.t / 2) + 16, "font-size": 11, fill: "var(--muted)" }, "magnet strips on the profile"));
-  // Carriage underside.
-  svg.append(el("line", { x1: X(-R - 4), x2: X(rollers[3] + R + 4), y1: Y(p.clear), y2: Y(p.clear),
-    stroke: "var(--muted)", "stroke-dasharray": "6 4" }));
-  svg.append(el("text", { x: X(rollers[1] + 4), y: Y(p.clear) - 5, "font-size": 11, fill: "var(--muted)" },
-    `carriage underside ${fmt(p.clear, 2)} mm`));
+  // Carriage surfaces: heights above the profile, which sits at y = -t/2.
+  if (p.carriage) {
+    const ch = M.channel(p);
+    const path = (fn, off) => {
+      let d = "";
+      for (let x = 0; x <= rollers[3] + 1e-9; x += 0.25) {
+        const v = fn(x);
+        if (v) d += `${d ? "L" : "M"}${X(x).toFixed(1)},${Y(v.h - p.t / 2 + off).toFixed(1)}`;
+      }
+      return d;
+    };
+    svg.append(el("path", { d: path(ch.ceiling, 0), fill: "none", stroke: "var(--muted)", "stroke-width": 1.5 }));
+    svg.append(el("path", { d: path(ch.floor, 0), fill: "none", stroke: "var(--muted)", "stroke-width": 1.5 }));
+    if (M.hasLiner(p)) {
+      const y = Y(p.clear - p.t / 2), h = p.liner * scale * ve;
+      const x0 = ch.xm - p.linerWidth / 2;
+      svg.append(el("rect", { x: X(x0), y, width: X(x0 + p.linerWidth) - X(x0), height: h, fill: "var(--accent)", opacity: 0.6 }));
+    }
+    svg.append(el("text", { x: X(rollers[1] + 4), y: Y(p.clear - p.t / 2) - 5, "font-size": 11, fill: "var(--muted)" },
+      `carriage-top ceiling ${fmt(p.clear, 2)} mm` + (M.hasLiner(p)
+        ? `, ${fmt(p.liner, 2)} × ${fmt(p.linerWidth, 0)} mm ${M.LINERS[p.linerMat].name} in the middle` : "")));
+  } else {
+    svg.append(el("line", { x1: X(-R - 4), x2: X(rollers[3] + R + 4), y1: Y(p.clear), y2: Y(p.clear),
+      stroke: "var(--muted)", "stroke-dasharray": "6 4" }));
+    svg.append(el("text", { x: X(rollers[1] + 4), y: Y(p.clear) - 5, "font-size": 11, fill: "var(--muted)" },
+      `carriage ceiling ${fmt(p.clear, 2)} mm, not modelled`));
+  }
 
   // Rollers (ellipses when the height is stretched).
   centres.forEach(([xc, yc], k) => {
@@ -461,14 +516,22 @@ function forceTable(p, s) {
   s.rollerForces.forEach((f, k) => rows.push([`Roller ${k + 1}`, f.fx, f.fy]));
   rows.push(["Magnets, left of middle", 0, s.profileForces[0]]);
   rows.push(["Magnets, right of middle", 0, s.profileForces[1]]);
+  if (p.carriage) {
+    for (const c of s.carriageForces) {
+      if (c.n * p.width < 0.05) continue;
+      const f = c.mu.map((m) => m * c.n * p.width);
+      rows.push([c.name, c.fx, c.fy, f[1] - f[0] < 0.05 ? fmtN(f[0]) : `${fmtN(f[0])}–${fmtN(f[1])}`]);
+    }
+  }
   const tb = $("forces").querySelector("tbody");
   tb.replaceChildren();
-  for (const [name, fx, fy] of rows) {
+  for (const [name, fx, fy, fr = "–"] of rows) {
     const tot = Math.hypot(fx, fy);
     const ang = Math.atan2(fy, fx) * 180 / Math.PI;
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${name}</td><td>${fmtN(fx * p.width)}</td><td>${fmtN(fy * p.width)}</td>` +
-      `<td>${fmtN(tot * p.width)}</td><td>${tot > 1e-9 ? ang.toFixed(0) + "°" : "–"}</td><td>${fmt(tot, 3)} N/mm</td>`;
+      `<td>${fmtN(tot * p.width)}</td><td>${tot > 1e-9 ? ang.toFixed(0) + "°" : "–"}</td><td>${fmt(tot, 3)} N/mm</td>` +
+      `<td>${fr}</td>`;
     tb.append(tr);
   }
 }
@@ -485,7 +548,8 @@ function update() {
     $("status").className = "status bad";
     return;
   }
-  const key = JSON.stringify([p.material, p.t, p.length, p.D, p.a, p.b, p.dz, p.k, p.q, p.plate]);
+  const key = JSON.stringify([p.material, p.t, p.length, p.D, p.a, p.b, p.dz, p.k, p.q, p.plate,
+    p.carriage, p.stick, p.slope, p.clear, p.ceilOut, p.liner, p.linerWidth]);
   try {
     if (key !== curveKey) { curve = M.screwCurve(p); curveKey = key; lastShape = null; }
     const T = M.pullForTravel(p, curve, p.u);
@@ -504,10 +568,28 @@ function update() {
 function render(p, mat, s, st, T) {
   const N = T * p.width;
   tile("tPull", `${fmtN(N)} N`, `${fmt(T, 3)} N/mm · ${fmt(st.membrane, 1)} MPa`);
-  const room = p.clear - s.archTop - p.t / 2;
+  // The strip top is t above its centre line height; the ceiling height is above the profile.
+  // Room: the smallest gap between the strip and the ceiling, from roller 2 to roller 3.
+  const ceil = p.clear;
+  let room = ceil - s.archTop - p.t;
+  if (p.carriage) {
+    const ch = M.channel(p), { rollers } = M.layout(p);
+    for (let i = 0; i < s.x.length; i++) {
+      if (s.x[i] < rollers[1] || s.x[i] > rollers[2]) continue;
+      const c = ch.ceiling(s.x[i]);
+      if (c) room = Math.min(room, c.h - p.t - s.y[i]);
+    }
+  }
   tile("tArch", `${fmt(s.archHeight, 2)} mm`,
-    `above the tops of rollers 2 and 3 · ${fmt(room, 2)} mm free under the carriage`,
-    room <= 0 ? "bad" : null);
+    `above the tops of rollers 2 and 3 · ` + (room <= 1e-3
+      ? (p.carriage ? "the strip touches the ceiling" : "the strip would hit the carriage")
+      : `${fmt(room, 2)} mm free under the ceiling`),
+    room <= 1e-3 && !p.carriage ? "bad" : null);
+  const [fLo, fHi] = M.carriageFriction(p, s);
+  const liner = M.LINERS[p.linerMat];
+  tile("tFric", p.carriage ? (fHi - fLo < 0.05 ? `${fmtN(fLo)} N` : `${fmtN(fLo)}–${fmtN(fHi)} N`) : "–",
+    p.carriage ? `strip sliding on the carriage · ${M.hasLiner(p) ? liner.name + " liner" : "no liner"}, aluminium ${M.MU_ALU}`
+      : "free strip, no carriage");
   tile("tRadius", `${fmt(s.rMin, 1)} mm`, `near roller ${s.at}`);
   const ratio = st.peak / mat.Rp02;
   tile("tStress", `${fmt(st.peak, 0)} MPa`, `bending ${fmt(st.bendMax, 0)} + pull ${fmt(st.membrane, 1)} · ${(ratio * 100).toFixed(0)} % of Rp0.2`,
@@ -538,7 +620,7 @@ function render(p, mat, s, st, T) {
   lineChart($("cArch"), { W: 420, H: 250, xs: cut.map((c) => c.T * p.width), xMax: nMax,
     series: [{ ys: cut.map((c) => c.archHeight), color: "var(--accent)" }],
     xLabel: "pull, N", yLabel: "arch height, mm", yMin: 0,
-    hlines: [{ y: p.clear - M.layout(p).lift - p.t / 2, label: "carriage underside", color: "var(--bad)" }],
+    hlines: [{ y: ceil - M.layout(p).lift - p.t, label: p.carriage ? "ceiling, the strip stops here" : "carriage ceiling", color: "var(--bad)" }],
     marker: { x: N, y: s.archHeight, label: `${fmt(s.archHeight, 2)} mm` } });
 
   // Target pull.
@@ -574,12 +656,17 @@ function render(p, mat, s, st, T) {
         ? ` The strip lifts ${s.gapOut.toFixed(3)} mm off the magnets outside the carriage.` : "")
     : "";
   $("matNote").textContent = `Material: ${mat.name}. ${mat.source}`;
+  $("linerNote").textContent = `Friction on steel, dry: ` + Object.values(M.LINERS)
+    .map((l) => `${l.name} ${l.mu[0]}–${l.mu[1]} (${l.source})`).join(" ") +
+    ` Aluminium ${M.MU_ALU} (Engineering ToolBox, aluminium on mild steel, kinetic). The data sheet values are` +
+    ` measured at 3 MPa and 0.33 m/s; here the pressure is much lower, so measure before you rely on them.`;
 }
 
 let timer;
 const later = () => { clearTimeout(timer); timer = setTimeout(update, 120); };
 for (const id of ids) $(id).addEventListener("input", later);
 $("plate").addEventListener("change", later);
+$("carriage").addEventListener("change", later);
 $("target").addEventListener("input", later);
 $("u").addEventListener("input", () => { $("uRange").value = $("u").value; later(); });
 $("uRange").addEventListener("input", () => { $("u").value = $("uRange").value; later(); });

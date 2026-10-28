@@ -39,4 +39,7 @@ It needs Node 18 or newer. It writes the results to
 - The bottom rollers stand 1.5 mm proud of carriage-bottom, the same as the top rollers below
   carriage-top. The top rollers are taken as raised, so they just touch the strip. Neither roller
   is in the CAD yet.
+- The designer page now models the carriage channel itself, with the rollers 0.5 mm proud. This
+  case switches that off (`carriage: false`) and uses its own walls, so its numbers stay
+  comparable with the log of 2026-10-28.
 - The magnet strips are the estimates of the designer page: 20 N/mm³ and 0.005 N/mm².
