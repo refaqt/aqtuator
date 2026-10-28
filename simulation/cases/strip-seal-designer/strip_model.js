@@ -75,7 +75,8 @@ export const DEFAULTS = {
   slope: 19.44,     // degrees, slopes of both halves (12 mm over 34 mm)
   ceilOut: 8.45,    // mm, flat ceiling starts this far outside rollers 2 and 3
   clear: 13.5,      // mm, flat ceiling of carriage-top above the profile
-  liner: 0.5,       // mm, plastic strip on the flat ceiling
+  liner: 0.5,       // mm, plastic strip on the flat ceiling, thickness
+  linerWidth: 10,   // mm, its width along the strip, centred between rollers 2 and 3
   linerMat: "PTFE",
   material: "301",
   width: 186,       // mm, the widest strip through the carriage
@@ -292,11 +293,14 @@ export function layout(p) {
   return { rho, lift, rollers, centres };
 }
 
+export const hasLiner = (p) => p.liner > 0 && (p.linerWidth ?? 0) > 0;
+
 // The channel between the carriage halves, as heights above the profile
 // (the top of the base), against x. Rollers 1 and 4 sit in carriage-top, on
 // the low edge of its slope. Rollers 2 and 3 sit in carriage-bottom, on the
 // high edge of its slope. Each roller sticks out p.stick from its half.
-//   ceiling(x): underside of carriage-top, or of the liner on its flat part
+//   ceiling(x): underside of carriage-top, or of the liner. The liner is a
+//               short strip of p.linerWidth in the middle of the flat ceiling.
 //   floor(x):   top of carriage-bottom
 // Returns null where a surface does not reach. kind: "liner" or "alu".
 export function channel(p) {
@@ -308,7 +312,10 @@ export function channel(p) {
     if (x < 0 || x > rollers[3]) return null;
     const d = Math.min(x, rollers[3] - x);
     if (d < xs) return { h: p.t + p.stick + tan * d, kind: "alu", slope: true };
-    return { h: p.clear - p.liner, kind: p.liner > 0 ? "liner" : "alu", slope: false };
+    if (hasLiner(p) && Math.abs(x - xm) <= p.linerWidth / 2) {
+      return { h: p.clear - p.liner, kind: "liner", slope: false };
+    }
+    return { h: p.clear, kind: "alu", slope: false };
   };
   const floor = (x) => {
     if (x < 0 || x > rollers[3]) return null;
@@ -555,7 +562,7 @@ export function shape(p, pull, opts = {}) {
     rollerForces: supports.map((s) => ({ fx: -s.fx, fy: -s.fy })),
     // Forces ON the carriage surfaces, per mm of width; n is the normal force.
     carriageForces: [
-      { name: "Carriage-top slopes", mu: [MU_ALU, MU_ALU], ...onPart(contacts[4]) },
+      { name: "Carriage-top, bare aluminium", mu: [MU_ALU, MU_ALU], ...onPart(contacts[4]) },
       { name: "Ceiling liner", mu: LINERS[p.linerMat]?.mu ?? [MU_ALU, MU_ALU], ...onPart(contacts[5]) },
       { name: "Carriage-bottom", mu: [MU_ALU, MU_ALU], ...onPart(contacts[6]) },
     ],
