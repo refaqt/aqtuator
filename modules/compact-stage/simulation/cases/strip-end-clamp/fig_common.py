@@ -11,7 +11,7 @@ OUT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
                                     'strip-end-clamp'))
 os.makedirs(OUT, exist_ok=True)
 
-C = dict(base='#c9ced6', top='#b9c9a8', scraper='#e8833a', strip='#222222', bar='#8fb3c9', pin='#e0c040',
+C = dict(base='#c9ced6', top='#b9c9a8', scraper='#e8833a', strip='#222222', insert='#8fb3c9', nut='#e0c040',
          screw='#7a5c99', roller='#1f5fa8', clash='#d62728')
 
 

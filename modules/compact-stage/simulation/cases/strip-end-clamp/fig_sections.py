@@ -1,73 +1,97 @@
-"""Sections along the travel at the end x = 0 of the base."""
+"""Sections along the travel through the insert (y = 105), and a detail of the insert."""
 from fig_common import *  # noqa: F401,F403
+from matplotlib.patches import Rectangle
 
-# base2, top, sc, st, br, pn, sw come from run.py
-XL, ZL = (-13.0, 27.0), (16.0, 50.0)
+# base2, top, top_long, sc, parts come from run.py
+Y = Y_C
 
 
-def panel(ax, y, label, show_rollers=False):
-    dx = CARRIAGE_END_X[label] - X0
-    parts = [(base2, C['base']), (shift(top, dx), C['top']), (shift(sc, dx), C['scraper'])]
-    parts += [(b, C['bar']) for b in br] + [(p, C['pin']) for p in pn] + [(s, C['screw']) for s in sw]
-    for s, c in parts:
-        draw(ax, poly(s, (0, y, 0), (0, 1, 0), 0, 2), c)
-    draw(ax, poly(st, (0, y, 0), (0, 1, 0), 0, 2), C['strip'], lw=1.2)
-    if show_rollers:
-        for r in roller_cyls(dx):
-            draw(ax, poly(r, (0, y, 0), (0, 1, 0), 0, 2), C['roller'])
-            draw(ax, poly(common(r, base2), (0, y, 0), (0, 1, 0), 0, 2), C['clash'])
+def draw_parts(ax, d, top_shape, clash=True):
+    t, s = shift(top_shape, d), shift(sc, d)
+    for shp, c in [(base2, C['base']), (t, C['top']), (s, C['scraper']), (parts['nut'], C['nut']),
+                   (parts['insert'], C['insert']), (parts['screw'], C['screw'])]:
+        draw(ax, poly(shp, (0, Y, 0), (0, 1, 0), 0, 2), c)
+    draw(ax, poly(parts['strip'], (0, Y, 0), (0, 1, 0), 0, 2), C['strip'], lw=1.2)
+    if clash:
+        for a in (t, s):
+            for b in (parts['insert'], parts['screw']):
+                draw(ax, poly(common(a, b), (0, Y, 0), (0, 1, 0), 0, 2), C['clash'])
     ax.axvline(0, color='k', lw=0.6, ls='--')
-    ax.set_xlim(*XL); ax.set_ylim(*ZL); ax.set_aspect('equal'); ax.grid(alpha=.25)
+    ax.set_aspect('equal'); ax.grid(alpha=.25)
     ax.set_xlabel('x along the travel [mm]'); ax.set_ylabel('z [mm]')
 
 
-mid = STEPS[1]
-y_pin, y_screw = pin_ys(mid)[1], screw_ys(mid)[0]
-fig, axs = plt.subplots(2, 2, figsize=(15, 12))
-
+fig, axs = plt.subplots(2, 2, figsize=(16, 11.5))
 ax = axs[0, 0]
-panel(ax, y_pin, 'usable travel end')
-ax.set_title(f'A. Through a pin (y = {y_pin:.0f}), carriage at the end of the usable travel', fontsize=10)
-note(ax, 'strip flat on the end wall:\nnothing stands above it', (12, 40.25), (13, 31))
-note(ax, 'R 3 edge on the wall top', (8.2, 39.6), (-12.5, 47))
-note(ax, 'step milled from the top,\n7 mm long, 16 mm deep,\nopen to the end face', (1, 26), (-12.5, 19))
-note(ax, 'bar, aluminium', (2, 33.5), (-12.5, 37))
-note(ax, 'tab hangs on a\nØ2 pin in the bar', (6.3, PIN_Z), (13, 23))
-note(ax, 'scraper lips 0.15 mm\nabove the strip', (6, 40.6), (13, 46))
-note(ax, 'base end face x = 0:\nnothing past it', (0, 18), (-12.5, 29))
+draw_parts(ax, CARRIAGE_END_X['first damper touch'] - X0, top)
+ax.set_xlim(-6, 24); ax.set_ylim(34, 50)
+ax.set_title('A. Through the insert (y = 105), carriage at the first damper touch.\nThe lips step back behind the insert.',
+             fontsize=10)
+note(ax, 'insert, flange Ø9 x 1 mm\non top of the strip', (6, Z_STRIP + 0.8), (-5.5, 47.5))
+note(ax, 'M2.5 countersunk screw,\nstraight down', (screw_x(), 39), (13, 36))
+note(ax, 'square nut in a groove\nmilled from the top', (3, 38.5), (-5.5, 35))
+note(ax, 'lips stepped back', (X0 + LIP_BACK[0][0] + CARRIAGE_END_X['first damper touch'] - X0 + 0.5, 40.5), (12, 46))
+note(ax, 'strip 0.15 mm', (16, Z_STRIP), (17, 42.5))
 
 ax = axs[0, 1]
-panel(ax, y_screw, 'dampers fully pressed')
-ax.set_title(f'B. Through a screw (y = {y_screw:.0f}), dampers fully pressed in (carriage 3 mm past the base end)',
+d = CARRIAGE_END_X['dampers fully pressed'] - X0
+draw_parts(ax, d, top)
+lp = poly(shift(long_pocket_cut(), d), (0, Y, 0), (0, 1, 0), 0, 2)
+for g in getattr(lp, 'geoms', [lp]):
+    xs, zs = g.exterior.xy
+    ax.plot(xs, zs, 'k--', lw=0.8)
+ax.set_xlim(-6, 24); ax.set_ylim(34, 50)
+ax.set_title('B. Same section, dampers fully pressed in (a crash).\nRed: carriage-top and scraper lips hit the insert.',
              fontsize=10)
-note(ax, 'M3 x 16 from the top,\nwith a locking patch.\nTurn it to set the pull', (SCREW_X, 37), (-12.5, 45))
-note(ax, 'vertical tapped hole\nin the step floor', (SCREW_X, 20), (8, 18))
-note(ax, 'bar moves 4 mm down\nand 2 mm up', (1, BAR_Z[0]), (-12.5, 22))
-note(ax, 'carriage-top and scraper\npass over: nothing above\nthe top of the base', (-1, 40.6), (12, 31))
+note(ax, f'longer pocket in carriage-top\n(dashed, {POCKET_LONG:.0f} mm) clears it', (10, 44.5), (11, 47.5))
+note(ax, 'the printed lips would hit\nthe flange in a crash', (4, 40.8), (8, 36))
 
 ax = axs[1, 0]
-panel(ax, 64.5, 'usable travel end')
-ax.set_title('C. Through a damper pocket (y = 64.5): no step, the strip ends flat on top', fontsize=10)
-note(ax, 'strip ends at x = 1\nand covers the\ndamper pocket', (5, 40.2), (12, 31))
-note(ax, 'damper pocket\n(no change)', (6, 25), (12, 20))
-note(ax, '3 mm wall:\nno change', (1.5, 30), (-12.5, 22))
+xs = screw_x()
+for shp, c in [(base2, C['base']), (parts['nut'], C['nut']), (parts['insert'], C['insert']), (parts['screw'], C['screw'])]:
+    draw(ax, poly(shp, (0, Y, 0), (0, 1, 0), 0, 2), c)
+draw(ax, poly(parts['strip'], (0, Y, 0), (0, 1, 0), 0, 2), C['strip'], lw=1.2)
+loose_ins = poly(insert(TRAVEL), (0, Y, 0), (0, 1, 0), 0, 2)
+for g in getattr(loose_ins, 'geoms', [loose_ins]):
+    x_, z_ = g.exterior.xy
+    ax.plot(x_, z_, color=C['insert'], lw=1.2, ls='--')
+ax.axvline(X_C, color='k', lw=0.5, ls=':')
+ax.axvline(xs, color=C['screw'], lw=0.5, ls=':')
+ax.set_xlim(-1, 12); ax.set_ylim(35.5, 42.5); ax.set_aspect('equal'); ax.grid(alpha=.25)
+ax.set_xlabel('x along the travel [mm]'); ax.set_ylabel('z [mm]')
+ax.set_title(f'C. The insert, enlarged. Insert axis x = {X_C}, screw axis x = {xs:.1f}.\n'
+             f'Dashed: the insert before the screw pulls ({TRAVEL} mm further in)', fontsize=10)
+note(ax, f'countersink {ECC} mm off the insert axis.\nInserts made with other offsets\ntune the pull',
+     (xs - 1.5, Z_STRIP + 0.7), (6.5, 41.6))
+note(ax, 'M6 x 0.5 thread clamps the strip\nbetween flange and nut', (X_C - 3, Z_WALL), (-0.8, 36.0))
+note(ax, 'groove floor; nut floats\n0.2 mm above it', (8.5, GROOVE_FLOOR), (8.0, 36.0))
 
 ax = axs[1, 1]
-panel(ax, ROLLER_Y[0], 'dampers fully pressed', show_rollers=True)
-ax.set_title(f'D. Through a top roller (y = {ROLLER_Y[0]}), dampers fully pressed: the roller hits the end wall',
-             fontsize=10)
-note(ax, 'roller Ø10 reaches 1 mm\nbelow the wall top (red).\nNot caused by the clamp:\nthe roller sits 1.25 mm below\nthe strip everywhere.\nRaise the rollers 1.25 mm.',
-     (8.5, 39.5), (11, 19))
-
-for a in (axs[0, 0], axs[1, 1]):
+ax.axis('off')
+txt = (
+    'How it works\n'
+    '  1. Before fitting, clamp each strip end between an insert and its nut.\n'
+    '  2. Lay the strip. Drop each nut into its groove: the flat sides stop it from turning.\n'
+    '  3. Put in the countersunk screw. Its hole in the base is a little nearer the stage middle\n'
+    '      than the countersink. As the head goes down, its cone pulls the insert, and the strip,\n'
+    f'      towards the base end until the countersink is centred: {TRAVEL} mm at each end.\n\n'
+    'What the base needs (all from the top)\n'
+    f'  A groove {GROOVE_W} mm wide, {Z_WALL - GROOVE_FLOOR:.1f} mm deep, from x = {GROOVE_X0} mm to the inside face.\n'
+    '  One M2.5 tapped hole, drilled straight down into its floor.\n\n'
+    'What the carriage needs\n'
+    '  The scraper lips step back to 6.5 mm behind the carriage end, 14 mm wide around the insert.\n'
+    '  For a crash, a longer pocket in carriage-top at the insert (15 mm instead of 10 mm),\n'
+    '  and the lips moved back into it. Without that, a full crash breaks the printed lips.\n\n'
+    'What stays visible\n'
+    '  Only the screw head and the flange. No pocket is open: the strip and the flange cover the\n'
+    '  groove, so chips cannot fall in, and users cannot reach the mechanism.')
+ax.text(0, 1, txt, va='top', fontsize=9.5, transform=ax.transAxes)
+for a in (axs[0, 0],):
     for name, c in [('base', C['base']), ('carriage-top', C['top']), ('scraper', C['scraper']),
-                    ('seal strip', C['strip']), ('bar', C['bar']), ('pin', C['pin']), ('screw', C['screw'])]:
+                    ('seal strip 0.15 mm', C['strip']), ('insert', C['insert']), ('nut', C['nut']),
+                    ('screw', C['screw']), ('overlap', C['clash'])]:
         a.plot([], [], 's', color=c, mec='k', ms=7, label=name)
-axs[1, 1].plot([], [], 's', color=C['roller'], mec='k', ms=7, label='top roller')
-axs[1, 1].plot([], [], 's', color=C['clash'], mec='k', ms=7, label='overlap')
-axs[0, 0].legend(loc='lower right', fontsize=7)
-axs[1, 1].legend(loc='upper right', fontsize=7)
-fig.suptitle('Strip end clamp, version 2: everything from the top. Sections along the travel (from the CAD geometry)',
-             fontsize=12)
+    a.legend(loc='lower right', fontsize=7)
+fig.suptitle('Strip end clamp, version 3: an insert pulled by a countersunk screw (from the CAD geometry)', fontsize=12)
 fig.tight_layout()
-fig.savefig(os.path.join(OUT, 'sections_along_travel.png'), dpi=110)
+fig.savefig(os.path.join(OUT, 'sections_insert.png'), dpi=110)

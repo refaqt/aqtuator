@@ -8,7 +8,7 @@ build them. Studies that are not about one stage family stay in the repository-w
 | --- | --- | --- |
 | [`carriage-bottom-deflection`](cases/carriage-bottom-deflection/) | FreeCAD 1.1 (Gmsh, CalculiX) | How much does the bottom carriage bend under a load on its top, and how high is the stress? (Blocks taken as rigid, one load case.) |
 | [`scraper-fit`](cases/scraper-fit/) | Python with cadquery-ocp (no FreeCAD) | Does a printed scraper with M3 countersunk screws fit at each end of carriage-top, and how close does it come to the seal strip? |
-| [`strip-end-clamp`](cases/strip-end-clamp/) | Python with cadquery-ocp (no FreeCAD) | Can each strip end be held and its pull set from the top only, with nothing above the strip and nothing past the 440 mm length? |
+| [`strip-end-clamp`](cases/strip-end-clamp/) | Python with cadquery-ocp (no FreeCAD), and Node | Can an insert pulled by a countersunk screw hold each strip end, and what pull, travel and contact with carriage-top does a 0.15 mm strip give? |
 
 Results summaries belong in `results/<case-slug>/summary.md`. Heavy outputs
 (`results/<case>/exports/`) are gitignored.

@@ -7,7 +7,8 @@ python modules/compact-stage/simulation/cases/scraper-fit/run.py
 ```
 
 This is version 2. It takes the top rollers into account, which were added to carriage-top on
-2026-10-22.
+2026-10-22. Since 2026-10-28 it uses the 0.15 mm strip. The lips follow the strip down, so they
+are now 1.2 mm high and still stop 0.15 mm above it.
 
 ## The short answer
 
@@ -16,10 +17,10 @@ This is version 2. It takes the top rollers into account, which were added to ca
   6.6 mm long where the rollers are. There the scraper is 6.4 mm long. It touches no other part.
   It may overlap the roller pockets, but not the rollers.
 - **The top rollers stick out 1.5 mm below carriage-top.** Their lowest point is at z = 39.0 mm:
-  1.0 mm below the top of the base and 1.25 mm below the top of a flat strip. In plan, each
-  roller starts 7.17 mm from the carriage end face.
+  1.0 mm below the top of the base and 1.15 mm below the top of a flat 0.15 mm strip. In plan,
+  each roller starts 7.17 mm from the carriage end face.
 - **It is held by five M3x10 countersunk screws (ISO 14581, Torx head)** that screw up into
-  carriage-top, away from the rollers. Each head sits 0.3 mm inside the plastic, 1.55 mm above
+  carriage-top, away from the rollers. Each head sits 0.3 mm inside the plastic, 1.65 mm above
   the strip.
 - **It has two lips with a groove between them.** Both lips stop 0.15 mm above the strip. So
   there is no friction and no wear in normal use. Chips larger than 0.15 mm stay outside.
@@ -34,9 +35,9 @@ This is version 2. It takes the top rollers into account, which were added to ca
 | Scraper overlaps carriage-bottom | 0 mm³ |
 | Scraper overlaps base | 0 mm³ |
 | Scraper to carriage-bottom | 5.57 mm |
-| Scraper to base (over the base walls, beside the strip) | 0.40 mm |
+| Scraper to base (over the base walls, beside the strip) | 0.30 mm |
 | Lip tip to strip | 0.15 mm |
-| Screw head to strip | 1.55 mm |
+| Screw head to strip | 1.65 mm |
 | Roller model overlaps carriage-top (check of the model) | 0 mm³ |
 | Roller to carriage-bottom (the log of 2026-10-22 says 0.32 mm) | 0.32 mm |
 | Scraper overlaps the rollers | 0 mm³ |

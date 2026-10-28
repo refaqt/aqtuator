@@ -138,7 +138,7 @@ function boundedQP(h0, h1, h2, f, lb, ub, y) {
     lo[i] = close(y[i], lb[i]) ? 1 : 0;
     hi[i] = !lo[i] && close(y[i], ub[i]) ? 1 : 0;
   }
-  for (let it = 0; it < 1000; it++) {
+  for (let it = 0; it < 50000; it++) {
     const out = new Float64Array(n);
     const free = [];
     for (let i = 0; i < n; i++) {
@@ -242,6 +242,18 @@ export function shape(p, pull, opts = {}) {
         const v = lift - rho + h;
         if (v > lb[i]) { lb[i] = v; lbOwner[i] = k; }
       }
+    }
+  }
+  // Extra obstacles, such as the carriage faces around the strip:
+  // opts.walls = [{x0, x1, y0, y1, side: 'up'|'down'}], a straight wall for the strip centre
+  // line from (x0, y0) to (x1, y1). 'up' is a ceiling, 'down' a floor. Their forces on the
+  // strip come back in wallF, per mm of width; a ceiling pushes down, so wallF.up <= 0.
+  for (const w of (opts.walls ?? [])) {
+    for (let i = 0; i < n; i++) {
+      if (x[i] < w.x0 || x[i] > w.x1) continue;
+      const v = w.y0 + (x[i] - w.x0) * (w.y1 - w.y0) / (w.x1 - w.x0);
+      if (w.side === 'up') { if (v < ub[i]) { ub[i] = v; ubOwner[i] = 9; } }
+      else if (v > lb[i]) { lb[i] = v; lbOwner[i] = 8; }
     }
   }
   const q = profile ? (p.q ?? 0) : 0;
@@ -349,6 +361,7 @@ export function shape(p, pull, opts = {}) {
   const profileF = [0, 0];     // left and right of the carriage middle
   const xm = rollers[3] / 2;
   let sumFy = 0, endF = 0;
+  const wallF = { up: 0, down: 0 };
   for (let i = 0; i < n; i++) {
     const side = x[i] < xm ? 0 : 1;
     if (pulled[i]) {
@@ -366,13 +379,17 @@ export function shape(p, pull, opts = {}) {
     }
     const owner = res.lo[i] ? lbOwner[i] : ubOwner[i];
     sumFy += g[i];
-    if (owner >= 0) {
+    if (owner >= 0 && owner < 4) {
       const [xc, yc] = centres[owner];
       const nx = x[i] - xc, ny = yr[i] - yc;
       supports[owner].fy += g[i];
       supports[owner].fx += Math.abs(ny) > 1e-9 ? g[i] * nx / ny : 0;
     } else if (owner === -1) {
       profileF[side] += g[i];
+    } else if (owner === 9) {
+      wallF.up += g[i];
+    } else if (owner === 8) {
+      wallF.down += g[i];
     }
   }
 
@@ -404,7 +421,7 @@ export function shape(p, pull, opts = {}) {
     // Force ON THE ROLLER is minus the force on the strip.
     rollerForces: supports.map((s) => ({ fx: -s.fx, fy: -s.fy })),
     profileForces: profileF.map((f) => -f),
-    sumFy, endF,
+    sumFy, endF, wallF,
     layout: { rho, lift, rollers, centres },
   };
 }
@@ -527,15 +544,15 @@ export function stressAndLife(p, s) {
 export const PULL_GRID = [0, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.7, 1,
   1.5, 2, 3, 4, 5, 7, 10, 15, 20, 30, 50];
 
-export function screwCurve(p, grid = PULL_GRID) {
+export function screwCurve(p, grid = PULL_GRID, opts = {}) {
   const m = MATERIALS[p.material];
   const out = [];
   let start;
   for (const T of grid) {
-    const s = shape(p, T, { start });
+    const s = shape(p, T, { ...opts, start });
     start = s.y;
     out.push({ T, extra: s.extra, archTop: s.archTop, archHeight: s.archHeight, archMid: s.archMid,
-      rMin: s.rMin, peak: stressAndLife(p, s).peak });
+      rMin: s.rMin, peak: stressAndLife(p, s).peak, wallF: s.wallF, y: s.y, x: s.x });
   }
   const e0 = out[0].extra;
   for (const r of out) r.u = e0 - r.extra + p.length * r.T / (m.E * p.t);
