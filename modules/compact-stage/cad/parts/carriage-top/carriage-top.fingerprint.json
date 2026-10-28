@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 107769.0,
+      "area": 107848.0,
       "bbox": [
         -105.0,
         -104.0,
@@ -16,7 +16,7 @@
       "com": [
         0.0,
         0.0,
-        13.3925
+        13.3995
       ],
       "counts": {
         "edges": 490,
@@ -28,7 +28,7 @@
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 431153.0
+      "volume": 430719.0
     },
     "Hole": {
       "area": 103166.0,
@@ -59,7 +59,7 @@
       "volume": 450340.0
     },
     "Hole001": {
-      "area": 104030.0,
+      "area": 104056.0,
       "bbox": [
         -105.0,
         -104.0,
@@ -70,9 +70,9 @@
       ],
       "closed": true,
       "com": [
-        0.681539,
-        -0.524463,
-        13.1846
+        0.705,
+        -0.542882,
+        13.1863
       ],
       "counts": {
         "edges": 289,
@@ -84,10 +84,10 @@
       "label": "Hole001",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 447015.0
+      "volume": 446899.0
     },
     "MultiTransform": {
-      "area": 106815.0,
+      "area": 106894.0,
       "bbox": [
         -105.0,
         -104.0,
@@ -100,7 +100,7 @@
       "com": [
         0.0,
         0.0,
-        13.3774
+        13.3844
       ],
       "counts": {
         "edges": 472,
@@ -112,7 +112,7 @@
       "label": "MultiTransform",
       "type": "PartDesign::MultiTransform",
       "valid": true,
-      "volume": 435859.0
+      "volume": 435426.0
     },
     "Pad": {
       "area": 103662.0,
@@ -143,7 +143,7 @@
       "volume": 851760.0
     },
     "Part": {
-      "area": 107769.0,
+      "area": 107848.0,
       "bbox": [
         -105.0,
         -104.0,
@@ -156,7 +156,7 @@
       "com": [
         0.0,
         0.0,
-        13.3925
+        13.3995
       ],
       "counts": {
         "edges": 490,
@@ -168,7 +168,7 @@
       "label": "carriage_top",
       "type": "App::Part",
       "valid": true,
-      "volume": 431153.0
+      "volume": 430719.0
     },
     "Pocket": {
       "area": 108360.0,
@@ -283,7 +283,7 @@
       "volume": 447561.0
     },
     "Pocket004": {
-      "area": 103856.0,
+      "area": 103882.0,
       "bbox": [
         -105.0,
         -104.0,
@@ -294,9 +294,9 @@
       ],
       "closed": true,
       "com": [
-        0.650882,
-        -0.500408,
-        13.183
+        0.674327,
+        -0.518815,
+        13.1852
       ],
       "counts": {
         "edges": 279,
@@ -308,10 +308,10 @@
       "label": "Pocket004",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 447166.0
+      "volume": 447050.0
     },
     "Pocket005": {
-      "area": 107769.0,
+      "area": 107848.0,
       "bbox": [
         -105.0,
         -104.0,
@@ -324,7 +324,7 @@
       "com": [
         0.0,
         0.0,
-        13.3925
+        13.3995
       ],
       "counts": {
         "edges": 490,
@@ -336,10 +336,10 @@
       "label": "Pocket005",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 431153.0
+      "volume": 430719.0
     },
     "Pocket006": {
-      "area": 104078.0,
+      "area": 104098.0,
       "bbox": [
         -105.0,
         -104.0,
@@ -350,9 +350,9 @@
       ],
       "closed": true,
       "com": [
-        0.745051,
-        -0.571329,
-        13.1894
+        0.766984,
+        -0.588589,
+        13.191
       ],
       "counts": {
         "edges": 289,
@@ -364,7 +364,7 @@
       "label": "Pocket006",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 446720.0
+      "volume": 446612.0
     },
     "Sketch": {
       "area": 0.0,
@@ -538,10 +538,10 @@
       "area": 0.0,
       "bbox": [
         -93.8333,
-        52.0,
+        52.0292,
         0.0,
         -85.8333,
-        89.0,
+        88.9708,
         0.0
       ],
       "closed": true,
@@ -567,16 +567,16 @@
       "bbox": [
         -91.5333,
         55.8,
-        4.5,
+        5.5,
         -88.1333,
         85.2,
-        4.5
+        5.5
       ],
       "closed": true,
       "com": [
         -89.8333,
         70.5,
-        4.5
+        5.5
       ],
       "counts": {
         "edges": 2,
@@ -757,6 +757,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-top.FCStd": "93b4c9fee71c4f51d7f6636356481ffb9afbb098ab5eaa4ae61a2ed5a80cb413"
+    "carriage-top.FCStd": "1d7d60091568abd46854b6afd8bf6e4ff9e7bc864d7c70ce32b9f8fa27916b64"
   }
 }

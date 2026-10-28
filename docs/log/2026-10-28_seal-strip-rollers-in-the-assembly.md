@@ -19,7 +19,8 @@ assembly.
 - **The three bought parts are in stoq**, on branch `claude/seal-strip-roller-parts`, not yet
   merged. Each has our own model, drawn from the published sizes.
 - **All eight rollers are in the assembly**, four in each carriage half. Nothing overlaps.
-- **The roller pockets did not change.** The roller is still 10 mm across and 20 mm long.
+- **The axle slots are 1 mm deeper (5.5 mm).** The rollers now stick out 0.5 mm from each carriage
+  half, as the seal strip page assumes. The roller pockets did not change.
 - All work is on branch `ccr-48c26499-qjdbrs`, not yet merged.
 
 ## Work Done
@@ -57,6 +58,9 @@ datasheets. The ball bearing value of 0.0015 is the usual value for deep groove 
   the module. It has three frames: one in the middle and one on each end face.
 - **Roller assembly:** a new sub-assembly with the sleeve, two bearings, two washers and the pin,
   held by fixed joints. Its frame `IF_axle` sits on the pin axis.
+- **Carriage halves:** the axle slots are 5.5 mm deep (were 4.5 mm). The depth is a new value
+  `axle_slot_depth` in the `Params` sheet of carriage-bottom, with its reason. carriage-top reads it.
+  Each half lost 433.8 mm³. The screw holes moved down with the slot floor.
 - **Carriage halves:** four new frames in each, `IF_roller_a_start` and so on, on the axle centre.
   They follow the roller and slot sketches. The frames are saved hidden, as the others are.
 - **Assembly:** eight links to the roller assembly, each with a fixed joint from its carriage frame
@@ -64,11 +68,14 @@ datasheets. The ball bearing value of 0.0015 is the usual value for deep groove 
 
 ### Checks
 
-- No roller overlaps any part. Each pin touches its slot. A bottom roller keeps 0.5 mm to
-  carriage-top. A top roller keeps 0.32 mm to carriage-bottom and 4.6 mm to the base.
+- No roller overlaps any part. Each pin touches its slot. A bottom roller keeps 1.5 mm to
+  carriage-top. A top roller keeps 1.19 mm to carriage-bottom and 5.3 mm to the base.
+- The thinnest wall at the axle screw holes is 0.8 mm, the same as before the deeper slot. In
+  carriage-top, 5 mm of material stays above the screw holes (was 6 mm).
+- The 28 mm pin still fits: the slot is as long as before.
 - The roller places match the seal strip page: x = 155.60 and 267.60 mm in carriage-bottom, x =
   118.77 and 304.44 mm in carriage-top.
-- The solids of the carriage halves did not change.
+- The carriage halves are each one valid solid. Apart from the deeper slots, the solids did not change.
 - `bash doqs.sh check` passes in this repository and in stoq.
 
 ### Architecture
@@ -80,14 +87,11 @@ datasheets. The ball bearing value of 0.0015 is the usual value for deep groove 
 ## Decisions Made
 
 - Niels Bosmans chose the flanged ball bearings over the plastic roller, to keep the friction low.
-- Agent choices, for review: NSK as the bearing brand, the 28 mm pin length, A2 washers, and a
-  roller sub-assembly linked eight times.
+- Niels Bosmans approved NSK as the bearing brand, the A2 stainless washers and the 28 mm pin.
+- Niels Bosmans chose to make the axle slots 1 mm deeper, so the rollers stick out 0.5 mm.
 
 ## Open Questions
 
-- **The rollers stick out 1.5 mm, not 0.5 mm.** In the CAD the pin lies on the floor of a 4.5 mm
-  deep slot, so its centre is 3.5 mm below the carriage surface. The seal strip page uses 0.5 mm,
-  from Niels Bosmans on 2026-10-28. For 0.5 mm, the slots must be 1 mm deeper.
 - **The pin and the bearings are not stainless steel.** Check them for rust in coolant. ISO 8734
   type C1 is a stainless pin.
 - **Does the 4.5 mm washer touch only the inner ring?** NSK gives no shoulder sizes for the F692ZZ.
@@ -100,8 +104,7 @@ datasheets. The ball bearing value of 0.0015 is the usual value for deep groove 
 1. Merge the stoq branch first, then this branch. This branch points the stoq submodule at the
    stoq branch commit.
 2. Open the assembly in the FreeCAD window and look at the rollers.
-3. Decide the roller stick-out: change the slots or the seal strip page.
-4. Add a BOM row for the tube stock of the sleeves.
+3. Add a BOM row for the tube stock of the sleeves.
 
 <details>
 <summary>Technical notes</summary>
@@ -134,6 +137,10 @@ datasheets. The ball bearing value of 0.0015 is the usual value for deep groove 
   and one bounding box value of 0.0006 mm (27.5006 → 27.5). In the assembly fingerprint, the damper
   bounding boxes changed by under 1 mm with the same centre of mass. This is a difference between
   FreeCAD 1.1.3 and 1.1.4. The added volume, 9 571 mm³, is eight rollers.
+- Deeper slot: carriage-bottom `Params.axle_slot_depth` = 5.5 mm drives `Pocket005.Length`;
+  carriage-top `Pocket004.Length` already reads `carriage_bottom#Pocket005.Length`. `Sketch015` sits
+  on the slot floor, so it moved to z = 22 mm and the frames to z = 23 mm (bottom) and 4.5 mm (top).
+  The rollers were started on the new frames and the assembly was solved again. No other part moved.
 - Mistake rules checked: the fatigue mistake (no value without a source), the tooling update rule
   (submodules not put back), the wrap mistake (no FreeCAD window was open), the PowerShell rules
   (bash only).

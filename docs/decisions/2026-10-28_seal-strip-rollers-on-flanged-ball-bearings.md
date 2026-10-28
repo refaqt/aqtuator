@@ -50,10 +50,13 @@ Each roller is made of standard parts, with one simple machined part:
   inner spacer tube of the sketch is no longer needed.
 - The washers sit between the inner ring of each bearing and the wall of the roller pocket. They keep
   the turning outer ring and its flange off the wall.
-- The roller stays 10 mm across and 20 mm long. The roller pockets and axle slots do not change.
+- The roller stays 10 mm across and 20 mm long. The roller pockets do not change.
+- The axle slots are 1 mm deeper: 5.5 mm instead of 4.5 mm. The pin lies on the slot floor, so the
+  roller sticks out 0.5 mm from each carriage half, as the seal strip page assumes.
 - The longest pin that fits the axle slot is 29 mm. The 28 mm pin keeps 0.5 mm at each end, and both
   axle screws still clamp it.
 - The plastic collar is rejected because of its friction.
+- Niels Bosmans approved NSK as the bearing brand, the A2 stainless washers and the 28 mm pin.
 
 ## Consequences
 
