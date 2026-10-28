@@ -496,7 +496,13 @@ package CompactStage {
     }
 
     part def SealingStrip {
-        doc /* Closes the slot in the top of the base. CAD: cad/parts/sealing-strip/. */
+        doc /*
+         * Closes the slot in the top of the base. CAD: cad/parts/sealing-strip/.
+         *
+         * Spring steel strip, EN 1.4310 (AISI 301), 0.15 mm thick. See
+         * docs/decisions/2026-10-28_seal-strip-0-15-mm.md.
+         */
+        attribute thickness : LengthValue = 0.15 [mm];
         port slotSeal : ~SlotSealInterface_v1;
         port clampStart : ~StripClampInterface_v1;
         port clampEnd : ~StripClampInterface_v1;

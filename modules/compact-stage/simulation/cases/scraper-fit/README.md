@@ -34,8 +34,8 @@ It writes the figures to [`../../results/scraper-fit/`](../../results/scraper-fi
 
 ## What is assumed
 
-- The seal strip is 0.25 mm thick and lies flat on the top of the base, at z = 40 mm. It has no
-  geometry in CAD yet. The checks use a strip 186 mm wide (y = 12 to 198 mm), the widest strip
+- The seal strip is 0.15 mm thick (decision of 2026-10-28) and lies flat on the top of the base,
+  at z = 40 mm. It has no geometry in CAD yet. The checks use a strip 186 mm wide (y = 12 to 198 mm), the widest strip
   that fits through the slope opening of the carriage.
 - The top rollers have no part in CAD yet. Each one is a Ø10 × 20 mm cylinder with its axis on
   the low edge of the slanted face of carriage-top, 3.5 mm above its underside. The case checks

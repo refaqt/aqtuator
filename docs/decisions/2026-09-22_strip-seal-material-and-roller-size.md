@@ -3,6 +3,8 @@
 - **Date:** 2026-09-22
 - **Status:** Proposed
 - **Revised:** 2026-09-22, after the carriage drawing showed how gently the strip turns
+- **Note:** 2026-10-28, the strip is now 0.15 mm thick, not 0.1 mm. See
+  [the seal strip is 0.15 mm thick](2026-10-28_seal-strip-0-15-mm.md). The material stays.
 
 ## Context
 

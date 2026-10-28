@@ -14,7 +14,7 @@ bot = placed('carriage-bottom', 'carriage_bottom001')
 base = placed('base', 'base')
 sc = scraper()
 top2 = cut(top, pocket_cut())
-strip = box(0, 12, 40, 440, 198, 40.25)
+strip = box(0, 12, 40, 440, 198, Z_STRIP_TOP)
 checks = [
     ('scraper overlaps carriage-top with pocket [mm3]', vol(common(sc, top2)), 0.0),
     ('scraper overlaps carriage-bottom [mm3]', vol(common(sc, bot)), 0.0),

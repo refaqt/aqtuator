@@ -390,6 +390,18 @@ export function shape(p, pull, opts = {}) {
       if (f && f.h > lb[i]) { lb[i] = f.h; lbOwner[i] = 6; }
     }
   }
+  // Extra obstacles, such as the carriage faces around the strip:
+  // opts.walls = [{x0, x1, y0, y1, side: 'up'|'down'}], a straight wall for the strip centre
+  // line from (x0, y0) to (x1, y1). 'up' is a ceiling, 'down' a floor. Their forces on the
+  // strip come back in wallF, per mm of width; a ceiling pushes down, so wallF.up <= 0.
+  for (const w of (opts.walls ?? [])) {
+    for (let i = 0; i < n; i++) {
+      if (x[i] < w.x0 || x[i] > w.x1) continue;
+      const v = w.y0 + (x[i] - w.x0) * (w.y1 - w.y0) / (w.x1 - w.x0);
+      if (w.side === 'up') { if (v < ub[i]) { ub[i] = v; ubOwner[i] = 9; } }
+      else if (v > lb[i]) { lb[i] = v; lbOwner[i] = 8; }
+    }
+  }
   const q = profile ? (p.q ?? 0) : 0;
   const yFar = bed ? -q / k : 0;          // flat far away, sunk by the magnet pull
   for (const i of [0, 1, n - 2, n - 1]) { lb[i] = yFar; ub[i] = yFar; }
@@ -497,6 +509,7 @@ export function shape(p, pull, opts = {}) {
   const contacts = { 4: { fx: 0, fy: 0, n: 0 }, 5: { fx: 0, fy: 0, n: 0 }, 6: { fx: 0, fy: 0, n: 0 } };
   const xm = rollers[3] / 2;
   let sumFy = 0, endF = 0;
+  const wallF = { up: 0, down: 0 };
   for (let i = 0; i < n; i++) {
     const side = x[i] < xm ? 0 : 1;
     if (pulled[i]) {
@@ -514,7 +527,9 @@ export function shape(p, pull, opts = {}) {
     }
     const owner = res.lo[i] ? lbOwner[i] : ubOwner[i];
     sumFy += g[i];
-    if (owner >= 4) {
+    if (owner === 8 || owner === 9) {
+      wallF[owner === 9 ? 'up' : 'down'] += g[i];
+    } else if (owner >= 4) {
       // A surface pushes along its normal. On a slope the normal leans
       // towards the carriage middle (floor) or away from it (ceiling).
       const sf = owner === 6 ? ch.floor(x[i]) : ch.ceiling(x[i]);
@@ -567,7 +582,7 @@ export function shape(p, pull, opts = {}) {
       { name: "Carriage-bottom", mu: [MU_ALU, MU_ALU], ...onPart(contacts[6]) },
     ],
     profileForces: profileF.map((f) => -f),
-    sumFy, endF,
+    sumFy, endF, wallF,
     layout: { rho, lift, rollers, centres },
   };
 }
