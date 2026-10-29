@@ -31,7 +31,7 @@
       "volume": 7010.7
     },
     "Assembly": {
-      "area": 650414.0,
+      "area": 660015.0,
       "bbox": [
         0.0,
         0.0,
@@ -42,21 +42,21 @@
       ],
       "closed": true,
       "com": [
-        216.081,
-        104.644,
-        25.5822
+        216.01,
+        104.634,
+        25.7147
       ],
       "counts": {
-        "edges": 6501,
-        "faces": 2589,
+        "edges": 6849,
+        "faces": 2710,
         "shells": 101,
         "solids": 65,
-        "verts": 4241
+        "verts": 4469
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 2852650.0
+      "volume": 2774810.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -342,11 +342,11 @@
       "area": 1734.26,
       "bbox": [
         105.603,
-        56.0403,
-        21.0403,
+        57.0,
+        21.0,
         125.603,
-        72.9597,
-        37.9597
+        72.0,
+        38.0
       ],
       "closed": true,
       "com": [
@@ -370,11 +370,11 @@
       "area": 1734.26,
       "bbox": [
         297.603,
-        56.0403,
-        21.0403,
+        57.0,
+        21.0,
         317.603,
-        72.9597,
-        37.9597
+        72.0,
+        38.0
       ],
       "closed": true,
       "com": [
@@ -398,11 +398,11 @@
       "area": 1734.26,
       "bbox": [
         105.603,
-        137.04,
-        21.0403,
+        138.0,
+        21.0,
         125.603,
-        153.96,
-        37.9597
+        153.0,
+        38.0
       ],
       "closed": true,
       "com": [
@@ -426,11 +426,11 @@
       "area": 1734.26,
       "bbox": [
         297.603,
-        137.04,
-        21.0403,
+        138.0,
+        21.0,
         317.603,
-        153.96,
-        37.9597
+        153.0,
+        38.0
       ],
       "closed": true,
       "com": [
@@ -451,7 +451,7 @@
       "volume": 2716.57
     },
     "base": {
-      "area": 276956.0,
+      "area": 284654.0,
       "bbox": [
         0.0,
         0.0,
@@ -462,21 +462,21 @@
       ],
       "closed": true,
       "com": [
-        219.909,
-        105.042,
-        12.2932
+        219.905,
+        105.044,
+        12.2488
       ],
       "counts": {
-        "edges": 240,
-        "faces": 83,
+        "edges": 504,
+        "faces": 171,
         "shells": 1,
         "solids": 1,
-        "verts": 160
+        "verts": 336
       },
       "label": "base",
       "type": "App::Link",
       "valid": true,
-      "volume": 1456460.0
+      "volume": 1391570.0
     },
     "carriage_bottom001": {
       "area": 117466.0,
@@ -486,7 +486,7 @@
         24.0,
         301.603,
         209.0,
-        51.5
+        51.5006
       ],
       "closed": true,
       "com": [
@@ -507,7 +507,7 @@
       "volume": 450085.0
     },
     "carriage_top": {
-      "area": 107848.0,
+      "area": 109751.0,
       "bbox": [
         106.603,
         1.0,
@@ -520,19 +520,19 @@
       "com": [
         211.603,
         105.0,
-        53.8995
+        53.7399
       ],
       "counts": {
-        "edges": 490,
-        "faces": 178,
+        "edges": 574,
+        "faces": 211,
         "shells": 1,
         "solids": 1,
-        "verts": 320
+        "verts": 372
       },
       "label": "carriage-top",
       "type": "App::Link",
       "valid": true,
-      "volume": 430719.0
+      "volume": 417780.0
     },
     "roller_bottom_a_end": {
       "area": 1591.15,
@@ -767,6 +767,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "c7b077a6f607ff8311b50034ee2c1a1b66b5cbed25d0917e1ae283a7eddee69f"
+    "compact-stage.FCStd": "71776badf48213d6ab0a3fcc80a5eb2504b06867a1bb0e55cf9daa83f78f5f47"
   }
 }

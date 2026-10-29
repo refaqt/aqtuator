@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 107848.0,
+      "area": 109751.0,
       "bbox": [
         -105.0,
         -104.0,
@@ -16,19 +16,131 @@
       "com": [
         0.0,
         0.0,
-        13.3995
+        13.2399
       ],
       "counts": {
-        "edges": 490,
-        "faces": 178,
+        "edges": 574,
+        "faces": 211,
         "shells": 1,
         "solids": 1,
-        "verts": 320
+        "verts": 372
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 430719.0
+      "volume": 417780.0
+    },
+    "CentreMountHoles": {
+      "area": 108196.0,
+      "bbox": [
+        -105.0,
+        -104.0,
+        0.0,
+        105.0,
+        104.0,
+        19.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        13.4
+      ],
+      "counts": {
+        "edges": 500,
+        "faces": 182,
+        "shells": 1,
+        "solids": 1,
+        "verts": 326
+      },
+      "label": "CentreMountHoles",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 430348.0
+    },
+    "CentreMountSketch": {
+      "area": 0.0,
+      "bbox": [
+        -102.5,
+        -2.5,
+        19.5,
+        102.5,
+        2.5,
+        19.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        19.5
+      ],
+      "counts": {
+        "edges": 2,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 2
+      },
+      "label": "CentreMountSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "CornerMountHoles": {
+      "area": 108575.0,
+      "bbox": [
+        -105.0,
+        -104.0,
+        0.0,
+        105.0,
+        104.0,
+        19.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        13.3978
+      ],
+      "counts": {
+        "edges": 520,
+        "faces": 190,
+        "shells": 1,
+        "solids": 1,
+        "verts": 338
+      },
+      "label": "CornerMountHoles",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 429936.0
+    },
+    "CornerMountSketch": {
+      "area": 0.0,
+      "bbox": [
+        -102.5,
+        -82.5,
+        19.5,
+        102.5,
+        82.5,
+        19.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        19.5
+      ],
+      "counts": {
+        "edges": 4,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 4
+      },
+      "label": "CornerMountSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     },
     "Hole": {
       "area": 103166.0,
@@ -85,6 +197,62 @@
       "type": "PartDesign::Hole",
       "valid": true,
       "volume": 446899.0
+    },
+    "InnerMountHoles": {
+      "area": 109459.0,
+      "bbox": [
+        -105.0,
+        -104.0,
+        0.0,
+        105.0,
+        104.0,
+        19.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        13.3969
+      ],
+      "counts": {
+        "edges": 550,
+        "faces": 202,
+        "shells": 1,
+        "solids": 1,
+        "verts": 356
+      },
+      "label": "InnerMountHoles",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 428987.0
+    },
+    "InnerMountSketch": {
+      "area": 0.0,
+      "bbox": [
+        -82.5,
+        -82.5,
+        19.5,
+        82.5,
+        82.5,
+        19.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        19.5
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 6
+      },
+      "label": "InnerMountSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     },
     "MultiTransform": {
       "area": 106894.0,
@@ -143,7 +311,7 @@
       "volume": 851760.0
     },
     "Part": {
-      "area": 107848.0,
+      "area": 109751.0,
       "bbox": [
         -105.0,
         -104.0,
@@ -156,19 +324,19 @@
       "com": [
         0.0,
         0.0,
-        13.3995
+        13.2399
       ],
       "counts": {
-        "edges": 490,
-        "faces": 178,
+        "edges": 574,
+        "faces": 211,
         "shells": 1,
         "solids": 1,
-        "verts": 320
+        "verts": 372
       },
       "label": "carriage_top",
       "type": "App::Part",
       "valid": true,
-      "volume": 430719.0
+      "volume": 417780.0
     },
     "Pocket": {
       "area": 108360.0,
@@ -365,6 +533,34 @@
       "type": "PartDesign::Pocket",
       "valid": true,
       "volume": 446612.0
+    },
+    "Pocket007": {
+      "area": 109751.0,
+      "bbox": [
+        -105.0,
+        -104.0,
+        0.0,
+        105.0,
+        104.0,
+        19.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        13.2399
+      ],
+      "counts": {
+        "edges": 574,
+        "faces": 211,
+        "shells": 1,
+        "solids": 1,
+        "verts": 372
+      },
+      "label": "Pocket007",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 417780.0
     },
     "Sketch": {
       "area": 0.0,
@@ -645,10 +841,38 @@
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
+    },
+    "Sketch010": {
+      "area": 0.0,
+      "bbox": [
+        -75.0,
+        -75.0,
+        19.5,
+        75.0,
+        75.0,
+        19.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        19.5
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "Sketch010",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     }
   },
   "parametric": {
-    "audited": 27,
+    "audited": 35,
     "objects": {
       "DatumPlane": {
         "label": "DatumPlane",
@@ -691,6 +915,13 @@
         "type": "PartDesign::Pocket",
         "unlinked": [
           "Length is a typed number: 7.5"
+        ]
+      },
+      "Pocket007": {
+        "label": "Pocket007",
+        "type": "PartDesign::Pocket",
+        "unlinked": [
+          "Length is a typed number: 0.5"
         ]
       },
       "Sketch": {
@@ -750,6 +981,16 @@
           "Constraint23 (Radius) is a typed number: 4 mm",
           "Constraint24 (DistanceX) is a typed number: 4.5 mm"
         ]
+      },
+      "Sketch010": {
+        "dof": 0,
+        "label": "Sketch010",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Constraint18 (Radius) is a typed number: 10 mm",
+          "Constraint21 (Distance) is a typed number: 5 mm",
+          "Constraint22 (Distance) is a typed number: 5 mm"
+        ]
       }
     }
   },
@@ -757,6 +998,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-top.FCStd": "a036a4883c9e4a2b02dc3aaa793a2cc0cc5e7bfebe22f6092f001b9a722f316a"
+    "carriage-top.FCStd": "11fd06a4929c66e938616648c7cd2666d65c99211501c1be8536fccc60910897"
   }
 }

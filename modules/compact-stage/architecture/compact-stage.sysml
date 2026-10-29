@@ -65,16 +65,53 @@ package CompactStage {
         doc /*
          * The bottom face of the base, where the stage screws onto the
          * machine. The screw holes follow the grid of STG-14.
+         *
+         * Twelve M5 screws go down through the base. The clearance holes
+         * are 5.5 mm, in two rows along the travel: y = 5 mm and
+         * y = 205 mm, so the rows are 200 mm apart. In each row, six holes
+         * sit at x = 20 mm to 420 mm, 80 mm apart. Each hole has a slot
+         * from the top down to the 10 mm floor for the screw head.
+         *
+         * The bottom face has a 0.5 mm recess from y = 40 mm to
+         * y = 170 mm. Only the two outer strips, 40 mm wide, touch the
+         * machine. So the base does not rock on a surface that is not
+         * perfectly flat.
          */
-        attribute holePitch : LengthValue;
+        attribute holePitch : LengthValue = 80 [mm];        // along the travel
+        attribute rowDistance : LengthValue = 200 [mm];     // across the travel
+        attribute screwCount : Natural = 12;
     }
 
     port def CarriageMountInterface_v1 {
         doc /*
          * The top face of carriage-top, where the load screws onto the
          * stage. The screw holes follow the grid of STG-14.
+         *
+         * Twelve M5 threaded holes, blind, from the top face. They sit in
+         * four rows at x = -100, -80, 80 and 100 mm from the carriage
+         * centre. In each row, the holes sit at y = -80 mm, 0 and 80 mm.
+         * The outer rows (x = -100 and 100 mm, 200 mm apart) match the
+         * base holes (BaseMountInterface_v1) of a second stage turned by
+         * 90 degrees, so two stages make a cross table. The upper base
+         * then sits 40 mm off the carriage centre, along its own travel.
+         * The inner rows are 20 mm inside the outer rows.
+         *
+         * Thread depths, limited by the pockets underneath:
+         * - outer rows, y = 0: 10 mm of thread (13 mm drill).
+         * - outer rows, corners: 6 mm of thread (7 mm drill), because the
+         *   roller pockets leave 8.5 mm of material.
+         * - inner rows: 9 mm of thread (11 mm drill), because a recess in
+         *   the bottom face leaves 14 mm of material.
+         * Use M5 screws that reach no deeper than the thread.
+         *
+         * The middle of the top face has a 0.5 mm recess, 150 mm by
+         * 150 mm. The load only touches the face around it, where the
+         * screw holes are.
          */
-        attribute holePitch : LengthValue;
+        attribute holePitch : LengthValue = 80 [mm];        // across the travel
+        attribute rowDistance : LengthValue = 200 [mm];     // outer rows, along the travel
+        attribute innerRowDistance : LengthValue = 160 [mm]; // inner rows, along the travel
+        attribute screwCount : Natural = 12;
     }
 
     // ---------------------------------------------------------------------
