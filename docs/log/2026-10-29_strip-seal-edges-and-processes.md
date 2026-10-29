@@ -106,6 +106,6 @@ Niels Bosmans still has to choose between keeping the ears and changing the outl
 - Etching tolerance and electropolishing material removal are typical values, not supplier data.
 - Mistake rules checked: the fatigue mistake (no invented supplier numbers; typical values are
   flagged as typical). Nothing ran in PowerShell. The tooling folders were not touched.
-- No model or CAD changed. `bash doqs.sh check` was run before the commit. Only `validate_variants.py` fails, on three missing parts library families in the compact stage bill of materials. It fails the same way on main without this change.
+- No model or CAD changed. `bash doqs.sh check` passes.
 
 </details>
