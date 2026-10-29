@@ -538,10 +538,10 @@
       "area": 0.0,
       "bbox": [
         -93.8333,
-        52.0292,
+        52.0,
         0.0,
         -85.8333,
-        88.9708,
+        89.0,
         0.0
       ],
       "closed": true,
@@ -757,6 +757,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-top.FCStd": "1d7d60091568abd46854b6afd8bf6e4ff9e7bc864d7c70ce32b9f8fa27916b64"
+    "carriage-top.FCStd": "a036a4883c9e4a2b02dc3aaa793a2cc0cc5e7bfebe22f6092f001b9a722f316a"
   }
 }
