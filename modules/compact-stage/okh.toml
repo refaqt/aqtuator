@@ -15,12 +15,12 @@ bom = "bom/bom.csv"
 [[provides-interface]]
 name        = "BaseMountInterface"
 version     = "1.0"
-description = "Bottom face of the base, where the stage screws onto the machine. Screw holes on the STG-14 grid."
+description = "Bottom face of the base, where the stage screws onto the machine. Twelve M5 clearance holes, 80 mm pitch, rows 200 mm apart (STG-14 grid). A 0.5 mm recess leaves two 40 mm strips in contact."
 
 [[provides-interface]]
 name        = "CarriageMountInterface"
 version     = "1.0"
-description = "Top face of carriage-top, where the load screws onto the stage. Screw holes on the STG-14 grid."
+description = "Top face of carriage-top, where the load screws onto the stage. Twelve M5 blind threaded holes, 80 mm pitch, in rows at x = ±80 and ±100 mm (STG-14 grid). The outer rows fit the base of a second stage turned 90 degrees, for a cross table. A 0.5 mm recess, 150 mm square, in the middle."
 
 # Parts we make. Bought parts come from the parts library in modules/stoq/.
 [[part]]

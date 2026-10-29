@@ -59,7 +59,7 @@
       "volume": 0.0
     },
     "Body": {
-      "area": 276956.0,
+      "area": 284654.0,
       "bbox": [
         0.0,
         0.0,
@@ -70,21 +70,21 @@
       ],
       "closed": true,
       "com": [
-        219.909,
-        105.042,
-        12.2932
+        219.905,
+        105.044,
+        12.2488
       ],
       "counts": {
-        "edges": 240,
-        "faces": 83,
+        "edges": 504,
+        "faces": 171,
         "shells": 1,
         "solids": 1,
-        "verts": 160
+        "verts": 336
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 1456460.0
+      "volume": 1391570.0
     },
     "DamperPocket": {
       "area": 276956.0,
@@ -170,8 +170,8 @@
       "valid": true,
       "volume": 1472490.0
     },
-    "Part": {
-      "area": 276956.0,
+    "Hole001": {
+      "area": 278201.0,
       "bbox": [
         0.0,
         0.0,
@@ -182,21 +182,49 @@
       ],
       "closed": true,
       "com": [
-        219.909,
+        220.745,
         105.042,
-        12.2932
+        12.2466
       ],
       "counts": {
-        "edges": 240,
-        "faces": 83,
+        "edges": 282,
+        "faces": 97,
         "shells": 1,
         "solids": 1,
-        "verts": 160
+        "verts": 188
+      },
+      "label": "Hole001",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 1450400.0
+    },
+    "Part": {
+      "area": 284654.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.905,
+        105.044,
+        12.2488
+      ],
+      "counts": {
+        "edges": 504,
+        "faces": 171,
+        "shells": 1,
+        "solids": 1,
+        "verts": 336
       },
       "label": "base001",
       "type": "App::Part",
       "valid": true,
-      "volume": 1456460.0
+      "volume": 1391570.0
     },
     "Pocket": {
       "area": 269724.0,
@@ -254,14 +282,70 @@
       "valid": true,
       "volume": 1473820.0
     },
+    "Pocket002": {
+      "area": 277950.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        220.679,
+        105.042,
+        12.2442
+      ],
+      "counts": {
+        "edges": 276,
+        "faces": 95,
+        "shells": 1,
+        "solids": 1,
+        "verts": 184
+      },
+      "label": "Pocket002",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 1450870.0
+    },
+    "Pocket003": {
+      "area": 284654.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.905,
+        105.044,
+        12.2488
+      ],
+      "counts": {
+        "edges": 504,
+        "faces": 171,
+        "shells": 1,
+        "solids": 1,
+        "verts": 336
+      },
+      "label": "Pocket003",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 1391570.0
+    },
     "RailHoleSketch": {
       "area": 0.0,
       "bbox": [
         38.0,
-        34.0146,
+        34.0,
         10.0,
         402.0,
-        175.985,
+        176.0,
         10.0
       ],
       "closed": true,
@@ -313,10 +397,10 @@
     "Sketch": {
       "area": 0.0,
       "bbox": [
-        4.04375,
+        4.0,
         17.0,
         40.0,
-        435.956,
+        436.0,
         193.0,
         40.0
       ],
@@ -341,10 +425,10 @@
     "Sketch001": {
       "area": 0.0,
       "bbox": [
-        4.04375,
+        4.0,
         17.0,
         13.0,
-        435.956,
+        436.0,
         193.0,
         13.0
       ],
@@ -369,11 +453,11 @@
     "Sketch002": {
       "area": 0.0,
       "bbox": [
-        67.2589,
-        65.2522,
+        67.25,
+        65.25,
         10.0,
         72.75,
-        70.7478,
+        70.75,
         10.0
       ],
       "closed": true,
@@ -393,10 +477,94 @@
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
+    },
+    "Sketch003": {
+      "area": 0.0,
+      "bbox": [
+        15.0,
+        0.0,
+        40.0,
+        25.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        20.0,
+        105.0,
+        40.0
+      ],
+      "counts": {
+        "edges": 14,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 14
+      },
+      "label": "Sketch003",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch004": {
+      "area": 0.0,
+      "bbox": [
+        17.25,
+        2.25,
+        10.0,
+        22.75,
+        207.75,
+        10.0
+      ],
+      "closed": true,
+      "com": [
+        20.0,
+        105.0,
+        10.0
+      ],
+      "counts": {
+        "edges": 2,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 2
+      },
+      "label": "Sketch004",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch005": {
+      "area": 0.0,
+      "bbox": [
+        0.0,
+        40.0,
+        0.0,
+        440.0,
+        170.0,
+        0.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 4,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 4
+      },
+      "label": "Sketch005",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     }
   },
   "parametric": {
-    "audited": 22,
+    "audited": 29,
     "objects": {
       "Block": {
         "label": "Block",
@@ -414,12 +582,34 @@
           "Width (DistanceY) is a typed number: 210 mm"
         ]
       },
+      "Hole001": {
+        "label": "Hole001",
+        "type": "PartDesign::Hole",
+        "unlinked": [
+          "Diameter is a typed number: 5.5"
+        ]
+      },
       "LinearPattern": {
         "label": "LinearPattern",
         "type": "PartDesign::LinearPattern",
         "unlinked": [
           "Occurrences is a typed number: 6",
           "Offset is a typed number: 60"
+        ]
+      },
+      "LinearPattern001": {
+        "label": "LinearPattern001",
+        "type": "PartDesign::LinearPattern",
+        "unlinked": [
+          "Occurrences is a typed number: 6",
+          "Length is a typed number: 400"
+        ]
+      },
+      "Pocket003": {
+        "label": "Pocket003",
+        "type": "PartDesign::Pocket",
+        "unlinked": [
+          "Length is a typed number: 0.5"
         ]
       },
       "RailHoleSketch": {
@@ -466,6 +656,28 @@
         "unlinked": [
           "Constraint3 (Diameter) is a typed number: 5.5 mm"
         ]
+      },
+      "Sketch003": {
+        "dof": 0,
+        "label": "Sketch003",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Constraint16 (Diameter) is a typed number: 9 mm",
+          "Constraint17 (Diameter) is a typed number: 5.5 mm",
+          "Constraint18 (DistanceX) is a typed number: 10 mm",
+          "Constraint24 (Radius) is a typed number: 4 mm",
+          "Constraint25 (Distance) is a typed number: 0.5 mm",
+          "Constraint42 (DistanceY) is a typed number: 200 mm",
+          "Constraint43 (Distance) is a typed number: 200 mm"
+        ]
+      },
+      "Sketch005": {
+        "dof": 0,
+        "label": "Sketch005",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Constraint13 (Distance) is a typed number: 40 mm"
+        ]
       }
     }
   },
@@ -473,6 +685,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "fe742e235f1d7a7bc819a3ccfb5ce79b8cba2818ff03cfc6ab4087f54e8122f7"
+    "base.FCStd": "2eeb31cda059e9647ce9006e20703e8936f49127243c3d5a4fba112ee2719afd"
   }
 }
