@@ -59,7 +59,7 @@
       "volume": 0.0
     },
     "Body": {
-      "area": 284654.0,
+      "area": 285464.0,
       "bbox": [
         0.0,
         0.0,
@@ -72,19 +72,19 @@
       "com": [
         219.905,
         105.044,
-        12.2488
+        12.184
       ],
       "counts": {
-        "edges": 504,
-        "faces": 171,
+        "edges": 658,
+        "faces": 227,
         "shells": 1,
         "solids": 1,
-        "verts": 336
+        "verts": 434
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 1391570.0
+      "volume": 1388090.0
     },
     "DamperPocket": {
       "area": 276956.0,
@@ -198,8 +198,8 @@
       "valid": true,
       "volume": 1450400.0
     },
-    "Part": {
-      "area": 284654.0,
+    "Hole002": {
+      "area": 285464.0,
       "bbox": [
         0.0,
         0.0,
@@ -212,19 +212,103 @@
       "com": [
         219.905,
         105.044,
-        12.2488
+        12.184
       ],
       "counts": {
-        "edges": 504,
-        "faces": 171,
+        "edges": 658,
+        "faces": 227,
         "shells": 1,
         "solids": 1,
-        "verts": 336
+        "verts": 434
+      },
+      "label": "Hole002",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 1388090.0
+    },
+    "MagnetRingSplit": {
+      "area": 284531.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.905,
+        105.044,
+        12.1953
+      ],
+      "counts": {
+        "edges": 628,
+        "faces": 215,
+        "shells": 1,
+        "solids": 1,
+        "verts": 416
+      },
+      "label": "MagnetRingSplit",
+      "type": "PartDesign::Pad",
+      "valid": true,
+      "volume": 1388860.0
+    },
+    "MagnetRingSplitSketch": {
+      "area": 0.0,
+      "bbox": [
+        7.0,
+        102.5,
+        39.35,
+        433.0,
+        107.5,
+        39.35
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        39.35
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "MagnetRingSplitSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Part": {
+      "area": 285464.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.905,
+        105.044,
+        12.184
+      ],
+      "counts": {
+        "edges": 658,
+        "faces": 227,
+        "shells": 1,
+        "solids": 1,
+        "verts": 434
       },
       "label": "base001",
       "type": "App::Part",
       "valid": true,
-      "volume": 1391570.0
+      "volume": 1388090.0
     },
     "Pocket": {
       "area": 269724.0,
@@ -338,14 +422,70 @@
       "valid": true,
       "volume": 1391570.0
     },
+    "Pocket004": {
+      "area": 284638.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.905,
+        105.044,
+        12.2081
+      ],
+      "counts": {
+        "edges": 556,
+        "faces": 191,
+        "shells": 1,
+        "solids": 1,
+        "verts": 368
+      },
+      "label": "Pocket004",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 1389500.0
+    },
+    "Pocket005": {
+      "area": 284525.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.905,
+        105.044,
+        12.195
+      ],
+      "counts": {
+        "edges": 604,
+        "faces": 207,
+        "shells": 1,
+        "solids": 1,
+        "verts": 400
+      },
+      "label": "Pocket005",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 1388850.0
+    },
     "RailHoleSketch": {
       "area": 0.0,
       "bbox": [
         38.0,
-        34.0,
+        34.0146,
         10.0,
         402.0,
-        176.0,
+        175.985,
         10.0
       ],
       "closed": true,
@@ -397,10 +537,10 @@
     "Sketch": {
       "area": 0.0,
       "bbox": [
-        4.0,
+        4.04375,
         17.0,
         40.0,
-        436.0,
+        435.956,
         193.0,
         40.0
       ],
@@ -425,10 +565,10 @@
     "Sketch001": {
       "area": 0.0,
       "bbox": [
-        4.0,
+        4.04375,
         17.0,
         13.0,
-        436.0,
+        435.956,
         193.0,
         13.0
       ],
@@ -510,10 +650,10 @@
       "area": 0.0,
       "bbox": [
         17.25,
-        2.25,
+        2.27005,
         10.0,
         22.75,
-        207.75,
+        207.73,
         10.0
       ],
       "closed": true,
@@ -561,10 +701,66 @@
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
+    },
+    "Sketch006": {
+      "area": 0.0,
+      "bbox": [
+        7.0,
+        14.0,
+        40.0,
+        433.0,
+        196.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        40.0
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "Sketch006",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch007": {
+      "area": 0.0,
+      "bbox": [
+        0.0,
+        3.0,
+        40.0,
+        440.0,
+        207.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        40.0
+      ],
+      "counts": {
+        "edges": 26,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 26
+      },
+      "label": "Sketch007",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     }
   },
   "parametric": {
-    "audited": 29,
+    "audited": 36,
     "objects": {
       "Block": {
         "label": "Block",
@@ -589,6 +785,13 @@
           "Diameter is a typed number: 5.5"
         ]
       },
+      "Hole002": {
+        "label": "Hole002",
+        "type": "PartDesign::Hole",
+        "unlinked": [
+          "Depth is a typed number: 15"
+        ]
+      },
       "LinearPattern": {
         "label": "LinearPattern",
         "type": "PartDesign::LinearPattern",
@@ -605,11 +808,46 @@
           "Length is a typed number: 400"
         ]
       },
+      "MagnetRingSplit": {
+        "label": "MagnetRingSplit",
+        "type": "PartDesign::Pad",
+        "unlinked": [
+          "Length is a typed number: 0.5"
+        ]
+      },
+      "MagnetRingSplitSketch": {
+        "dof": 0,
+        "label": "MagnetRingSplitSketch",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "ring_outer_x (DistanceX) is a typed number: 7 mm",
+          "ring_w (DistanceX) is a typed number: 3 mm",
+          "split_y0 (DistanceY) is a typed number: 102.5 mm",
+          "split_l (DistanceY) is a typed number: 5 mm",
+          "ring_outer_x_end (DistanceX) is a typed number: 433 mm",
+          "Constraint24 (DistanceY) is a typed number: 102.5 mm",
+          "AttachmentOffset is typed: (0, 0, 39.35) mm, 0 deg"
+        ]
+      },
       "Pocket003": {
         "label": "Pocket003",
         "type": "PartDesign::Pocket",
         "unlinked": [
           "Length is a typed number: 0.5"
+        ]
+      },
+      "Pocket004": {
+        "label": "Pocket004",
+        "type": "PartDesign::Pocket",
+        "unlinked": [
+          "Length is a typed number: 0.65"
+        ]
+      },
+      "Pocket005": {
+        "label": "Pocket005",
+        "type": "PartDesign::Pocket",
+        "unlinked": [
+          "Length is a typed number: 0.15"
         ]
       },
       "RailHoleSketch": {
@@ -678,6 +916,34 @@
         "unlinked": [
           "Constraint13 (Distance) is a typed number: 40 mm"
         ]
+      },
+      "Sketch006": {
+        "dof": 0,
+        "label": "Sketch006",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Constraint20 (Radius) is a typed number: 4 mm",
+          "Constraint28 (DistanceY) is a typed number: 3 mm"
+        ]
+      },
+      "Sketch007": {
+        "dof": 0,
+        "label": "Sketch007",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "strip_pocket_side (Distance) is a typed number: 5 mm",
+          "Constraint14 (Angle) is a typed number: 45 deg",
+          "Constraint15 (Diameter) is a typed number: 4 mm",
+          "Constraint17 (Diameter) is a typed number: 8 mm",
+          "Constraint55 (Radius) is a typed number: 4 mm",
+          "Constraint56 (DistanceX) is a typed number: 1 mm",
+          "Constraint57 (Distance) is a typed number: 1 mm",
+          "Constraint58 (Distance) is a typed number: 1 mm",
+          "Constraint59 (Distance) is a typed number: 3 mm",
+          "Constraint62 (Diameter) is a typed number: 4 mm",
+          "Constraint64 (Diameter) is a typed number: 8 mm",
+          "preload_screw_x (DistanceX) is a typed number: 6.5 mm"
+        ]
       }
     }
   },
@@ -685,6 +951,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "2eeb31cda059e9647ce9006e20703e8936f49127243c3d5a4fba112ee2719afd"
+    "base.FCStd": "e5ee34e850e68c9e8b2b762273460461b5ee47c756f7737a78c2589edb41c5b5"
   }
 }

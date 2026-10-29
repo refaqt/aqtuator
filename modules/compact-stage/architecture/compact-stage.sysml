@@ -21,8 +21,8 @@
 //     base             the fixed body; it mounts on the machine
 //     carriage-bottom  the moving part inside the base
 //     carriage-top     the moving part above the base; the load mounts on it
-//     sealing-strip    a strip that closes the slot in the top of the base
-//     sealing-clamp    holds one end of the strip on the base (two of them)
+//     sealing-strip    a strip that closes the slot in the top of the base;
+//                      six M4 screws hold it on the base
 //
 // The CAD of each part is in cad/parts/<part>/. The assembly is in
 // cad/assemblies/compact-stage/.
@@ -213,17 +213,38 @@ package CompactStage {
 
     port def SlotSealInterface_v1 {
         doc /*
-         * The sealing strip lies on the top of the base and closes the slot
-         * along the whole travel.
+         * The sealing strip lies in a pocket 0.15 mm deep in the top of the
+         * base, so its top is level with the top of the base. It closes the
+         * slot along the whole travel. Magnets in a 3 mm wide ring pocket,
+         * 0.5 mm below the strip pocket, hold it down around the slot. The
+         * ring is cut in two at each preload screw.
+         *
+         * The pocket is 186 mm wide over the strip body, the strip 185.6 mm:
+         * 0.2 mm on each side, and also 0.2 mm on each side to the 186 mm
+         * slope openings of the carriage.
          */
+        attribute pocketDepth : LengthValue = 0.15 [mm];
     }
 
-    port def StripClampInterface_v1 {
-        doc /* A sealing clamp holds one end of the sealing strip. */
-    }
-
-    port def ClampMountInterface_v1 {
-        doc /* A sealing clamp screws onto one end of the base. */
+    port def StripScrewInterface_v1 {
+        doc /*
+         * Six M4 screws hold the sealing strip on the base. The holes are
+         * tapped M4, 12 mm deep, in the floor of the strip pocket.
+         *
+         * Preload: one countersunk screw ISO 10642 M4 x 10 at each strip end,
+         * on the middle line (base holes 6.5 mm from each base end). The
+         * strip hole (5 mm) sits 0.35 mm off the screw axis, towards the
+         * strip middle. Tightening the screw pushes the outer edge of the
+         * hole outwards, so the strip is pulled. Both ends together move
+         * 0.21 mm for the design pull of 270 N. See
+         * simulation/cases/strip-seal-fit/.
+         *
+         * Clamp: one button head screw with collar ISO 7380-2 M4 x 10 at
+         * each corner (base holes 5 mm from the end, 8 mm from the side).
+         * Strip holes 4.5 mm. Tighten them when the pull is set, then take
+         * the two preload screws out. The corner screws then hold the pull.
+         */
+        attribute pull : ForceValue = 270 [N];
     }
 
     port def RailMountInterface_v1 {
@@ -480,8 +501,7 @@ package CompactStage {
         doc /* The fixed body of the stage. CAD: cad/parts/base/. */
         port machineMount : BaseMountInterface_v1;
         port slotSeal : SlotSealInterface_v1;
-        port clampMountStart : ClampMountInterface_v1;
-        port clampMountEnd : ClampMountInterface_v1;
+        port stripScrews : StripScrewInterface_v1;
         port referenceRailMount : RailMountInterface_v1;
         port secondRailMount : RailMountInterface_v1;
         port firstStatorMount : StatorMountInterface_v1;
@@ -593,17 +613,7 @@ package CompactStage {
          */
         attribute thickness : LengthValue = 0.15 [mm];
         port slotSeal : ~SlotSealInterface_v1;
-        port clampStart : ~StripClampInterface_v1;
-        port clampEnd : ~StripClampInterface_v1;
-    }
-
-    part def SealingClamp {
-        doc /*
-         * Holds one end of the sealing strip on the base. The stage has two,
-         * one at each end. CAD: cad/parts/sealing-clamp/.
-         */
-        port strip : StripClampInterface_v1;
-        port baseMount : ~ClampMountInterface_v1;
+        port stripScrews : ~StripScrewInterface_v1;
     }
 
     // ---------------------------------------------------------------------
@@ -648,8 +658,6 @@ package CompactStage {
         part carriageBottom : CarriageBottom;
         part carriageTop : CarriageTop;
         part sealingStrip : SealingStrip;
-        part sealingClampStart : SealingClamp;
-        part sealingClampEnd : SealingClamp;
         part referenceRail : GuideRail;
         part secondRail : GuideRail;
         part firstStator : MagnetTrack;
@@ -685,10 +693,7 @@ package CompactStage {
 
         // The seal
         connect base.slotSeal to sealingStrip.slotSeal;
-        connect sealingClampStart.strip to sealingStrip.clampStart;
-        connect sealingClampEnd.strip to sealingStrip.clampEnd;
-        connect sealingClampStart.baseMount to base.clampMountStart;
-        connect sealingClampEnd.baseMount to base.clampMountEnd;
+        connect base.stripScrews to sealingStrip.stripScrews;
 
         // The guide rails
         connect base.referenceRailMount to referenceRail.baseMount;
