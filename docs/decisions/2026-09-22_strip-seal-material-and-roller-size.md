@@ -5,6 +5,8 @@
 - **Revised:** 2026-09-22, after the carriage drawing showed how gently the strip turns
 - **Note:** 2026-10-28, the strip is now 0.15 mm thick, not 0.1 mm. See
   [the seal strip is 0.15 mm thick](2026-10-28_seal-strip-0-15-mm.md). The material stays.
+- **Note:** 2026-10-29, point 2 now says how to make the edges. See
+  [how to make the seal strip](../log/2026-10-29_strip-seal-edges-and-processes.md).
 
 ## Context
 
@@ -59,6 +61,26 @@ higher modulus does no better.
 At this strength the strip stretches by only 0.5 percent before it breaks. It is strong but
 not forgiving. Cracks start at edge damage, and the strip maker states that rounding the
 edges gives a large increase in fatigue life. A sheared edge can cost a factor of ten.
+
+Added on 2026-10-29, proposed until Niels Bosmans chooses between the two options below:
+
+- **The ears rule out the mill edge.** The ears at the strip corners stand 8 mm out past each
+  side. So the long edges cannot be the rounded edges of the steel mill. They are cut, and they
+  bend at every roller.
+- **The outline and the holes are cut by photochemical etching** (acid through a printed mask).
+  It leaves no burr and does not heat the steel. Laser cutting is only for prototypes, and punching
+  always leaves a burr.
+- **The whole strip is then electropolished.** This rounds the cut edges, removes micro-burrs and
+  renews the protective layer against the coolant. Tumbling, shot peening and heavy grinding are
+  not used, because they bend or warp a 0.15 mm sheet.
+- **Every inside corner gets a generous radius**, mainly where an ear meets the strip body.
+- **The drawing states the result, not only the process:** edges free of burrs, nicks and heat
+  marks, all edges rounded, and a minimum inside corner radius still to be chosen with the
+  supplier.
+- **Two options remain.** Option A keeps the ears and relies on the etched and electropolished
+  edge. Option B changes the outline so that nothing stands out past the strip body, and keeps the
+  rounded edges of the mill along the length. The strip maker should confirm that an etched and
+  electropolished edge reaches the fatigue life of their rounded edge.
 
 **3. The rollers stay at 14 mm. The ramp length is what the design controls, not the
 roller diameter.**
