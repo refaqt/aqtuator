@@ -10,6 +10,7 @@ build them. Studies that are not about one stage family stay in the repository-w
 | [`scraper-fit`](cases/scraper-fit/) | Python with cadquery-ocp (no FreeCAD) | Does a printed scraper with M3 countersunk screws fit at each end of carriage-top, and how close does it come to the seal strip? |
 | [`strip-pull`](cases/strip-pull/) | Python and Node | How far must the strip ends move for a given pull, and how hard does a 0.15 mm strip press on carriage-top? |
 | [`strip-end-insert`](cases/strip-end-insert/) | Python with cadquery-ocp (no FreeCAD) and scipy | Does the corner insert concept for the strip ends fit the base and the carriage (with corner pockets and a spring end), and how does its pull spread across the strip? |
+| [`strip-seal-fit`](cases/strip-seal-fit/) | Node | How far must seal strip rollers 2 and 3 go down, and which pull keeps the strip off both carriage halves with an infinite fatigue life? |
 
 Results summaries belong in `results/<case-slug>/summary.md`. Heavy outputs
 (`results/<case>/exports/`) are gitignored.

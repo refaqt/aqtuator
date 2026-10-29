@@ -78,6 +78,11 @@ Walls can be added as obstacles (`opts.walls`), for example the faces of the two
 around the strip. Their forces on the strip come back in `wallF`. The page does not use them yet.
 The [`strip-pull`](../../../modules/compact-stage/simulation/cases/strip-pull/) case does.
 
+The option `stick23` sets the stick-out of rollers 2 and 3 alone, for rollers that go down while
+carriage-bottom stays. Below zero, the roller sits under the flat top of carriage-bottom. Without
+it, both halves use `stick`. The page does not use it. The
+[`strip-seal-fit`](../../../modules/compact-stage/simulation/cases/strip-seal-fit/) case does.
+
 Forces on each roller come from the contact reactions of the solver, split along the line from
 the roller centre to the contact point. The vertical forces of the rollers, the magnets and the
 carriage add up to zero, which the check script tests.

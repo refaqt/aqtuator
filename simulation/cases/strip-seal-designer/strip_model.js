@@ -72,6 +72,7 @@ export const DEFAULTS = {
   // The strip runs in a channel between the two carriage halves.
   carriage: true,   // false: free strip, no carriage surfaces
   stick: 0.5,       // mm, how far each roller sticks out of its carriage half
+  stick23: null,    // mm, the same for rollers 2 and 3 only; null: use stick. Below 0: under the flat top
   slope: 19.44,     // degrees, slopes of both halves (12 mm over 34 mm)
   ceilOut: 8.45,    // mm, flat ceiling starts this far outside rollers 2 and 3
   clear: 13.5,      // mm, flat ceiling of carriage-top above the profile
@@ -298,7 +299,8 @@ export const hasLiner = (p) => p.liner > 0 && (p.linerWidth ?? 0) > 0;
 // The channel between the carriage halves, as heights above the profile
 // (the top of the base), against x. Rollers 1 and 4 sit in carriage-top, on
 // the low edge of its slope. Rollers 2 and 3 sit in carriage-bottom, on the
-// high edge of its slope. Each roller sticks out p.stick from its half.
+// high edge of its slope. Each roller sticks out p.stick from its half;
+// rollers 2 and 3 stick out p.stick23 instead, when it is set.
 //   ceiling(x): underside of carriage-top, or of the liner. The liner is a
 //               short strip of p.linerWidth in the middle of the flat ceiling.
 //   floor(x):   top of carriage-bottom
@@ -308,6 +310,7 @@ export function channel(p) {
   const { lift, rollers } = layout(p);
   const xm = rollers[3] / 2;
   const xs = p.a - p.ceilOut;           // end of the sloped ceiling
+  const stick23 = p.stick23 ?? p.stick;
   const ceiling = (x) => {
     if (x < 0 || x > rollers[3]) return null;
     const d = Math.min(x, rollers[3] - x);
@@ -321,10 +324,10 @@ export function channel(p) {
     if (x < 0 || x > rollers[3]) return null;
     const d = Math.min(x, rollers[3] - x);
     if (d < p.a) {
-      const h = lift - p.stick - tan * (p.a - d);
+      const h = lift - stick23 - tan * (p.a - d);
       return h < 0 ? null : { h, kind: "alu", slope: true };   // below the base: no carriage there
     }
-    return { h: lift - p.stick, kind: "alu", slope: false };
+    return { h: lift - stick23, kind: "alu", slope: false };
   };
   return { ceiling, floor, tan, xm };
 }

@@ -20,9 +20,9 @@ move with it if it ever becomes its own repository.
 
 The second family is [`modules/compact-stage/`](../modules/compact-stage/): a compact stage
 driven by an iron core linear motor. It holds the stage requirements, the servo drive
-requirements, and five parts we make (base, carriage bottom, carriage top, sealing strip and
-sealing clamp) with an interface between every pair of parts that touch. The parts exist in CAD
-but have no geometry yet. All servo drives we considered for it are compared in
+requirements, and four parts we make (base, carriage bottom, carriage top and sealing strip)
+with an interface between every pair of parts that touch. Six M4 screws hold the sealing strip on
+the base. The parts and the bought parts are in the assembly CAD. All servo drives we considered for it are compared in
 [`servo-drive-selection.md`](servo-drive-selection.md). All linear encoders we considered are compared in
 [`linear-encoder-selection.md`](linear-encoder-selection.md). The low-cost displacement sensors for the stage
 error motion test are compared in [`displacement-sensor-selection.md`](displacement-sensor-selection.md).

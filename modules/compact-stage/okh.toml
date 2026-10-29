@@ -39,10 +39,6 @@ source = ["cad/parts/carriage-top/carriage-top.FCStd"]
 name = "Sealing Strip"
 source = ["cad/parts/sealing-strip/sealing-strip.FCStd"]
 
-[[part]]
-name = "Sealing Clamp"
-source = ["cad/parts/sealing-clamp/sealing-clamp.FCStd"]
-
 [[bought-part]]
 bom   = "MEC-001"
 part  = "stoq:ace/ta-damper#TA17-7"

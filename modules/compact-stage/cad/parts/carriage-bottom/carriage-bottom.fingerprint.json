@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 117466.0,
+      "area": 117505.0,
       "bbox": [
         0.0,
         0.0,
@@ -15,8 +15,8 @@
       "closed": true,
       "com": [
         105.194,
-        84.285,
-        16.4237
+        84.2822,
+        16.4218
       ],
       "counts": {
         "edges": 993,
@@ -28,7 +28,7 @@
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 450085.0
+      "volume": 449868.0
     },
     "Hole": {
       "area": 99075.7,
@@ -59,7 +59,7 @@
       "volume": 1026100.0
     },
     "Hole001": {
-      "area": 95979.8,
+      "area": 96033.1,
       "bbox": [
         0.0,
         0.0,
@@ -72,7 +72,7 @@
       "com": [
         104.0,
         90.0,
-        14.2091
+        14.2072
       ],
       "counts": {
         "edges": 430,
@@ -84,10 +84,10 @@
       "label": "Hole001",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 747160.0
+      "volume": 746928.0
     },
     "Hole002": {
-      "area": 105008.0,
+      "area": 105062.0,
       "bbox": [
         0.0,
         0.0,
@@ -98,9 +98,9 @@
       ],
       "closed": true,
       "com": [
-        105.427,
-        84.4981,
-        15.8656
+        105.428,
+        84.4957,
+        15.8637
       ],
       "counts": {
         "edges": 508,
@@ -112,10 +112,10 @@
       "label": "Hole002",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 536764.0
+      "volume": 536532.0
     },
     "Hole003": {
-      "area": 115437.0,
+      "area": 115490.0,
       "bbox": [
         0.0,
         0.0,
@@ -127,8 +127,8 @@
       "closed": true,
       "com": [
         105.179,
-        84.3571,
-        16.3305
+        84.3543,
+        16.3284
       ],
       "counts": {
         "edges": 867,
@@ -140,10 +140,10 @@
       "label": "Hole003",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 455839.0
+      "volume": 455607.0
     },
     "Hole004": {
-      "area": 116005.0,
+      "area": 116058.0,
       "bbox": [
         0.0,
         0.0,
@@ -155,8 +155,8 @@
       "closed": true,
       "com": [
         105.18,
-        84.3512,
-        16.3237
+        84.3483,
+        16.3216
       ],
       "counts": {
         "edges": 897,
@@ -168,7 +168,7 @@
       "label": "Hole004",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 455360.0
+      "volume": 455129.0
     },
     "Mirrored": {
       "area": 94461.8,
@@ -255,7 +255,7 @@
       "volume": 821827.0
     },
     "Part": {
-      "area": 117466.0,
+      "area": 117505.0,
       "bbox": [
         0.0,
         0.0,
@@ -267,8 +267,8 @@
       "closed": true,
       "com": [
         105.194,
-        84.285,
-        16.4237
+        84.2822,
+        16.4218
       ],
       "counts": {
         "edges": 993,
@@ -280,7 +280,7 @@
       "label": "carriage_bottom",
       "type": "App::Part",
       "valid": true,
-      "volume": 450085.0
+      "volume": 449868.0
     },
     "Pocket": {
       "area": 93010.8,
@@ -423,7 +423,7 @@
       "volume": 750308.0
     },
     "Pocket005": {
-      "area": 95284.0,
+      "area": 95337.4,
       "bbox": [
         0.0,
         0.0,
@@ -436,7 +436,7 @@
       "com": [
         104.0,
         90.0,
-        14.212
+        14.2097
       ],
       "counts": {
         "edges": 390,
@@ -448,10 +448,10 @@
       "label": "Pocket005",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 747766.0
+      "volume": 747534.0
     },
     "Pocket006": {
-      "area": 102998.0,
+      "area": 103052.0,
       "bbox": [
         0.0,
         0.0,
@@ -462,9 +462,9 @@
       ],
       "closed": true,
       "com": [
-        104.954,
-        85.5468,
-        16.0251
+        104.955,
+        85.545,
+        16.0233
       ],
       "counts": {
         "edges": 454,
@@ -476,10 +476,10 @@
       "label": "Pocket006",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 566853.0
+      "volume": 566622.0
     },
     "Pocket007": {
-      "area": 104177.0,
+      "area": 104230.0,
       "bbox": [
         0.0,
         0.0,
@@ -490,9 +490,9 @@
       ],
       "closed": true,
       "com": [
-        105.422,
-        84.5822,
-        15.8957
+        105.423,
+        84.5799,
+        15.8937
       ],
       "counts": {
         "edges": 466,
@@ -504,10 +504,10 @@
       "label": "Pocket007",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 538695.0
+      "volume": 538463.0
     },
     "Pocket008": {
-      "area": 106647.0,
+      "area": 106701.0,
       "bbox": [
         0.0,
         0.0,
@@ -519,8 +519,8 @@
       "closed": true,
       "com": [
         105.43,
-        84.3959,
-        15.8373
+        84.3935,
+        15.8353
       ],
       "counts": {
         "edges": 688,
@@ -532,7 +532,7 @@
       "label": "Pocket008",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 533498.0
+      "volume": 533266.0
     },
     "Pocket009": {
       "area": 97876.1,
@@ -591,7 +591,7 @@
       "volume": 902610.0
     },
     "Pocket011": {
-      "area": 106700.0,
+      "area": 106753.0,
       "bbox": [
         0.0,
         0.0,
@@ -603,8 +603,8 @@
       "closed": true,
       "com": [
         105.242,
-        84.2877,
-        15.8226
+        84.2852,
+        15.8206
       ],
       "counts": {
         "edges": 706,
@@ -616,10 +616,10 @@
       "label": "Pocket011",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 530569.0
+      "volume": 530337.0
     },
     "Pocket012": {
-      "area": 108592.0,
+      "area": 108646.0,
       "bbox": [
         0.0,
         0.0,
@@ -630,9 +630,9 @@
       ],
       "closed": true,
       "com": [
-        102.47,
-        83.923,
-        15.9352
+        102.469,
+        83.9202,
+        15.9331
       ],
       "counts": {
         "edges": 730,
@@ -644,10 +644,10 @@
       "label": "Pocket012",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 503227.0
+      "volume": 502995.0
     },
     "Pocket013": {
-      "area": 111348.0,
+      "area": 111402.0,
       "bbox": [
         0.0,
         0.0,
@@ -658,9 +658,9 @@
       ],
       "closed": true,
       "com": [
-        102.188,
-        85.5265,
-        16.2286
+        102.187,
+        85.5244,
+        16.2266
       ],
       "counts": {
         "edges": 774,
@@ -672,10 +672,10 @@
       "label": "Pocket013",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 490078.0
+      "volume": 489846.0
     },
     "Pocket014": {
-      "area": 111975.0,
+      "area": 112029.0,
       "bbox": [
         0.0,
         0.0,
@@ -686,9 +686,9 @@
       ],
       "closed": true,
       "com": [
-        101.558,
-        85.3249,
-        16.1775
+        101.557,
+        85.3227,
+        16.1755
       ],
       "counts": {
         "edges": 792,
@@ -700,10 +700,10 @@
       "label": "Pocket014",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 486410.0
+      "volume": 486178.0
     },
     "Pocket015": {
-      "area": 112560.0,
+      "area": 112614.0,
       "bbox": [
         0.0,
         0.0,
@@ -715,8 +715,8 @@
       "closed": true,
       "com": [
         103.454,
-        85.4602,
-        16.3853
+        85.458,
+        16.3833
       ],
       "counts": {
         "edges": 810,
@@ -728,10 +728,10 @@
       "label": "Pocket015",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 474360.0
+      "volume": 474128.0
     },
     "Pocket018": {
-      "area": 113214.0,
+      "area": 113267.0,
       "bbox": [
         0.0,
         0.0,
@@ -743,8 +743,8 @@
       "closed": true,
       "com": [
         105.361,
-        84.8767,
-        16.4429
+        84.8742,
+        16.4409
       ],
       "counts": {
         "edges": 837,
@@ -756,10 +756,10 @@
       "label": "Pocket018",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 462259.0
+      "volume": 462028.0
     },
     "Pocket019": {
-      "area": 115193.0,
+      "area": 115246.0,
       "bbox": [
         0.0,
         0.0,
@@ -770,9 +770,9 @@
       ],
       "closed": true,
       "com": [
-        105.126,
-        84.3539,
-        16.3345
+        105.127,
+        84.351,
+        16.3324
       ],
       "counts": {
         "edges": 855,
@@ -784,10 +784,10 @@
       "label": "Pocket019",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 456120.0
+      "volume": 455888.0
     },
     "Pocket020": {
-      "area": 117337.0,
+      "area": 117390.0,
       "bbox": [
         0.0,
         0.0,
@@ -798,9 +798,9 @@
       ],
       "closed": true,
       "com": [
-        105.191,
-        84.2983,
-        16.4345
+        105.192,
+        84.2953,
+        16.4325
       ],
       "counts": {
         "edges": 993,
@@ -812,10 +812,10 @@
       "label": "Pocket020",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 451131.0
+      "volume": 450899.0
     },
     "Pocket021": {
-      "area": 117466.0,
+      "area": 117505.0,
       "bbox": [
         0.0,
         0.0,
@@ -827,8 +827,8 @@
       "closed": true,
       "com": [
         105.194,
-        84.285,
-        16.4237
+        84.2822,
+        16.4218
       ],
       "counts": {
         "edges": 993,
@@ -840,7 +840,7 @@
       "label": "Pocket021",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 450085.0
+      "volume": 449868.0
     },
     "Sketch": {
       "area": 0.0,
@@ -874,10 +874,10 @@
       "area": 0.0,
       "bbox": [
         20.0,
-        19.0,
+        19.0146,
         27.5,
         188.0,
-        161.0,
+        160.985,
         27.5
       ],
       "closed": true,
@@ -1098,17 +1098,17 @@
       "area": 0.0,
       "bbox": [
         19.0,
-        35.5,
-        22.0,
+        35.5109,
+        21.5,
         189.0,
-        144.5,
-        22.0
+        144.489,
+        21.5
       ],
       "closed": true,
       "com": [
         104.0,
         90.0,
-        22.0
+        21.5
       ],
       "counts": {
         "edges": 8,
@@ -1182,10 +1182,10 @@
       "area": 0.0,
       "bbox": [
         77.0,
-        71.0,
+        71.0146,
         27.5,
         131.0,
-        145.0,
+        144.985,
         27.5
       ],
       "closed": true,
@@ -1266,10 +1266,10 @@
       "area": 0.0,
       "bbox": [
         18.0,
-        17.0,
+        17.0292,
         27.5,
         190.0,
-        163.0,
+        162.971,
         27.5
       ],
       "closed": true,
@@ -1353,7 +1353,7 @@
         4.5,
         0.0,
         156.25,
-        71.5,
+        71.4672,
         0.0
       ],
       "closed": true,
@@ -1378,9 +1378,9 @@
       "area": 0.0,
       "bbox": [
         147.25,
-        65.0,
+        65.0328,
         27.5,
-        212.5,
+        212.467,
         119.0,
         27.5
       ],
@@ -1462,9 +1462,9 @@
       "area": 0.0,
       "bbox": [
         33.0,
-        111.0,
+        111.02,
         27.5,
-        211.0,
+        210.978,
         127.0,
         27.5
       ],
@@ -1490,10 +1490,10 @@
       "area": 0.0,
       "bbox": [
         18.5,
-        64.5,
+        64.5109,
         27.5,
         21.5,
-        93.5,
+        93.4891,
         27.5
       ],
       "closed": true,
@@ -1518,10 +1518,10 @@
       "area": 0.0,
       "bbox": [
         3.5,
-        13.9,
+        13.9146,
         27.5,
         204.5,
-        166.1,
+        166.085,
         27.5
       ],
       "closed": true,
@@ -1573,10 +1573,10 @@
     "Sketch034": {
       "area": 0.0,
       "bbox": [
-        20.5,
+        20.5255,
         28.5,
         27.5,
-        187.5,
+        187.474,
         151.5,
         27.5
       ],
@@ -1968,6 +1968,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "9fb2c7414dc746f7b89fc1d7daf0da71894a8a0169994e7a46e0cd1174b98567"
+    "carriage-bottom.FCStd": "e72c454650bd896c486aa7844157274d2041c1ad06c3cfa36deb83c242832429"
   }
 }

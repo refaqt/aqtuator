@@ -8,8 +8,8 @@ and we will not use it in future developments. See
 
 ## Parts
 
-The stage is one assembly of five parts that we make. The sealing clamp is used twice, once at
-each end of the base.
+The stage is one assembly of four parts that we make. Six M4 screws hold the sealing strip on
+the base: one countersunk screw at each end sets the pull, and one screw at each corner clamps it.
 
 | Part | What it does | CAD |
 | --- | --- | --- |
@@ -17,7 +17,6 @@ each end of the base.
 | Carriage bottom | The moving part inside the base. | [`cad/parts/carriage-bottom/`](cad/parts/carriage-bottom/) |
 | Carriage top | The moving part above the base. The load mounts on it. | [`cad/parts/carriage-top/`](cad/parts/carriage-top/) |
 | Sealing strip | Closes the slot in the top of the base. | [`cad/parts/sealing-strip/`](cad/parts/sealing-strip/) |
-| Sealing clamp | Holds one end of the sealing strip on the base. | [`cad/parts/sealing-clamp/`](cad/parts/sealing-clamp/) |
 
 The assembly is [`cad/assemblies/compact-stage/`](cad/assemblies/compact-stage/). It links each
 part by a relative path, and fixes the base in place. The parts have no geometry yet.
