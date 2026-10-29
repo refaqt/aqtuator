@@ -38,3 +38,4 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-10-09 | [Lay the encoder tape with a 3D-printed dummy guide block](2026-10-09_lay-the-encoder-tape-with-a-printed-dummy-block.md) |
 | 2026-10-19 | [The encoder protocol follows the drive. BiSS-C is not required](2026-10-19_encoder-protocol-follows-the-drive.md) |
 | 2026-10-28 | [The seal strip is 0.15 mm thick](2026-10-28_seal-strip-0-15-mm.md) |
+| 2026-10-28 | [The seal strip rollers turn on two flanged ball bearings](2026-10-28_seal-strip-rollers-on-flanged-ball-bearings.md) |

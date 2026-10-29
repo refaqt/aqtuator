@@ -31,7 +31,7 @@
       "volume": 7010.7
     },
     "Assembly": {
-      "area": 637527.0,
+      "area": 650414.0,
       "bbox": [
         0.0,
         0.0,
@@ -42,21 +42,21 @@
       ],
       "closed": true,
       "com": [
-        216.095,
-        104.643,
-        25.5197
+        216.081,
+        104.644,
+        25.5822
       ],
       "counts": {
-        "edges": 6189,
-        "faces": 2373,
-        "shells": 53,
-        "solids": 17,
-        "verts": 4033
+        "edges": 6501,
+        "faces": 2589,
+        "shells": 101,
+        "solids": 65,
+        "verts": 4241
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 2843940.0
+      "volume": 2852650.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -342,11 +342,11 @@
       "area": 1734.26,
       "bbox": [
         105.603,
-        57.0,
-        21.0,
+        56.0403,
+        21.0403,
         125.603,
-        72.0,
-        38.0
+        72.9597,
+        37.9597
       ],
       "closed": true,
       "com": [
@@ -370,11 +370,11 @@
       "area": 1734.26,
       "bbox": [
         297.603,
-        57.0,
-        21.0,
+        56.0403,
+        21.0403,
         317.603,
-        72.0,
-        38.0
+        72.9597,
+        37.9597
       ],
       "closed": true,
       "com": [
@@ -398,11 +398,11 @@
       "area": 1734.26,
       "bbox": [
         105.603,
-        138.0,
-        21.0,
+        137.04,
+        21.0403,
         125.603,
-        153.0,
-        38.0
+        153.96,
+        37.9597
       ],
       "closed": true,
       "com": [
@@ -426,11 +426,11 @@
       "area": 1734.26,
       "bbox": [
         297.603,
-        138.0,
-        21.0,
+        137.04,
+        21.0403,
         317.603,
-        153.0,
-        38.0
+        153.96,
+        37.9597
       ],
       "closed": true,
       "com": [
@@ -479,20 +479,20 @@
       "volume": 1456460.0
     },
     "carriage_bottom001": {
-      "area": 117387.0,
+      "area": 117466.0,
       "bbox": [
         121.603,
         1.0,
         24.0,
         301.603,
         209.0,
-        51.5006
+        51.5
       ],
       "closed": true,
       "com": [
-        217.312,
-        106.193,
-        40.4282
+        217.318,
+        106.194,
+        40.4237
       ],
       "counts": {
         "edges": 993,
@@ -504,10 +504,10 @@
       "label": "carriage_bottom",
       "type": "App::Link",
       "valid": true,
-      "volume": 450518.0
+      "volume": 450085.0
     },
     "carriage_top": {
-      "area": 107769.0,
+      "area": 107848.0,
       "bbox": [
         106.603,
         1.0,
@@ -520,7 +520,7 @@
       "com": [
         211.603,
         105.0,
-        53.8925
+        53.8995
       ],
       "counts": {
         "edges": 490,
@@ -532,7 +532,231 @@
       "label": "carriage-top",
       "type": "App::Link",
       "valid": true,
-      "volume": 431153.0
+      "volume": 430719.0
+    },
+    "roller_bottom_a_end": {
+      "area": 1591.15,
+      "bbox": [
+        150.603,
+        20.5,
+        42.0,
+        160.603,
+        48.5,
+        52.0
+      ],
+      "closed": true,
+      "com": [
+        155.603,
+        34.5,
+        47.0
+      ],
+      "counts": {
+        "edges": 39,
+        "faces": 27,
+        "shells": 6,
+        "solids": 6,
+        "verts": 26
+      },
+      "label": "roller_bottom_a_end",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 1196.35
+    },
+    "roller_bottom_a_start": {
+      "area": 1591.15,
+      "bbox": [
+        262.603,
+        20.5,
+        42.0,
+        272.603,
+        48.5,
+        52.0
+      ],
+      "closed": true,
+      "com": [
+        267.603,
+        34.5,
+        47.0
+      ],
+      "counts": {
+        "edges": 39,
+        "faces": 27,
+        "shells": 6,
+        "solids": 6,
+        "verts": 26
+      },
+      "label": "roller_bottom_a_start",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 1196.35
+    },
+    "roller_bottom_b_end": {
+      "area": 1591.15,
+      "bbox": [
+        150.603,
+        161.5,
+        42.0,
+        160.603,
+        189.5,
+        52.0
+      ],
+      "closed": true,
+      "com": [
+        155.603,
+        175.5,
+        47.0
+      ],
+      "counts": {
+        "edges": 39,
+        "faces": 27,
+        "shells": 6,
+        "solids": 6,
+        "verts": 26
+      },
+      "label": "roller_bottom_b_end",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 1196.35
+    },
+    "roller_bottom_b_start": {
+      "area": 1591.15,
+      "bbox": [
+        262.603,
+        161.5,
+        42.0,
+        272.603,
+        189.5,
+        52.0
+      ],
+      "closed": true,
+      "com": [
+        267.603,
+        175.5,
+        47.0
+      ],
+      "counts": {
+        "edges": 39,
+        "faces": 27,
+        "shells": 6,
+        "solids": 6,
+        "verts": 26
+      },
+      "label": "roller_bottom_b_start",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 1196.35
+    },
+    "roller_top_a_end": {
+      "area": 1591.15,
+      "bbox": [
+        113.77,
+        20.5,
+        40.0,
+        123.77,
+        48.5,
+        50.0
+      ],
+      "closed": true,
+      "com": [
+        118.77,
+        34.5,
+        45.0
+      ],
+      "counts": {
+        "edges": 39,
+        "faces": 27,
+        "shells": 6,
+        "solids": 6,
+        "verts": 26
+      },
+      "label": "roller_top_a_end",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 1196.35
+    },
+    "roller_top_a_start": {
+      "area": 1591.15,
+      "bbox": [
+        299.436,
+        20.5,
+        40.0,
+        309.436,
+        48.5,
+        50.0
+      ],
+      "closed": true,
+      "com": [
+        304.436,
+        34.5,
+        45.0
+      ],
+      "counts": {
+        "edges": 39,
+        "faces": 27,
+        "shells": 6,
+        "solids": 6,
+        "verts": 26
+      },
+      "label": "roller_top_a_start",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 1196.35
+    },
+    "roller_top_b_end": {
+      "area": 1591.15,
+      "bbox": [
+        113.77,
+        161.5,
+        40.0,
+        123.77,
+        189.5,
+        50.0
+      ],
+      "closed": true,
+      "com": [
+        118.77,
+        175.5,
+        45.0
+      ],
+      "counts": {
+        "edges": 39,
+        "faces": 27,
+        "shells": 6,
+        "solids": 6,
+        "verts": 26
+      },
+      "label": "roller_top_b_end",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 1196.35
+    },
+    "roller_top_b_start": {
+      "area": 1591.15,
+      "bbox": [
+        299.436,
+        161.5,
+        40.0,
+        309.436,
+        189.5,
+        50.0
+      ],
+      "closed": true,
+      "com": [
+        304.436,
+        175.5,
+        45.0
+      ],
+      "counts": {
+        "edges": 39,
+        "faces": 27,
+        "shells": 6,
+        "solids": 6,
+        "verts": 26
+      },
+      "label": "roller_top_b_start",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 1196.35
     }
   },
   "parametric": {
@@ -543,6 +767,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "2899937d9b2df1fdcf5c45d0c72cba3b13357c211634a20801f6898d4c03c0d0"
+    "compact-stage.FCStd": "c7b077a6f607ff8311b50034ee2c1a1b66b5cbed25d0917e1ae283a7eddee69f"
   }
 }

@@ -1,0 +1,134 @@
+{
+  "document": "roller_sleeve",
+  "errors": [],
+  "objects": {
+    "Body": {
+      "area": 1025.42,
+      "bbox": [
+        -5.0,
+        -5.0,
+        -9.2,
+        5.0,
+        5.0,
+        9.2
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 4,
+        "shells": 1,
+        "solids": 1,
+        "verts": 4
+      },
+      "label": "Sleeve",
+      "type": "PartDesign::Body",
+      "valid": true,
+      "volume": 924.885
+    },
+    "Bore": {
+      "area": 1025.42,
+      "bbox": [
+        -5.0,
+        -5.0,
+        -9.2,
+        5.0,
+        5.0,
+        9.2
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 4,
+        "shells": 1,
+        "solids": 1,
+        "verts": 4
+      },
+      "label": "Bore",
+      "type": "PartDesign::SubtractiveCylinder",
+      "valid": true,
+      "volume": 924.885
+    },
+    "Part": {
+      "area": 1025.42,
+      "bbox": [
+        -5.0,
+        -5.0,
+        -9.2,
+        5.0,
+        5.0,
+        9.2
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 4,
+        "shells": 1,
+        "solids": 1,
+        "verts": 4
+      },
+      "label": "roller-sleeve",
+      "type": "App::Part",
+      "valid": true,
+      "volume": 924.885
+    },
+    "Tube": {
+      "area": 735.133,
+      "bbox": [
+        -5.0,
+        -5.0,
+        -9.2,
+        5.0,
+        5.0,
+        9.2
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 3,
+        "faces": 3,
+        "shells": 1,
+        "solids": 1,
+        "verts": 2
+      },
+      "label": "Tube",
+      "type": "PartDesign::AdditiveCylinder",
+      "valid": true,
+      "volume": 1445.13
+    }
+  },
+  "parametric": {
+    "audited": 5,
+    "objects": {}
+  },
+  "params": {
+    "bearing_d_out": 6.0,
+    "bearing_flange_w": 0.8,
+    "roller_d": 10.0,
+    "roller_l": 20.0,
+    "sleeve_l": 18.4
+  },
+  "saved": true,
+  "schema": 1,
+  "sources": {
+    "roller-sleeve.FCStd": "c6df19a3a0d4914ac7af1679a34912a2cc2a3bd95fb7f3c7e372cf3225b0922a"
+  }
+}

@@ -39,8 +39,11 @@
 // forcer (the coil part of the motor) are in this file, with their
 // interfaces to carriage-bottom. The linear encoder is in this file too: the
 // read head on carriage-bottom, the scale on the base.
-// Not modelled yet: the rollers and the screws. When they enter this file,
-// they bring their own interfaces: for example roller to sealing strip.
+// The eight seal strip rollers are in this file, with their interface to
+// the carriage halves. Each roller is an assembly of standard parts and one
+// sleeve we make. See docs/decisions/2026-10-28_seal-strip-rollers-on-flanged-ball-bearings.md.
+// Not modelled yet: the screws, and the interface between a roller and the
+// sealing strip.
 //
 // Not modelled yet either: the interface between a guide block and its
 // rail. It needs a choice first: which row of blocks (a or b) runs on the
@@ -391,6 +394,47 @@ package CompactStage {
          */
     }
 
+    port def RollerMountInterface_v1 {
+        doc /*
+         * The axle of one seal strip roller in its slot in a carriage half.
+         * The 2 mm pin lies against the slot wall on the roller centre, and
+         * on the slot floor. Two countersunk screws clamp it there.
+         *
+         * In the CAD, the frames IF_roller_a_start and so on sit on the pin
+         * axis, in the middle of the roller. Z points along the pin, towards
+         * the b side of the stage.
+         */
+        attribute axleDiameter : LengthValue = 2 [mm];
+        attribute rollerDiameter : LengthValue = 10 [mm];
+        attribute rollerLength : LengthValue = 20 [mm];
+    }
+
+    port def RollerAxisInterface_v1 {
+        doc /*
+         * The axis of the roller sleeve, where the pin runs through it. The
+         * pin carries the sleeve through the two bearings; it does not touch
+         * the sleeve itself. Frame IF_centre on the sleeve and on the pin.
+         */
+    }
+
+    port def BearingSeatInterface_v1 {
+        doc /*
+         * One end of the roller sleeve. The bearing sits in the 6 mm hole,
+         * and its flange rests on the end face. Frame IF_end_a or IF_end_b on
+         * the sleeve, IF_seat on the bearing. Z points out of the sleeve.
+         */
+        attribute holeDiameter : LengthValue = 6 [mm];
+    }
+
+    port def WasherFaceInterface_v1 {
+        doc /*
+         * The face of a bearing on its flange side, where a washer touches
+         * the inner ring. The washer keeps the turning outer ring off the
+         * pocket wall. Frame IF_flange_face on the bearing, IF_face on the
+         * washer.
+         */
+    }
+
     // ---------------------------------------------------------------------
     // Parts. Each port says which side of an interface a part is on.
     // ---------------------------------------------------------------------
@@ -443,6 +487,10 @@ package CompactStage {
         port damperBStartMount : DamperMountInterface_v1;
         port damperAEndMount : DamperMountInterface_v1;
         port damperBEndMount : DamperMountInterface_v1;
+        port rollerAStart : RollerMountInterface_v1;
+        port rollerBStart : RollerMountInterface_v1;
+        port rollerAEnd : RollerMountInterface_v1;
+        port rollerBEnd : RollerMountInterface_v1;
     }
 
     part def GuideBlock {
@@ -493,6 +541,10 @@ package CompactStage {
          */
         port loadMount : CarriageMountInterface_v1;
         port carriageJoint : ~CarriageJointInterface_v1;
+        port rollerAStart : RollerMountInterface_v1;
+        port rollerBStart : RollerMountInterface_v1;
+        port rollerAEnd : RollerMountInterface_v1;
+        port rollerBEnd : RollerMountInterface_v1;
     }
 
     part def SealingStrip {
@@ -576,6 +628,14 @@ package CompactStage {
         part damperBStart : EndStopDamper;
         part damperAEnd : EndStopDamper;
         part damperBEnd : EndStopDamper;
+        part rollerBottomAStart : SealRoller;
+        part rollerBottomBStart : SealRoller;
+        part rollerBottomAEnd : SealRoller;
+        part rollerBottomBEnd : SealRoller;
+        part rollerTopAStart : SealRoller;
+        part rollerTopBStart : SealRoller;
+        part rollerTopAEnd : SealRoller;
+        part rollerTopBEnd : SealRoller;
 
         // Interfaces of the whole stage
         port machineMount : BaseMountInterface_v1;
@@ -624,6 +684,16 @@ package CompactStage {
         connect base.damperBStartStop to damperBStart.stop;
         connect base.damperAEndStop to damperAEnd.stop;
         connect base.damperBEndStop to damperBEnd.stop;
+
+        // RollerMount: four seal strip rollers in each carriage half
+        connect carriageBottom.rollerAStart to rollerBottomAStart.axle;
+        connect carriageBottom.rollerBStart to rollerBottomBStart.axle;
+        connect carriageBottom.rollerAEnd to rollerBottomAEnd.axle;
+        connect carriageBottom.rollerBEnd to rollerBottomBEnd.axle;
+        connect carriageTop.rollerAStart to rollerTopAStart.axle;
+        connect carriageTop.rollerBStart to rollerTopBStart.axle;
+        connect carriageTop.rollerAEnd to rollerTopAEnd.axle;
+        connect carriageTop.rollerBEnd to rollerTopBEnd.axle;
     }
 
     part def EndStopDamper {
@@ -633,6 +703,65 @@ package CompactStage {
          */
         port mount : ~DamperMountInterface_v1;
         port stop : ~DamperStopInterface_v1;
+    }
+
+    part def SealRoller {
+        doc /*
+         * One seal strip roller, 10 mm across and 20 mm long. A pin is the
+         * fixed axle; two flanged ball bearings carry the sleeve; a washer
+         * on each side keeps the bearings off the pocket walls.
+         * CAD: cad/assemblies/roller/, frame IF_axle on the pin axis.
+         */
+        port axle : ~RollerMountInterface_v1;
+
+        part sleeve : RollerSleeve;
+        part bearingA : RollerBearing;
+        part bearingB : RollerBearing;
+        part washerA : RollerWasher;
+        part washerB : RollerWasher;
+        part pin : RollerAxle;
+
+        connect sleeve.endA to bearingA.seat;
+        connect sleeve.endB to bearingB.seat;
+        connect bearingA.flangeFace to washerA.face;
+        connect bearingB.flangeFace to washerB.face;
+        connect sleeve.centre to pin.centre;
+    }
+
+    part def RollerSleeve {
+        doc /*
+         * The sleeve of a seal strip roller: precision tube 10 x 2 mm, cut
+         * to 18.4 mm, with a bearing in each end. CAD: cad/parts/roller-sleeve/.
+         */
+        port centre : RollerAxisInterface_v1;
+        port endA : BearingSeatInterface_v1;
+        port endB : BearingSeatInterface_v1;
+    }
+
+    part def RollerBearing {
+        doc /*
+         * Roller Bearing, bought: stoq:nsk/miniature-flanged-metric#F692ZZ.
+         * From the parts library in modules/stoq/. Two in each roller.
+         */
+        port seat : ~BearingSeatInterface_v1;
+        port flangeFace : WasherFaceInterface_v1;
+    }
+
+    part def RollerWasher {
+        doc /*
+         * Roller Washer, bought: stoq:iso/iso-7092#2-200HV-A2. From the parts
+         * library in modules/stoq/. Two in each roller.
+         */
+        port face : ~WasherFaceInterface_v1;
+    }
+
+    part def RollerAxle {
+        doc /*
+         * Roller Axle, bought: stoq:iso/iso-8734#2X28-A, a 2 x 28 mm hardened
+         * dowel pin. From the parts library in modules/stoq/. One in each
+         * roller.
+         */
+        port centre : ~RollerAxisInterface_v1;
     }
 
     // ---------------------------------------------------------------------

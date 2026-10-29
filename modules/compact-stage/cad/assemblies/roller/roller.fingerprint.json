@@ -1,0 +1,212 @@
+{
+  "document": "roller",
+  "errors": [],
+  "objects": {
+    "Assembly": {
+      "area": 1591.15,
+      "bbox": [
+        -5.0,
+        -5.0,
+        -14.0,
+        5.0,
+        5.0,
+        14.0
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 39,
+        "faces": 27,
+        "shells": 6,
+        "solids": 6,
+        "verts": 26
+      },
+      "label": "roller",
+      "type": "Assembly::AssemblyObject",
+      "valid": true,
+      "volume": 1196.35
+    },
+    "F692ZZ_a": {
+      "area": 161.242,
+      "bbox": [
+        -3.75,
+        -3.75,
+        -10.0,
+        3.75,
+        3.75,
+        -7.0
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        -8.65882
+      ],
+      "counts": {
+        "edges": 9,
+        "faces": 6,
+        "shells": 1,
+        "solids": 1,
+        "verts": 6
+      },
+      "label": "F692ZZ_a",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 88.1217
+    },
+    "F692ZZ_b": {
+      "area": 161.242,
+      "bbox": [
+        -3.75,
+        -3.75,
+        7.0,
+        3.75,
+        3.75,
+        10.0
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        8.65882
+      ],
+      "counts": {
+        "edges": 9,
+        "faces": 6,
+        "shells": 1,
+        "solids": 1,
+        "verts": 6
+      },
+      "label": "F692ZZ_b",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 88.1217
+    },
+    "pin": {
+      "area": 182.212,
+      "bbox": [
+        -1.0,
+        -0.992709,
+        -14.0,
+        1.0,
+        0.992709,
+        14.0
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 3,
+        "faces": 3,
+        "shells": 1,
+        "solids": 1,
+        "verts": 2
+      },
+      "label": "pin",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 87.9646
+    },
+    "roller_sleeve": {
+      "area": 1025.42,
+      "bbox": [
+        -5.0,
+        -5.0,
+        -9.2,
+        5.0,
+        5.0,
+        9.2
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 4,
+        "shells": 1,
+        "solids": 1,
+        "verts": 4
+      },
+      "label": "roller_sleeve",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 924.885
+    },
+    "washer_a": {
+      "area": 30.5206,
+      "bbox": [
+        -2.25,
+        -2.25,
+        -10.3,
+        2.25,
+        2.25,
+        -10.0
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        -10.15
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 4,
+        "shells": 1,
+        "solids": 1,
+        "verts": 4
+      },
+      "label": "washer_a",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 3.6309
+    },
+    "washer_b": {
+      "area": 30.5206,
+      "bbox": [
+        -2.25,
+        -2.25,
+        10.0,
+        2.25,
+        2.25,
+        10.3
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        10.15
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 4,
+        "shells": 1,
+        "solids": 1,
+        "verts": 4
+      },
+      "label": "washer_b",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 3.6309
+    }
+  },
+  "parametric": {
+    "audited": 1,
+    "objects": {}
+  },
+  "params": {},
+  "saved": true,
+  "schema": 1,
+  "sources": {
+    "roller.FCStd": "8f907d37f21ff172c683a956bb50a6ba06e2e437b37b90bd293ec81577e028db"
+  }
+}
