@@ -183,4 +183,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-28 | [Seal strip rollers on flanged ball bearings, in the assembly](2026-10-28_seal-strip-rollers-in-the-assembly.md) | engineering, cad, architecture, purchasing |  |
 | 2026-10-29 | [Two compact stages screw together as a cross table](2026-10-29_cross-table-mounting-holes.md) | engineering, cad, architecture |  |
 | 2026-10-29 | [How to make the seal strip, and how to get edges without burrs](2026-10-29_strip-seal-edges-and-processes.md) | engineering, purchasing |  |
+| 2026-10-30 | [Seal strip: corner slots, corner screws 1 mm in, and the flat strip](2026-10-30_strip-corner-slots.md) | cad |  |
 | 2026-10-30 | [Scraper: what other makers do, why not felt, and a brass and TPU design](2026-10-30_scraper-brass-and-tpu.md) | engineering, cad | 1 |

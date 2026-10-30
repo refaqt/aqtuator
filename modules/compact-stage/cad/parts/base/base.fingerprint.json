@@ -538,10 +538,10 @@
       "area": 0.0,
       "bbox": [
         38.0,
-        34.0146,
+        34.0,
         10.0,
         402.0,
-        175.985,
+        176.0,
         10.0
       ],
       "closed": true,
@@ -593,10 +593,10 @@
     "Sketch": {
       "area": 0.0,
       "bbox": [
-        4.04375,
+        4.0,
         17.0,
         40.0,
-        435.956,
+        436.0,
         193.0,
         40.0
       ],
@@ -621,10 +621,10 @@
     "Sketch001": {
       "area": 0.0,
       "bbox": [
-        4.04375,
+        4.0,
         17.0,
         13.0,
-        435.956,
+        436.0,
         193.0,
         13.0
       ],
@@ -706,10 +706,10 @@
       "area": 0.0,
       "bbox": [
         17.25,
-        2.27005,
+        2.25,
         10.0,
         22.75,
-        207.73,
+        207.75,
         10.0
       ],
       "closed": true,
@@ -994,11 +994,11 @@
           "Constraint55 (Radius) is a typed number: 4 mm",
           "Constraint56 (DistanceX) is a typed number: 1 mm",
           "Constraint57 (Distance) is a typed number: 1 mm",
-          "Constraint58 (Distance) is a typed number: 1 mm",
-          "Constraint59 (Distance) is a typed number: 3 mm",
-          "Constraint62 (Diameter) is a typed number: 4 mm",
-          "Constraint64 (Diameter) is a typed number: 8 mm",
-          "preload_screw_x (DistanceX) is a typed number: 6.5 mm"
+          "Constraint58 (Distance) is a typed number: 3 mm",
+          "Constraint61 (Diameter) is a typed number: 4 mm",
+          "Constraint63 (Diameter) is a typed number: 8 mm",
+          "preload_screw_x (DistanceX) is a typed number: 6.5 mm",
+          "corner_screw_x (DistanceX) is a typed number: 6 mm"
         ]
       }
     }
@@ -1007,6 +1007,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "45783e4c072417eff9b2f190ea4e5ff4ac14df6d786a21f9cf2c6507dc3650c5"
+    "base.FCStd": "0bec25c11e7093b92d392f1729c717e148c442e800bc69b76db646a6b8a22ba9"
   }
 }

@@ -36,7 +36,7 @@ def _doqs_scripts(start):
 
 sys.path.insert(0, str(_doqs_scripts(_HERE)))
 
-from cad_build import body, frame, main, part, sheet  # noqa: E402
+from cad_build import bind, body, dim, frame, main, part, sheet  # noqa: E402
 
 #: The axes and origin of this part.
 AXES = (
@@ -56,8 +56,16 @@ BASE_L = 440.0          # length of the base along X
 POCKET_FLOOR = 39.85    # floor of the strip pocket
 POCKET_Y = (12.0, 198.0)   # sides of the strip body in the pocket
 EAR_Y = (3.0, 207.0)       # outer sides of the ears in the pocket
-PRELOAD_SCREWS = [(6.5, 105.0), (433.5, 105.0)]
-CORNER_SCREWS = [(5.0, 8.0), (5.0, 202.0), (435.0, 8.0), (435.0, 202.0)]
+EAR_R = 4.0             # radius at the outer end of each ear
+EAR_STEP_X = 18.0       # the 45° step from an ear ends on the body side, this far from the end
+SCREW_Y_MID = 105.0     # the preload screws sit in the middle of the width
+PRELOAD_SCREWS = [(6.5, SCREW_Y_MID), (433.5, SCREW_Y_MID)]
+# Corner screws 6 mm from the base ends (Niels Bosmans 2026-10-30, was 5 mm).
+CORNER_SCREW_X = 6.0
+CORNER_SCREW_Y = (8.0, 202.0)
+CORNER_SCREWS = [(x, y) for x in (CORNER_SCREW_X, BASE_L - CORNER_SCREW_X) for y in CORNER_SCREW_Y]
+# EN 1.4310, Alleima 11R51, the same as the strip model of the seal strip designer page.
+E_STRIP = 185000.0      # MPa
 # ISO 10642 M4: the cone of the head meets the shank at 4 mm. The cone rests on
 # the pocket floor (the base has no countersink), so at the top of the strip it
 # is 4 + 2 * strip_t wide. The outer edge of the strip hole touches it there.
@@ -72,9 +80,9 @@ def pocket_outline():
     from FreeCAD import Vector as V
 
     import math
-    r = 4.0
+    r = EAR_R
     c45 = r * math.cos(math.radians(45))
-    step_x = 18.0   # the 45° step from an ear ends on the body side, this far from the end
+    step_x = EAR_STEP_X
 
     def ear(xe, side):
         # xe: end of the base (0 or 440); side: +1 for high Y, -1 for low Y
@@ -178,6 +186,7 @@ def strip_shape(params):
     end_gap = float(params["strip_end_gap"])
     edge_gap = float(params["strip_edge_gap"])
     d_corner = float(params["strip_corner_hole_d"])
+    slot_l = float(params["strip_corner_slot_l"])
     d_preload = float(params["strip_preload_hole_d"])
 
     outline = pocket_outline().makeOffset2D(-edge_gap, join=0)
@@ -193,16 +202,246 @@ def strip_shape(params):
     flat = flat.cut(Part.makeBox(x_hi - x_lo, 300, 10, V(x_lo, -50, POCKET_FLOOR - 5)))
     strip = flat.fuse(bent_band(profile, t, y0, y1)).removeSplitter()
 
-    # Holes. The preload hole sits off the screw axis, towards the strip middle,
-    # so that its outer edge touches the cone of the screw at the top of the strip.
+    # Holes. The corner holes are slots along X, centred on the screw, so the strip
+    # can slide under the collars while the preload is set. The preload hole sits off
+    # the screw axis, towards the strip middle, so that its outer edge touches the
+    # cone of the screw at the top of the strip.
     r_cone = CONE_D_AT_FLOOR / 2 + t
     for x, y in CORNER_SCREWS:
-        strip = strip.cut(Part.makeCylinder(d_corner / 2, 10, V(x, y, POCKET_FLOOR - 5)))
+        z = POCKET_FLOOR - 5
+        slot = Part.makeCylinder(d_corner / 2, 10, V(x - slot_l / 2, y, z)).fuse([
+            Part.makeCylinder(d_corner / 2, 10, V(x + slot_l / 2, y, z)),
+            Part.makeBox(slot_l, d_corner, 10, V(x - slot_l / 2, y - d_corner / 2, z)),
+        ])
+        strip = strip.cut(slot)
     for x, y in PRELOAD_SCREWS:
-        sx = 1 if x < BASE_L / 2 else -1
-        xh = x + sx * (d_preload / 2 - r_cone)
+        xh = preload_hole_x(x, d_preload, t)
         strip = strip.cut(Part.makeCylinder(d_preload / 2, 10, V(xh, y, POCKET_FLOOR - 5)))
     return strip
+
+
+def preload_hole_x(x, d_preload, t):
+    """Centre of the preload hole for the screw at x: off the axis, towards the strip middle,
+    so that its outer edge touches the cone of the screw at the top of the strip."""
+    sx = 1 if x < BASE_L / 2 else -1
+    return x + sx * (d_preload / 2 - (CONE_D_AT_FLOOR / 2 + t))
+
+
+def flat_map(profile, t, pull, width):
+    """A function that turns an x of the bent, pulled strip into an x of the strip as cut.
+
+    On the flat strip, a point lies as far from the strip middle as it does along the bent
+    centre line, less the stretch of the pull. The stretch is taken as the same along the whole
+    strip; beyond the preload holes there is no pull, which changes less than 0.001 mm.
+    """
+    import bisect
+    import math
+
+    xs = [x for x, _ in profile]
+    s = [0.0]
+    for (xa, za), (xb, zb) in zip(profile, profile[1:]):
+        s.append(s[-1] + math.hypot(xb - xa, zb - za))
+
+    def arc(x):
+        # Length along the strip from the start of the profile; flat outside it.
+        if x <= xs[0]:
+            return x - xs[0]
+        if x >= xs[-1]:
+            return s[-1] + x - xs[-1]
+        i = bisect.bisect_right(xs, x) - 1
+        f = (x - xs[i]) / (xs[i + 1] - xs[i])
+        return s[i] + f * (s[i + 1] - s[i])
+
+    eps = pull / (E_STRIP * width * t)
+    mid = BASE_L / 2
+    s_mid = arc(mid)
+    return lambda x: mid + (arc(x) - s_mid) / (1 + eps)
+
+
+def _sheet_value(q):
+    """A function that reads one alias of the sheet as a number in mm (or N)."""
+    def val(alias):
+        v = q.get(alias)
+        return float(getattr(v, "Value", v))
+    return val
+
+
+def _xy_plane(body_obj):
+    """The XY plane of a Body's own origin."""
+    return next(f for f in body_obj.Origin.OriginFeatures if getattr(f, "Role", "") == "XY_Plane")
+
+
+def _remove_features(doc, body_obj):
+    """Remove every feature of a Body, so a rebuild starts clean."""
+    for obj in list(body_obj.Group):
+        if obj.TypeId in ("App::Origin", "PartDesign::CoordinateSystem"):
+            continue
+        body_obj.removeObject(obj)
+        doc.removeObject(obj.Name)
+
+
+def flat_outline_sketch(doc, flat_body):
+    """The outline of the strip as cut: two end lines, two body sides and four ears.
+
+    Each ear has a straight outer side, an arc and a 45° step to the body side, as in the
+    strip pocket of the base, with the edge gap taken off. Every size is an expression on
+    the parameter sheet. The lengths along X come from `strip_flat_l`.
+    """
+    import math
+    import Part
+    import Sketcher
+    from FreeCAD import Vector as V
+
+
+    val = _sheet_value(sheet(doc))
+    gap, end_gap = val("strip_edge_gap"), val("strip_end_gap")
+    r = val("strip_ear_r") - gap
+    x_l = val("strip_base_l") / 2 - val("strip_flat_l") / 2
+    x_r = x_l + val("strip_flat_l")
+    # From the strip end to the ear arc centre, and to the end of the 45° step.
+    c_off = (val("strip_ear_step_x") - (val("strip_ear_y1") - val("strip_ear_r") - val("strip_pocket_y1"))
+             - val("strip_ear_r") * math.sqrt(2) - end_gap)
+    k_off = val("strip_ear_step_x") + gap - gap * math.sqrt(2) - end_gap
+    y_out = (val("strip_ear_y0") + gap, val("strip_ear_y1") - gap)
+    y_body = (val("strip_pocket_y0") + gap, val("strip_pocket_y1") - gap)
+    y_c = (val("strip_ear_y0") + val("strip_ear_r"), val("strip_ear_y1") - val("strip_ear_r"))
+
+    P = "Params."
+    e_xl = f"{P}strip_base_l / 2 - {P}strip_flat_l / 2"
+    e_xr = f"{P}strip_base_l / 2 + {P}strip_flat_l / 2"
+    e_c = (f"({P}strip_ear_step_x - ({P}strip_ear_y1 - {P}strip_ear_r - {P}strip_pocket_y1)"
+           f" - {P}strip_ear_r * sqrt(2) - {P}strip_end_gap)")
+    e_k = f"({P}strip_ear_step_x + {P}strip_edge_gap * (1 - sqrt(2)) - {P}strip_end_gap)"
+    e_r = f"{P}strip_ear_r - {P}strip_edge_gap"
+    e_yc = (f"{P}strip_ear_y0 + {P}strip_ear_r", f"{P}strip_ear_y1 - {P}strip_ear_r")
+    e_yb = (f"{P}strip_pocket_y0 + {P}strip_edge_gap", f"{P}strip_pocket_y1 - {P}strip_edge_gap")
+
+    sk = flat_body.newObject("Sketcher::SketchObject", "FlatOutline")
+    sk.AttachmentSupport = [(_xy_plane(flat_body), "")]
+    sk.MapMode = "FlatFace"
+
+    def pt(a, cx, cy):
+        return V(cx + r * math.cos(math.radians(a)), cy + r * math.sin(math.radians(a)), 0)
+
+    def line(a, b):
+        return sk.addGeometry(Part.LineSegment(a, b))
+
+    def arc(cx, cy, a0, a1):
+        return sk.addGeometry(Part.ArcOfCircle(Part.Circle(V(cx, cy, 0), V(0, 0, 1), r),
+                                               math.radians(a0), math.radians(a1)))
+
+    # Ears: (end, side) -> centre x, arc angles; the arc runs counter-clockwise.
+    ears = {}
+    for end, xe, sx in (("L", x_l, 1), ("R", x_r, -1)):
+        for side in (0, 1):
+            cx = xe + sx * c_off
+            kx = xe + sx * k_off
+            ears[end, side] = (cx, y_c[side], kx)
+
+    # Walk round counter-clockwise from the left end, low side, up.
+    g_end_l = line(V(x_l, y_out[0], 0), V(x_l, y_out[1], 0))
+    cx, cy, kx = ears["L", 1]
+    g_ear_lh = line(V(x_l, y_out[1], 0), V(cx, y_out[1], 0))
+    g_arc_lh = arc(cx, cy, 45, 90)
+    g_step_lh = line(pt(45, cx, cy), V(kx, y_body[1], 0))
+    cx2, cy2, kx2 = ears["R", 1]
+    g_body_h = line(V(kx, y_body[1], 0), V(kx2, y_body[1], 0))
+    g_step_rh = line(V(kx2, y_body[1], 0), pt(135, cx2, cy2))
+    g_arc_rh = arc(cx2, cy2, 90, 135)
+    g_ear_rh = line(V(cx2, y_out[1], 0), V(x_r, y_out[1], 0))
+    g_end_r = line(V(x_r, y_out[1], 0), V(x_r, y_out[0], 0))
+    cx3, cy3, kx3 = ears["R", 0]
+    g_ear_rl = line(V(x_r, y_out[0], 0), V(cx3, y_out[0], 0))
+    g_arc_rl = arc(cx3, cy3, 225, 270)
+    g_step_rl = line(pt(225, cx3, cy3), V(kx3, y_body[0], 0))
+    cx4, cy4, kx4 = ears["L", 0]
+    g_body_l = line(V(kx3, y_body[0], 0), V(kx4, y_body[0], 0))
+    g_step_ll = line(V(kx4, y_body[0], 0), pt(315, cx4, cy4))
+    g_arc_ll = arc(cx4, cy4, 270, 315)
+    g_ear_ll = line(V(cx4, y_out[0], 0), V(x_l, y_out[0], 0))
+
+    C = Sketcher.Constraint
+    # Plain corners, and the tangent joints at both ends of every arc.
+    for a, pa, b, pb in ((g_end_l, 2, g_ear_lh, 1), (g_step_lh, 2, g_body_h, 1),
+                         (g_body_h, 2, g_step_rh, 1), (g_ear_rh, 2, g_end_r, 1),
+                         (g_end_r, 2, g_ear_rl, 1), (g_step_rl, 2, g_body_l, 1),
+                         (g_body_l, 2, g_step_ll, 1), (g_ear_ll, 2, g_end_l, 1)):
+        sk.addConstraint(C("Coincident", a, pa, b, pb))
+    for a, pa, b, pb in ((g_ear_lh, 2, g_arc_lh, 2), (g_arc_lh, 1, g_step_lh, 1),
+                         (g_step_rh, 2, g_arc_rh, 2), (g_arc_rh, 1, g_ear_rh, 1),
+                         (g_ear_rl, 2, g_arc_rl, 2), (g_arc_rl, 1, g_step_rl, 1),
+                         (g_step_ll, 2, g_arc_ll, 2), (g_arc_ll, 1, g_ear_ll, 1)):
+        sk.addConstraint(C("Tangent", a, pa, b, pb))
+    for g in (g_ear_lh, g_body_h, g_ear_rh, g_ear_rl, g_body_l, g_ear_ll):
+        sk.addConstraint(C("Horizontal", g))
+    for g in (g_end_l, g_end_r):
+        sk.addConstraint(C("Vertical", g))
+
+    dim(sk, C("DistanceX", -1, 1, g_end_l, 1, x_l), e_xl, "flat_end_left")
+    dim(sk, C("DistanceX", -1, 1, g_end_r, 1, x_r), e_xr, "flat_end_right")
+    dim(sk, C("DistanceY", -1, 1, g_body_h, 1, y_body[1]), e_yb[1])
+    dim(sk, C("DistanceY", -1, 1, g_body_l, 1, y_body[0]), e_yb[0])
+    for g, (cx, cy, kx), step, pk, e_x, e_kx in (
+            (g_arc_lh, ears["L", 1], g_step_lh, 2, f"{e_xl} + {e_c}", f"{e_xl} + {e_k}"),
+            (g_arc_rh, ears["R", 1], g_step_rh, 1, f"{e_xr} - {e_c}", f"{e_xr} - {e_k}"),
+            (g_arc_rl, ears["R", 0], g_step_rl, 2, f"{e_xr} - {e_c}", f"{e_xr} - {e_k}"),
+            (g_arc_ll, ears["L", 0], g_step_ll, 1, f"{e_xl} + {e_c}", f"{e_xl} + {e_k}")):
+        side = 1 if cy > y_body[0] + 50 else 0
+        dim(sk, C("Radius", g, r), e_r)
+        dim(sk, C("DistanceX", -1, 1, g, 3, cx), e_x)
+        dim(sk, C("DistanceY", -1, 1, g, 3, cy), e_yc[side])
+        dim(sk, C("DistanceX", -1, 1, step, pk, kx), e_kx)
+    return sk
+
+
+def flat_holes_sketch(doc, flat_body):
+    """The four corner slots and the two preload holes of the strip as cut."""
+    import math
+    import Part
+    import Sketcher
+    from FreeCAD import Vector as V
+
+
+    val = _sheet_value(sheet(doc))
+    x_l = val("strip_base_l") / 2 - val("strip_flat_l") / 2
+    x_r = x_l + val("strip_flat_l")
+    r = val("strip_corner_hole_d") / 2
+    half = val("strip_corner_slot_l") / 2
+
+    P = "Params."
+    e_xl = f"{P}strip_base_l / 2 - {P}strip_flat_l / 2"
+    e_xr = f"{P}strip_base_l / 2 + {P}strip_flat_l / 2"
+
+    sk = flat_body.newObject("Sketcher::SketchObject", "FlatHolesSketch")
+    sk.AttachmentSupport = [(_xy_plane(flat_body), "")]
+    sk.MapMode = "FlatFace"
+    C = Sketcher.Constraint
+
+    for xe, sx, e_xe, sign in ((x_l, 1, e_xl, "+"), (x_r, -1, e_xr, "-")):
+        xc = xe + sx * val("strip_flat_corner_x")
+        for i, y in enumerate((val("strip_corner_screw_y0"), val("strip_corner_screw_y1"))):
+            a1 = sk.addGeometry(Part.ArcOfCircle(Part.Circle(V(xc - half, y, 0), V(0, 0, 1), r),
+                                                 math.pi / 2, 3 * math.pi / 2))
+            a2 = sk.addGeometry(Part.ArcOfCircle(Part.Circle(V(xc + half, y, 0), V(0, 0, 1), r),
+                                                 -math.pi / 2, math.pi / 2))
+            top = sk.addGeometry(Part.LineSegment(V(xc + half, y + r, 0), V(xc - half, y + r, 0)))
+            bot = sk.addGeometry(Part.LineSegment(V(xc - half, y - r, 0), V(xc + half, y - r, 0)))
+            for a, pa, b, pb in ((a2, 2, top, 1), (top, 2, a1, 1), (a1, 2, bot, 1), (bot, 2, a2, 1)):
+                sk.addConstraint(C("Tangent", a, pa, b, pb))
+            sk.addConstraint(C("Horizontal", top))
+            dim(sk, C("Radius", a1, r), f"{P}strip_corner_hole_d / 2")
+            dim(sk, C("Radius", a2, r), f"{P}strip_corner_hole_d / 2")
+            dim(sk, C("DistanceX", -1, 1, a1, 3, xc - half),
+                f"{e_xe} {sign} {P}strip_flat_corner_x - {P}strip_corner_slot_l / 2")
+            dim(sk, C("DistanceY", -1, 1, a1, 3, y), f"{P}strip_corner_screw_y{i}")
+            dim(sk, C("DistanceX", a1, 3, a2, 3, 2 * half), f"{P}strip_corner_slot_l")
+        xh = xe + sx * val("strip_flat_preload_x")
+        c = sk.addGeometry(Part.Circle(V(xh, val("strip_screw_y_mid"), 0), V(0, 0, 1),
+                                       val("strip_preload_hole_d") / 2))
+        dim(sk, C("Diameter", c, val("strip_preload_hole_d")), f"{P}strip_preload_hole_d")
+        dim(sk, C("DistanceX", -1, 1, c, 3, xh), f"{e_xe} {sign} {P}strip_flat_preload_x")
+        dim(sk, C("DistanceY", -1, 1, c, 3, val("strip_screw_y_mid")), f"{P}strip_screw_y_mid")
+    return sk
 
 
 def build(doc, params):
@@ -211,17 +450,69 @@ def build(doc, params):
     EN 1.4310 (AISI 301), see docs/decisions/2026-10-28_seal-strip-0-15-mm.md.
     The strip ends sit `strip_end_gap` from the base ends. Two countersunk
     screws (ISO 10642 M4) set the pull; four button head screws with collar
-    (ISO 7380-2 M4) clamp the corners.
+    (ISO 7380-2 M4) clamp the corners, through slots 1 mm long.
+
+    The file holds two shapes. `sealing-strip` is the strip as it lies in the
+    assembly: bent and pulled. The assembly links only this one.
+    `sealing-strip-flat` is the strip as cut from the sheet, a parametric Body:
+    it is longer by the extra length of the bends over the rollers, and
+    shorter by the stretch of the pull, so that its holes land on the screws
+    when it is fitted and pulled. It lies flat at z = 0, with its middle at the middle of
+    the base.
     """
     with open(DEFAULTS, newline="") as f:
-        params = {**{r["alias"]: r["value"] for r in csv.DictReader(f)
-                     if r["alias"].startswith("strip_")}, **params}
+        rows = [r for r in csv.DictReader(f) if r["alias"].startswith("strip_")]
+    units = {r["alias"]: r["unit"] for r in rows}
+    params = {**{r["alias"]: r["value"] for r in rows}, **params}
+    values = {k: (v.Value if hasattr(v, "Value") else v) for k, v in params.items()}
+
+    # The flat strip: where the strip end, a corner slot and a preload hole land, as cut.
+    t = float(values["strip_t"])
+    width = POCKET_Y[1] - POCKET_Y[0] - 2 * float(values["strip_edge_gap"])
+    to_flat = flat_map(read_profile(t), t, float(values["strip_pull"]), width)
+    end_x = float(values["strip_end_gap"])
+    flat_end = to_flat(end_x)
+    hole_x = preload_hole_x(PRELOAD_SCREWS[0][0], float(values["strip_preload_hole_d"]), t)
+    derived = {
+        # Sizes of the base, for the expressions of the flat strip.
+        "strip_base_l": BASE_L,
+        "strip_pocket_y0": POCKET_Y[0], "strip_pocket_y1": POCKET_Y[1],
+        "strip_ear_y0": EAR_Y[0], "strip_ear_y1": EAR_Y[1],
+        "strip_ear_r": EAR_R, "strip_ear_step_x": EAR_STEP_X,
+        "strip_corner_screw_y0": CORNER_SCREW_Y[0], "strip_corner_screw_y1": CORNER_SCREW_Y[1],
+        "strip_screw_y_mid": SCREW_Y_MID,
+        # The strip as cut, computed from the bent shape and the pull.
+        "strip_flat_l": round(2 * (BASE_L / 2 - flat_end), 4),
+        "strip_flat_corner_x": round(to_flat(CORNER_SCREW_X) - flat_end, 4),
+        "strip_flat_preload_x": round(to_flat(hole_x) - flat_end, 4),
+    }
+    units.update({k: "mm" for k in derived})
+
+    # Remove the flat features first: they read the sheet that is cleared next.
+    flat_container = part(doc, "sealing-strip-flat")
+    flat_body = body(doc, "FlatBody", container=flat_container)
+    _remove_features(doc, flat_body)
+
     p = sheet(doc)
     p.clearAll()
-    for row, (alias, value) in enumerate(params.items(), start=1):
+    for row, (alias, value) in enumerate({**params, **derived}.items(), start=1):
+        unit = units.get(alias, "")
+        text = str(getattr(value, "Value", value))
         p.set(f"A{row}", alias)
-        p.set(f"B{row}", str(value))
+        p.set(f"B{row}", f"={text} {unit}" if unit in ("mm", "N") and not text.startswith("=") else text)
         p.setAlias(f"B{row}", alias)
+    doc.recompute()
+
+    outline = flat_outline_sketch(doc, flat_body)
+    pad = flat_body.newObject("PartDesign::Pad", "FlatPad")
+    pad.Profile = outline
+    bind(pad, "Length", "Params.strip_t")
+    holes = flat_holes_sketch(doc, flat_body)
+    pocket = flat_body.newObject("PartDesign::Pocket", "FlatHoles")
+    pocket.Profile = holes
+    pocket.Type = "ThroughAll"
+    pocket.Midplane = True
+    outline.Visibility = holes.Visibility = False
     doc.recompute()
 
     container = part(doc, "sealing-strip")
@@ -234,7 +525,6 @@ def build(doc, params):
     if old is not None:
         strip_body.BaseFeature = None
         doc.removeObject(old.Name)
-    values = {k: (v.Value if hasattr(v, "Value") else v) for k, v in params.items()}
     shape = doc.addObject("Part::Feature", "StripShape")
     shape.Label = "StripShape (preloaded, carriage in the middle)"
     shape.Shape = strip_shape(values)
