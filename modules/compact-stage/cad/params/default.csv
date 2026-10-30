@@ -7,6 +7,7 @@ sleeve_l,=roller_l - 2 * bearing_flange_w,mm,,,Length of the sleeve: the roller 
 strip_t,0.15,mm,design,docs/decisions/2026-10-28_seal-strip-0-15-mm.md,Thickness of the seal strip. The strip pocket in the base is as deep
 strip_end_gap,1,mm,design,Niels Bosmans 2026-10-29,Room between each end of the seal strip and the end face of the base
 strip_edge_gap,0.2,mm,design,base Pocket005,Room between the seal strip outline and the wall of its pocket in the base. The pocket body is 186 mm wide; the strip 185.6 mm. The strip keeps 0.2 mm to the slope openings of the carriage (186 mm) on each side
-strip_corner_hole_d,4.5,mm,design,ISO 273 medium for M4,Hole in each strip corner for the ISO 7380-2 M4 clamp screw
+strip_corner_hole_d,4.5,mm,design,ISO 273 medium for M4,Width of the slot in each strip corner for the ISO 7380-2 M4 clamp screw
+strip_corner_slot_l,1,mm,design,Niels Bosmans 2026-10-30,Length of each corner slot along X (centre to centre). It is centred on the screw. So the strip can slide 0.5 mm each way under the collar while the preload is set
 strip_preload_hole_d,5,mm,design,simulation/cases/strip-seal-fit,Hole at each strip end for the ISO 10642 M4 preload screw. It sits off the screw axis towards the strip middle
 strip_pull,270,N,design,simulation/cases/strip-seal-fit,Pull in the seal strip after the preload screws are tight. No carriage contact from 190 to 350 N

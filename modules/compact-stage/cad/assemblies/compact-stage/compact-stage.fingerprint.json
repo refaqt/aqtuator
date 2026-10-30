@@ -31,7 +31,7 @@
       "volume": 7010.7
     },
     "Assembly": {
-      "area": 899340.0,
+      "area": 899329.0,
       "bbox": [
         0.0,
         0.0,
@@ -44,19 +44,19 @@
       "com": [
         219.872,
         104.665,
-        24.8583
+        24.8581
       ],
       "counts": {
-        "edges": 7587,
-        "faces": 3002,
+        "edges": 7641,
+        "faces": 3022,
         "shells": 110,
         "solids": 74,
-        "verts": 4947
+        "verts": 4983
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 3031520.0
+      "volume": 3031460.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -451,7 +451,7 @@
       "volume": 2716.57
     },
     "base": {
-      "area": 285464.0,
+      "area": 285487.0,
       "bbox": [
         0.0,
         0.0,
@@ -464,19 +464,19 @@
       "com": [
         219.905,
         105.044,
-        12.184
+        12.1831
       ],
       "counts": {
-        "edges": 658,
-        "faces": 227,
+        "edges": 664,
+        "faces": 231,
         "shells": 1,
         "solids": 1,
-        "verts": 434
+        "verts": 438
       },
       "label": "base",
       "type": "App::Link",
       "valid": true,
-      "volume": 1388090.0
+      "volume": 1388040.0
     },
     "carriage_bottom001": {
       "area": 117505.0,
@@ -537,16 +537,16 @@
     "corner_screw_a_end": {
       "area": 294.042,
       "bbox": [
-        430.33,
+        429.33,
         3.30981,
         30.0,
-        439.697,
+        438.697,
         12.6902,
         42.2
       ],
       "closed": true,
       "com": [
-        435.0,
+        434.0,
         8.0,
         37.2342
       ],
@@ -557,7 +557,7 @@
         "solids": 1,
         "verts": 22
       },
-      "label": "M4x10-Screw004",
+      "label": "M4x10-Screw009",
       "type": "Part::FeaturePython",
       "valid": true,
       "volume": 203.866
@@ -565,16 +565,16 @@
     "corner_screw_a_start": {
       "area": 294.042,
       "bbox": [
-        0.330451,
+        1.33045,
         3.30981,
         30.0,
-        9.69708,
+        10.6971,
         12.6902,
         42.2
       ],
       "closed": true,
       "com": [
-        5.0,
+        6.0,
         8.0,
         37.2342
       ],
@@ -585,7 +585,7 @@
         "solids": 1,
         "verts": 22
       },
-      "label": "M4x10-Screw002",
+      "label": "M4x10-Screw007",
       "type": "Part::FeaturePython",
       "valid": true,
       "volume": 203.866
@@ -593,16 +593,16 @@
     "corner_screw_b_end": {
       "area": 294.042,
       "bbox": [
-        430.33,
+        429.33,
         197.31,
         30.0,
-        439.697,
+        438.697,
         206.69,
         42.2
       ],
       "closed": true,
       "com": [
-        435.0,
+        434.0,
         202.0,
         37.2342
       ],
@@ -613,7 +613,7 @@
         "solids": 1,
         "verts": 22
       },
-      "label": "M4x10-Screw005",
+      "label": "M4x10-Screw010",
       "type": "Part::FeaturePython",
       "valid": true,
       "volume": 203.866
@@ -621,16 +621,16 @@
     "corner_screw_b_start": {
       "area": 294.042,
       "bbox": [
-        0.330451,
+        1.33045,
         197.31,
         30.0,
-        9.69708,
+        10.6971,
         206.69,
         42.2
       ],
       "closed": true,
       "com": [
-        5.0,
+        6.0,
         202.0,
         37.2342
       ],
@@ -641,7 +641,7 @@
         "solids": 1,
         "verts": 22
       },
-      "label": "M4x10-Screw003",
+      "label": "M4x10-Screw008",
       "type": "Part::FeaturePython",
       "valid": true,
       "volume": 203.866
@@ -927,7 +927,7 @@
       "volume": 1196.35
     },
     "sealing_strip": {
-      "area": 164956.0,
+      "area": 164921.0,
       "bbox": [
         1.0,
         3.2,
@@ -940,19 +940,19 @@
       "com": [
         220.003,
         105.0,
-        44.2554
+        44.2563
       ],
       "counts": {
-        "edges": 90,
-        "faces": 32,
+        "edges": 138,
+        "faces": 48,
         "shells": 1,
         "solids": 1,
-        "verts": 60
+        "verts": 92
       },
       "label": "sealing-strip",
       "type": "App::Link",
       "valid": true,
-      "volume": 12381.9
+      "volume": 12379.3
     }
   },
   "parametric": {
@@ -963,6 +963,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "a1a091598cfe6671fa7ac5b6f210d9334668b341ef0ec56adc75a2f588fdc497"
+    "compact-stage.FCStd": "3fce7a9f95c4183381fe06c18fe74d40e2b9f51be1a989b0732de4c13d5cb3e2"
   }
 }
