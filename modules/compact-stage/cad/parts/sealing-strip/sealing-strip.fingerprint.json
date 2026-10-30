@@ -58,6 +58,146 @@
       "valid": true,
       "volume": 12379.3
     },
+    "Body001": {
+      "area": 164913.0,
+      "bbox": [
+        -0.9765,
+        3.2,
+        0.0,
+        440.976,
+        206.8,
+        0.15
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        0.075
+      ],
+      "counts": {
+        "edges": 102,
+        "faces": 36,
+        "shells": 1,
+        "solids": 1,
+        "verts": 68
+      },
+      "label": "FlatBody",
+      "type": "PartDesign::Body",
+      "valid": true,
+      "volume": 12352.7
+    },
+    "FlatHoles": {
+      "area": 164913.0,
+      "bbox": [
+        -0.9765,
+        3.2,
+        0.0,
+        440.976,
+        206.8,
+        0.15
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        0.075
+      ],
+      "counts": {
+        "edges": 102,
+        "faces": 36,
+        "shells": 1,
+        "solids": 1,
+        "verts": 68
+      },
+      "label": "FlatHoles",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 12352.7
+    },
+    "FlatHolesSketch": {
+      "area": 0.0,
+      "bbox": [
+        1.2732,
+        5.75,
+        0.0,
+        438.727,
+        204.25,
+        0.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 18,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 18
+      },
+      "label": "FlatHolesSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "FlatOutline": {
+      "area": 0.0,
+      "bbox": [
+        -0.9765,
+        3.2,
+        0.0,
+        440.976,
+        206.8,
+        0.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 16,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 16
+      },
+      "label": "FlatOutline",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "FlatPad": {
+      "area": 165140.0,
+      "bbox": [
+        -0.9765,
+        3.2,
+        0.0,
+        440.976,
+        206.8,
+        0.15
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        0.075
+      ],
+      "counts": {
+        "edges": 48,
+        "faces": 18,
+        "shells": 1,
+        "solids": 1,
+        "verts": 32
+      },
+      "label": "FlatPad",
+      "type": "PartDesign::Pad",
+      "valid": true,
+      "volume": 12370.8
+    },
     "Part": {
       "area": 164921.0,
       "bbox": [
@@ -85,6 +225,34 @@
       "type": "App::Part",
       "valid": true,
       "volume": 12379.3
+    },
+    "Part001": {
+      "area": 164913.0,
+      "bbox": [
+        -0.9765,
+        3.2,
+        0.0,
+        440.976,
+        206.8,
+        0.15
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        0.075
+      ],
+      "counts": {
+        "edges": 102,
+        "faces": 36,
+        "shells": 1,
+        "solids": 1,
+        "verts": 68
+      },
+      "label": "sealing-strip-flat",
+      "type": "App::Part",
+      "valid": true,
+      "volume": 12352.7
     },
     "StripShape": {
       "area": 164921.0,
@@ -116,7 +284,7 @@
     }
   },
   "parametric": {
-    "audited": 1,
+    "audited": 5,
     "objects": {}
   },
   "params": {
@@ -136,6 +304,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "sealing-strip.FCStd": "072cef168f130464dc3b48c3af28051e0502f4fce1c868e3c52a6e9119757f7a"
+    "sealing-strip.FCStd": "97cd6bfed40aca21de31dd9c4e847280cac828f42521a177115a46eec3dbe10f"
   }
 }
