@@ -178,6 +178,7 @@ def strip_shape(params):
     end_gap = float(params["strip_end_gap"])
     edge_gap = float(params["strip_edge_gap"])
     d_corner = float(params["strip_corner_hole_d"])
+    slot_l = float(params["strip_corner_slot_l"])
     d_preload = float(params["strip_preload_hole_d"])
 
     outline = pocket_outline().makeOffset2D(-edge_gap, join=0)
@@ -193,11 +194,18 @@ def strip_shape(params):
     flat = flat.cut(Part.makeBox(x_hi - x_lo, 300, 10, V(x_lo, -50, POCKET_FLOOR - 5)))
     strip = flat.fuse(bent_band(profile, t, y0, y1)).removeSplitter()
 
-    # Holes. The preload hole sits off the screw axis, towards the strip middle,
-    # so that its outer edge touches the cone of the screw at the top of the strip.
+    # Holes. The corner holes are slots along X, centred on the screw, so the strip
+    # can slide under the collars while the preload is set. The preload hole sits off
+    # the screw axis, towards the strip middle, so that its outer edge touches the
+    # cone of the screw at the top of the strip.
     r_cone = CONE_D_AT_FLOOR / 2 + t
     for x, y in CORNER_SCREWS:
-        strip = strip.cut(Part.makeCylinder(d_corner / 2, 10, V(x, y, POCKET_FLOOR - 5)))
+        z = POCKET_FLOOR - 5
+        slot = Part.makeCylinder(d_corner / 2, 10, V(x - slot_l / 2, y, z)).fuse([
+            Part.makeCylinder(d_corner / 2, 10, V(x + slot_l / 2, y, z)),
+            Part.makeBox(slot_l, d_corner, 10, V(x - slot_l / 2, y - d_corner / 2, z)),
+        ])
+        strip = strip.cut(slot)
     for x, y in PRELOAD_SCREWS:
         sx = 1 if x < BASE_L / 2 else -1
         xh = x + sx * (d_preload / 2 - r_cone)
@@ -211,7 +219,7 @@ def build(doc, params):
     EN 1.4310 (AISI 301), see docs/decisions/2026-10-28_seal-strip-0-15-mm.md.
     The strip ends sit `strip_end_gap` from the base ends. Two countersunk
     screws (ISO 10642 M4) set the pull; four button head screws with collar
-    (ISO 7380-2 M4) clamp the corners.
+    (ISO 7380-2 M4) clamp the corners, through slots 1 mm long.
     """
     with open(DEFAULTS, newline="") as f:
         params = {**{r["alias"]: r["value"] for r in csv.DictReader(f)
