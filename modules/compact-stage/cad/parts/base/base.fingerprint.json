@@ -59,7 +59,7 @@
       "volume": 0.0
     },
     "Body": {
-      "area": 285464.0,
+      "area": 285487.0,
       "bbox": [
         0.0,
         0.0,
@@ -72,19 +72,19 @@
       "com": [
         219.905,
         105.044,
-        12.184
+        12.1831
       ],
       "counts": {
-        "edges": 658,
-        "faces": 227,
+        "edges": 664,
+        "faces": 231,
         "shells": 1,
         "solids": 1,
-        "verts": 434
+        "verts": 438
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 1388090.0
+      "volume": 1388040.0
     },
     "DamperPocket": {
       "area": 276956.0,
@@ -199,7 +199,7 @@
       "volume": 1450400.0
     },
     "Hole002": {
-      "area": 285464.0,
+      "area": 285460.0,
       "bbox": [
         0.0,
         0.0,
@@ -212,7 +212,7 @@
       "com": [
         219.905,
         105.044,
-        12.184
+        12.1842
       ],
       "counts": {
         "edges": 658,
@@ -227,7 +227,7 @@
       "volume": 1388090.0
     },
     "MagnetRingSplit": {
-      "area": 284531.0,
+      "area": 284528.0,
       "bbox": [
         0.0,
         0.0,
@@ -240,7 +240,7 @@
       "com": [
         219.905,
         105.044,
-        12.1953
+        12.1954
       ],
       "counts": {
         "edges": 628,
@@ -252,16 +252,16 @@
       "label": "MagnetRingSplit",
       "type": "PartDesign::Pad",
       "valid": true,
-      "volume": 1388860.0
+      "volume": 1388870.0
     },
     "MagnetRingSplitSketch": {
       "area": 0.0,
       "bbox": [
         7.0,
-        102.5,
+        98.5,
         39.35,
         433.0,
-        107.5,
+        111.5,
         39.35
       ],
       "closed": true,
@@ -283,7 +283,7 @@
       "volume": 0.0
     },
     "Part": {
-      "area": 285464.0,
+      "area": 285487.0,
       "bbox": [
         0.0,
         0.0,
@@ -296,19 +296,19 @@
       "com": [
         219.905,
         105.044,
-        12.184
+        12.1831
       ],
       "counts": {
-        "edges": 658,
-        "faces": 227,
+        "edges": 664,
+        "faces": 231,
         "shells": 1,
         "solids": 1,
-        "verts": 434
+        "verts": 438
       },
       "label": "base001",
       "type": "App::Part",
       "valid": true,
-      "volume": 1388090.0
+      "volume": 1388040.0
     },
     "Pocket": {
       "area": 269724.0,
@@ -477,6 +477,62 @@
       "type": "PartDesign::Pocket",
       "valid": true,
       "volume": 1388850.0
+    },
+    "PreloadCounterbore": {
+      "area": 285487.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        219.905,
+        105.044,
+        12.1831
+      ],
+      "counts": {
+        "edges": 664,
+        "faces": 231,
+        "shells": 1,
+        "solids": 1,
+        "verts": 438
+      },
+      "label": "PreloadCounterbore",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 1388040.0
+    },
+    "PreloadCounterboreSketch": {
+      "area": 0.0,
+      "bbox": [
+        4.0,
+        102.518,
+        39.85,
+        436.0,
+        107.482,
+        39.85
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        39.85
+      ],
+      "counts": {
+        "edges": 2,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 2
+      },
+      "label": "PreloadCounterboreSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     },
     "RailHoleSketch": {
       "area": 0.0,
@@ -760,7 +816,7 @@
     }
   },
   "parametric": {
-    "audited": 36,
+    "audited": 38,
     "objects": {
       "Block": {
         "label": "Block",
@@ -820,12 +876,12 @@
         "label": "MagnetRingSplitSketch",
         "type": "Sketcher::SketchObject",
         "unlinked": [
+          "split_r (Radius) is a typed number: 4 mm",
           "ring_outer_x (DistanceX) is a typed number: 7 mm",
           "ring_w (DistanceX) is a typed number: 3 mm",
           "split_y0 (DistanceY) is a typed number: 102.5 mm",
           "split_l (DistanceY) is a typed number: 5 mm",
           "ring_outer_x_end (DistanceX) is a typed number: 433 mm",
-          "Constraint24 (DistanceY) is a typed number: 102.5 mm",
           "AttachmentOffset is typed: (0, 0, 39.35) mm, 0 deg"
         ]
       },
@@ -951,6 +1007,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "e5ee34e850e68c9e8b2b762273460461b5ee47c756f7737a78c2589edb41c5b5"
+    "base.FCStd": "45783e4c072417eff9b2f190ea4e5ff4ac14df6d786a21f9cf2c6507dc3650c5"
   }
 }
