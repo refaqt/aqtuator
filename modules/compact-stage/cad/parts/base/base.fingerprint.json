@@ -59,7 +59,7 @@
       "volume": 0.0
     },
     "Body": {
-      "area": 285464.0,
+      "area": 285460.0,
       "bbox": [
         0.0,
         0.0,
@@ -72,7 +72,7 @@
       "com": [
         219.905,
         105.044,
-        12.184
+        12.1842
       ],
       "counts": {
         "edges": 658,
@@ -199,7 +199,7 @@
       "volume": 1450400.0
     },
     "Hole002": {
-      "area": 285464.0,
+      "area": 285460.0,
       "bbox": [
         0.0,
         0.0,
@@ -212,7 +212,7 @@
       "com": [
         219.905,
         105.044,
-        12.184
+        12.1842
       ],
       "counts": {
         "edges": 658,
@@ -227,7 +227,7 @@
       "volume": 1388090.0
     },
     "MagnetRingSplit": {
-      "area": 284531.0,
+      "area": 284528.0,
       "bbox": [
         0.0,
         0.0,
@@ -240,7 +240,7 @@
       "com": [
         219.905,
         105.044,
-        12.1953
+        12.1954
       ],
       "counts": {
         "edges": 628,
@@ -252,16 +252,16 @@
       "label": "MagnetRingSplit",
       "type": "PartDesign::Pad",
       "valid": true,
-      "volume": 1388860.0
+      "volume": 1388870.0
     },
     "MagnetRingSplitSketch": {
       "area": 0.0,
       "bbox": [
         7.0,
-        102.5,
+        98.5,
         39.35,
         433.0,
-        107.5,
+        111.5,
         39.35
       ],
       "closed": true,
@@ -283,7 +283,7 @@
       "volume": 0.0
     },
     "Part": {
-      "area": 285464.0,
+      "area": 285460.0,
       "bbox": [
         0.0,
         0.0,
@@ -296,7 +296,7 @@
       "com": [
         219.905,
         105.044,
-        12.184
+        12.1842
       ],
       "counts": {
         "edges": 658,
@@ -482,10 +482,10 @@
       "area": 0.0,
       "bbox": [
         38.0,
-        34.0146,
+        34.0,
         10.0,
         402.0,
-        175.985,
+        176.0,
         10.0
       ],
       "closed": true,
@@ -537,10 +537,10 @@
     "Sketch": {
       "area": 0.0,
       "bbox": [
-        4.04375,
+        4.0,
         17.0,
         40.0,
-        435.956,
+        436.0,
         193.0,
         40.0
       ],
@@ -565,10 +565,10 @@
     "Sketch001": {
       "area": 0.0,
       "bbox": [
-        4.04375,
+        4.0,
         17.0,
         13.0,
-        435.956,
+        436.0,
         193.0,
         13.0
       ],
@@ -650,10 +650,10 @@
       "area": 0.0,
       "bbox": [
         17.25,
-        2.27005,
+        2.25,
         10.0,
         22.75,
-        207.73,
+        207.75,
         10.0
       ],
       "closed": true,
@@ -820,12 +820,12 @@
         "label": "MagnetRingSplitSketch",
         "type": "Sketcher::SketchObject",
         "unlinked": [
+          "split_r (Radius) is a typed number: 4 mm",
           "ring_outer_x (DistanceX) is a typed number: 7 mm",
           "ring_w (DistanceX) is a typed number: 3 mm",
           "split_y0 (DistanceY) is a typed number: 102.5 mm",
           "split_l (DistanceY) is a typed number: 5 mm",
           "ring_outer_x_end (DistanceX) is a typed number: 433 mm",
-          "Constraint24 (DistanceY) is a typed number: 102.5 mm",
           "AttachmentOffset is typed: (0, 0, 39.35) mm, 0 deg"
         ]
       },
@@ -951,6 +951,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "e5ee34e850e68c9e8b2b762273460461b5ee47c756f7737a78c2589edb41c5b5"
+    "base.FCStd": "732a63673354a30c4927a1dabccc85573d089ad74e5c7350f9780e9fa814b4b1"
   }
 }
