@@ -3,11 +3,11 @@
   "errors": [],
   "objects": {
     "BaseFeature": {
-      "area": 164921.0,
+      "area": 164885.0,
       "bbox": [
         1.0,
         3.2,
-        39.8487,
+        39.8476,
         439.0,
         206.8,
         52.7148
@@ -16,7 +16,7 @@
       "com": [
         220.003,
         105.0,
-        44.2563
+        44.2573
       ],
       "counts": {
         "edges": 138,
@@ -28,14 +28,14 @@
       "label": "BaseFeature",
       "type": "PartDesign::FeatureBase",
       "valid": true,
-      "volume": 12379.3
+      "volume": 12376.6
     },
     "Body": {
-      "area": 164921.0,
+      "area": 164885.0,
       "bbox": [
         1.0,
         3.2,
-        39.8487,
+        39.8476,
         439.0,
         206.8,
         52.7148
@@ -44,7 +44,7 @@
       "com": [
         220.003,
         105.0,
-        44.2563
+        44.2573
       ],
       "counts": {
         "edges": 138,
@@ -56,10 +56,10 @@
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 12379.3
+      "volume": 12376.6
     },
     "Body001": {
-      "area": 164913.0,
+      "area": 164877.0,
       "bbox": [
         -0.9765,
         3.2,
@@ -84,10 +84,10 @@
       "label": "FlatBody",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 12352.7
+      "volume": 12350.0
     },
     "FlatHoles": {
-      "area": 164913.0,
+      "area": 164877.0,
       "bbox": [
         -0.9765,
         3.2,
@@ -112,7 +112,7 @@
       "label": "FlatHoles",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 12352.7
+      "volume": 12350.0
     },
     "FlatHolesSketch": {
       "area": 0.0,
@@ -171,7 +171,7 @@
       "volume": 0.0
     },
     "FlatPad": {
-      "area": 165140.0,
+      "area": 165104.0,
       "bbox": [
         -0.9765,
         3.2,
@@ -196,14 +196,14 @@
       "label": "FlatPad",
       "type": "PartDesign::Pad",
       "valid": true,
-      "volume": 12370.8
+      "volume": 12368.1
     },
     "Part": {
-      "area": 164921.0,
+      "area": 164885.0,
       "bbox": [
         1.0,
         3.2,
-        39.8487,
+        39.8476,
         439.0,
         206.8,
         52.7148
@@ -212,7 +212,7 @@
       "com": [
         220.003,
         105.0,
-        44.2563
+        44.2573
       ],
       "counts": {
         "edges": 138,
@@ -224,10 +224,10 @@
       "label": "sealing-strip",
       "type": "App::Part",
       "valid": true,
-      "volume": 12379.3
+      "volume": 12376.6
     },
     "Part001": {
-      "area": 164913.0,
+      "area": 164877.0,
       "bbox": [
         -0.9765,
         3.2,
@@ -252,14 +252,14 @@
       "label": "sealing-strip-flat",
       "type": "App::Part",
       "valid": true,
-      "volume": 12352.7
+      "volume": 12350.0
     },
     "StripShape": {
-      "area": 164921.0,
+      "area": 164885.0,
       "bbox": [
         1.0,
         3.2,
-        39.8487,
+        39.8476,
         439.0,
         206.8,
         52.7148
@@ -268,7 +268,7 @@
       "com": [
         220.003,
         105.0,
-        44.2563
+        44.2573
       ],
       "counts": {
         "edges": 138,
@@ -280,30 +280,17 @@
       "label": "StripShape (preloaded, carriage in the middle)",
       "type": "Part::Feature",
       "valid": true,
-      "volume": 12379.3
+      "volume": 12376.6
     }
   },
   "parametric": {
     "audited": 5,
     "objects": {}
   },
-  "params": {
-    "bearing_d_out": 6.0,
-    "bearing_flange_w": 0.8,
-    "roller_d": 10.0,
-    "roller_l": 20.0,
-    "sleeve_l": "=roller_l - 2 * bearing_flange_w",
-    "strip_corner_hole_d": 4.5,
-    "strip_corner_slot_l": 1.0,
-    "strip_edge_gap": 0.2,
-    "strip_end_gap": 1.0,
-    "strip_preload_hole_d": 5.0,
-    "strip_pull": 270.0,
-    "strip_t": 0.15
-  },
+  "params": {},
   "saved": true,
   "schema": 1,
   "sources": {
-    "sealing-strip.FCStd": "97cd6bfed40aca21de31dd9c4e847280cac828f42521a177115a46eec3dbe10f"
+    "sealing-strip.FCStd": "c19439dec825dbac0afbb015f4ade8caf2b6f5f120b8774c7383f24410e8f564"
   }
 }

@@ -74,15 +74,17 @@ CONE_D_AT_FLOOR = 4.0
 ROLLER1_X = 118.77 + (220.0 - 211.603)
 
 
-def pocket_outline():
-    """The strip pocket of the base (Pocket005), as one face at z = 0."""
+def pocket_outline(step_x=EAR_STEP_X):
+    """The strip pocket of the base (Pocket005), as one face at z = 0.
+
+    With a smaller `step_x`, the 45° steps and the ear arcs move towards the base ends.
+    """
     import Part
     from FreeCAD import Vector as V
 
     import math
     r = EAR_R
     c45 = r * math.cos(math.radians(45))
-    step_x = EAR_STEP_X
 
     def ear(xe, side):
         # xe: end of the base (0 or 440); side: +1 for high Y, -1 for low Y
@@ -189,7 +191,9 @@ def strip_shape(params):
     slot_l = float(params["strip_corner_slot_l"])
     d_preload = float(params["strip_preload_hole_d"])
 
-    outline = pocket_outline().makeOffset2D(-edge_gap, join=0)
+    # The ear steps sit half a slot length further towards the strip ends than in the pocket.
+    # So the strip keeps the edge gap at the steps when it slides the whole slot towards its middle.
+    outline = pocket_outline(EAR_STEP_X - slot_l / 2).makeOffset2D(-edge_gap, join=0)
     clip = Part.makeBox(BASE_L - 2 * end_gap, 300, 1, V(end_gap, -50, -0.5))
     outline = outline.common(clip)
     outline = Part.Face(outline.Faces[0].OuterWire) if len(outline.Faces) == 1 else outline.Faces[0]
@@ -284,7 +288,8 @@ def flat_outline_sketch(doc, flat_body):
     """The outline of the strip as cut: two end lines, two body sides and four ears.
 
     Each ear has a straight outer side, an arc and a 45° step to the body side, as in the
-    strip pocket of the base, with the edge gap taken off. Every size is an expression on
+    strip pocket of the base, with the edge gap taken off. The steps and arcs sit half a slot
+    length further towards the strip ends, as in `strip_shape`. Every size is an expression on
     the parameter sheet. The lengths along X come from `strip_flat_l`.
     """
     import math
@@ -299,9 +304,10 @@ def flat_outline_sketch(doc, flat_body):
     x_l = val("strip_base_l") / 2 - val("strip_flat_l") / 2
     x_r = x_l + val("strip_flat_l")
     # From the strip end to the ear arc centre, and to the end of the 45° step.
+    half_slot = val("strip_corner_slot_l") / 2
     c_off = (val("strip_ear_step_x") - (val("strip_ear_y1") - val("strip_ear_r") - val("strip_pocket_y1"))
-             - val("strip_ear_r") * math.sqrt(2) - end_gap)
-    k_off = val("strip_ear_step_x") + gap - gap * math.sqrt(2) - end_gap
+             - val("strip_ear_r") * math.sqrt(2) - end_gap - half_slot)
+    k_off = val("strip_ear_step_x") + gap - gap * math.sqrt(2) - end_gap - half_slot
     y_out = (val("strip_ear_y0") + gap, val("strip_ear_y1") - gap)
     y_body = (val("strip_pocket_y0") + gap, val("strip_pocket_y1") - gap)
     y_c = (val("strip_ear_y0") + val("strip_ear_r"), val("strip_ear_y1") - val("strip_ear_r"))
@@ -310,8 +316,9 @@ def flat_outline_sketch(doc, flat_body):
     e_xl = f"{P}strip_base_l / 2 - {P}strip_flat_l / 2"
     e_xr = f"{P}strip_base_l / 2 + {P}strip_flat_l / 2"
     e_c = (f"({P}strip_ear_step_x - ({P}strip_ear_y1 - {P}strip_ear_r - {P}strip_pocket_y1)"
-           f" - {P}strip_ear_r * sqrt(2) - {P}strip_end_gap)")
-    e_k = f"({P}strip_ear_step_x + {P}strip_edge_gap * (1 - sqrt(2)) - {P}strip_end_gap)"
+           f" - {P}strip_ear_r * sqrt(2) - {P}strip_end_gap - {P}strip_corner_slot_l / 2)")
+    e_k = (f"({P}strip_ear_step_x + {P}strip_edge_gap * (1 - sqrt(2)) - {P}strip_end_gap"
+           f" - {P}strip_corner_slot_l / 2)")
     e_r = f"{P}strip_ear_r - {P}strip_edge_gap"
     e_yc = (f"{P}strip_ear_y0 + {P}strip_ear_r", f"{P}strip_ear_y1 - {P}strip_ear_r")
     e_yb = (f"{P}strip_pocket_y0 + {P}strip_edge_gap", f"{P}strip_pocket_y1 - {P}strip_edge_gap")
