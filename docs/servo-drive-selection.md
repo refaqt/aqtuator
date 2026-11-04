@@ -5,7 +5,7 @@ requirements. It is an overview. The research is in the log entries and decision
 each row and in [Sources](#sources). If a number here differs from a log entry, the log entry and the
 maker's own manual win. Tell us, and we fix this page.
 
-Last updated: 2026-10-22. Prices were seen on 2026-09-29 and many are asking prices.
+Last updated: 2026-11-04. Prices were seen on 2026-09-29 and many are asking prices.
 
 ## Short answer
 
@@ -148,7 +148,7 @@ These do not fit one of the rules: we use LinuxCNC as the master, and we do not 
 | Aerotech | Automation1 iXA4 (2 axes) | [Data sheet](https://www.aerotech.com/wp-content/uploads/2024/01/Automation1-iXA4-Data-Sheet-D20240112-1.pdf) | 1 phase up to 240 VAC | 5 / 10 A peak | 10 kHz. 16 free biquads | Not found | Same as above |
 | Omron (Delta Tau) | Power Brick AC (4 axes) | [Data sheet](https://assets.omron.com/m/151c4acbc3cc59b4/original/Power-Brick-AC-Datasheet.pdf) | 90 to 250 VAC | 5 / 10 A per axis | User sets the rate. Own servo code in C | USD 8,000 to 8,700 without 1 Vpp | Most open, but four axes and very expensive |
 | ETEL | AccurET Modular 300 | [Data sheet](https://www.etel.ch/wp-content/uploads/2024/03/accuret-modular-300-ethercat-data.pdf) | 1 phase 71 to 240 VAC | 4 / 7.5 A, two axes | 20 kHz | Grey market only | EtherCAT in position mode only, 500 µs cycle |
-| Agito Akribis, Googol GSHD | | [Agito catalogue](https://agito-akribis.com/wp-content/uploads/2026/04/Agito-Motion-Controls-and-DrivesEN-26.5.2-1.pdf), [Googol manual](https://www.googoltech.com.cn/Uploads/file/20260814/20260814112508_39012.pdf) | | | | | Left out for the Israeli link. Googol EtherCAT model has no analog encoder input |
+| Agito Akribis, Googol GSHD | | [Agito catalogue](https://agito-akribis.com/wp-content/uploads/2026/04/Agito-Motion-Controls-and-DrivesEN-26.5.2-1.pdf), [Googol manual](https://www.googoltech.com.cn/Uploads/file/20260814/20260814112508_39012.pdf) | | | | | Left out for the Israeli link. Googol EtherCAT model has no analog encoder input. On 2026-11-04 the Agito AGD155-EC-2A06 was checked and a price was asked, for the comparison only. It meets the hard requirements on paper and has a 16 kHz position loop. [Log](log/2026-11-04_agito-akribis-agd155-ec-price-request.md) |
 | STMBL (open source) | v4.3 | [GitHub](https://github.com/rene-dev/stmbl) | 30 to 350 VDC | 17 A continuous (wiki) | 5 kHz position loop, open code | 250 euro | No EtherCAT (Mesa, step/dir or analog), no STO. Dropped: "we will not build our own drive yet" |
 | Copley | Xenus XSL-230-18, used, with our own STM32 or C2000 board | [Data sheet](https://www.artisantg.com/info/Copley_Controls_Corp_XSL_230_40_Datasheet_2017315103716.pdf) | 100 to 240 VAC | 4.2 / 12.7 A | Current mode at 15 kHz. We write the position loop | USD 305 to 405 used | Dropped for the same reason. No STO. Used parts only |
 | Texas Instruments | TIEVM-MTR-HVINV | [Tool page](https://www.ti.com/tool/TIEVM-MTR-HVINV) | 165 to 265 VAC | 3 A | Own firmware | USD 186 | Not recommended: months of work, no isolation, no STO |
