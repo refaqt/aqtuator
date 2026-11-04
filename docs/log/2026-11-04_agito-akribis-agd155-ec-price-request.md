@@ -16,12 +16,16 @@ draft email that asks for a quotation and for the technical points that are stil
 - **The AGD155-EC stays excluded.** We ask for a price only to compare. Its own product manual
   says the drive is "designed by Agito Akribis Systems Ltd. in Israel", and Akribis Systems Pte Ltd
   in Singapore sells it under licence.
-- **On paper, the AGD155-EC-2A06 meets all ten hard requirements.** Two points need the maker's
-  answer: the Bode plot tool is described in the catalogue, not in a software manual, and the type
-  of the motor thermal sensor is still unknown.
+- **On paper, the AGD155-EC-2A06 meets all ten hard requirements.** Three points need an answer:
+  whether it reads the full BiSS C word of our encoder, the Bode plot tool (described in the
+  catalogue, not in a software manual), and the type of the motor thermal sensor.
+- **It reads our encoder.** The stage uses the RSF AK MC 15 B read head, with a BiSS C output
+  (RSF order code BiSS/Cu). The main encoder port of the AGD155-EC reads BiSS-C directly, with a
+  1 MHz clock and up to 32 position bits. RSF does not publish the length of the position word, so
+  "reads the full word" is not confirmed yet. The email asks both points.
 - **It is strong where the other candidates are weak.** All loops run at 16 kHz (62.5 µs). That is
   four times faster than the 4 kHz of the Kollmorgen AKD and the Copley Xenus Plus, so it also meets
-  the 8 kHz preference (DRV-P3). The sine and cosine (1 Vpp) input accepts 250 kHz. We need 150 kHz.
+  the 8 kHz preference (DRV-P3).
 - **The smallest AGD155-EC is too big for our motor.** It gives 6 A continuous and 18 A peak. The
   MK21 needs 2.0 A and 5.9 A. A drive this size measures small currents less finely. The catalogue
   also lists a smaller model, the AGD156-EC-2A03 (3 A continuous, 9 A peak), which fits the MK21
@@ -44,12 +48,22 @@ are in the closed block at the end.
 | DRV-05 | Linear motor, finds the commutation angle without Hall sensors | Linear motors allowed. "Auto-phasing" for sine and cosine encoders | Pass |
 | DRV-06 | Reads the motor thermal sensor | One input for PT100, PT1000 or a thermostat | Pass, if the MK21 sensor fits one of these. The MK21 sensor type is still unknown |
 | DRV-07 | EtherCAT with CiA 402 | EtherCAT (CoE), CiA 402, cyclic synchronous position mode | Pass |
-| DRV-08 | Reads 1 Vpp up to 150 kHz, with no converter box | Main encoder port: sine and cosine, "1V pkp @2.5V", up to 250 kHz, 120 Ω termination. Also EnDat 2.2 and BiSS-C | Pass |
+| DRV-08 | Reads the RSF AK MC 15 B (BiSS C unidirectional, 0.1 µm) directly, with the full position word | Main encoder port X2: BiSS-C, 1 MHz clock, up to 32 position bits, commutation by absolute offset. RSF allows a BiSS C clock up to 5 or 10 MHz, so 1 MHz works | Pass for the protocol. The full word is **not confirmed**: RSF does not publish the word length |
 | DRV-09 | Position loop 4 kHz or faster | 16 kHz for position, velocity and current (catalogue). The EtherCAT manual gives the position loop cycle as 62.5 µs | Pass |
 | DRV-10 | Bode plots in the setup software | PCSuite: frequency domain plant identification. "User can inspect the plant bode, open loop, closed loop". Bode and Nichols charts | Pass, from the catalogue. No software manual in English found |
 | DRV-P1 | Free second-order filters | Auto-tuning designs "gains and filters". An application note shows notch filters | Not confirmed. The filter types are not published |
 | DRV-P2 | Block diagram of the loop | Not found | Not confirmed |
 | DRV-P3 | Position loop 8 kHz or faster | 16 kHz | Pass |
+
+Two practical points for the encoder:
+
+- **The connectors do not match.** The RSF head ends in a 15-pin D-sub plug. The drive port X2 is a
+  10-pin 3M connector (36210-0100PL). We need an adapter cable. The email asks Agito for one.
+- **The drive can power the head.** X2 gives 5 V and up to 0.5 A. The head needs 3.6 V to 14 V and
+  about 100 mA at 5 V.
+
+The sine and cosine (1 Vpp) input of the drive no longer matters for us. For the record: it
+accepts up to 250 kHz.
 
 ### What the order code means
 
@@ -70,8 +84,9 @@ Subject: Request for quotation: AGD155-EC-2A06 and AGD156-EC-2A03 servo drives
 > like a quotation for your EtherCAT drives.
 >
 > The motor is a MAXWELL MK21 iron core linear motor. It needs 2.0 A rms continuous and 5.9 A rms
-> for 1 s. The encoder gives 1 Vpp sine and cosine signals, with a 20 µm signal period, up to
-> 150 kHz. The EtherCAT master is a PC with LinuxCNC.
+> for 1 s. The encoder is an RSF Elektronik AK MC 15 B read head on an MC 15 MK steel tape. It is
+> absolute, with a BiSS C unidirectional output (RSF order code BiSS/Cu) and a 0.1 µm measuring
+> step. The top speed is 3 m/s. The EtherCAT master is a PC with LinuxCNC.
 >
 > **Quotation**
 >
@@ -79,19 +94,26 @@ Subject: Request for quotation: AGD155-EC-2A06 and AGD156-EC-2A03 servo drives
 > 2. The price and delivery time of the AGD156-EC-2A03 (3 A rms continuous, 9 A rms peak), for 1
 >    and for 2 drives. Is this model available in Europe? Please send its data sheet and product
 >    manual. We could not find them on your web site.
-> 3. The price of the connector kit and of the encoder, Hall and interface cables for each model.
+> 3. The price of the connector kit and of the interface cables for each model. We also need an
+>    encoder cable from the 15-pin D-sub plug of the RSF head to your main encoder port. Can you
+>    supply one, and at what price?
 > 4. Is the PCSuite software free? If not, what does it cost? Are the frequency response tools
 >    and the auto-tuning included?
 > 5. Shipping cost to Belgium, and the payment terms.
 >
 > **Technical questions**
 >
-> 6. Does the AGD156-EC-2A03 read a 1 Vpp sine and cosine encoder? If yes, up to which signal
->    frequency, and with which interpolation?
+> 6. Does the AGD156-EC-2A03 read a BiSS C encoder on its encoder port? With which clock
+>    frequency and how many position bits?
 > 7. Please confirm in writing: in cyclic synchronous position mode over EtherCAT, the position
 >    loop runs every 62.5 µs (16 kHz). Is this the same for the AGD156-EC?
-> 8. The data sheet gives the sine and cosine input as "1V pkp @2.5V". Is this the standard 1 Vpp
->    signal, as from a Heidenhain or Renishaw encoder?
+> 8. BiSS C with the RSF AK MC 15 B:
+>    - Does the AGD155-EC read the full BiSS C frame of this head: the position word, the error
+>      and warning bits and the CRC check? Have you tested RSF or HEIDENHAIN BiSS C heads?
+>    - The data sheet gives a BiSS C clock of 1 MHz. Is the encoder read in every 62.5 µs
+>      cycle? How long does one read take, and what is the delay from the read to the position
+>      loop?
+>    - Can we set a higher clock frequency? The RSF head allows up to 5 MHz.
 > 9. Which filters can we set in the position and velocity loops? Can we set a general
 >    second-order filter (a biquad) with a free numerator and a free denominator? How many filters
 >    can be active at the same time?
@@ -127,8 +149,11 @@ Subject: Request for quotation: AGD155-EC-2A06 and AGD156-EC-2A03 servo drives
 ## Open Questions
 
 - The price of the AGD155-EC-2A06 and of the AGD156-EC-2A03.
-- Every technical question in the email above. The most important ones are the filter types
-  (question 9), the Bode plot tool (question 11) and the thermal sensor (question 12).
+- Every technical question in the email above. The most important ones are the BiSS C read
+  (question 8), the filter types (question 9), the Bode plot tool (question 11) and the thermal
+  sensor (question 12).
+- The length of the BiSS C position word of the RSF AK MC 15 B. The RSF data sheet does not give
+  it. Ask RSF too.
 
 ## Next Steps
 
@@ -160,6 +185,18 @@ Agito Akribis documents, all read on 2026-11-04:
   plant identification, Bode and Nichols charts of the plant, open loop and closed loop.
 - Application note on disturbance rejection (UPM), Rev.1.1: <https://agito-akribis.com/wp-content/uploads/2026/10/Agito-AN-UPM-Disturbance-Rejection-Rev.1.1.pdf>.
   Shows a notch filter at 1,500 Hz.
+- Product manual Rev.3.4, section 3.4.11: main encoder port X2 reads AqB, sine and cosine, BiSS-C
+  and EnDat 2.2. Mating connector 3M 36210-0100PL, 5 V up to 0.5 A.
 - Contact address from <https://agito-akribis.com/contact/>.
+
+RSF document:
+
+- MC 15 data sheet: <https://www.rsf.at/wp-content/uploads/2024/02/MC15-EN.pdf>. AK MC 15 B:
+  "BiSS C unidirectional", version "BiSS/Cu", clock frequencies up to 5 MHz or 10 MHz, measuring
+  step 0.1 µm or 0.05 µm, up to 600 m/min, supply 3.6 V to 14 V. No word length is given.
+
+On 2026-11-04 this entry first checked the drive against an old 1 Vpp encoder. The drive
+requirements file still described that encoder. The entry and the email were corrected the same
+day. See [the mistake note](../mistakes/2026-11-04_drive-check-used-the-old-encoder.md).
 
 </details>

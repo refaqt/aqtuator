@@ -36,3 +36,4 @@ Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mista
 | 2026-09-28 | [Tuned the drive controllers for phase margin only](2026-09-28_tuned-for-phase-margin-only.md) |
 | 2026-09-29 | [Took a drive loop rate from a trade article, not the manual](2026-09-29_loop-rate-from-a-trade-article.md) |
 | 2026-10-22 | [The wrap command crashed the open FreeCAD window, twice](2026-10-22_wrap-crashed-the-open-freecad.md) |
+| 2026-11-04 | [A drive check used the old encoder, because the drive requirements were not updated](2026-11-04_drive-check-used-the-old-encoder.md) |

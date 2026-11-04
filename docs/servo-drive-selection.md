@@ -46,7 +46,7 @@ That file is the source. This table is a copy for reading.
 | DRV-05 | Runs a linear synchronous motor with a 30 mm electrical period, and finds the commutation angle without Hall sensors | Hard |
 | DRV-06 | Reads the motor thermal sensor (type not known yet), or stops on an input | Hard |
 | DRV-07 | EtherCAT with the CiA 402 drive profile (the master is a PC with LinuxCNC) | Hard |
-| DRV-08 | Reads the stage encoder directly, with no converter box. Today: 1 Vpp at up to 150 kHz (3 m/s divided by 20 µm) | Hard |
+| DRV-08 | Reads the stage encoder directly, with no converter box. Today: the RSF AK MC 15 B, BiSS C unidirectional, 0.1 µm step. The drive must read BiSS-C and the full position word. Before 2026-11-04 this row said 1 Vpp at up to 150 kHz, and most drives below were checked against that old encoder | Hard |
 | DRV-09 | Position loop at 4 kHz or faster (250 µs or shorter), read in the maker's manual | Hard |
 | DRV-10 | The maker's setup software has a tuning function that measures the axis and shows Bode plots (gain and phase against frequency) of the transfer function | Hard |
 | DRV-P1 | Our own filters in the loop, best as a free second order filter (a biquad) | Preferred |
