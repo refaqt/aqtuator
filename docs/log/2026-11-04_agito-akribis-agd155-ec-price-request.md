@@ -16,6 +16,11 @@ draft email that asks for a quotation and for the technical points that are stil
 - **The AGD155-EC stays excluded.** We ask for a price only to compare. Its own product manual
   says the drive is "designed by Agito Akribis Systems Ltd. in Israel", and Akribis Systems Pte Ltd
   in Singapore sells it under licence.
+- **Two company names, one group.** Agito Akribis Systems Ltd. is the Israeli company in Kfar Saba
+  that designs the drive. Akribis Systems Pte Ltd is the Singapore parent company that sells it.
+  The email address below is on the Singapore domain (akribis-sys.com), but it is the Agito
+  information address. See also the
+  [note on the Akribis CASD drive](2026-11-04_akribis-casd-looks-like-servotronix-cdhd.md).
 - **On paper, the AGD155-EC-2A06 meets all ten hard requirements.** Three points need an answer:
   whether it reads the full BiSS C word of our encoder, the Bode plot tool (described in the
   catalogue, not in a software manual), and the type of the motor thermal sensor.
@@ -141,7 +146,7 @@ Subject: Request for quotation: AGD155-EC-2A06 and AGD156-EC-2A03 servo drives
 
 ## Decisions Made
 
-- **Agito Akribis stays excluded.** The rule of 2026-10-06 does not change. See the
+- **Agito Akribis Systems Ltd. stays excluded.** The rule of 2026-10-06 does not change. See the
   [decision record](../decisions/2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md).
 - **We ask Agito Akribis for a price only for the comparison.** The answer goes in the drive
   comparison page as a reference price. It does not make the drive a candidate.
