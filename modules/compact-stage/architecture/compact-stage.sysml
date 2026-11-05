@@ -226,6 +226,19 @@ package CompactStage {
         attribute pocketDepth : LengthValue = 0.15 [mm];
     }
 
+    port def MagnetRingInterface_v1 {
+        doc /*
+         * The ring pocket for the magnet strips, in the floor of the strip
+         * pocket: 3 mm wide, 0.5 mm deep, R4 outer corners. It is cut in two
+         * at each preload screw. Six straight strips fill it: one 417.5 mm
+         * strip on each long side, and two 80 mm strips in each end leg.
+         * The strips lie adhesive face down on the ring floor, and their top
+         * is level with the floor of the strip pocket.
+         */
+        attribute ringWidth : LengthValue = 3 [mm];
+        attribute ringDepth : LengthValue = 0.5 [mm];
+    }
+
     port def StripScrewInterface_v1 {
         doc /*
          * Six M4 screws hold the sealing strip on the base. The holes are
@@ -504,6 +517,7 @@ package CompactStage {
         port machineMount : BaseMountInterface_v1;
         port slotSeal : SlotSealInterface_v1;
         port stripScrews : StripScrewInterface_v1;
+        port magnetRing : MagnetRingInterface_v1;
         port referenceRailMount : RailMountInterface_v1;
         port secondRailMount : RailMountInterface_v1;
         port firstStatorMount : StatorMountInterface_v1;
@@ -660,6 +674,12 @@ package CompactStage {
         part carriageBottom : CarriageBottom;
         part carriageTop : CarriageTop;
         part sealingStrip : SealingStrip;
+        part magnetLongA : MagnetStrip;
+        part magnetLongB : MagnetStrip;
+        part magnetShortStartA : MagnetStrip;
+        part magnetShortStartB : MagnetStrip;
+        part magnetShortEndA : MagnetStrip;
+        part magnetShortEndB : MagnetStrip;
         part referenceRail : GuideRail;
         part secondRail : GuideRail;
         part firstStator : MagnetTrack;
@@ -696,6 +716,14 @@ package CompactStage {
         // The seal
         connect base.slotSeal to sealingStrip.slotSeal;
         connect base.stripScrews to sealingStrip.stripScrews;
+
+        // MagnetRing: six magnet strips in the ring pocket hold the seal strip flat
+        connect base.magnetRing to magnetLongA.ring;
+        connect base.magnetRing to magnetLongB.ring;
+        connect base.magnetRing to magnetShortStartA.ring;
+        connect base.magnetRing to magnetShortStartB.ring;
+        connect base.magnetRing to magnetShortEndA.ring;
+        connect base.magnetRing to magnetShortEndB.ring;
 
         // The guide rails
         connect base.referenceRailMount to referenceRail.baseMount;
@@ -747,6 +775,17 @@ package CompactStage {
          */
         port mount : ~DamperMountInterface_v1;
         port stop : ~DamperStopInterface_v1;
+    }
+
+    part def MagnetStrip {
+        doc /*
+         * Magnet Strip, bought: neodymium magnet tape 3 x 0.5 mm, cut from
+         * the roll stoq:generic/ndfeb-magnet-tape#3X0.5X500. Long strip:
+         * stoq:generic/ndfeb-magnet-tape#3X0.5X417.5. Short strip:
+         * stoq:generic/ndfeb-magnet-tape#3X0.5X80. From the parts library in
+         * modules/stoq/.
+         */
+        port ring : ~MagnetRingInterface_v1;
     }
 
     part def SealRoller {
