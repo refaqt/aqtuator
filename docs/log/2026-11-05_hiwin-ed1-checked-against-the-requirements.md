@@ -58,19 +58,19 @@ the E1 drive that fits best. In Europe, HIWIN GmbH sells the E1 under the order 
 - **Safety version 1.** STO with a safety approval. The 12-digit code without "1" has STO without
   the approval.
 - **ESC-SS-S02, not ESC-AN.** The SS box reads BiSS-C, EnDat 2.1/2.2 and 1 Vpp, so it works with
-  both encoders we have in the project. The AN box reads only analogue encoders.
+  our BiSS-C encoder, and EnDat and 1 Vpp too. The AN box reads only analogue encoders.
 
-### Both stage encoders work through the ESC box
+### The stage encoder works through the ESC box
 
-- **RSF MC 15 with BiSS-C (now in the CAD of the compact stage).** The RSF frame is 32 bit
-  position, 2 bit status and 6 bit CRC: 40 bit. The ESC box reads frames up to 46 bit and clocks
-  BiSS-C at up to 5 MHz. RSF also sells the same head with EnDat 2.2.
-- **1 Vpp with a 20 µm period (still written in the drive requirements).** The manual gives 4 m/s
-  for a 20 µm period, which is 200 kHz. We need 150 kHz at 3 m/s. Above 100 kHz, the analogue
-  encoder filter must be off (Pt207).
+The three places that name the stage encoder agree: `currentStage` in the drive requirements, the
+read head in the stage architecture, and the bill of materials. All three name the RSF AK MC 15 B
+with BiSS C. The mistake note of 2026-11-04 asks for this comparison before each drive check.
 
-The requirement file and the CAD do not name the same encoder. The result for the ED1 is the same
-for both, so this check does not depend on it.
+- **RSF MC 15 with BiSS-C.** The RSF frame is 32 bit position, 2 bit status and 6 bit CRC: 40 bit.
+  The ESC box reads frames up to 46 bit and clocks BiSS-C at up to 5 MHz. RSF also sells the same
+  head with EnDat 2.2, which the ESC-SS box also reads.
+- **For reference, the old 1 Vpp encoder with a 20 µm period.** The manual gives 4 m/s for a 20 µm
+  period, which is 200 kHz. So the ED1 with the ESC box would also have read the old encoder.
 
 ### If the time at peak current matters
 

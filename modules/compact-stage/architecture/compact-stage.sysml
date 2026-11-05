@@ -256,20 +256,22 @@ package CompactStage {
          * The M4 x 20 screw that HIWIN lists would come out of the bottom
          * face by 0.3 mm.
          *
-         * The tabs stand out from the side walls of the base, and each rail
-         * lies against them with its outer side. Its inner side touches
-         * nothing. Each tab is 20 mm long and starts 19 mm in from the end
-         * of the rail, so it never touches the rail end. The rounded
-         * corners at the foot of each tab stay 4.5 mm away from the rail.
+         * The tabs stand out from the side wall of the base, and the
+         * reference rail lies against them with its outer side. Its inner
+         * side touches nothing. Each tab is 20 mm long and starts 19 mm in
+         * from the end of the rail, so it never touches the rail end. The
+         * rounded corners at the foot of each tab stay 4.5 mm away from the
+         * rail.
          *
          * The reference rail (y = 174 mm) lies against two tabs, one near
          * each end. The tabs set its position and its direction.
          *
-         * The second rail (y = 36 mm) lies against one tab, near one end.
-         * The tab sets its position at that end only. To set its
-         * direction, put the carriage on both rails and move it from end
-         * to end while you tighten the screws of the second rail, one after
-         * the other. HIWIN calls this "alignment on the reference rail".
+         * The second rail (y = 36 mm) has no tab. Both of its sides touch
+         * nothing. The carriage sets its position and its direction: put
+         * the carriage on both rails and move it from end to end while you
+         * tighten the screws of the second rail, one after the other. HIWIN
+         * calls this "alignment on the reference rail". A tab at the second
+         * rail would fight the carriage, so there is none.
          *
          * The y positions are rail centres, measured from the long side of
          * the base. The rails are 138 mm apart, the same as the rows of
@@ -278,8 +280,8 @@ package CompactStage {
          *
          * The base is 210 mm wide. The pocket between the side walls is
          * 176 mm wide, so each wall is 17 mm thick. Each guide block has
-         * 2 mm of space to the wall. The tabs follow the rails:
-         * in the CAD, their depth is a formula of the rail position.
+         * 2 mm of space to the wall. The tabs follow the reference
+         * rail: in the CAD, their depth is a formula of the rail position.
          *
          * In the CAD, the base has the frames IF_reference_rail_mount and
          * IF_second_rail_mount. Each sits on the floor (z = 10 mm), on the

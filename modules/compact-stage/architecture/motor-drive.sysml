@@ -82,14 +82,18 @@ package MotorDriveRequirements {
          * or the top speed changes. Every requirement that depends on them
          * then changes with them.
          *
-         * Today: an optical encoder with 1 Vpp sine and cosine output and a
-         * 20 µm grating pitch, and a top speed of 3 m/s (STG-09 in
-         * compact-stage.sysml). The highest encoder signal frequency is then
-         * 3 m/s / 20 µm = 150 kHz.
+         * Today (since 2026-10-27): the RSF AK MC 15 B read head on an
+         * MC 15 MK steel tape. It is an absolute encoder with a BiSS C
+         * unidirectional output (RSF order code BiSS/Cu) and a 0.1 µm
+         * measuring step. It is the ReadHead in compact-stage.sysml. The
+         * top speed is 3 m/s (STG-09 in compact-stage.sysml).
+         *
+         * Until 2026-11-04 this part still described an older 1 Vpp
+         * encoder with a 20 µm grating pitch (150 kHz at 3 m/s). Drive
+         * checks before that date used the old encoder.
          */
         part :>> encoder {
-            attribute :>> signal = EncoderSignal::sinCos1Vpp;
-            attribute :>> signalPeriod = 0.020 [mm];
+            attribute :>> signal = EncoderSignal::bissC;
         }
         attribute :>> maxSpeed = 3 [m/s];
     }
@@ -255,7 +259,7 @@ package MotorDriveRequirements {
              *
              * - For a 1 Vpp sine and cosine encoder, the drive reads 1 Vpp,
              *   and it accepts the highest signal frequency: the top speed
-             *   divided by the signal period. Today that is 150 kHz.
+             *   divided by the signal period.
              * - For a serial encoder (BiSS-C, EnDat 2.2 or another
              *   protocol), the drive reads that protocol. It must also read
              *   the full data frame of that encoder. Check this by hand
