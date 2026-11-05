@@ -186,3 +186,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-10-30 | [Seal strip: corner slots, corner screws 1 mm in, and the flat strip](2026-10-30_strip-corner-slots.md) | cad |  |
 | 2026-10-30 | [Scraper: what other makers do, why not felt, and a brass and TPU design](2026-10-30_scraper-brass-and-tpu.md) | engineering, cad | 1 |
 | 2026-11-04 | [Seal strip: room at the 45° steps of the ears](2026-11-04_strip-ear-step-gap.md) | cad |  |
+| 2026-11-04 | [Agito Akribis AGD155-EC checked, and a price request for the comparison](2026-11-04_agito-akribis-agd155-ec-price-request.md) | engineering, purchasing |  |
+| 2026-11-04 | [The Akribis CASD drive looks like a Servotronix CDHD, and the two Akribis companies](2026-11-04_akribis-casd-looks-like-servotronix-cdhd.md) | engineering, purchasing |  |
