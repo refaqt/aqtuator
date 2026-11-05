@@ -44,7 +44,21 @@ package MotorDriveRequirements {
         attribute maxCoilTemperature : Real = 120;         // degree Celsius
         attribute maxBusVoltage : Real = 600;              // V DC
         attribute moverMass : MassValue = 1.1 [kg];
-        attribute thermalSensor : String = "3 PNC SNM120 in series";
+        // Thermal sensor: three PTC thermistors in series, two wires. The
+        // data sheet prints "3 PNC SNM120 in series"; PNC is a misprint.
+        // Resistance values are from the MAXWELL PTC table, column "three
+        // PTC in series", measured at 2.5 V or less. They are stated against
+        // the rated response temperature Tk, so they hold for any Tk. See
+        // modules/stoq/modules/maxwell/modules/mk2-mover/docs/mk21-thermal-sensor.md
+        attribute thermalSensor : String = "3 PTC SNM120 in series";
+        attribute thermalSensorResponseTemperature : Real = 120;  // degree Celsius, Tk. From the name SNM120, not confirmed by MAXWELL
+        attribute thermalSensorResistanceAt25C : Real = 300;      // ohm, at most
+        attribute thermalSensorResistanceCold : Real = 750;       // ohm, at most, from -20 degree Celsius to Tk - 20 K
+        attribute thermalSensorResistanceBelowTk : Real = 1650;   // ohm, at most, at Tk - 5 K
+        attribute thermalSensorResistanceAboveTk : Real = 3990;   // ohm, at least, at Tk + 5 K
+        attribute thermalSensorResistanceHot : Real = 12000;      // ohm, at least, at Tk + 15 K
+        attribute thermalSensorMaxVoltage : Real = 30;            // V, highest voltage without damage
+        attribute thermalSensorResponseTime : Real = 5;           // second, at most
     }
 
     // ---------------------------------------------------------------------
@@ -224,9 +238,17 @@ package MotorDriveRequirements {
              * The drive reads the thermal sensor in the MK21 coil and stops
              * the motor when the sensor trips.
              *
-             * Not known yet: the sensor type. The data sheet only names it
-             * "3 PNC SNM120 in series". Ask MAXWELL before you check a drive
-             * against the sensor input itself.
+             * Known: the sensor is three PTC thermistors in series (a
+             * switching sensor, not a measuring one like a KTY or PT1000).
+             * It reads 1650 ohm or less at Tk - 5 K and 3990 ohm or more at
+             * Tk + 5 K. A PTC input passes when its trip resistance can be
+             * set, or is fixed, between these two values. The input must
+             * never put more than 30 V on the sensor. All values are in
+             * MaxwellMK21 above. Tk is probably 120 degree Celsius; MAXWELL
+             * has not confirmed it yet.
+             *
+             * A KTY, PT100 or PT1000 input alone does not pass. It expects
+             * a sensor whose resistance rises in a straight line.
              *
              * A drive without such an input still passes if the sensor can
              * be wired to a digital input that stops the drive.
