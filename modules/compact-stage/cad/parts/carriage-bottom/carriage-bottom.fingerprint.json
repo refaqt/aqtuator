@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 117505.0,
+      "area": 119025.0,
       "bbox": [
         0.0,
         0.0,
@@ -14,21 +14,21 @@
       ],
       "closed": true,
       "com": [
-        105.194,
-        84.2822,
-        16.4218
+        104.184,
+        84.1478,
+        16.2713
       ],
       "counts": {
-        "edges": 993,
-        "faces": 350,
+        "edges": 1127,
+        "faces": 400,
         "shells": 1,
         "solids": 1,
-        "verts": 657
+        "verts": 745
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 449868.0
+      "volume": 441660.0
     },
     "Hole": {
       "area": 99075.7,
@@ -115,7 +115,7 @@
       "volume": 536532.0
     },
     "Hole003": {
-      "area": 115490.0,
+      "area": 115057.0,
       "bbox": [
         0.0,
         0.0,
@@ -126,9 +126,9 @@
       ],
       "closed": true,
       "com": [
-        105.179,
-        84.3543,
-        16.3284
+        105.24,
+        84.4432,
+        16.3508
       ],
       "counts": {
         "edges": 867,
@@ -140,10 +140,10 @@
       "label": "Hole003",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 455607.0
+      "volume": 457651.0
     },
     "Hole004": {
-      "area": 116058.0,
+      "area": 115626.0,
       "bbox": [
         0.0,
         0.0,
@@ -154,9 +154,9 @@
       ],
       "closed": true,
       "com": [
-        105.18,
-        84.3483,
-        16.3216
+        105.241,
+        84.4374,
+        16.344
       ],
       "counts": {
         "edges": 897,
@@ -168,7 +168,91 @@
       "label": "Hole004",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 455129.0
+      "volume": 457172.0
+    },
+    "Hole006": {
+      "area": 118384.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        105.041,
+        84.2701,
+        16.3504
+      ],
+      "counts": {
+        "edges": 1076,
+        "faces": 381,
+        "shells": 1,
+        "solids": 1,
+        "verts": 712
+      },
+      "label": "Hole006 (cooling block screw, countersunk)",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 446397.0
+    },
+    "Hole007": {
+      "area": 118441.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        105.039,
+        84.2698,
+        16.3501
+      ],
+      "counts": {
+        "edges": 1081,
+        "faces": 384,
+        "shells": 1,
+        "solids": 1,
+        "verts": 715
+      },
+      "label": "Hole007 (cooling block screw, countersunk)",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 446369.0
+    },
+    "Hole008": {
+      "area": 119025.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        104.184,
+        84.1478,
+        16.2713
+      ],
+      "counts": {
+        "edges": 1127,
+        "faces": 400,
+        "shells": 1,
+        "solids": 1,
+        "verts": 745
+      },
+      "label": "Hole008 (cable clamp M3)",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 441660.0
     },
     "Mirrored": {
       "area": 94461.8,
@@ -255,7 +339,7 @@
       "volume": 821827.0
     },
     "Part": {
-      "area": 117505.0,
+      "area": 119025.0,
       "bbox": [
         0.0,
         0.0,
@@ -266,21 +350,21 @@
       ],
       "closed": true,
       "com": [
-        105.194,
-        84.2822,
-        16.4218
+        104.184,
+        84.1478,
+        16.2713
       ],
       "counts": {
-        "edges": 993,
-        "faces": 350,
+        "edges": 1127,
+        "faces": 400,
         "shells": 1,
         "solids": 1,
-        "verts": 657
+        "verts": 745
       },
       "label": "carriage_bottom",
       "type": "App::Part",
       "valid": true,
-      "volume": 449868.0
+      "volume": 441660.0
     },
     "Pocket": {
       "area": 93010.8,
@@ -507,7 +591,7 @@
       "volume": 538463.0
     },
     "Pocket008": {
-      "area": 106701.0,
+      "area": 106608.0,
       "bbox": [
         0.0,
         0.0,
@@ -518,9 +602,9 @@
       ],
       "closed": true,
       "com": [
-        105.43,
-        84.3935,
-        15.8353
+        105.439,
+        84.3967,
+        15.8436
       ],
       "counts": {
         "edges": 688,
@@ -532,7 +616,7 @@
       "label": "Pocket008",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 533266.0
+      "volume": 534219.0
     },
     "Pocket009": {
       "area": 97876.1,
@@ -591,7 +675,7 @@
       "volume": 902610.0
     },
     "Pocket011": {
-      "area": 106753.0,
+      "area": 106660.0,
       "bbox": [
         0.0,
         0.0,
@@ -602,9 +686,9 @@
       ],
       "closed": true,
       "com": [
-        105.242,
-        84.2852,
-        15.8206
+        105.252,
+        84.2887,
+        15.829
       ],
       "counts": {
         "edges": 706,
@@ -616,10 +700,10 @@
       "label": "Pocket011",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 530337.0
+      "volume": 531291.0
     },
     "Pocket012": {
-      "area": 108646.0,
+      "area": 108553.0,
       "bbox": [
         0.0,
         0.0,
@@ -630,9 +714,9 @@
       ],
       "closed": true,
       "com": [
-        102.469,
-        83.9202,
-        15.9331
+        102.485,
+        83.9246,
+        15.9417
       ],
       "counts": {
         "edges": 730,
@@ -644,10 +728,10 @@
       "label": "Pocket012",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 502995.0
+      "volume": 503949.0
     },
     "Pocket013": {
-      "area": 111402.0,
+      "area": 111309.0,
       "bbox": [
         0.0,
         0.0,
@@ -658,9 +742,9 @@
       ],
       "closed": true,
       "com": [
-        102.187,
-        85.5244,
-        16.2266
+        102.203,
+        85.5257,
+        16.2349
       ],
       "counts": {
         "edges": 774,
@@ -672,10 +756,10 @@
       "label": "Pocket013",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 489846.0
+      "volume": 490799.0
     },
     "Pocket014": {
-      "area": 112029.0,
+      "area": 111926.0,
       "bbox": [
         0.0,
         0.0,
@@ -686,9 +770,9 @@
       ],
       "closed": true,
       "com": [
-        101.557,
-        85.3227,
-        16.1755
+        101.584,
+        85.3215,
+        16.1849
       ],
       "counts": {
         "edges": 792,
@@ -700,10 +784,10 @@
       "label": "Pocket014",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 486178.0
+      "volume": 487199.0
     },
     "Pocket015": {
-      "area": 112614.0,
+      "area": 112511.0,
       "bbox": [
         0.0,
         0.0,
@@ -714,9 +798,9 @@
       ],
       "closed": true,
       "com": [
-        103.454,
-        85.458,
-        16.3833
+        103.478,
+        85.4565,
+        16.3925
       ],
       "counts": {
         "edges": 810,
@@ -728,10 +812,10 @@
       "label": "Pocket015",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 474128.0
+      "volume": 475149.0
     },
     "Pocket018": {
-      "area": 113267.0,
+      "area": 113164.0,
       "bbox": [
         0.0,
         0.0,
@@ -742,9 +826,9 @@
       ],
       "closed": true,
       "com": [
-        105.361,
-        84.8742,
-        16.4409
+        105.382,
+        84.8739,
+        16.4502
       ],
       "counts": {
         "edges": 837,
@@ -756,10 +840,10 @@
       "label": "Pocket018",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 462028.0
+      "volume": 463048.0
     },
     "Pocket019": {
-      "area": 115246.0,
+      "area": 114814.0,
       "bbox": [
         0.0,
         0.0,
@@ -770,9 +854,9 @@
       ],
       "closed": true,
       "com": [
-        105.127,
-        84.351,
-        16.3324
+        105.188,
+        84.4399,
+        16.3547
       ],
       "counts": {
         "edges": 855,
@@ -784,10 +868,10 @@
       "label": "Pocket019",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 455888.0
+      "volume": 457932.0
     },
     "Pocket020": {
-      "area": 117390.0,
+      "area": 116957.0,
       "bbox": [
         0.0,
         0.0,
@@ -798,9 +882,9 @@
       ],
       "closed": true,
       "com": [
-        105.192,
-        84.2953,
-        16.4325
+        105.253,
+        84.3855,
+        16.4546
       ],
       "counts": {
         "edges": 993,
@@ -812,10 +896,10 @@
       "label": "Pocket020",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 450899.0
+      "volume": 452943.0
     },
     "Pocket021": {
-      "area": 117505.0,
+      "area": 117073.0,
       "bbox": [
         0.0,
         0.0,
@@ -826,9 +910,9 @@
       ],
       "closed": true,
       "com": [
-        105.194,
-        84.2822,
-        16.4218
+        105.256,
+        84.3726,
+        16.444
       ],
       "counts": {
         "edges": 993,
@@ -840,7 +924,231 @@
       "label": "Pocket021",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 449868.0
+      "volume": 451912.0
+    },
+    "Pocket022": {
+      "area": 117938.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        105.259,
+        84.3199,
+        16.4324
+      ],
+      "counts": {
+        "edges": 1041,
+        "faces": 368,
+        "shells": 1,
+        "solids": 1,
+        "verts": 689
+      },
+      "label": "Pocket022 (forcer O-ring groove)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 450700.0
+    },
+    "Pocket023": {
+      "area": 117949.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        105.258,
+        84.3198,
+        16.4323
+      ],
+      "counts": {
+        "edges": 1041,
+        "faces": 368,
+        "shells": 1,
+        "solids": 1,
+        "verts": 689
+      },
+      "label": "Pocket023 (port lead)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 450683.0
+    },
+    "Pocket024": {
+      "area": 118324.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        105.043,
+        84.2706,
+        16.3509
+      ],
+      "counts": {
+        "edges": 1065,
+        "faces": 376,
+        "shells": 1,
+        "solids": 1,
+        "verts": 705
+      },
+      "label": "Pocket024 (cooling block pocket)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 446440.0
+    },
+    "Pocket026": {
+      "area": 118328.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        105.042,
+        84.2704,
+        16.3507
+      ],
+      "counts": {
+        "edges": 1071,
+        "faces": 378,
+        "shells": 1,
+        "solids": 1,
+        "verts": 709
+      },
+      "label": "Pocket026 (cooling ports)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 446425.0
+    },
+    "Pocket027": {
+      "area": 118897.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        104.202,
+        84.1526,
+        16.2727
+      ],
+      "counts": {
+        "edges": 1117,
+        "faces": 396,
+        "shells": 1,
+        "solids": 1,
+        "verts": 739
+      },
+      "label": "Pocket027 (hose slot)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 441741.0
+    },
+    "Pocket028": {
+      "area": 118343.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        105.037,
+        84.2696,
+        16.3499
+      ],
+      "counts": {
+        "edges": 1087,
+        "faces": 386,
+        "shells": 1,
+        "solids": 1,
+        "verts": 719
+      },
+      "label": "Pocket028 (screw head recess)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 446351.0
+    },
+    "Sk_Hole006": {
+      "area": 0.0,
+      "bbox": [
+        126.65,
+        87.65,
+        20.3,
+        129.35,
+        90.35,
+        20.3
+      ],
+      "closed": true,
+      "com": [
+        128.0,
+        89.0,
+        20.3
+      ],
+      "counts": {
+        "edges": 1,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 1
+      },
+      "label": "Hole006 (cooling block screw, countersunk) sketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sk_Hole007": {
+      "area": 0.0,
+      "bbox": [
+        138.65,
+        87.65,
+        20.3,
+        141.35,
+        90.35,
+        20.3
+      ],
+      "closed": true,
+      "com": [
+        140.0,
+        89.0,
+        20.3
+      ],
+      "counts": {
+        "edges": 1,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 1
+      },
+      "label": "Hole007 (cooling block screw, in relief) sketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     },
     "Sketch": {
       "area": 0.0,
@@ -1209,17 +1517,17 @@
     "Sketch019": {
       "area": 0.0,
       "bbox": [
-        83.8,
-        49.0,
+        88.15,
+        50.8,
         20.0,
-        124.2,
-        159.0,
+        119.85,
+        157.2,
         20.0
       ],
       "closed": true,
       "com": [
-        105.004,
-        101.29,
+        102.838,
+        107.304,
         20.0
       ],
       "counts": {
@@ -1386,8 +1694,8 @@
       ],
       "closed": true,
       "com": [
-        173.059,
-        99.7996,
+        172.338,
+        100.378,
         27.5
       ],
       "counts": {
@@ -1597,10 +1905,206 @@
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
+    },
+    "Sketch035": {
+      "area": 0.0,
+      "bbox": [
+        84.0,
+        46.5,
+        20.0,
+        124.0,
+        161.5,
+        20.0
+      ],
+      "closed": true,
+      "com": [
+        104.0,
+        104.0,
+        20.0
+      ],
+      "counts": {
+        "edges": 16,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 16
+      },
+      "label": "Sketch035 (forcer O-ring groove)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch036": {
+      "area": 0.0,
+      "bbox": [
+        116.85,
+        83.0109,
+        20.0,
+        119.85,
+        91.5,
+        20.0
+      ],
+      "closed": true,
+      "com": [
+        118.35,
+        87.25,
+        20.0
+      ],
+      "counts": {
+        "edges": 4,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 4
+      },
+      "label": "Sketch036 (port lead)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch037": {
+      "area": 0.0,
+      "bbox": [
+        108.5,
+        78.5,
+        27.5,
+        150.0,
+        100.5,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        129.25,
+        89.5,
+        27.5
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "Sketch037 (cooling block pocket)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch039": {
+      "area": 0.0,
+      "bbox": [
+        113.0,
+        83.2591,
+        22.5,
+        119.6,
+        95.7409,
+        22.5
+      ],
+      "closed": true,
+      "com": [
+        116.3,
+        89.5,
+        22.5
+      ],
+      "counts": {
+        "edges": 2,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 2
+      },
+      "label": "Sketch039 (cooling ports)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch041": {
+      "area": 0.0,
+      "bbox": [
+        160.0,
+        83.0,
+        27.5,
+        212.0,
+        106.5,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        185.144,
+        95.597,
+        27.5
+      ],
+      "counts": {
+        "edges": 14,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 14
+      },
+      "label": "Sketch041 (hose slot)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch042": {
+      "area": 0.0,
+      "bbox": [
+        124.9,
+        85.9226,
+        20.0,
+        143.1,
+        92.0774,
+        20.0
+      ],
+      "closed": true,
+      "com": [
+        134.0,
+        89.0,
+        20.0
+      ],
+      "counts": {
+        "edges": 2,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 2
+      },
+      "label": "Sketch042 (screw head recess)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch043": {
+      "area": 0.0,
+      "bbox": [
+        208.0,
+        80.0,
+        22.3109,
+        208.0,
+        140.0,
+        25.2891
+      ],
+      "closed": true,
+      "com": [
+        208.0,
+        110.0,
+        23.8
+      ],
+      "counts": {
+        "edges": 2,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 2
+      },
+      "label": "Sketch043 (cable clamp screws)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     }
   },
   "parametric": {
-    "audited": 70,
+    "audited": 90,
     "objects": {
       "Hole": {
         "label": "Hole",
@@ -1636,6 +2140,27 @@
         "type": "PartDesign::Hole",
         "unlinked": [
           "Depth is a typed number: 9"
+        ]
+      },
+      "Hole006": {
+        "label": "Hole006 (cooling block screw, countersunk)",
+        "type": "PartDesign::Hole",
+        "unlinked": [
+          "Diameter is a typed number: 2.9"
+        ]
+      },
+      "Hole007": {
+        "label": "Hole007 (cooling block screw, countersunk)",
+        "type": "PartDesign::Hole",
+        "unlinked": [
+          "Diameter is a typed number: 2.9"
+        ]
+      },
+      "Hole008": {
+        "label": "Hole008 (cable clamp M3)",
+        "type": "PartDesign::Hole",
+        "unlinked": [
+          "Depth is a typed number: 8"
         ]
       },
       "Pad": {
@@ -1698,7 +2223,62 @@
         "label": "Pocket019",
         "type": "PartDesign::Pocket",
         "unlinked": [
-          "Length is a typed number: 6"
+          "Length is a typed number: 5"
+        ]
+      },
+      "Pocket022": {
+        "label": "Pocket022 (forcer O-ring groove)",
+        "type": "PartDesign::Pocket",
+        "unlinked": [
+          "Length is a typed number: 1.5"
+        ]
+      },
+      "Pocket024": {
+        "label": "Pocket024 (cooling block pocket)",
+        "type": "PartDesign::Pocket",
+        "unlinked": [
+          "Length is a typed number: 5"
+        ]
+      },
+      "Pocket026": {
+        "label": "Pocket026 (cooling ports)",
+        "type": "PartDesign::Pocket",
+        "unlinked": [
+          "Length is a typed number: 2"
+        ]
+      },
+      "Pocket027": {
+        "label": "Pocket027 (hose slot)",
+        "type": "PartDesign::Pocket",
+        "unlinked": [
+          "Length is a typed number: 7.5"
+        ]
+      },
+      "Pocket028": {
+        "label": "Pocket028 (screw head recess)",
+        "type": "PartDesign::Pocket",
+        "unlinked": [
+          "Length is a typed number: 0.3"
+        ]
+      },
+      "Sk_Hole006": {
+        "dof": 0,
+        "label": "Hole006 (cooling block screw, countersunk) sketch",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Hole006_d (Diameter) is a typed number: 2.7 mm",
+          "Hole006_x (DistanceX) is a typed number: 128 mm",
+          "Hole006_y (DistanceY) is a typed number: 89 mm"
+        ]
+      },
+      "Sk_Hole007": {
+        "dof": 0,
+        "label": "Hole007 (cooling block screw, in relief) sketch",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "Hole007_d (Diameter) is a typed number: 2.7 mm",
+          "Hole007_x (DistanceX) is a typed number: 140 mm",
+          "Hole007_y (DistanceY) is a typed number: 89 mm"
         ]
       },
       "Sketch": {
@@ -1830,9 +2410,9 @@
         "label": "Sketch019",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "channel_pitch (Distance) is a typed number: 5.2 mm",
-          "outer_radius (Radius) is a typed number: 4.5 mm",
-          "tool_diameter (Diameter) is a typed number: 4 mm"
+          "channel_pitch (Distance) is a typed number: 4.1 mm",
+          "outer_radius (Radius) is a typed number: 3.5 mm",
+          "tool_diameter (Diameter) is a typed number: 3 mm"
         ]
       },
       "Sketch020": {
@@ -1889,8 +2469,8 @@
         "label": "Sketch025",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "Constraint4 (Radius) is a typed number: 40 mm",
-          "Constraint6 (Distance) is a typed number: 5 mm",
+          "cable_bend_r (Radius) is a typed number: 35 mm",
+          "cable_rise_l (Distance) is a typed number: 10 mm",
           "Constraint23 (Distance) is a typed number: 4.5 mm",
           "Constraint24 (Distance) is a typed number: 20 mm"
         ]
@@ -1961,6 +2541,87 @@
           "Constraint30 (DistanceX) is a typed number: 10 mm",
           "Constraint32 (Distance) is a typed number: 4.5 mm"
         ]
+      },
+      "Sketch035": {
+        "dof": 0,
+        "label": "Sketch035 (forcer O-ring groove)",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "groove_out_r (Radius) is a typed number: 7.4 mm",
+          "groove_out_y0 (DistanceY) is a typed number: 46.5 mm",
+          "groove_out_x1 (DistanceX) is a typed number: 124 mm",
+          "groove_out_y2 (DistanceY) is a typed number: 161.5 mm",
+          "groove_out_x3 (DistanceX) is a typed number: 84 mm",
+          "groove_in_r (Radius) is a typed number: 4.6 mm",
+          "groove_in_y0 (DistanceY) is a typed number: 49.3 mm",
+          "groove_in_x1 (DistanceX) is a typed number: 121.2 mm",
+          "groove_in_y2 (DistanceY) is a typed number: 158.7 mm",
+          "groove_in_x3 (DistanceX) is a typed number: 86.8 mm"
+        ]
+      },
+      "Sketch036": {
+        "dof": 0,
+        "label": "Sketch036 (port lead)",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "lead_y_end (DistanceY) is a typed number: 84.5 mm"
+        ]
+      },
+      "Sketch037": {
+        "dof": 0,
+        "label": "Sketch037 (cooling block pocket)",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "block_r (Radius) is a typed number: 3 mm",
+          "block_y0 (DistanceY) is a typed number: 78.5 mm",
+          "block_x1 (DistanceX) is a typed number: 150 mm",
+          "block_y2 (DistanceY) is a typed number: 100.5 mm",
+          "block_x3 (DistanceX) is a typed number: 108.5 mm"
+        ]
+      },
+      "Sketch039": {
+        "dof": 0,
+        "label": "Sketch039 (cooling ports)",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "port_d (Diameter) is a typed number: 2.5 mm",
+          "port_b_y (DistanceY) is a typed number: 94.5 mm"
+        ]
+      },
+      "Sketch041": {
+        "dof": 0,
+        "label": "Sketch041 (hose slot)",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "hose_r (Radius) is a typed number: 3 mm",
+          "hose_y0 (DistanceY) is a typed number: 83 mm",
+          "hose_x1 (DistanceX) is a typed number: 186 mm",
+          "hose_y2 (DistanceY) is a typed number: 94.5 mm",
+          "hose_x3 (DistanceX) is a typed number: 212 mm",
+          "hose_y4 (DistanceY) is a typed number: 106.5 mm",
+          "hose_x5 (DistanceX) is a typed number: 183 mm",
+          "hose_y6 (DistanceY) is a typed number: 99 mm",
+          "hose_x7 (DistanceX) is a typed number: 160 mm"
+        ]
+      },
+      "Sketch042": {
+        "dof": 0,
+        "label": "Sketch042 (screw head recess)",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "recess_d (Diameter) is a typed number: 6.2 mm"
+        ]
+      },
+      "Sketch043": {
+        "dof": 0,
+        "label": "Sketch043 (cable clamp screws)",
+        "type": "Sketcher::SketchObject",
+        "unlinked": [
+          "clamp_screw_d (Diameter) is a typed number: 3 mm",
+          "clamp_screw_a_y (DistanceX) is a typed number: 81.5 mm",
+          "clamp_screw_z (DistanceY) is a typed number: 23.8 mm",
+          "clamp_screw_b_y (DistanceX) is a typed number: 138.5 mm"
+        ]
       }
     }
   },
@@ -1968,6 +2629,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "e72c454650bd896c486aa7844157274d2041c1ad06c3cfa36deb83c242832429"
+    "carriage-bottom.FCStd": "54150a5b6908fa7fe0eedf50b76b29e672fa039244be873322488c2900be66d6"
   }
 }

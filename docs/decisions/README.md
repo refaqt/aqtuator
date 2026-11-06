@@ -39,3 +39,4 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-10-19 | [The encoder protocol follows the drive. BiSS-C is not required](2026-10-19_encoder-protocol-follows-the-drive.md) |
 | 2026-10-28 | [The seal strip is 0.15 mm thick](2026-10-28_seal-strip-0-15-mm.md) |
 | 2026-10-28 | [The seal strip rollers turn on two flanged ball bearings](2026-10-28_seal-strip-rollers-on-flanged-ball-bearings.md) |
+| 2026-11-06 | [The forcer cooling is sealed with standard O-rings and a printed block](2026-11-06_forcer-cooling-sealed-with-standard-o-rings.md) |
