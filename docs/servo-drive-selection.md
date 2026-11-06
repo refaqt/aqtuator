@@ -49,9 +49,14 @@ That file is the source. This table is a copy for reading.
 | DRV-08 | Reads the stage encoder directly, with no converter box. Today: the RSF AK MC 15 B, BiSS C unidirectional, 0.1 µm step. The drive must read BiSS-C and the full position word. Before 2026-11-04 this row said 1 Vpp at up to 150 kHz, and most drives below were checked against that old encoder | Hard |
 | DRV-09 | Position loop at 4 kHz or faster (250 µs or shorter), read in the maker's manual | Hard |
 | DRV-10 | The maker's setup software has a tuning function that measures the axis and shows Bode plots (gain and phase against frequency) of the transfer function | Hard |
+| DRV-11 | CE mark with an EU Declaration of Conformity: Low Voltage, EMC and RoHS directives. Note the EMC category (C2 or C3) | Hard |
+| DRV-12 | Safe Torque Off (STO), certified by a testing body, at least SIL 2 and PL d | Hard |
+| DRV-13 | Stops the motor on a following error, on an encoder fault and at software position limits | Hard |
 | DRV-P1 | Our own filters in the loop, best as a free second order filter (a biquad) | Preferred |
 | DRV-P2 | A published block diagram of the control loop | Preferred |
 | DRV-P3 | A position loop faster than 4 kHz. 8 kHz or more is clearly better | Preferred |
+| DRV-P4 | STO at SIL 3 and PL e | Preferred |
+| DRV-P5 | Safe Stop 1, a brake output and dynamic braking | Preferred |
 
 Buying rules that are not in the SysML file (they change with each search):
 

@@ -141,6 +141,21 @@ package MotorDriveRequirements {
         attribute freeBiquadFilterCount : Natural;
         attribute publishesLoopDiagram : Boolean;
         attribute tuningToolShowsBodePlot : Boolean;         // in the maker's own setup software
+        // Safety and CE (DRV-11 to DRV-13, DRV-P4, DRV-P5). Read each value
+        // in the maker's Declaration of Conformity, safety certificate or
+        // manual. See docs/compact-stage-ce-assessment.md.
+        attribute declaresLowVoltageDirective : Boolean;     // 2014/35/EU, with EN 61800-5-1
+        attribute declaresEmcDirective : Boolean;            // 2014/30/EU, with EN 61800-3
+        attribute declaresRohsDirective : Boolean;           // 2011/65/EU
+        attribute stoSafetyIntegrityLevel : Natural;         // SIL of Safe Torque Off (IEC 61800-5-2, IEC 61508); 0 when there is no certified STO
+        attribute stoPerformanceLevel : Natural;             // PL of Safe Torque Off (EN ISO 13849-1): 1 = PL a ... 4 = PL d, 5 = PL e; 0 when none
+        attribute stoCertifiedByTestingBody : Boolean;       // a certificate from a testing body such as TUV
+        attribute stopsOnFollowingError : Boolean;           // position error too large: the drive disables the motor
+        attribute stopsOnEncoderFault : Boolean;             // lost or wrong encoder data: the drive disables the motor
+        attribute hasSoftwarePositionLimits : Boolean;       // the drive stops at a set position, without a switch
+        attribute hasSafeStop1 : Boolean;                    // SS1: braked stop, then STO; built in or with the maker's safety relay
+        attribute hasBrakeOutput : Boolean;                  // controls a holding brake that the customer adds
+        attribute hasDynamicBraking : Boolean;               // shorts the motor phases to brake on a fault
     }
 
     // ---------------------------------------------------------------------
@@ -348,6 +363,79 @@ package MotorDriveRequirements {
             subject drive : MotorDrive;
             require constraint { drive.tuningToolShowsBodePlot }
         }
+
+        // --- Safety and CE marking ---------------------------------------------
+
+        requirement def <'DRV-11'> CeMarking {
+            doc /*
+             * The drive carries the CE mark (the EU product safety mark),
+             * and the maker gives an EU Declaration of Conformity. It
+             * declares the Low Voltage Directive 2014/35/EU (with
+             * EN 61800-5-1), the EMC Directive 2014/30/EU (with EN 61800-3)
+             * and the RoHS Directive 2011/65/EU.
+             *
+             * Note the EMC category in the declaration (C2 or C3) and
+             * whether it needs an extra mains filter. A drive of category
+             * C3 alone is not meant for a public low-voltage network, such
+             * as many labs and offices.
+             *
+             * The stage is partly completed machinery. The customer builds
+             * it into a machine and makes the final CE assessment. The
+             * drive must therefore bring its own CE marking.
+             */
+            subject drive : MotorDrive;
+            require constraint {
+                drive.declaresLowVoltageDirective
+                and drive.declaresEmcDirective
+                and drive.declaresRohsDirective
+            }
+        }
+
+        requirement def <'DRV-12'> SafeTorqueOff {
+            doc /*
+             * The drive has Safe Torque Off (STO): a certified input that
+             * cuts the motor force, so the motor cannot push. It meets at
+             * least SIL 2 (IEC 61800-5-2) and PL d (EN ISO 13849-1), and a
+             * testing body certifies it.
+             *
+             * Why: the motor pushes up to 670 N and the carriage moves at up
+             * to 3 m/s. A hand at the end of the travel can be crushed. The
+             * customer stops the machine through STO, from an emergency stop
+             * or a door switch. The first estimate of the required level is
+             * PL d, and PL e when people often work near the moving carriage.
+             * See docs/compact-stage-ce-assessment.md.
+             *
+             * A linear motor has no brake and holds nothing without power.
+             * STO alone lets the carriage coast. This is acceptable only for
+             * a horizontal stage.
+             */
+            subject drive : MotorDrive;
+            require constraint {
+                drive.stoSafetyIntegrityLevel >= 2
+                and drive.stoPerformanceLevel >= 4
+                and drive.stoCertifiedByTestingBody
+            }
+        }
+
+        requirement def <'DRV-13'> FaultStops {
+            doc /*
+             * The drive disables the motor on a following error (the
+             * position error grows too large), on an encoder fault (lost
+             * data or a bad check sum), and at software position limits.
+             *
+             * The stage has no limit switches that the drive can read. The
+             * RSF AK MC 15 B read head gives only power and BiSS data on its
+             * connector. The software limits use the absolute position. The
+             * end stop dampers are the last protection. None of these is a
+             * safety function with a Performance Level.
+             */
+            subject drive : MotorDrive;
+            require constraint {
+                drive.stopsOnFollowingError
+                and drive.stopsOnEncoderFault
+                and drive.hasSoftwarePositionLimits
+            }
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -394,6 +482,38 @@ package MotorDriveRequirements {
             subject drive : MotorDrive;
             require constraint { drive.positionLoopRate >= 8000 [Hz] }
         }
+
+        requirement def <'DRV-P4'> HigherSafeTorqueOff {
+            doc /*
+             * STO at SIL 3 and PL e. A customer whose risk assessment needs
+             * PL e can then use the drive without an extra contactor.
+             */
+            subject drive : MotorDrive;
+            require constraint {
+                drive.stoSafetyIntegrityLevel >= 3
+                and drive.stoPerformanceLevel >= 5
+            }
+        }
+
+        requirement def <'DRV-P5'> SaferStopping {
+            doc /*
+             * Features that make a stop shorter or safer:
+             *
+             * - Safe Stop 1 (SS1): the drive brakes the carriage first, and
+             *   then switches to STO. The carriage then does not coast into
+             *   the end stop.
+             * - A brake output, for a customer who mounts the stage
+             *   vertically and adds a holding brake.
+             * - Dynamic braking: on a fault the drive shorts the motor
+             *   phases, and the motor brakes itself.
+             */
+            subject drive : MotorDrive;
+            require constraint {
+                drive.hasSafeStop1
+                and drive.hasBrakeOutput
+                and drive.hasDynamicBraking
+            }
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -421,6 +541,9 @@ package MotorDriveRequirements {
         }
         requirement positionLoopRate : Mandatory::PositionLoopRate;
         requirement bodePlotTuning : Mandatory::BodePlotTuning;
+        requirement ceMarking : Mandatory::CeMarking;
+        requirement safeTorqueOff : Mandatory::SafeTorqueOff;
+        requirement faultStops : Mandatory::FaultStops;
     }
 
     requirement currentDriveSpecification : MotorDriveSpecification {
