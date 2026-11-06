@@ -10,7 +10,7 @@ Last updated: 2026-11-05. Prices were seen on 2026-09-29 and many are asking pri
 ## Short answer
 
 - **Candidates:** the Kollmorgen **AKD-x00306** (first generation, EtherCAT version) and the Copley
-  **Xenus Plus XEL-230-18** (EtherCAT version). Both meet all ten hard requirements in the makers'
+  **Xenus Plus XEL-230-18** (EtherCAT version). Both met all ten hard requirements of that date in the makers'
   manuals, including the Bode plot tuning tool (DRV-10). Their prices are not confirmed. See the
   [decision record](decisions/2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md).
 - **Fallback drive:** Delta **ASD-A3-0421-E** with the Delta **ASD-IF-EN0A20** converter box. It is
@@ -31,6 +31,13 @@ Last updated: 2026-11-05. Prices were seen on 2026-09-29 and many are asking pri
      converter box is allowed.
   4. MAXWELL must tell us whether the MK21 has Hall sensors and what type its thermal sensor is.
 
+- **Safety check (2026-11-06).** Three hard safety requirements were added: CE marking (DRV-11),
+  certified Safe Torque Off at SIL 2 / PL d or better (DRV-12), and motor stops on faults
+  (DRV-13). The Copley XEL fails DRV-12: it has no certified STO. No other drive is confirmed
+  yet, mainly because no Declaration of Conformity or STO certificate was seen. The tables below
+  are not yet updated for these three. See the
+  [CE assessment](compact-stage-ce-assessment.md#the-drives-on-your-list).
+
 ## What the drive must do
 
 The requirements are in
@@ -49,9 +56,14 @@ That file is the source. This table is a copy for reading.
 | DRV-08 | Reads the stage encoder directly, with no converter box. Today: the RSF AK MC 15 B, BiSS C unidirectional, 0.1 µm step. The drive must read BiSS-C and the full position word. Before 2026-11-04 this row said 1 Vpp at up to 150 kHz, and most drives below were checked against that old encoder | Hard |
 | DRV-09 | Position loop at 4 kHz or faster (250 µs or shorter), read in the maker's manual | Hard |
 | DRV-10 | The maker's setup software has a tuning function that measures the axis and shows Bode plots (gain and phase against frequency) of the transfer function | Hard |
+| DRV-11 | CE mark with an EU Declaration of Conformity: Low Voltage, EMC and RoHS directives. Note the EMC category (C2 or C3) | Hard |
+| DRV-12 | Safe Torque Off (STO), certified by a testing body, at least SIL 2 and PL d | Hard |
+| DRV-13 | Stops the motor on a following error, on an encoder fault and at software position limits | Hard |
 | DRV-P1 | Our own filters in the loop, best as a free second order filter (a biquad) | Preferred |
 | DRV-P2 | A published block diagram of the control loop | Preferred |
 | DRV-P3 | A position loop faster than 4 kHz. 8 kHz or more is clearly better | Preferred |
+| DRV-P4 | STO at SIL 3 and PL e | Preferred |
+| DRV-P5 | Safe Stop 1, a brake output and dynamic braking | Preferred |
 
 Buying rules that are not in the SysML file (they change with each search):
 
