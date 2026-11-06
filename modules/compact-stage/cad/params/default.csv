@@ -11,3 +11,18 @@ strip_corner_hole_d,4.5,mm,design,ISO 273 medium for M4,Width of the slot in eac
 strip_corner_slot_l,1,mm,design,Niels Bosmans 2026-10-30,Length of each corner slot along X (centre to centre). It is centred on the screw. So the strip can slide 0.5 mm each way under the collar while the preload is set. The 45° steps of the strip ears sit half this length further towards the strip ends than the pocket steps; so the strip keeps strip_edge_gap at the steps over the whole slide
 strip_preload_hole_d,5,mm,design,simulation/cases/strip-seal-fit,Hole at each strip end for the ISO 10642 M4 preload screw. It sits off the screw axis towards the strip middle
 strip_pull,270,N,design,simulation/cases/strip-seal-fit,Pull in the seal strip after the preload screws are tight. No carriage contact from 190 to 350 N
+cooling_block_gap,0.15,mm,design,carriage-bottom Sketch037,Room on each side between the printed cooling block and the wall of its pocket in carriage-bottom
+cooling_block_top_gap,0.1,mm,design,carriage-bottom Pad,Room between the top of the cooling block and the top face of carriage-bottom. The seal strip runs 1 mm above that face
+port_oring_id,5,mm,catalogue,ERIKS O-ring NBR 70 36624 5x1.5,Inside diameter of the O-ring that seals each cooling port between the block and the pocket floor
+port_oring_cs,1.5,mm,catalogue,ERIKS O-ring NBR 70 36624 5x1.5,Cross-section of the port O-ring
+port_groove_depth,1.1,mm,design,Face seal 25 to 30 % squeeze,Depth of the port O-ring groove in the bottom of the block
+port_groove_w,2.0,mm,design,Face seal groove width about 1.35 x cross-section,Width of the port O-ring groove. The outer wall touches the O-ring outside diameter; water pushes from inside
+hose_od,4,mm,catalogue,PU tube 4 x 2.5 (Festo PUN-H-4),Outside diameter of the cooling hose
+hose_id,2.5,mm,catalogue,PU tube 4 x 2.5 (Festo PUN-H-4),Inside diameter of the cooling hose
+barb_d_max,3.4,mm,design,About 35 % stretch on hose_id,Largest diameter of a hose barb ring on the cooling block
+barb_d_min,2.8,mm,design,About 12 % stretch on hose_id,Smallest diameter of a hose barb ring: the hose still seals here
+barb_l,8,mm,design,,Length of a hose barb from the end face of the cooling block to its tip
+barb_collar_l,1,mm,design,,Length of the collar at the root of a hose barb
+barb_rings,3,,design,,Number of rings on a hose barb
+barb_bore_d,1.4,mm,design,Leaves 0.7 mm resin under the smallest ring,Bore through a hose barb
+cooling_passage_d,2.0,mm,design,,Diameter of the water passages inside the cooling block. With the port groove under it and the top over it, it leaves 0.9 mm walls

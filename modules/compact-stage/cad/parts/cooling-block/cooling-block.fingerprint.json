@@ -1,0 +1,156 @@
+{
+  "document": "cooling_block",
+  "errors": [],
+  "objects": {
+    "BaseFeature": {
+      "area": 3025.61,
+      "bbox": [
+        -19.35,
+        -10.35,
+        0.0,
+        27.1,
+        11.35,
+        4.9
+      ],
+      "closed": true,
+      "com": [
+        0.627084,
+        0.4867,
+        2.48481
+      ],
+      "counts": {
+        "edges": 84,
+        "faces": 44,
+        "shells": 1,
+        "solids": 1,
+        "verts": 54
+      },
+      "label": "BaseFeature",
+      "type": "PartDesign::FeatureBase",
+      "valid": true,
+      "volume": 3849.69
+    },
+    "BlockShape": {
+      "area": 3025.61,
+      "bbox": [
+        -19.35,
+        -10.35,
+        0.0,
+        27.1,
+        11.35,
+        4.9
+      ],
+      "closed": true,
+      "com": [
+        0.627084,
+        0.4867,
+        2.48481
+      ],
+      "counts": {
+        "edges": 84,
+        "faces": 44,
+        "shells": 1,
+        "solids": 1,
+        "verts": 54
+      },
+      "label": "BlockShape (printed cooling block)",
+      "type": "Part::Feature",
+      "valid": true,
+      "volume": 3849.69
+    },
+    "Body": {
+      "area": 3025.61,
+      "bbox": [
+        -19.35,
+        -10.35,
+        0.0,
+        27.1,
+        11.35,
+        4.9
+      ],
+      "closed": true,
+      "com": [
+        0.627084,
+        0.4867,
+        2.48481
+      ],
+      "counts": {
+        "edges": 84,
+        "faces": 44,
+        "shells": 1,
+        "solids": 1,
+        "verts": 54
+      },
+      "label": "Body",
+      "type": "PartDesign::Body",
+      "valid": true,
+      "volume": 3849.69
+    },
+    "Part": {
+      "area": 3025.61,
+      "bbox": [
+        -19.35,
+        -10.35,
+        0.0,
+        27.1,
+        11.35,
+        4.9
+      ],
+      "closed": true,
+      "com": [
+        0.627084,
+        0.4867,
+        2.48481
+      ],
+      "counts": {
+        "edges": 84,
+        "faces": 44,
+        "shells": 1,
+        "solids": 1,
+        "verts": 54
+      },
+      "label": "cooling-block",
+      "type": "App::Part",
+      "valid": true,
+      "volume": 3849.69
+    }
+  },
+  "parametric": {
+    "audited": 1,
+    "objects": {}
+  },
+  "params": {
+    "barb_bore_d": 1.4,
+    "barb_collar_l": 1.0,
+    "barb_d_max": 3.4,
+    "barb_d_min": 2.8,
+    "barb_l": 8.0,
+    "barb_rings": 3.0,
+    "bearing_d_out": 6.0,
+    "bearing_flange_w": 0.8,
+    "cooling_block_gap": 0.15,
+    "cooling_block_top_gap": 0.1,
+    "cooling_passage_d": 2.0,
+    "hose_id": 2.5,
+    "hose_od": 4.0,
+    "port_groove_depth": 1.1,
+    "port_groove_w": 2.0,
+    "port_oring_cs": 1.5,
+    "port_oring_id": 5.0,
+    "roller_d": 10.0,
+    "roller_l": 20.0,
+    "sleeve_l": 18.4,
+    "strip_corner_hole_d": 4.5,
+    "strip_corner_slot_l": 1.0,
+    "strip_edge_gap": 0.2,
+    "strip_end_gap": 1.0,
+    "strip_preload_hole_d": 5.0,
+    "strip_pull": 270.0,
+    "strip_t": 0.15
+  },
+  "saved": true,
+  "schema": 1,
+  "sources": {
+    "cooling-block.FCStd": "895a7494ab92474e48d6f9b73516b43d968647330468c3ba6f3c312617707c60"
+  }
+}
