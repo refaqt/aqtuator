@@ -10,7 +10,7 @@ Last updated: 2026-11-05. Prices were seen on 2026-09-29 and many are asking pri
 ## Short answer
 
 - **Candidates:** the Kollmorgen **AKD-x00306** (first generation, EtherCAT version) and the Copley
-  **Xenus Plus XEL-230-18** (EtherCAT version). Both meet all ten hard requirements in the makers'
+  **Xenus Plus XEL-230-18** (EtherCAT version). Both met all ten hard requirements of that date in the makers'
   manuals, including the Bode plot tuning tool (DRV-10). Their prices are not confirmed. See the
   [decision record](decisions/2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md).
 - **Fallback drive:** Delta **ASD-A3-0421-E** with the Delta **ASD-IF-EN0A20** converter box. It is
@@ -30,6 +30,13 @@ Last updated: 2026-11-05. Prices were seen on 2026-09-29 and many are asking pri
   3. Delta must confirm a position loop of 4 kHz or faster, and we must decide whether Delta's own
      converter box is allowed.
   4. MAXWELL must tell us whether the MK21 has Hall sensors and what type its thermal sensor is.
+
+- **Safety check (2026-11-06).** Three hard safety requirements were added: CE marking (DRV-11),
+  certified Safe Torque Off at SIL 2 / PL d or better (DRV-12), and motor stops on faults
+  (DRV-13). The Copley XEL fails DRV-12: it has no certified STO. No other drive is confirmed
+  yet, mainly because no Declaration of Conformity or STO certificate was seen. The tables below
+  are not yet updated for these three. See the
+  [CE assessment](compact-stage-ce-assessment.md#the-drives-on-your-list).
 
 ## What the drive must do
 

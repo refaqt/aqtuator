@@ -27,6 +27,10 @@ Date: 2026-11-06. Design state: the CAD and the architecture of
   position. That does the job of the old limit switches, but it is not a safety function. Before
   we take the limit switches out of the parts list, please tell us where the read head limit
   signal is described.
+- **None of your drive options passes all safety features yet in its own documents.** The Copley
+  XEL fails: it has no certified Safe Torque Off. Delta ASDA-A3 has the best documented one. For
+  the others, the Declaration of Conformity or the safety certificate is missing. See
+  [the drive table](#the-drives-on-your-list).
 - **The drive needs three safety features**: the CE mark (Low Voltage, EMC and RoHS directives),
   a certified Safe Torque Off at SIL 2 / PL d or better, and motor stops on a following error, an
   encoder fault and at software limits. These are now hard requirements DRV-11 to DRV-13 in
@@ -155,7 +159,42 @@ own risk assessment.
 
 ### The drives on your list
 
-The check of the drives on your list is still running. This section is filled in the next update.
+Checked on 2026-11-06 in the makers' own manuals and data sheets. **Pass** and **Fail** mean the
+maker's document gives the answer. **NC** (not confirmed) means we could not read it in a maker's
+document. NC never counts as a pass. We did not open an EU Declaration of Conformity or an STO
+certificate for any drive. Ask for both with every quotation.
+
+Elmo, Servotronix and Agito Akribis are checked because you asked. They stay excluded by the
+recorded rule that we do not buy from Israeli suppliers
+([decision of 2026-10-06](decisions/2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md)).
+
+| Drive | DRV-11 CE (LVD, EMC, RoHS) | DRV-12 STO, SIL 2 / PL d, certified | DRV-13 Fault stops | DRV-P4 SIL 3 / PL e | DRV-P5 SS1, brake output, dynamic braking | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| Kollmorgen AKD-x00306, EtherCAT | Pass. Machinery, LVD, EMC and RoHS directives listed. Needs an external filter: C2 with a motor cable under 10 m, C3 above | SIL 2, PL d, Cat 3, one STO input. The manual names no testing body: **NC** | Pass. Following error, feedback fault, software limit | No | No safe SS1. Brake output yes. Dynamic braking yes | **Close.** Ask for the STO certificate |
+| Kollmorgen AKD2G-SPE-6V03S-A1F3-0000-A | **NC.** The only manual we could open (beta, 2018) says approvals are pending. Needs an external filter for C2 | Option 1: two channels, SIL 2, PL d, Cat 3. Approval pending in that edition: **NC** | NC (not read in the manual) | No. Options 2 and 3 (other order codes) give SIL 3 with SS1, SBC and SLS | Brake output yes (2.5 A). Dynamic braking yes | **Not confirmed.** Ask for the current manual, the Declaration of Conformity and the STO certificate |
+| Copley Xenus Plus XEL-230-18 | NC. EMC and LVD listed, but with the standards IEC 61010-1 and EN 55011, not EN 61800. Line filter required for CE. RoHS not read | **Fail.** The XEL has "Motor Torque Off", which Copley says "does not have the certifications of STO" | Pass for following error and feedback error. Software limits NC | No | Brake output yes (1 A). Dynamic braking NC | **Fails DRV-12.** The two-axis XE2 has a TÜV SÜD STO (SIL 3, PL d) |
+| Delta ASD-A3-0421-E | NC. The STO table lists the machinery and LVD standards. The full Declaration was not opened. Filter recommended for C2 | **Pass.** Two channels, certified by TÜV SÜD. SIL 3 / PL e with the monitor output wired, SIL 2 / PL d without | Pass. Position error, encoder fault, software limits | Pass, with the monitor output wired | No SS1. Brake signal only through a relay. Dynamic braking yes | **Best on STO.** Still the converter and loop rate problems from the drive page |
+| HIWIN E1 ED1F-EN-0422-01-00 (safety version 1) | Pass. CE mark, LVD, EMC and RoHS. **EMC category C3** | SIL 3, PL e, Cat 3, two inputs and a monitor output. The manual names no testing body: **NC** | Pass for position error and encoder faults. Software limits NC | Pass on paper | No SS1. Brake output yes. Dynamic braking yes | **Close.** C3 means it is not meant for a public low-voltage network (many labs) without extra filtering. HIWIN cannot deliver it in Europe today (drive page) |
+| DGSMARTWIN AKS-4D52AECAB | **NC.** The manual only says the drive is tested to the standards. Its table is almost word for word the Servotronix table, with an old EMC directive. No Declaration seen | SIL 3, PL e, Cat 3 claimed, two inputs. No testing body named: **NC** | Pass. Following error, encoder faults, soft limits from the absolute encoder | Pass on paper | Brake output yes. Dynamic braking yes (emergency stop only). No SS1 | **Not confirmed.** Ask for the Declaration of Conformity and the STO certificate before you trust the CE mark |
+| Elmo Gold Oboe 6/230 (excluded) | NC. Only the old LVD 2006/95/EC. Elmo leaves EMC to the maker of the end product | SIL 3, PL e, Cat 3, certificate Z10 13 08 84596 001 (issuer not named): **Pass on level, issuer NC** | NC | Pass | No SS1. Brake output yes. Dynamic braking NC | Excluded |
+| Servotronix CDHD2S-0032AEC2 (excluded) | NC. "Will be tested and certified". Filter required | **Fail.** "STO certification for all CDHD2S models is currently pending", and one input pair only | Pass | No (not certified) | Brake through a relay. Dynamic braking yes | Excluded |
+| Agito Akribis AGD155-EC-2A06 (excluded) | NC. Only IEC 61800-5-1 and IEC 61800-3 named, no directive | **Fail.** Two inputs, "pending certification", no SIL or PL | Pass | No | Brake output yes. Dynamic braking NC | Excluded |
+
+What this means for the choice:
+
+- **No drive on the list passes all three new hard requirements in its maker's own documents.**
+  The missing piece is almost always the paper: the Declaration of Conformity and the STO
+  certificate. Ask for both in every quotation request.
+- **The Copley Xenus Plus XEL fails.** It has no certified STO. If you want Copley, ask about the
+  XE2 (two axes, certified STO), or add a certified safety contactor in the motor cable.
+- **Delta ASDA-A3** has the best documented STO (TÜV SÜD, up to SIL 3 / PL e).
+- **Kollmorgen AKD** reaches SIL 2 / PL d. That is enough for DRV-12, but not for a customer who
+  needs PL e.
+- **No drive on the list has a certified Safe Stop 1** in these order codes. A customer can build
+  SS1 with a safety relay that has a time delay: it first stops the drive by command, then opens
+  STO.
+- **No drive documents a limit switch signal from BiSS-C.** Software limits from the absolute
+  position are the way to go.
 
 ## What to do next
 
@@ -194,6 +233,17 @@ a first engineering check, not legal advice.
   section 1.2 (EMC 2014/30/EU, RoHS 2011/65/EU), section 1.4 (intended use: length and path
   information only), section 2.1.1 (shock 1000 m/s², 6 ms), section 8.1 (BiSS C pins: UP, sensor
   UP, 0 V, sensor 0 V, SLO+, SLO−, MA+, MA−; no limit lines).
+- Drive sources (PDF pages):
+  [AKD installation manual, edition AG 2022](https://www.kml-technology.com/wp-content/uploads/2024/05/Kollmorgen_AKD_Installation_EN.pdf) p. 28 to 30, 46, 58, 196 to 198;
+  [AKD2G with safety option 1, beta 2018](https://inmoco.co.uk/wp-content/uploads/2022/01/AKD2G-Installation-Manual-with-FS1.pdf) p. 29 to 32, 36 to 42, 127 to 129;
+  [Copley XEL data sheet](https://s3.amazonaws.com/www.motionusa.com/copley/XenusPlus_XEL-ds.pdf) p. 2, 3, 7, 17 to 19 and
+  [Xenus Plus user guide rev 06](https://www.aoyamasteel.co.jp/wp-content/uploads/2024/11/AmpManual-XEL.pdf) p. 5, 11, 50 to 59, 65;
+  [Delta ASDA-A3 manual 2025](https://www.damencnc.com/userdata/file/7617-5_Delta_ASDA_A3_Manual_English_2025.pdf) p. 68, 69, 76, 77, 130, 131, 181, 183, 635, 695, 696;
+  HIWIN E1 manual MD09UE01 V3.3 from [hiwinmikro.tw](https://www.hiwinmikro.tw/Downloads/ManualOverview_EN.htm), printed page vii, p. 12-5, 12-17, 13-7;
+  DGSMARTWIN AKS manual, local copy `docs/documentation/AKS Drive Manual.pdf`, sections 2.8, 4.7, 5.2.6, 10.2.3;
+  [Elmo Gold Oboe installation guide](https://inelso.ru/upload//specs/MAN-G-OBOEIG-EC.pdf) p. 7, 12, 16;
+  [Servotronix CDHD2S manual V1.12](https://e-motors.tech/wp-content/uploads/2024/07/CDHD2S-Manual-V1.12-20231101-en.pdf) p. 20, 29, 52, 91, 242;
+  [Agito AGD155 product manual rev 3.4](https://agito-akribis.com/wp-content/uploads/2026/10/Agito-AGD155-Product-Manual-Rev.3.4.pdf) p. 17, 22, 30 to 33.
 - Limit switches: `SW-001` and `ELC-001` in `modules/compact-stage/bom/bom.csv`, left in place.
 - Mistake rules applied: deciding values only from the maker's own document
   (`docs/mistakes/2026-09-29_loop-rate-from-a-trade-article.md`), and search the whole repository
