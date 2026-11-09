@@ -5,7 +5,7 @@ requirements. It is an overview. The research is in the log entries and decision
 each row and in [Sources](#sources). If a number here differs from a log entry, the log entry and the
 maker's own manual win. Tell us, and we fix this page.
 
-Last updated: 2026-11-05. Prices were seen on 2026-09-29 and many are asking prices.
+Last updated: 2026-11-09. Prices were seen on 2026-09-29 and many are asking prices.
 
 ## Short answer
 
@@ -182,6 +182,9 @@ These do not fit one of the rules: we use LinuxCNC as the master, and we do not 
   402), Delta ASD-A3-0743-E (400 V class, can exceed 600 V).
 - **Too small:** Delta ASD-A3-0221-E fails DRV-01. The ASD-A3-0721-E works but is more than twice the
   MK21 current.
+- **Not continued for now:** DGSMARTWIN AKS-4D52AECAB (CNY 3,600, FOB Shenzhen). No loop rate in
+  writing, and the documents are not clear and mostly in Chinese. See the
+  [log of 2026-11-09](log/2026-11-09_dgsmartwin-answers-and-stop.md).
 - **Israeli link:** Dynamikwell is a copy of the Servotronix CDHD manual. The Akribis CASD series looks like a Servotronix CDHD with an Akribis label.
 - **Encoder converters**, for drives that read SSI or BiSS-C:
   [iC-Haus iC-NQC](https://img.ozdisan.com/ETicaret_Dosya/507359_163230.pdf) (board USD 87),
