@@ -197,3 +197,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-06 | [Forcer water cooling: O-ring seal, printed cooling block, hose route, cable clamp](2026-11-06_forcer-water-cooling-seal-and-block.md) | cad, engineering, purchasing |  |
 | 2026-11-09 | [CE assessment updated for the Machinery Regulation](2026-11-09_ce-assessment-for-the-machinery-regulation.md) | engineering, safety |  |
 | 2026-11-09 | [Payload against speed table, damper overload, and earthing of the carriage](2026-11-09_payload-speed-table-and-earthing.md) | engineering, safety |  |
+| 2026-11-09 | [DGSMARTWIN answers on the AKS drive and the SA32 encoder. We stop with them for now](2026-11-09_dgsmartwin-answers-and-stop.md) | engineering, purchasing |  |
