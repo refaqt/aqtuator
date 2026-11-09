@@ -156,6 +156,7 @@ package MotorDriveRequirements {
         attribute hasSafeStop1 : Boolean;                    // SS1: braked stop, then STO; built in or with the maker's safety relay
         attribute hasBrakeOutput : Boolean;                  // controls a holding brake that the customer adds
         attribute hasDynamicBraking : Boolean;               // shorts the motor phases to brake on a fault
+        attribute locksParametersWithPassword : Boolean;     // speed, current and position limits locked by a password
     }
 
     // ---------------------------------------------------------------------
@@ -515,6 +516,21 @@ package MotorDriveRequirements {
                 and drive.hasBrakeOutput
                 and drive.hasDynamicBraking
             }
+        }
+
+        requirement def <'DRV-P6'> ParameterLock {
+            doc /*
+             * The drive can lock its settings with a password: at least the
+             * speed limit, the peak current limit, the overspeed trip and
+             * the software position limits.
+             *
+             * Why: we set the speed limit for each customer from the payload
+             * table in docs/compact-stage-ce-assessment.md, and lock it. The
+             * Machinery Regulation (EU) 2023/1230 also asks that safety
+             * settings are protected against changes.
+             */
+            subject drive : MotorDrive;
+            require constraint { drive.locksParametersWithPassword }
         }
     }
 

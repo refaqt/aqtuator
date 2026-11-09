@@ -25,7 +25,9 @@ This assessment follows the **Machinery Regulation (EU) 2023/1230**, which appli
   dampers per end take 12 J per stroke, 18 J in an emergency. At 3 m/s (STG-09) and 5 kg, the
   carriage brings 22.5 J. If the motor keeps pushing during the crash, it adds about 4.7 J. With
   no safety-rated limit switch, the dampers are the last protection. Choose: a lower declared top
-  speed, a declared largest payload, stronger end stops, or a combination. **This is a design
+  speed, a declared largest payload, stronger end stops, or a combination. A table gives the
+  speed limit to lock in the drive for each payload: see
+  [Largest payload against the speed limit](#largest-payload-against-the-speed-limit). **This is a design
   limit, not only a text for the customer**: see
   [Payload and top speed are design limits](#payload-and-top-speed-are-design-limits).
 - **The limit switches are removed, and that is acceptable for safety.** The RSF read head has no
@@ -126,43 +128,114 @@ means an injury that heals. **Low** means a small injury or only damage to the s
 | H4 | The carriage falls when power is off | Only if the stage is mounted vertically or on a slope. The linear motor has no brake | High | Nothing | State "horizontal mounting only" in the instructions and on the label. For other positions the customer adds a brake or a holding device. A drive with a brake output (DRV-P5) makes this easy |
 | H5 | Magnet attraction: crushed fingers | When the carriage is lifted off or put on the base. The MK21 forcer pulls on the magnet tracks with 963 N. Steel tools jump onto the tracks | High | Nothing | Assembly and service steps: lower the carriage along the guide rails only, never by hand onto the magnets. Consider a simple mounting aid (two threaded jacking screws, or a plastic spacer). Warning sign "magnetic field" (ISO 7010 W006) on the base |
 | H6 | Magnetic field: medical implants and data | Near the open magnet tracks, mainly during service and shipping | High for people with a pacemaker | Nothing | Warning sign (ISO 7010 P007 "no access for people with pacemakers") and a text in the instructions. Check the air transport rule for magnetised material before shipping by air |
-| H7 | Electric shock | Motor cable and plug (bus about 325 V DC). Also when the carriage is pushed by hand: the motor makes 53.4 V rms per m/s at its open plug | High | The motor cable runs through a channel in the bottom carriage | A protective earth point on the base, with a symbol (IEC 60417-5019), and a written way to bond the forcer and the base to earth. A motor cable rated for constant flexing, with its earth wire. Strain relief at the forcer and at the base. Instructions: never open the motor plug while the carriage moves, wait for the drive's bus discharge time |
+| H7 | Electric shock | Motor cable and plug (bus about 325 V DC). Also when the carriage is pushed by hand: the motor makes 53.4 V rms per m/s at its open plug | High | The motor cable runs through a channel in the bottom carriage | A protective earth point on the base, with a symbol (IEC 60417-5019). The carriage is earthed through the forcer and the earth wire of the motor cable: see [Earthing of the carriage](#earthing-of-the-carriage). A motor cable rated for constant flexing, with its earth wire. Strain relief at the forcer and at the base. Instructions: never open the motor plug while the carriage moves, wait for the drive's bus discharge time |
 | H8 | Hot surface | The coil may reach 120 °C. The forcer sits under the carriage | Low to medium | The PTC sensor in the coil, read by the drive (DRV-06), and the motor current protection (DRV-03) | Measure the outside temperature of the carriage at the continuous force. If it goes above the touch limit of EN ISO 13732-1, add a "hot surface" sign (ISO 7010 W017) |
 | H9 | Cuts from the steel seal strip | 0.15 mm strip under 270 N pull. During assembly and service | Medium | Six M4 screws hold it. The preload screw sets the pull | Instructions for fitting and removing the strip: gloves, release the pull with the preload screw first. Deburr the strip edges |
 | H10 | Parts come loose from a crash | Damper, read head, payload screws, after an impact of about 53 g | Low to medium | The read head is rated for 1000 m/s² (about 100 g) shock in the RSF manual. The damper study gave about 53 g at 2 m/s | Use thread locker on the damper and payload screws. Tell the customer to check the dampers after every crash, and to change them as ACE asks |
 | H11 | Unexpected start | A fault or a set-point at power-on | High (same as H1) | Depends on the drive | The customer's stop circuit uses STO (DRV-12). The drive must not start the motor by itself after power returns. Put this in the instructions |
-| H13 | Water near live parts | The forcer is water cooled. The cooling channel is closed by the forcer face and an O-ring. A printed block with hose barbs connects the hoses. A leak can wet the motor (about 325 V) and the cable opening | High (electric shock if the carriage is not earthed), medium for the motor | The O-ring seal, and a leak test of the block at 2 bar for 1 hour before the motor is powered (decision of 2026-11-06) | Earth the carriage, not only the base (H7). Make the leak test a fixed step of assembly, and write it down for each stage. In the instructions: the allowed water pressure and temperature, a check for leaks before the motor is powered, and switch off the drive before the hoses are taken off. The customer's supply must have a residual current device that suits a servo drive (ask the drive maker which type) |
+| H13 | Water near live parts | The forcer is water cooled. The cooling channel is closed by the forcer face and an O-ring. A printed block with hose barbs connects the hoses. A leak can wet the motor (about 325 V) and the cable opening | High (electric shock if the carriage is not earthed), medium for the motor | The O-ring seal, and a leak test of the block at 2 bar for 1 hour before the motor is powered (decision of 2026-11-06) | Earth the carriage, not only the base (H7, [Earthing of the carriage](#earthing-of-the-carriage)). Make the leak test a fixed step of assembly, and write it down for each stage. In the instructions: the allowed water pressure and temperature, a check for leaks before the motor is powered, and switch off the drive before the hoses are taken off. The customer's supply must have a residual current device that suits a servo drive (ask the drive maker which type) |
 | H12 | Wrong use of the encoder signal for safety | An integrator uses the RSF position for a safety function | High | Nothing | RSF says the MC 15 may only be used for length and position information. State in the instructions that the stage has no safety-rated position or speed signal |
+
+### Earthing of the carriage
+
+The carriage carries the forcer, and it is close to the motor cable and the cooling water. So it
+needs a protective earth, like the base (EN 60204-1).
+
+**The carriage can be earthed through the forcer, under three conditions:**
+
+1. **The earth wire of the motor cable must connect to the metal body of the forcer.** The MAXWELL
+   MK2 data sheet does not show the cable wiring. This is **not confirmed**: ask MAXWELL (through
+   Saho) for the wiring of the MK21 cable and how the earth wire is connected.
+2. **Bare metal contact between the forcer and the bottom carriage.** Anodising insulates. If the
+   bottom carriage is anodised, leave the forcer face bare, or use toothed lock washers under the
+   forcer screws, or add a short earth wire from the forcer to the carriage.
+3. **The same between the top and the bottom carriage.** The top carriage needs its own good
+   contact, in the same way.
+
+**The guide blocks are not an earth path.** The balls run in grease, so the contact is not
+reliable. The base therefore needs its own earth terminal to the earth of the machine.
+
+**After assembly, measure the earth path** from the top carriage to the earth terminal of the
+drive (continuity test, EN 60204-1). Write the result in the assembly record of each stage.
 
 ### End stop energy
 
 The kinetic energy is E = ½ m v². The motor can also push while the damper is pressed in: at most
-670 N over the 7 mm stroke, about 4.7 J.
-
-| Moving mass (carriage and payload) | 2.0 m/s | 2.2 m/s | 3.0 m/s |
-| --- | --- | --- | --- |
-| 5 kg | 10.0 J | 12.1 J | 22.5 J |
-| 5 kg, motor still pushing | 14.7 J | 16.8 J | 27.2 J |
+670 N over the 7 mm stroke, about 4.7 J. If the drive's peak current is locked at 5.9 A (512 N),
+the push is about 3.6 J.
 
 Two TA17-7 per end take 12 J per stroke and 18 J in an emergency (ACE TUBUS TA instructions, page
-3, as in the [end bumper study](log/2026-10-21_space-for-end-bumpers.md)).
+3, as in the [end bumper study](log/2026-10-21_space-for-end-bumpers.md)). A runaway crash is a
+rare event, so the emergency rating applies. After such a crash the dampers must be checked or
+changed.
 
-- **At 3 m/s the dampers are too weak, even without motor push.**
-- **The drive must stop the motor on the crash**, so the motor does not push. A tight following
-  error limit does this (DRV-13). But it is not safety rated, so the emergency rating must hold
-  the motor push as well.
-- **The 5 kg is an assumption.** The moving mass without payload must come from the CAD, and the
-  largest payload must be fixed in the specification.
+**Moving mass without payload: about 4.2 kg (estimate).** Bottom carriage 1.19 kg and top
+carriage 1.13 kg (CAD volumes, aluminium at 2.7 g/cm³), forcer 1.10 kg, four guide blocks
+0.60 kg, read head 0.05 kg, dampers 0.02 kg, screws, cables, hoses and water about 0.15 kg. Weigh
+the first real carriage and correct the table if needed.
 
-Options, best first:
+#### Largest payload against the speed limit
 
-1. **Declare the safe limits in the specification and the instructions**: largest payload and top
-   speed so that ½ m v² + 4.7 J ≤ 18 J. At 5 kg this is about 2.3 m/s. Higher speed is only
-   allowed with a smaller payload.
-2. **Stronger end stops.** The end bumper study shows the TA21-9 and the TA22-10 do not fit the
-   20.4 mm free height today. A different damper type or a changed base would be needed.
-3. **A speed limit near the ends in the drive.** This helps in normal use. It is not a safety
-   function, because the encoder is not safety rated (H12). It does not replace option 1.
+The speed to set in the drive is the highest safe impact speed divided by 1.1. A runaway carriage
+can reach the overspeed trip of the drive before the drive stops it, and that trip is usually 10 %
+above the speed limit.
+
+| Payload on the carriage | Speed limit to set (motor push 670 N) | Speed limit to set (peak current locked at 5.9 A) |
+| --- | --- | --- |
+| 0 kg | 2.28 m/s | 2.37 m/s |
+| 1 kg | 2.05 m/s | 2.13 m/s |
+| 2 kg | 1.88 m/s | 1.95 m/s |
+| 3 kg | 1.74 m/s | 1.81 m/s |
+| 5 kg | 1.54 m/s | 1.61 m/s |
+| 7.5 kg | 1.37 m/s | 1.42 m/s |
+| 10 kg | 1.24 m/s | 1.29 m/s |
+| 15 kg | 1.07 m/s | 1.11 m/s |
+| 20 kg | 0.95 m/s | 0.99 m/s |
+
+- **3 m/s (STG-09) is not possible at any payload with today's dampers.** It needs stronger end
+  stops. The end bumper study shows the TA21-9 and the TA22-10 do not fit the 20.4 mm free height
+  today, so a different damper type or a changed base would be needed.
+- **How to use the table.** Take the row at or above the customer's real payload, including
+  grippers, fixtures and a second stage on top. Set and lock in the drive: the speed limit, the
+  peak current limit (5.9 A for the right column), and the overspeed trip (at most 10 % above
+  the limit). Write the payload and the speed on the type plate and in the delivery record.
+- **The locked speed limit is a protective measure, not a safety function.** The encoder is not
+  safety rated (H12), so the end stops must still hold the worst case. The table is made so that
+  they do.
+- **The drive must also stop the motor on the crash** (following error, DRV-13). That makes the
+  real impact milder than the table assumes.
+
+### What happens when the dampers are overloaded
+
+If the carriage hits the end faster than the table allows, the damper is pressed in fully (7 mm).
+The rest of the energy then goes into a hard metal hit between the damper body and the base end
+wall. For a very short time the force becomes much higher than the 2.6 kN of a normal damper
+stop.
+
+**Damage to the stage (likely):**
+
+- the damper is destroyed;
+- dents in the carriage end and the end wall;
+- the M4 damper screws or square nuts tear out;
+- ball marks on the guide blocks and rails;
+- the read head gets a shock above its 1000 m/s² rating;
+- the forcer screws and the payload screws take a large load.
+
+**Danger to people (possible, but limited):** parts can be thrown off. Most likely is the
+customer's payload, if it is not held well, or pieces of a broken damper or screw. The energy
+above the damper rating is about 5 to 10 J, about the same as a 1 kg part falling from 1 m. That
+can hurt an eye or a hand. It cannot break a proper guard.
+
+**A hand at the end of the travel is crushed in any case** (H1), with or without overload. People
+are protected by the guards and by Safe Torque Off, not by the dampers.
+
+**Conclusion:** an overload is mainly damage to the stage, with a small danger from thrown parts.
+The measures:
+
+1. the locked speed table above;
+2. the payload held with screws and thread locker, as the assembly instructions say;
+3. guards that can hold small thrown parts (the customer's job, stated in the instructions);
+4. an inspection of the dampers, the guides and the read head after every crash.
 
 ### Payload and top speed are design limits
 
@@ -213,6 +286,7 @@ The drive is not chosen yet. These features are now in
 | DRV-13 | Stops the motor on a following error, on an encoder fault, and at software position limits | Hard | Replaces the limit switches (H3), and stops the motor push in a crash (H2) |
 | DRV-P4 | STO at SIL 3 and PL e | Preferred | A customer whose risk assessment asks for PL e can use the drive directly |
 | DRV-P5 | Safe Stop 1 (braked stop, then STO), a brake output, and dynamic braking (the drive shorts the motor phases on a fault) | Preferred | Shorter stops, less coasting into the dampers (H2), and a brake for vertical use (H4) |
+| DRV-P6 | The settings can be locked with a password: speed limit, peak current, overspeed trip, software position limits | Preferred | We lock the speed limit for each customer from the payload table. The Regulation asks to protect safety settings against changes |
 
 Already required for the motor: a current limit with a thermal model (DRV-03) and the PTC input
 (DRV-06). They protect the motor from overheating (H8).
@@ -340,8 +414,14 @@ a first engineering check, not legal advice.
   `modules/stoq/modules/maxwell/modules/mk2-mover/bom/parts.csv` (attraction 963 N, back EMF
   53.4 V rms per m/s, 670 N for 0.5 s) and `MaxwellMK21` in `motor-drive.sysml`.
 - Damper ratings: ACE TUBUS TA operating and mounting instructions 21_22_0019, page 3, as cited in
-  `docs/log/2026-10-21_space-for-end-bumpers.md`. Motor push: 670 N × 0.007 m = 4.69 J.
-  Allowed speed at 5 kg: v = √(2 × (18 − 4.7) / 5) = 2.31 m/s.
+  `docs/log/2026-10-21_space-for-end-bumpers.md`. Motor push: 670 N × 0.007 m = 4.69 J, or
+  512 N × 0.007 m = 3.58 J.
+- Speed table: v_impact = √(2 × (18 J − push) / (4.24 kg + payload)); speed limit = v_impact / 1.1.
+  Moving mass 4.24 kg = 1.19 + 1.13 + 1.10 + 0.60 + 0.05 + 0.02 + 0.15 kg. Carriage volumes
+  441 660 mm³ and 417 780 mm³ from `cad/parts/*/carriage-*.fingerprint.json`. Guide block 150 g
+  from `modules/stoq/modules/hiwin/` parts list. Forcer 1.1 kg from the MAXWELL data sheet.
+- MAXWELL MK2 data sheet (`modules/stoq/modules/maxwell/docs/datasheets/`): no cable wiring or
+  earth connection given.
 - RSF AK MC 15 mounting instructions
   (`modules/stoq/modules/rsf/modules/mc15-readhead/docs/datasheets/rsf-ak-mc15-mounting-instructions.pdf`):
   section 1.2 (EMC 2014/30/EU, RoHS 2011/65/EU), section 1.4 (intended use: length and path

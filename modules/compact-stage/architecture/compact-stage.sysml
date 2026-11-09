@@ -1117,9 +1117,12 @@ package CompactStage {
              * limiting force of the motor over the damper stroke: 670 N times
              * 7 mm, about 4.7 J for two ACE TA17-7.
              *
-             * Today two TA17-7 per end give 18 J in an emergency. With a
-             * 5 kg moving mass this allows about 2.3 m/s, not 3 m/s. See
-             * docs/compact-stage-ce-assessment.md.
+             * Today two TA17-7 per end give 18 J in an emergency. The moving
+             * mass without payload is about 4.2 kg (estimate from the CAD;
+             * weigh it). With no payload this allows a speed limit of about
+             * 2.3 m/s, not 3 m/s. The table "Largest payload against the
+             * speed limit" in docs/compact-stage-ce-assessment.md gives the
+             * speed limit to set and lock in the drive for each payload.
              */
             subject stage : CompactStage;
             require constraint {
