@@ -31,48 +31,104 @@
       "volume": 8048.57
     },
     "Body": {
-      "area": 6636.08,
+      "area": 6630.17,
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
-        33.117,
-        4.90015,
-        2.527
+        33.1123,
+        4.90237,
+        2.0825
       ],
       "counts": {
-        "edges": 186,
-        "faces": 73,
+        "edges": 217,
+        "faces": 78,
         "shells": 1,
         "solids": 1,
-        "verts": 106
+        "verts": 131
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 8486.68
+      "volume": 8489.77
+    },
+    "Drop_a": {
+      "area": 5801.68,
+      "bbox": [
+        -19.35,
+        -10.85,
+        -4.1,
+        89.15,
+        21.0,
+        4.9
+      ],
+      "closed": true,
+      "com": [
+        34.0178,
+        5.14727,
+        2.08897
+      ],
+      "counts": {
+        "edges": 132,
+        "faces": 53,
+        "shells": 1,
+        "solids": 1,
+        "verts": 80
+      },
+      "label": "Drop_a",
+      "type": "PartDesign::SubtractiveCylinder",
+      "valid": true,
+      "volume": 8984.96
+    },
+    "Drop_b": {
+      "area": 6446.84,
+      "bbox": [
+        -19.35,
+        -10.85,
+        -4.1,
+        89.15,
+        21.0,
+        4.9
+      ],
+      "closed": true,
+      "com": [
+        33.9023,
+        4.98938,
+        2.05619
+      ],
+      "counts": {
+        "edges": 180,
+        "faces": 70,
+        "shells": 1,
+        "solids": 1,
+        "verts": 104
+      },
+      "label": "Drop_b",
+      "type": "PartDesign::SubtractiveCylinder",
+      "valid": true,
+      "volume": 8663.48
     },
     "FittingSketch": {
       "area": 0.0,
       "bbox": [
         89.15,
         3.0169,
-        0.50423,
+        -2.09577,
         89.15,
         19.0,
-        5.49577
+        2.89577
       ],
       "closed": true,
       "com": [
         89.15,
         11.0,
-        3.0
+        0.4
       ],
       "counts": {
         "edges": 2,
@@ -87,52 +143,52 @@
       "volume": 0.0
     },
     "FittingThreads": {
-      "area": 6530.83,
+      "area": 6551.24,
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
-        33.1487,
-        4.90405,
-        2.52425
+        33.0841,
+        4.89634,
+        2.08261
       ],
       "counts": {
-        "edges": 166,
-        "faces": 65,
+        "edges": 202,
+        "faces": 72,
         "shells": 1,
         "solids": 1,
-        "verts": 94
+        "verts": 122
       },
       "label": "FittingThreads",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 8542.2
+      "volume": 8531.41
     },
     "GrooveCore_a": {
       "area": 5100.29,
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
         33.8821,
         5.00841,
-        2.55185
+        2.11021
       ],
       "counts": {
         "edges": 72,
-        "faces": 29,
+        "faces": 28,
         "shells": 1,
         "solids": 1,
         "verts": 48
@@ -147,20 +203,20 @@
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
         34.1384,
         5.01859,
-        2.56183
+        2.11778
       ],
       "counts": {
         "edges": 81,
-        "faces": 35,
+        "faces": 34,
         "shells": 1,
         "solids": 1,
         "verts": 54
@@ -175,20 +231,20 @@
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
         33.9465,
         5.02322,
-        2.55481
+        2.11252
       ],
       "counts": {
         "edges": 69,
-        "faces": 27,
+        "faces": 26,
         "shells": 1,
         "solids": 1,
         "verts": 46
@@ -203,20 +259,20 @@
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
         34.2097,
         5.01862,
-        2.56483
+        2.12011
       ],
       "counts": {
         "edges": 78,
-        "faces": 33,
+        "faces": 32,
         "shells": 1,
         "solids": 1,
         "verts": 52
@@ -231,20 +287,20 @@
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
         33.6899,
         4.96425,
-        2.54301
+        2.10332
       ],
       "counts": {
         "edges": 66,
-        "faces": 25,
+        "faces": 24,
         "shells": 1,
         "solids": 1,
         "verts": 44
@@ -259,16 +315,16 @@
       "bbox": [
         80.15,
         1.0,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        -1.5
+        -4.1
       ],
       "closed": true,
       "com": [
         84.65,
         11.0,
-        -1.5
+        -4.1
       ],
       "counts": {
         "edges": 8,
@@ -311,32 +367,32 @@
       "volume": 0.0
     },
     "Part": {
-      "area": 6636.08,
+      "area": 6630.17,
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
-        33.117,
-        4.90015,
-        2.527
+        33.1123,
+        4.90237,
+        2.0825
       ],
       "counts": {
-        "edges": 186,
-        "faces": 73,
+        "edges": 217,
+        "faces": 78,
         "shells": 1,
         "solids": 1,
-        "verts": 106
+        "verts": 131
       },
       "label": "cooling-block",
       "type": "App::Part",
       "valid": true,
-      "volume": 8486.68
+      "volume": 8489.77
     },
     "PassageProfile_a": {
       "area": 0.0,
@@ -455,20 +511,20 @@
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
         34.0484,
         5.14748,
-        2.54804
+        2.08848
       ],
       "counts": {
         "edges": 122,
-        "faces": 50,
+        "faces": 49,
         "shells": 1,
         "solids": 1,
         "verts": 73
@@ -479,52 +535,52 @@
       "volume": 8990.45
     },
     "Passage_b": {
-      "area": 6424.02,
+      "area": 6435.43,
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
-        33.9659,
-        4.99699,
-        2.53151
+        33.9341,
+        4.99668,
+        2.0557
       ],
       "counts": {
-        "edges": 160,
-        "faces": 63,
+        "edges": 170,
+        "faces": 66,
         "shells": 1,
         "solids": 1,
-        "verts": 90
+        "verts": 97
       },
       "label": "Passage_b",
       "type": "PartDesign::SubtractivePipe",
       "valid": true,
-      "volume": 8674.46
+      "volume": 8668.97
     },
     "Riser_a": {
       "area": 5119.13,
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
         33.926,
         5.01851,
-        2.55291
+        2.11082
       ],
       "counts": {
         "edges": 75,
-        "faces": 31,
+        "faces": 30,
         "shells": 1,
         "solids": 1,
         "verts": 50
@@ -539,20 +595,20 @@
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
         34.187,
         5.01861,
-        2.56291
+        2.11841
       ],
       "counts": {
         "edges": 84,
-        "faces": 37,
+        "faces": 36,
         "shells": 1,
         "solids": 1,
         "verts": 56
@@ -568,22 +624,22 @@
         -1.25,
         -1.24089,
         0.0,
-        76.25,
+        71.25,
         12.2409,
         0.0
       ],
       "closed": true,
       "com": [
-        38.0,
-        5.5,
+        27.3333,
+        3.66667,
         0.0
       ],
       "counts": {
-        "edges": 4,
+        "edges": 3,
         "faces": 0,
         "shells": 0,
         "solids": 0,
-        "verts": 4
+        "verts": 3
       },
       "label": "ScrewSketch",
       "type": "Sketcher::SketchObject",
@@ -591,47 +647,44 @@
       "volume": 0.0
     },
     "ScrewThreads": {
-      "area": 6636.08,
+      "area": 6630.17,
       "bbox": [
         -19.35,
         -10.85,
-        -1.5,
+        -4.1,
         89.15,
         21.0,
-        7.5
+        4.9
       ],
       "closed": true,
       "com": [
-        33.117,
-        4.90015,
-        2.527
+        33.1123,
+        4.90237,
+        2.0825
       ],
       "counts": {
-        "edges": 186,
-        "faces": 73,
+        "edges": 217,
+        "faces": 78,
         "shells": 1,
         "solids": 1,
-        "verts": 106
+        "verts": 131
       },
       "label": "ScrewThreads",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 8486.68
+      "volume": 8489.77
     }
   },
   "parametric": {
-    "audited": 23,
+    "audited": 25,
     "objects": {}
   },
   "params": {
     "bearing_d_out": 6.0,
     "bearing_flange_w": 0.8,
     "cable_clamp_l": 10.0,
-    "cable_clamp_r": 1.5,
     "cable_clamp_side_gap": 0.1,
-    "cable_clamp_side_wall": 1.2,
     "cable_clamp_squeeze": 0.2,
-    "cable_clamp_wall": 0.8,
     "carriage_edge_x": 208.0,
     "carriage_side_bottom_z": 16.5,
     "carriage_top_z": 27.5,
@@ -654,9 +707,8 @@
     "cooling_pocket_end_x": 212.0,
     "cooling_screw_a_x": 128.0,
     "cooling_screw_b_x": 140.0,
-    "cooling_screw_c_x": 193.0,
+    "cooling_screw_c_x": 198.0,
     "cooling_screw_d": 2.5,
-    "cooling_screw_d_x": 203.0,
     "cooling_tap_depth": 4.0,
     "fit_head_l": 9.0,
     "fit_head_r": 2.0,
@@ -675,8 +727,8 @@
     "motor_cable_d": 8.3,
     "motor_cable_dip": 5.0,
     "motor_cable_dip_angle": 45.0,
+    "motor_cable_dip_start": 5.0,
     "motor_cable_y": 114.5,
-    "motor_clamp_x": 199.0,
     "motor_slot_depth": 9.0,
     "motor_slot_w": 9.0,
     "port_a_x": 118.35,
@@ -689,7 +741,8 @@
     "port_oring_id": 5.0,
     "read_head_cable_d": 3.7,
     "read_head_cable_y": 124.0,
-    "read_head_clamp_x": 170.0,
+    "read_head_slot_depth": 5.0,
+    "read_head_slot_w": 6.0,
     "roller_d": 10.0,
     "roller_l": 20.0,
     "screw_recess_depth": 0.3,
@@ -705,6 +758,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "cooling-block.FCStd": "1fa6c2e328a1f447532b6fc2d3ddea02f14c406c5728bdc16dc9415559989e99"
+    "cooling-block.FCStd": "315f3b862aff5c3d387b21c526ce5e6c718957e45ed16c6dedc20ad9607976d1"
   }
 }

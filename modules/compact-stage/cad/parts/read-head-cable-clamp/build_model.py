@@ -1,11 +1,12 @@
 """Rebuild the printed read head cable clamp from `cad/params/default.csv`, in the GUI or headless.
 
-Two printed halves hold the read head cable where it leaves carriage-bottom. Each half
-has a half-round groove as wide as the cable. The halves lie in a pocket in the
-top of carriage-bottom, and carriage-top closes the pocket. When both halves
-touch the cable, the stack is `cable_clamp_squeeze` higher than the pocket is
-deep. So carriage-top presses the halves onto the cable and holds it. Each
-half is `cable_clamp_side_gap` smaller than the pocket on every side.
+Two printed halves sit in the cable slot of carriage-bottom, flush with the
+side face, and hold the read head cable where it leaves the carriage. They close the
+end of the slot, so almost no dirt can get in. Each half has a half-round
+groove as wide as the cable, and square corners. When both halves touch the
+cable, the stack is `cable_clamp_squeeze` higher than the slot is deep. So
+carriage-top presses the halves onto the cable and holds it. Each half is
+`cable_clamp_side_gap` narrower than the slot on each side.
 
 Every size is an expression on the `Params` sheet, which this script fills
 from the module parameters. Print both halves in a tough material; they carry
@@ -49,7 +50,7 @@ P = "Params."
 
 #: The axes and origin of this part.
 AXES = (
-    "Origin on the floor of the clamp pocket in carriage-bottom, under the "
+    "Origin on the floor of the cable slot in carriage-bottom, under the "
     "cable axis, in the middle of the clamp length. X along the cable "
     "(the same way as carriage-bottom X), Z up."
 )
@@ -58,12 +59,12 @@ CABLE = "read_head_cable_d"
 
 DERIVED = {
     "cable_r": f"={CABLE} / 2",
-    "half_h": f"={CABLE} / 2 + cable_clamp_wall",
-    "half_w": f"={CABLE} / 2 + cable_clamp_side_wall",
+    "half_h": "=(read_head_slot_depth + cable_clamp_squeeze) / 2",
+    "half_w": "=read_head_slot_w / 2 - cable_clamp_side_gap",
     "half_l": "=cable_clamp_l / 2",
 }
 
-USED = (CABLE, "cable_clamp_l", "cable_clamp_wall", "cable_clamp_side_wall", "cable_clamp_r")
+USED = (CABLE, "cable_clamp_l", "cable_clamp_side_gap", "cable_clamp_squeeze", "read_head_slot_w", "read_head_slot_depth")
 
 
 def _fill_sheet(doc, params):
@@ -90,8 +91,7 @@ def _plane(b, role):
 
 
 def _half(doc, container, label, z_expr, v):
-    """One half: a block with rounded corners and a half-round groove for the cable."""
-    import Sketcher
+    """One half: a block with square corners and a half-round groove for the cable."""
 
     b = body(doc, label, container=container)
     for obj in list(b.Group):
@@ -104,9 +104,8 @@ def _half(doc, container, label, z_expr, v):
     if z_expr:
         bind(sk, ".AttachmentOffset.Base.z", z_expr)
     hl, hw = v("half_l"), v("half_w")
-    co.rounded_rect(sk, -hl, hl, -hw, hw, v("cable_clamp_r"), {
-        "x0": f"-{P}half_l", "x1": f"{P}half_l", "y0": f"-{P}half_w", "y1": f"{P}half_w",
-        "r": f"{P}cable_clamp_r"})
+    co.rect(sk, -hl, hl, -hw, hw, {
+        "x0": f"-{P}half_l", "x1": f"{P}half_l", "y0": f"-{P}half_w", "y1": f"{P}half_w"})
     pad = b.newObject("PartDesign::Pad", f"{label}Pad")
     pad.Profile = sk
     bind(pad, "Length", f"{P}half_h")

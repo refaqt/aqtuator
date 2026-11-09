@@ -271,3 +271,25 @@ def passage_spine(sk, v, side):
          f"{P}carriage_edge_x + {P}cooling_block_gap + {P}fit_head_l - {P}fit_tap_depth"
          f" + {P}cooling_passage_d / 2")
     return ids
+
+
+def rect(sk, x0, x1, y0, y1, e):
+    """A rectangle with square corners. `e` maps 'x0','x1','y0','y1' to expressions."""
+    import Part
+    import Sketcher
+    from FreeCAD import Vector as V
+
+    pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+    ids = [sk.addGeometry(Part.LineSegment(V(*pts[i], 0), V(*pts[(i + 1) % 4], 0)), False)
+           for i in range(4)]
+    for i in range(4):
+        sk.addConstraint(Sketcher.Constraint("Coincident", ids[i], 2, ids[(i + 1) % 4], 1))
+    sk.addConstraint(Sketcher.Constraint("Horizontal", ids[0]))
+    sk.addConstraint(Sketcher.Constraint("Horizontal", ids[2]))
+    sk.addConstraint(Sketcher.Constraint("Vertical", ids[1]))
+    sk.addConstraint(Sketcher.Constraint("Vertical", ids[3]))
+    _dim(sk, Sketcher.Constraint("DistanceX", -1, 1, ids[0], 1, x0), e["x0"])
+    _dim(sk, Sketcher.Constraint("DistanceX", -1, 1, ids[0], 2, x1), e["x1"])
+    _dim(sk, Sketcher.Constraint("DistanceY", -1, 1, ids[0], 1, y0), e["y0"])
+    _dim(sk, Sketcher.Constraint("DistanceY", -1, 1, ids[2], 1, y1), e["y1"])
+    return ids

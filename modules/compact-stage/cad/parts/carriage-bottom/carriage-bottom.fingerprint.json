@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 119030.0,
+      "area": 118933.0,
       "bbox": [
         0.0,
         0.0,
@@ -14,24 +14,24 @@
       ],
       "closed": true,
       "com": [
-        104.322,
-        84.0942,
-        16.2983
+        104.383,
+        84.1126,
+        16.3016
       ],
       "counts": {
-        "edges": 1210,
-        "faces": 430,
+        "edges": 1128,
+        "faces": 401,
         "shells": 1,
         "solids": 1,
-        "verts": 799
+        "verts": 746
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 442437.0
+      "volume": 442726.0
     },
     "CableDip": {
-      "area": 118985.0,
+      "area": 118933.0,
       "bbox": [
         0.0,
         0.0,
@@ -42,36 +42,36 @@
       ],
       "closed": true,
       "com": [
-        104.374,
-        84.1118,
-        16.3013
+        104.383,
+        84.1126,
+        16.3016
       ],
       "counts": {
-        "edges": 1138,
-        "faces": 406,
+        "edges": 1128,
+        "faces": 401,
         "shells": 1,
         "solids": 1,
-        "verts": 751
+        "verts": 746
       },
       "label": "CableDip (motor cable dip under the cooling block)",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 442687.0
+      "volume": 442726.0
     },
     "CableDipSketch": {
       "area": 0.0,
       "bbox": [
-        158.819,
-        101.067,
+        155.44,
+        97.5174,
         18.5,
-        186.75,
-        119.0,
+        188.197,
+        118.85,
         18.5
       ],
       "closed": true,
       "com": [
-        173.702,
-        111.0,
+        171.279,
+        109.22,
         18.5
       ],
       "counts": {
@@ -81,7 +81,7 @@
         "solids": 0,
         "verts": 4
       },
-      "label": "CableDipSketch (motor cable dip under the cooling block)",
+      "label": "CableDipSketch (motor cable dip, rounded ends)",
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
@@ -339,7 +339,7 @@
       "volume": 450546.0
     },
     "HoleCD": {
-      "area": 118855.0,
+      "area": 118767.0,
       "bbox": [
         0.0,
         0.0,
@@ -350,21 +350,21 @@
       ],
       "closed": true,
       "com": [
-        104.546,
-        84.1779,
-        16.3006
+        104.557,
+        84.1798,
+        16.3009
       ],
       "counts": {
-        "edges": 1124,
-        "faces": 401,
+        "edges": 1119,
+        "faces": 398,
         "shells": 1,
         "solids": 1,
-        "verts": 743
+        "verts": 740
       },
-      "label": "HoleCD (block screws near the side face)",
+      "label": "HoleCD (block screw near the side face)",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 443750.0
+      "volume": 443801.0
     },
     "Mirrored": {
       "area": 94461.8,
@@ -393,62 +393,6 @@
       "type": "PartDesign::Mirrored",
       "valid": true,
       "volume": 824063.0
-    },
-    "MotorClampPocket": {
-      "area": 119026.0,
-      "bbox": [
-        0.0,
-        0.0,
-        0.0,
-        208.0,
-        180.0,
-        27.5
-      ],
-      "closed": true,
-      "com": [
-        104.325,
-        84.0959,
-        16.2986
-      ],
-      "counts": {
-        "edges": 1174,
-        "faces": 418,
-        "shells": 1,
-        "solids": 1,
-        "verts": 775
-      },
-      "label": "MotorClampPocket (Motor cable clamp pocket)",
-      "type": "PartDesign::Pocket",
-      "valid": true,
-      "volume": 442455.0
-    },
-    "MotorClampSketch": {
-      "area": 0.0,
-      "bbox": [
-        193.9,
-        109.05,
-        27.5,
-        204.1,
-        119.95,
-        27.5
-      ],
-      "closed": true,
-      "com": [
-        199.0,
-        114.5,
-        27.5
-      ],
-      "counts": {
-        "edges": 8,
-        "faces": 0,
-        "shells": 0,
-        "solids": 0,
-        "verts": 8
-      },
-      "label": "MotorClampSketch (Motor cable clamp pocket)",
-      "type": "Sketcher::SketchObject",
-      "valid": true,
-      "volume": 0.0
     },
     "Pad": {
       "area": 96220.0,
@@ -507,7 +451,7 @@
       "volume": 821827.0
     },
     "Part": {
-      "area": 119030.0,
+      "area": 118933.0,
       "bbox": [
         0.0,
         0.0,
@@ -518,21 +462,21 @@
       ],
       "closed": true,
       "com": [
-        104.322,
-        84.0942,
-        16.2983
+        104.383,
+        84.1126,
+        16.3016
       ],
       "counts": {
-        "edges": 1210,
-        "faces": 430,
+        "edges": 1128,
+        "faces": 401,
         "shells": 1,
         "solids": 1,
-        "verts": 799
+        "verts": 746
       },
       "label": "carriage_bottom",
       "type": "App::Part",
       "valid": true,
-      "volume": 442437.0
+      "volume": 442726.0
     },
     "Pocket": {
       "area": 93010.8,
@@ -1206,64 +1150,8 @@
       "valid": true,
       "volume": 450528.0
     },
-    "ReadHeadClampPocket": {
-      "area": 119030.0,
-      "bbox": [
-        0.0,
-        0.0,
-        0.0,
-        208.0,
-        180.0,
-        27.5
-      ],
-      "closed": true,
-      "com": [
-        104.322,
-        84.0942,
-        16.2983
-      ],
-      "counts": {
-        "edges": 1210,
-        "faces": 430,
-        "shells": 1,
-        "solids": 1,
-        "verts": 799
-      },
-      "label": "ReadHeadClampPocket (ReadHead cable clamp pocket)",
-      "type": "PartDesign::Pocket",
-      "valid": true,
-      "volume": 442437.0
-    },
-    "ReadHeadClampSketch": {
-      "area": 0.0,
-      "bbox": [
-        164.9,
-        120.85,
-        27.5,
-        175.1,
-        127.15,
-        27.5
-      ],
-      "closed": true,
-      "com": [
-        170.0,
-        124.0,
-        27.5
-      ],
-      "counts": {
-        "edges": 8,
-        "faces": 0,
-        "shells": 0,
-        "solids": 0,
-        "verts": 8
-      },
-      "label": "ReadHeadClampSketch (ReadHead cable clamp pocket)",
-      "type": "Sketcher::SketchObject",
-      "valid": true,
-      "volume": 0.0
-    },
     "RecessCD": {
-      "area": 118764.0,
+      "area": 118718.0,
       "bbox": [
         0.0,
         0.0,
@@ -1274,21 +1162,21 @@
       ],
       "closed": true,
       "com": [
-        104.542,
-        84.1773,
-        16.3006
+        104.555,
+        84.1795,
+        16.3009
       ],
       "counts": {
-        "edges": 1134,
-        "faces": 404,
+        "edges": 1122,
+        "faces": 399,
         "shells": 1,
         "solids": 1,
-        "verts": 749
+        "verts": 742
       },
       "label": "RecessCD (screw head recess near the side face)",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 443731.0
+      "volume": 443792.0
     },
     "Sk_Hole006": {
       "area": 0.0,
@@ -1349,11 +1237,11 @@
     "Sk_HoleCD": {
       "area": 0.0,
       "bbox": [
-        191.65,
-        99.1598,
+        196.65,
+        99.15,
         16.8,
-        204.35,
-        101.84,
+        199.35,
+        101.85,
         16.8
       ],
       "closed": true,
@@ -1363,13 +1251,13 @@
         16.8
       ],
       "counts": {
-        "edges": 2,
+        "edges": 1,
         "faces": 0,
         "shells": 0,
         "solids": 0,
-        "verts": 2
+        "verts": 1
       },
-      "label": "Sk_HoleCD (block screws near the side face)",
+      "label": "Sk_HoleCD (block screw near the side face)",
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
@@ -2245,11 +2133,11 @@
     "Sketch_RecessCD": {
       "area": 0.0,
       "bbox": [
-        189.9,
-        97.4226,
+        194.9,
+        97.4,
         16.5,
-        206.1,
-        103.577,
+        201.1,
+        103.6,
         16.5
       ],
       "closed": true,
@@ -2259,11 +2147,11 @@
         16.5
       ],
       "counts": {
-        "edges": 2,
+        "edges": 1,
         "faces": 0,
         "shells": 0,
         "solids": 0,
-        "verts": 2
+        "verts": 1
       },
       "label": "Sketch_RecessCD (screw head recess near the side face)",
       "type": "Sketcher::SketchObject",
@@ -2272,7 +2160,7 @@
     }
   },
   "parametric": {
-    "audited": 97,
+    "audited": 93,
     "objects": {
       "Hole": {
         "label": "Hole",
@@ -2732,11 +2620,8 @@
     "bearing_d_out": 6.0,
     "bearing_flange_w": 0.8,
     "cable_clamp_l": 10.0,
-    "cable_clamp_r": 1.5,
     "cable_clamp_side_gap": 0.1,
-    "cable_clamp_side_wall": 1.2,
     "cable_clamp_squeeze": 0.2,
-    "cable_clamp_wall": 0.8,
     "carriage_edge_x": 208.0,
     "carriage_side_bottom_z": 16.5,
     "carriage_top_z": 27.5,
@@ -2759,9 +2644,8 @@
     "cooling_pocket_end_x": 212.0,
     "cooling_screw_a_x": 128.0,
     "cooling_screw_b_x": 140.0,
-    "cooling_screw_c_x": 193.0,
+    "cooling_screw_c_x": 198.0,
     "cooling_screw_d": 2.5,
-    "cooling_screw_d_x": 203.0,
     "cooling_tap_depth": 4.0,
     "fit_head_l": 9.0,
     "fit_head_r": 2.0,
@@ -2780,8 +2664,8 @@
     "motor_cable_d": 8.3,
     "motor_cable_dip": 5.0,
     "motor_cable_dip_angle": 45.0,
+    "motor_cable_dip_start": 5.0,
     "motor_cable_y": 114.5,
-    "motor_clamp_x": 199.0,
     "motor_slot_depth": 9.0,
     "motor_slot_w": 9.0,
     "port_a_x": 118.35,
@@ -2794,7 +2678,8 @@
     "port_oring_id": 5.0,
     "read_head_cable_d": 3.7,
     "read_head_cable_y": 124.0,
-    "read_head_clamp_x": 170.0,
+    "read_head_slot_depth": 5.0,
+    "read_head_slot_w": 6.0,
     "roller_d": 10.0,
     "roller_l": 20.0,
     "screw_recess_depth": 0.3,
@@ -2810,6 +2695,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "67df899fcb31cd12f2d0acf4a0f6a5b12ba0597b962e3a0c6119317c6e78c8b8"
+    "carriage-bottom.FCStd": "50bfc5baa2c57be6962e61a188c314efe53fd50749bab0fbc2b3434940e97074"
   }
 }

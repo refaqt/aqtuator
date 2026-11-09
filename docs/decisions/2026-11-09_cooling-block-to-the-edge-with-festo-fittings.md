@@ -32,14 +32,21 @@ outside the side face held the hoses and both cables. Niels asked for:
   does not fit between them. The fitting also has an internal 2.5 mm hex, so a hex key tightens
   it (1 Nm). The M5 threads are tapped 5 mm deep in the print, with 2 mm of resin around each.
 - **Motor cable.** The cable must stay under the block where it comes up. The motor cable slot is
-  5 mm deeper in the first 45° of its bend, so the cable can stay low there.
-- **Screws.** Four ISO 10642 M2.5 screws from below: M2.5 × 6 in the wide part, M2.5 × 8 near
-  the side face.
-- **Cable clamps.** One clamp for each cable, in a pocket in the top of carriage-bottom. Each
-  clamp has two printed halves with a half-round groove. With both halves on the cable, the stack
-  is 0.2 mm higher than the pocket is deep. Each half has 0.1 mm of room to the pocket on every
-  side. The read head clamp sits at x = 170 mm, away from the motor cable bend, so the two
-  pockets do not meet.
+  5 mm deeper over 45° of its bend, starting 5° into the bend. Both ends of the deeper part are
+  half circles of the slot width, so a mill can cut it. The start keeps 2.8 mm away from the step
+  in the underside of carriage-bottom.
+- **Print base.** The top of the block and of the head is one flat face. The block is printed
+  with that face on the build plate. The head hangs down outside the side face, so the M5
+  threads sit 2.6 mm lower than the passages. A short drop in the head joins them.
+- **Screws.** Three ISO 10642 M2.5 screws from below: two M2.5 × 6 in the wide part, one
+  M2.5 × 8 near the side face (at x = 198 mm). After review, the two screws near the side face
+  became one.
+- **Cable clamps.** One clamp for each cable, in the end of its own cable slot, flush with the
+  side face, so it also closes the slot against dirt. Each clamp has two printed halves with a
+  half-round groove and square corners. Each half is 0.1 mm narrower than the slot on each side
+  (motor 8.8 mm, read head 5.8 mm). With both halves on the cable, the stack is 0.2 mm higher
+  than the slot is deep. Beside the motor cable, only 0.25 mm of resin is left at the split line;
+  Niels accepted this.
 
 ## Consequences
 
@@ -47,5 +54,5 @@ outside the side face held the hoses and both cables. Niels asked for:
   the same parameters in `modules/compact-stage/cad/params/default.csv`.
 - The hose slot and the two M3 holes for the old side clamp are gone from carriage-bottom.
 - The motor cable must lie low in its bend, under the block. Check this with the real cable.
-- The two screws near the side face have only 2.3 mm of thread in the resin. Test the pull-out
+- The screw near the side face has only 2.3 mm of thread in the resin. Test the pull-out
   strength on the first print.

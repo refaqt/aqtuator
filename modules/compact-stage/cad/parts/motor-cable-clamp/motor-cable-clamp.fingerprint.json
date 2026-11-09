@@ -3,104 +3,104 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 395.494,
+      "area": 342.23,
       "bbox": [
         -5.0,
-        -5.35,
+        -4.4,
         0.0,
         5.0,
-        5.35,
-        4.95
+        4.4,
+        4.6
       ],
       "closed": true,
       "com": [
-        1.11916e-09,
-        -1.07128e-09,
-        1.70144
+        0.0,
+        0.0,
+        1.21464
       ],
       "counts": {
-        "edges": 30,
-        "faces": 12,
+        "edges": 18,
+        "faces": 8,
         "shells": 1,
         "solids": 1,
-        "verts": 20
+        "verts": 12
       },
       "label": "Lower",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 249.568
+      "volume": 134.27
     },
     "Body001": {
-      "area": 395.494,
+      "area": 342.23,
       "bbox": [
         -5.0,
-        -5.35,
-        4.95,
+        -4.4,
+        4.6,
         5.0,
-        5.35,
-        9.9
+        4.4,
+        9.2
       ],
       "closed": true,
       "com": [
-        -4.59695e-09,
-        4.16516e-09,
-        8.19856
+        0.0,
+        0.0,
+        7.98536
       ],
       "counts": {
-        "edges": 30,
-        "faces": 12,
+        "edges": 18,
+        "faces": 8,
         "shells": 1,
         "solids": 1,
-        "verts": 20
+        "verts": 12
       },
       "label": "Upper",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 249.568
+      "volume": 134.27
     },
     "LowerGroove": {
-      "area": 395.494,
+      "area": 342.23,
       "bbox": [
         -5.0,
-        -5.35,
+        -4.4,
         0.0,
         5.0,
-        5.35,
-        4.95
+        4.4,
+        4.6
       ],
       "closed": true,
       "com": [
-        1.11916e-09,
-        -1.07128e-09,
-        1.70144
+        0.0,
+        0.0,
+        1.21464
       ],
       "counts": {
-        "edges": 30,
-        "faces": 12,
+        "edges": 18,
+        "faces": 8,
         "shells": 1,
         "solids": 1,
-        "verts": 20
+        "verts": 12
       },
       "label": "LowerGroove",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 249.568
+      "volume": 134.27
     },
     "LowerGrooveSketch": {
       "area": 0.0,
       "bbox": [
         0.0,
         -4.15,
-        0.8,
+        0.45,
         0.0,
         4.15,
-        9.1
+        8.75
       ],
       "closed": true,
       "com": [
         0.0,
         0.0,
-        4.95
+        4.6
       ],
       "counts": {
         "edges": 1,
@@ -118,10 +118,10 @@
       "area": 0.0,
       "bbox": [
         -5.0,
-        -5.35,
+        -4.4,
         0.0,
         5.0,
-        5.35,
+        4.4,
         0.0
       ],
       "closed": true,
@@ -131,11 +131,11 @@
         0.0
       ],
       "counts": {
-        "edges": 8,
+        "edges": 4,
         "faces": 0,
         "shells": 0,
         "solids": 0,
-        "verts": 8
+        "verts": 4
       },
       "label": "LowerOutline",
       "type": "Sketcher::SketchObject",
@@ -143,104 +143,104 @@
       "volume": 0.0
     },
     "LowerPad": {
-      "area": 402.32,
+      "area": 348.96,
       "bbox": [
         -5.0,
-        -5.35,
+        -4.4,
         0.0,
         5.0,
-        5.35,
-        4.95
+        4.4,
+        4.6
       ],
       "closed": true,
       "com": [
         0.0,
         0.0,
-        2.475
+        2.3
       ],
       "counts": {
-        "edges": 24,
-        "faces": 10,
+        "edges": 12,
+        "faces": 6,
         "shells": 1,
         "solids": 1,
-        "verts": 16
+        "verts": 8
       },
       "label": "LowerPad",
       "type": "PartDesign::Pad",
       "valid": true,
-      "volume": 520.089
+      "volume": 404.8
     },
     "Part": {
-      "area": 790.988,
+      "area": 684.46,
       "bbox": [
         -5.0,
-        -5.35,
+        -4.4,
         0.0,
         5.0,
-        5.35,
-        9.9
+        4.4,
+        9.2
       ],
       "closed": true,
       "com": [
-        -1.73889e-09,
-        1.55604e-09,
-        4.95
+        0.0,
+        0.0,
+        4.6
       ],
       "counts": {
-        "edges": 60,
-        "faces": 24,
+        "edges": 36,
+        "faces": 16,
         "shells": 2,
         "solids": 2,
-        "verts": 40
+        "verts": 24
       },
       "label": "motor-cable-clamp",
       "type": "App::Part",
       "valid": true,
-      "volume": 499.135
+      "volume": 268.539
     },
     "UpperGroove": {
-      "area": 395.494,
+      "area": 342.23,
       "bbox": [
         -5.0,
-        -5.35,
-        4.95,
+        -4.4,
+        4.6,
         5.0,
-        5.35,
-        9.9
+        4.4,
+        9.2
       ],
       "closed": true,
       "com": [
-        -4.59695e-09,
-        4.16516e-09,
-        8.19856
+        0.0,
+        0.0,
+        7.98536
       ],
       "counts": {
-        "edges": 30,
-        "faces": 12,
+        "edges": 18,
+        "faces": 8,
         "shells": 1,
         "solids": 1,
-        "verts": 20
+        "verts": 12
       },
       "label": "UpperGroove",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 249.568
+      "volume": 134.27
     },
     "UpperGrooveSketch": {
       "area": 0.0,
       "bbox": [
         0.0,
         -4.15,
-        0.8,
+        0.45,
         0.0,
         4.15,
-        9.1
+        8.75
       ],
       "closed": true,
       "com": [
         0.0,
         0.0,
-        4.95
+        4.6
       ],
       "counts": {
         "edges": 1,
@@ -258,24 +258,24 @@
       "area": 0.0,
       "bbox": [
         -5.0,
-        -5.35,
-        4.95,
+        -4.4,
+        4.6,
         5.0,
-        5.35,
-        4.95
+        4.4,
+        4.6
       ],
       "closed": true,
       "com": [
         0.0,
         0.0,
-        4.95
+        4.6
       ],
       "counts": {
-        "edges": 8,
+        "edges": 4,
         "faces": 0,
         "shells": 0,
         "solids": 0,
-        "verts": 8
+        "verts": 4
       },
       "label": "UpperOutline",
       "type": "Sketcher::SketchObject",
@@ -283,32 +283,32 @@
       "volume": 0.0
     },
     "UpperPad": {
-      "area": 402.32,
+      "area": 348.96,
       "bbox": [
         -5.0,
-        -5.35,
-        4.95,
+        -4.4,
+        4.6,
         5.0,
-        5.35,
-        9.9
+        4.4,
+        9.2
       ],
       "closed": true,
       "com": [
         0.0,
         0.0,
-        7.425
+        6.9
       ],
       "counts": {
-        "edges": 24,
-        "faces": 10,
+        "edges": 12,
+        "faces": 6,
         "shells": 1,
         "solids": 1,
-        "verts": 16
+        "verts": 8
       },
       "label": "UpperPad",
       "type": "PartDesign::Pad",
       "valid": true,
-      "volume": 520.089
+      "volume": 404.8
     }
   },
   "parametric": {
@@ -319,11 +319,8 @@
     "bearing_d_out": 6.0,
     "bearing_flange_w": 0.8,
     "cable_clamp_l": 10.0,
-    "cable_clamp_r": 1.5,
     "cable_clamp_side_gap": 0.1,
-    "cable_clamp_side_wall": 1.2,
     "cable_clamp_squeeze": 0.2,
-    "cable_clamp_wall": 0.8,
     "carriage_edge_x": 208.0,
     "carriage_side_bottom_z": 16.5,
     "carriage_top_z": 27.5,
@@ -346,9 +343,8 @@
     "cooling_pocket_end_x": 212.0,
     "cooling_screw_a_x": 128.0,
     "cooling_screw_b_x": 140.0,
-    "cooling_screw_c_x": 193.0,
+    "cooling_screw_c_x": 198.0,
     "cooling_screw_d": 2.5,
-    "cooling_screw_d_x": 203.0,
     "cooling_tap_depth": 4.0,
     "fit_head_l": 9.0,
     "fit_head_r": 2.0,
@@ -367,8 +363,8 @@
     "motor_cable_d": 8.3,
     "motor_cable_dip": 5.0,
     "motor_cable_dip_angle": 45.0,
+    "motor_cable_dip_start": 5.0,
     "motor_cable_y": 114.5,
-    "motor_clamp_x": 199.0,
     "motor_slot_depth": 9.0,
     "motor_slot_w": 9.0,
     "port_a_x": 118.35,
@@ -381,7 +377,8 @@
     "port_oring_id": 5.0,
     "read_head_cable_d": 3.7,
     "read_head_cable_y": 124.0,
-    "read_head_clamp_x": 170.0,
+    "read_head_slot_depth": 5.0,
+    "read_head_slot_w": 6.0,
     "roller_d": 10.0,
     "roller_l": 20.0,
     "screw_recess_depth": 0.3,
@@ -397,6 +394,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "motor-cable-clamp.FCStd": "090e089e7fa25445bda2baaf0a5473c630d0b0a9f9825e29d7755075007baa6d"
+    "motor-cable-clamp.FCStd": "779882c90a4320286b546744144b349a1a139ced6b04d83db16de340eac313e6"
   }
 }

@@ -107,3 +107,26 @@ rounded rectangle shape, which a round model cannot show.
 1. Niels reviews the design in FreeCAD.
 2. Print the block and the clamps. Leak test the block at 2 bar for 1 hour before the motor is
    powered.
+
+## Review fixes (same day)
+
+Niels Bosmans reviewed the design and found five problems. All are fixed.
+
+- **Parts did not load.** The assembly uses the new parts from the parts library, but the new
+  library version was not recorded in this repository. The session start put the library folder
+  back on the old version, which does not have them. The new version is now recorded, and all six
+  parts load.
+- **Flat print base.** The top of the block and its head is now one flat face. The head hangs
+  down, and the M5 threads moved 2.6 mm down. A short drop in each passage joins them.
+- **Screws near the side face.** The two countersunk holes there became one, at x = 198 mm. The
+  block has three screws now.
+- **Cable clamps.** The clamps now sit in the existing cable slots, flush with the side face, with
+  square corners and 0.1 mm of room on each side. The extra clamp pockets are gone. I had read
+  "0.1 mm of space on each side of the cable pocket" as a new, wider pocket. That was wrong.
+- **Cable dip.** The deeper part of the motor cable slot had straight ends with sharp corners
+  that no mill can cut. Its ends are now half circles of the slot width. It starts 5° into the
+  bend, so its end stays 2.8 mm away from the step in the underside.
+
+The rule "design for the process: corner radii for milling, tool access, a flat print face, take
+sizes from the existing slot" is now in the shared FreeCAD skill (refaqt/refaqt-agents#20).
+

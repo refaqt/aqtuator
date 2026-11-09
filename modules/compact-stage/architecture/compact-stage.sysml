@@ -458,11 +458,12 @@ package CompactStage {
          * the cooling channel and an arm with smooth bends to the side face.
          * The arm crosses over the motor cable where the cable comes up.
          * Two ports go from the pocket floor into the channel. A 5 x 1.5
-         * NBR 70 O-ring in the bottom of the block seals each port. Four
+         * NBR 70 O-ring in the bottom of the block seals each port. Three
          * countersunk M2.5 screws come up from below, through
          * carriage-bottom, and are tapped into the block: two in the wide
-         * part, two near the side face. All four sit on the centre line of
-         * the block.
+         * part, one near the side face. All three sit on the centre line of
+         * the block.  The motor cable slot is deeper under the arm, with
+         * rounded ends, so the cable stays low there.
          *
          * In the CAD, the frame IF_cooling_block sits on the pocket floor,
          * on the axis of screw A (Hole006). Z points up, X and Y as in
@@ -471,23 +472,24 @@ package CompactStage {
          */
         attribute portCount : Natural = 2;
         attribute portDiameter : LengthValue = 2.5 [mm];
-        attribute screwCount : Natural = 4;
+        attribute screwCount : Natural = 3;
         attribute pocketDepth : LengthValue = 5 [mm];
         attribute armWidth : LengthValue = 12 [mm];
     }
 
     port def CableClampInterface_v2 {
         doc /*
-         * A pocket in the top of carriage-bottom where a cable leaves the
-         * carriage. Two printed halves with a half-round groove hold the
-         * cable in it. Carriage-top closes the pocket. The stack of both
-         * halves and the cable is 0.2 mm higher than the pocket is deep, so
-         * carriage-top presses the cable. Each half is 0.1 mm smaller than
-         * the pocket on every side. One for the motor cable, one for the
-         * read head cable.
+         * The end of a cable slot in the top of carriage-bottom, at the
+         * side face. Two printed halves with a half-round groove hold the
+         * cable there and close the slot end, so almost no dirt gets in.
+         * Carriage-top closes the slot. The stack of both halves and the
+         * cable is 0.2 mm higher than the slot is deep, so carriage-top
+         * presses the cable. Each half is 0.1 mm narrower than the slot on
+         * each side, and ends flush with the side face. One for the motor
+         * cable, one for the read head cable.
          *
          * In the CAD, the frames IF_motor_cable_clamp and
-         * IF_read_head_cable_clamp sit on the pocket floor, under the cable
+         * IF_read_head_cable_clamp sit on the slot floor, under the cable
          * axis, in the middle of the clamp length. They join the frame
          * IF_carriage of each clamp.
          */
@@ -908,8 +910,9 @@ package CompactStage {
 
     part def CableClamp {
         doc /*
-         * A printed cable clamp in two halves, in a pocket in the top of
-         * carriage-bottom. Carriage-top presses the halves onto the cable.
+         * A printed cable clamp in two halves with square corners, in the
+         * end of a cable slot of carriage-bottom. Carriage-top presses the
+         * halves onto the cable.
          * CAD: cad/parts/motor-cable-clamp/ and
          * cad/parts/read-head-cable-clamp/.
          */

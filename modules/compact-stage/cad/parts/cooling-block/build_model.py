@@ -15,9 +15,9 @@ Seals:
 * Each fitting has its own sealing ring under its hex. The end face of the
   head is flat for it.
 
-Four countersunk M2.5 screws come up from below through carriage-bottom and
-pull the block onto the pocket floor: two in the wide part, two near the side
-face. All four sit on the centre line of the block.
+Three countersunk M2.5 screws come up from below through carriage-bottom and
+pull the block onto the pocket floor: two in the wide part, one near the side
+face. All three sit on the centre line of the block.
 
 The block is a chain of PartDesign features. Every sketch is fully
 constrained, and every size is an expression on the `Params` sheet, which
@@ -26,9 +26,12 @@ carriage-bottom coordinates: their attachment offset moves them to the block
 origin. The outline is the same function as the pocket in carriage-bottom
 (`cooling_outline.py`), smaller by `cooling_block_gap`.
 
-Print it in SLA resin (for example a tough resin), bottom face down. The
-passages inside are closed, so a resin print is needed: an FDM print is not
-water-tight. Tap the four M2.5 holes and the two M5 holes in the resin.
+Print it in SLA resin (for example a tough resin), with the top face on the
+build plate: the top of the block and of the head is one flat face. The head
+hangs down outside the side face, so the M5 threads sit lower than the
+passages; a short drop in the head joins them. The passages inside are
+closed, so a resin print is needed: an FDM print is not water-tight. Tap the
+three M2.5 holes and the two M5 holes in the resin.
 
 Run headless with:
 
@@ -86,6 +89,7 @@ DERIVED = {
     "head_x1": "=carriage_edge_x + cooling_block_gap + fit_head_l",
     "head_half_w": "=fit_pitch / 2 + fit_thread_d / 2 + fit_wall",
     "head_half_h": "=fit_thread_d / 2 + fit_wall",
+    "fit_z": "=cooling_pocket_depth - cooling_block_top_gap - fit_thread_d / 2 - fit_wall",
 }
 
 #: Parameters the block reads. They are copied to its sheet.
@@ -96,7 +100,7 @@ USED = (
     "cooling_arm_bend_x", "cooling_arm_y", "cooling_arm_r", "cooling_end_r",
     "port_a_x", "port_a_y", "port_b_x", "port_b_y", "port_oring_id", "port_oring_cs",
     "port_groove_depth", "port_groove_w", "cooling_passage_d", "cooling_passage_offset",
-    "cooling_screw_a_x", "cooling_screw_b_x", "cooling_screw_c_x", "cooling_screw_d_x",
+    "cooling_screw_a_x", "cooling_screw_b_x", "cooling_screw_c_x",
     "cooling_tap_depth", "cooling_screw_d", "fit_thread_d", "fit_tap_depth", "fit_wall", "fit_pitch",
     "fit_head_l", "fit_head_r", "fit_jog_x0", "fit_jog_x1",
 )
@@ -180,10 +184,11 @@ def build(doc, params):
     pad.Profile = sk
     bind(pad, "Length", f"{P}block_t")
 
-    # The head outside the side face. It holds the two M5 threads with
-    # fit_wall of resin around each.
+    # The head outside the side face. Its top is flush with the top of the
+    # block (the print base), and it hangs down. It holds the two M5 threads
+    # with fit_wall of resin around each.
     sk = _sketch(block_body, "HeadSketch", _xy(block_body),
-                 (*to_carriage, f"{P}passage_z - {P}head_half_h"))
+                 (*to_carriage, f"{P}block_t - 2 * {P}head_half_h"))
     x0, x1 = v("head_x0"), v("head_x1")
     ya, hw = v("cooling_arm_y"), v("head_half_w")
     co.rounded_rect(sk, x0, x1, ya - hw, ya + hw, v("fit_head_r"), {
@@ -225,13 +230,22 @@ def build(doc, params):
         pipe.Spine = (spine, [f"Edge{i}" for i in range(1, 6)])
         pipe.Transition = "Round corner"
         spine.Visibility = prof.Visibility = False
+        # In the head, a short drop from the passage level down to the axis
+        # of the M5 thread, at the bottom face of the tapped hole.
+        drop = block_body.newObject("PartDesign::SubtractiveCylinder", f"Drop_{tag}")
+        bind(drop, "Radius", f"{P}cooling_passage_d / 2")
+        bind(drop, "Height", f"{P}passage_z - {P}fit_z")
+        bind(drop, "Placement.Base.x", f"{P}head_x1 - {P}fit_tap_depth - {P}ox")
+        bind(drop, "Placement.Base.y",
+             f"{P}cooling_arm_y {'-' if side < 0 else '+'} {P}fit_pitch / 2 - {P}oy")
+        bind(drop, "Placement.Base.z", f"{P}fit_z")
 
     # The M5 threads for the fittings, in the end face of the head.
     sk = _sketch(block_body, "FittingSketch", _yz(block_body),
                  (f"-{P}oy", None, f"{P}head_x1 - {P}ox"))
-    co.circles(sk, [((ya + s * v("fit_pitch") / 2, v("passage_z"), v("fit_thread_d") / 2),
+    co.circles(sk, [((ya + s * v("fit_pitch") / 2, v("fit_z"), v("fit_thread_d") / 2),
                      (f"{P}cooling_arm_y {'+' if s > 0 else '-'} {P}fit_pitch / 2",
-                      f"{P}passage_z", f"{P}fit_thread_d / 2")) for s in (-1, 1)])
+                      f"{P}fit_z", f"{P}fit_thread_d / 2")) for s in (-1, 1)])
     hole = block_body.newObject("PartDesign::Hole", "FittingThreads")
     hole.Profile = sk
     hole.Threaded = True
@@ -241,11 +255,11 @@ def build(doc, params):
     bind(hole, "Depth", f"{P}fit_tap_depth")
     hole.DrillPoint = "Flat"
 
-    # The four M2.5 threads for the screws from below, on the centre line.
+    # The three M2.5 threads for the screws from below, on the centre line.
     sk = _sketch(block_body, "ScrewSketch", _xy(block_body), (*to_carriage, None))
     pts = []
     for tag, y_alias in (("a", "cooling_arm_y0"), ("b", "cooling_arm_y0"),
-                         ("c", "cooling_arm_y"), ("d", "cooling_arm_y")):
+                         ("c", "cooling_arm_y")):
         pts.append(((v(f"cooling_screw_{tag}_x"), v(y_alias), v("cooling_screw_d") / 2),
                     (f"{P}cooling_screw_{tag}_x", f"{P}{y_alias}", f"{P}cooling_screw_d / 2")))
     co.circles(sk, pts)
@@ -270,7 +284,7 @@ def build(doc, params):
     # Z points out of the head, along the fitting.
     for tag, s in (("a", "-"), ("b", "+")):
         frame(doc, f"IF_fitting_{tag}", x=f"{P}head_x1 - {P}ox",
-                  y=f"{P}cooling_arm_y {s} {P}fit_pitch / 2 - {P}oy", z=f"{P}passage_z",
+                  y=f"{P}cooling_arm_y {s} {P}fit_pitch / 2 - {P}oy", z=f"{P}fit_z",
                   angle="90 deg", axis=(0, 1, 0), container=container)
     # One frame at each port, on the bottom face: the seat of its O-ring.
     for tag in ("a", "b"):
