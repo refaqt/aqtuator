@@ -29,7 +29,7 @@ assembly later.
 
 | File | What it holds |
 | --- | --- |
-| [`architecture/compact-stage.sysml`](architecture/compact-stage.sysml) | The stage requirements (`STG-01` to `STG-14`: size, accuracy, speed, force, load and the screw hole grid), the parts of the stage, and an interface for every pair of parts that touch. |
+| [`architecture/compact-stage.sysml`](architecture/compact-stage.sysml) | The stage requirements (`STG-01` to `STG-15`: size, accuracy, speed, force, load, the screw hole grid and the end stop energy), the parts of the stage, and an interface for every pair of parts that touch. |
 | [`architecture/motor-drive.sysml`](architecture/motor-drive.sysml) | Requirements for the servo drive of the MAXWELL MK21 linear motor (`DRV-01` to `DRV-13`, and `DRV-P1` to `DRV-P5`). `DRV-11` to `DRV-13` and `DRV-P4`, `DRV-P5` are the safety and CE requirements; see the [CE assessment](../../docs/compact-stage-ce-assessment.md). |
 
 Every pair of parts that touch has an interface: a `port def` in `compact-stage.sysml`, a port on

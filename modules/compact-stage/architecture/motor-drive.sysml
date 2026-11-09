@@ -423,11 +423,13 @@ package MotorDriveRequirements {
              * position error grows too large), on an encoder fault (lost
              * data or a bad check sum), and at software position limits.
              *
-             * The stage has no limit switches that the drive can read. The
-             * RSF AK MC 15 B read head gives only power and BiSS data on its
-             * connector. The software limits use the absolute position. The
-             * end stop dampers are the last protection. None of these is a
-             * safety function with a Performance Level.
+             * The stage has no limit switches. They were removed on
+             * 2026-11-09. The RSF AK MC 15 B read head has no limit signal:
+             * its connector gives only power and BiSS data, and Niels
+             * confirmed this. The software limits use the absolute position.
+             * The end stops are the last protection (STG-15 in
+             * compact-stage.sysml). None of these is a safety function with
+             * a Performance Level.
              */
             subject drive : MotorDrive;
             require constraint {

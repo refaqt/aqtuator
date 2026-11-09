@@ -1,7 +1,7 @@
 // The compact stage: its requirements, its parts, and the interfaces between
 // its parts.
 //
-// Requirements: STG-01 to STG-14 hold for the whole stage: its size, its
+// Requirements: STG-01 to STG-15 hold for the whole stage: its size, its
 // accuracy, its speed, its force and its load. A design review or a
 // measurement campaign can cite each one by its short name. The servo drive
 // has its own requirements in motor-drive.sysml.
@@ -726,6 +726,13 @@ package CompactStage {
         attribute lateralLoadCapacity : ForceValue;  // at the centre, in either direction
         attribute interfaceHolePitch : LengthValue;  // pitch of the screw holes at each interface
 
+        // End stops (STG-15). No numbers yet: the largest payload is not
+        // fixed, and the moving mass must come from the CAD.
+        attribute movingMass : MassValue;          // carriage, forcer and read head, without payload
+        attribute maxPayload : MassValue;          // largest payload on the carriage that we declare
+        attribute motorPushEnergy : EnergyValue;   // limiting force of the motor times the damper stroke
+        attribute endStopEnergy : EnergyValue;     // emergency rating of the end stops at one end, together
+
         part base : Base;
         part carriageBottom : CarriageBottom;
         part carriageTop : CarriageTop;
@@ -1095,6 +1102,31 @@ package CompactStage {
                 or stage.interfaceHolePitch == 80 [mm]
             }
         }
+
+        // --- Safety -------------------------------------------------------------
+
+        requirement def <'STG-15'> EndStopEnergy {
+            doc /*
+             * The end stops at each end stop the carriage with the largest
+             * payload at the top speed (STG-09), while the motor still
+             * pushes, within their emergency rating.
+             *
+             * The stage has no limit switches. The software limits of the
+             * drive are not a safety function, so the end stops are the last
+             * protection when the carriage runs away. The motor push is the
+             * limiting force of the motor over the damper stroke: 670 N times
+             * 7 mm, about 4.7 J for two ACE TA17-7.
+             *
+             * Today two TA17-7 per end give 18 J in an emergency. With a
+             * 5 kg moving mass this allows about 2.3 m/s, not 3 m/s. See
+             * docs/compact-stage-ce-assessment.md.
+             */
+            subject stage : CompactStage;
+            require constraint {
+                0.5 * (stage.movingMass + stage.maxPayload) * stage.maxSpeed * stage.maxSpeed
+                    + stage.motorPushEnergy <= stage.endStopEnergy
+            }
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -1122,5 +1154,6 @@ package CompactStage {
         requirement outputPower : Mandatory::OutputPower;
         requirement lateralLoad : Mandatory::LateralLoad;
         requirement interfaceGrid : Mandatory::InterfaceGrid;
+        requirement endStopEnergy : Mandatory::EndStopEnergy;
     }
 }

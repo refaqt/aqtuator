@@ -4,29 +4,40 @@ This is a first check of the compact stage design against the EU safety rules fo
 lists what must change or be added to make the stage safer, and which safety features the servo
 drive must have. It is not a full risk assessment, and it does not replace one.
 
-Date: 2026-11-06. Design state: the CAD and the architecture of
-[`modules/compact-stage/`](../modules/compact-stage/) on that date.
+Date: 2026-11-06, updated 2026-11-09. Design state: the CAD and the architecture of
+[`modules/compact-stage/`](../modules/compact-stage/) on 2026-11-09, with the water-cooled forcer.
+
+This assessment follows the **Machinery Regulation (EU) 2023/1230**, which applies from
+20 January 2027. The stage will be sold after that date.
 
 ## Short answer
 
-- **Legal route: the stage is "partly completed machinery".** A customer always builds it into a
-  larger setup. So the stage gets a Declaration of Incorporation and assembly instructions, not a
-  CE mark under the machinery rules. The customer makes the CE assessment of the whole machine.
-  The drive keeps its own CE mark. This holds also when we sell a drive with the stage, as long
-  as the customer connects and sets it up in their own machine.
-- **The rules change on 20 January 2027.** The Machinery Directive 2006/42/EC is then replaced by
-  the Machinery Regulation (EU) 2023/1230. A stage sold from that date must follow the new
-  Regulation. Verify the date and the new annex numbers with a specialist.
+- **Legal route: the stage is "partly completed machinery"** under the Machinery Regulation (EU)
+  2023/1230. A customer always builds it into a larger setup. So the stage gets technical
+  documentation, a Declaration of Incorporation and assembly instructions, not a CE mark under
+  the machinery rules. The customer makes the CE assessment of the whole machine. The drive keeps
+  its own CE mark. This holds also when we sell a drive with the stage, as long as the customer
+  connects and sets it up in their own machine.
+- **The Regulation replaces the Machinery Directive 2006/42/EC on 20 January 2027.** Everything
+  below is written for the Regulation. It also asks that safety settings in software are
+  protected against changes, so drive limits that we pre-set must be documented and locked.
 - **Most important design point: the end stops are too weak for the top speed.** The two TA17-7
   dampers per end take 12 J per stroke, 18 J in an emergency. At 3 m/s (STG-09) and 5 kg, the
   carriage brings 22.5 J. If the motor keeps pushing during the crash, it adds about 4.7 J. With
   no safety-rated limit switch, the dampers are the last protection. Choose: a lower declared top
-  speed, a declared largest payload, stronger end stops, or a combination.
-- **The RSF read head has no limit outputs.** Its own manual shows only power and the BiSS data
-  lines on the connector. The drive can stop at software position limits, from the absolute
-  position. That does the job of the old limit switches, but it is not a safety function. Before
-  we take the limit switches out of the parts list, please tell us where the read head limit
-  signal is described.
+  speed, a declared largest payload, stronger end stops, or a combination. **This is a design
+  limit, not only a text for the customer**: see
+  [Payload and top speed are design limits](#payload-and-top-speed-are-design-limits).
+- **The limit switches are removed, and that is acceptable for safety.** The RSF read head has no
+  limit signal (its own manual, and confirmed by Niels on 2026-11-06). The drive stops the
+  carriage at software position limits, from the absolute position. Limit switches were never a
+  safety function for people: guards and Safe Torque Off protect people. The dampers must hold
+  the worst case. See [Without limit switches](#without-limit-switches).
+- **The water-cooled forcer adds one danger**: water close to parts at about 325 V. The leak test
+  that is already planned, the protective earth of the carriage and a leak check in the
+  instructions cover it (H13).
+- **Safe Torque Off is the customer's main stop.** See
+  [When the STO must work, and how to make it compliant](#when-the-sto-must-work-and-how-to-make-it-compliant).
 - **None of your drive options passes all safety features yet in its own documents.** The Copley
   XEL fails: it has no certified Safe Torque Off. Delta ASDA-A3 has the best documented one. For
   the others, the Declaration of Conformity or the safety certificate is missing. See
@@ -53,12 +64,17 @@ customer every danger that is left and what they must do about it.
 
 ### Which law applies
 
-| Topic | Rule today | From 20 January 2027 |
-| --- | --- | --- |
-| The stage, built into a customer machine | Machinery Directive 2006/42/EC, as partly completed machinery: Declaration of Incorporation (Annex II B), assembly instructions (Annex VI), relevant technical documentation (Annex VII B) | Machinery Regulation (EU) 2023/1230, also for partly completed machinery. Annex numbers to be verified |
-| The drive | Its maker's CE mark: Low Voltage Directive 2014/35/EU, EMC Directive 2014/30/EU, RoHS Directive 2011/65/EU. The STO safety function falls under the machinery rules as a safety component | Same, with the new machinery Regulation for the safety function |
-| The encoder | RSF declares the EMC and RoHS directives in its mounting instructions | Same |
-| The motor | The motor maker's declaration. Ask MAXWELL (through Saho) for it | Same |
+| Topic | Rule from 20 January 2027 |
+| --- | --- |
+| The stage, built into a customer machine | Machinery Regulation (EU) 2023/1230, as partly completed machinery. We must: meet the essential health and safety requirements (Annex III) that apply to the stage; write the technical documentation (Annex IV, Part B); sign a Declaration of Incorporation (Annex V, Part B); and give assembly instructions (Annex XI). The Declaration and the instructions go with every stage. They may be in digital form |
+| The drive | Its maker's CE mark: Low Voltage Directive 2014/35/EU, EMC Directive 2014/30/EU, RoHS Directive 2011/65/EU. The STO safety function falls under the machinery rules as a safety function of the drive |
+| The encoder | RSF declares the EMC and RoHS directives in its mounting instructions |
+| The motor | The motor maker's declaration. Ask MAXWELL (through Saho) for it |
+
+The annex numbers come from summaries that agree with each other, including the
+[EUR-Lex summary](https://eur-lex.europa.eu/EN/legal-content/summary/machinery-safety-requirements.html).
+Check them in the full text on EUR-Lex before the technical file is final. Our network blocked
+the full text.
 
 Notes:
 
@@ -72,6 +88,18 @@ Notes:
 - **Partly completed machinery must still meet the essential safety requirements that we can
   meet.** The Declaration of Incorporation lists which ones we applied. The rest go to the
   customer through the assembly instructions.
+- **New in the Regulation: protection against changes ("corruption").** Safety settings in
+  software and parameters must be protected against changes by accident or on purpose. For us
+  this means: if we deliver a drive with pre-set limits (current, speed, software position
+  limits, following error), we write them down in the technical file and lock them with a
+  password.
+- **A big change by the customer can make them the manufacturer.** If a customer changes the
+  stage in a way we did not plan (a heavier payload, a higher speed, vertical mounting without a
+  brake), the Regulation can treat that as a substantial modification. The assembly instructions
+  must state the limits clearly, so this line is easy to see.
+- **Standards give a presumption of conformity only when they are listed in the Official Journal
+  under the Regulation.** Check the list for each standard below before the technical file is
+  final.
 
 ### Standards to use
 
@@ -94,7 +122,7 @@ means an injury that heals. **Low** means a small injury or only damage to the s
 | --- | --- | --- | --- | --- | --- |
 | H1 | Crushing of hands at the travel ends | Between the carriage ends and the base end walls, and between the carriage top and parts the customer adds. In operation and during set-up | High | Nothing on the stage. Guarding is left to the integrator | State in the instructions: the force (670 N for 0.5 s), the speed (3 m/s), the crush zones, and the stop distance with STO. Require guards and an STO stop circuit in the instructions. Put a crush warning sign (ISO 7010 W019 or W024) on both ends of the base |
 | H2 | Crash into the end stops | Carriage runs away (wrong set-point, tuning error, encoder fault) | Medium for people (parts fly off), high for the stage | Two ACE TA17-7 per end: 12 J per stroke, 18 J emergency. Enough for 5 kg at about 2.2 m/s | See [End stop energy](#end-stop-energy). Fix the largest payload and the declared top speed so the dampers hold the worst case. Or choose stronger end stops |
-| H3 | No hardware end of travel signal | The limit switches are being removed | Medium | Software limits in the drive, from the absolute position (DRV-13). The RSF head has no limit outputs | Set the software limits inside the damper contacts. The dampers must hold the worst case (H2). Keep the inductive switches only if a customer controller needs a hardware signal |
+| H3 | No hardware end of travel signal | The limit switches were removed on 2026-11-09. The RSF head has no limit signal | Low for people, medium for the stage | Software limits in the drive, from the absolute position (DRV-13) | Set the software limits inside the damper contacts. The dampers must hold the worst case (H2). See [Without limit switches](#without-limit-switches) |
 | H4 | The carriage falls when power is off | Only if the stage is mounted vertically or on a slope. The linear motor has no brake | High | Nothing | State "horizontal mounting only" in the instructions and on the label. For other positions the customer adds a brake or a holding device. A drive with a brake output (DRV-P5) makes this easy |
 | H5 | Magnet attraction: crushed fingers | When the carriage is lifted off or put on the base. The MK21 forcer pulls on the magnet tracks with 963 N. Steel tools jump onto the tracks | High | Nothing | Assembly and service steps: lower the carriage along the guide rails only, never by hand onto the magnets. Consider a simple mounting aid (two threaded jacking screws, or a plastic spacer). Warning sign "magnetic field" (ISO 7010 W006) on the base |
 | H6 | Magnetic field: medical implants and data | Near the open magnet tracks, mainly during service and shipping | High for people with a pacemaker | Nothing | Warning sign (ISO 7010 P007 "no access for people with pacemakers") and a text in the instructions. Check the air transport rule for magnetised material before shipping by air |
@@ -103,6 +131,7 @@ means an injury that heals. **Low** means a small injury or only damage to the s
 | H9 | Cuts from the steel seal strip | 0.15 mm strip under 270 N pull. During assembly and service | Medium | Six M4 screws hold it. The preload screw sets the pull | Instructions for fitting and removing the strip: gloves, release the pull with the preload screw first. Deburr the strip edges |
 | H10 | Parts come loose from a crash | Damper, read head, payload screws, after an impact of about 53 g | Low to medium | The read head is rated for 1000 m/s² (about 100 g) shock in the RSF manual. The damper study gave about 53 g at 2 m/s | Use thread locker on the damper and payload screws. Tell the customer to check the dampers after every crash, and to change them as ACE asks |
 | H11 | Unexpected start | A fault or a set-point at power-on | High (same as H1) | Depends on the drive | The customer's stop circuit uses STO (DRV-12). The drive must not start the motor by itself after power returns. Put this in the instructions |
+| H13 | Water near live parts | The forcer is water cooled. The cooling channel is closed by the forcer face and an O-ring. A printed block with hose barbs connects the hoses. A leak can wet the motor (about 325 V) and the cable opening | High (electric shock if the carriage is not earthed), medium for the motor | The O-ring seal, and a leak test of the block at 2 bar for 1 hour before the motor is powered (decision of 2026-11-06) | Earth the carriage, not only the base (H7). Make the leak test a fixed step of assembly, and write it down for each stage. In the instructions: the allowed water pressure and temperature, a check for leaks before the motor is powered, and switch off the drive before the hoses are taken off. The customer's supply must have a residual current device that suits a servo drive (ask the drive maker which type) |
 | H12 | Wrong use of the encoder signal for safety | An integrator uses the RSF position for a safety function | High | Nothing | RSF says the MC 15 may only be used for length and position information. State in the instructions that the stage has no safety-rated position or speed signal |
 
 ### End stop energy
@@ -134,6 +163,43 @@ Options, best first:
    20.4 mm free height today. A different damper type or a changed base would be needed.
 3. **A speed limit near the ends in the drive.** This helps in normal use. It is not a safety
    function, because the encoder is not safety rated (H12). It does not replace option 1.
+
+### Payload and top speed are design limits
+
+Telling the customer is not enough on its own. The risk assessment standard EN ISO 12100 sets a
+fixed order:
+
+1. **Safe design first.** We choose the largest payload and the top speed, and we make sure the
+   end stops can stop that worst case. The stage requirement STG-15 now holds this rule, and the
+   attribute `maxPayload` waits for a number.
+2. **Then protection.** If we deliver the drive, we pre-set its current limit, its speed limit and
+   its software position limits, and we lock them (see the protection against changes above).
+3. **Then information.** The limits go on the type plate, in the technical data and in the
+   assembly instructions.
+
+Information alone is only allowed for the danger that design and protection cannot remove. A
+customer who goes over the limits changes the stage beyond what we planned. The clear limits make
+that easy to see.
+
+### Without limit switches
+
+The RSF read head has no limit signal, so the two inductive switches are removed from the parts
+list. This is acceptable for safety, for these reasons:
+
+- **Limit switches protect the machine, not people.** A normal limit switch has no safety level
+  (no Performance Level). People are protected by the customer's guards and by Safe Torque Off.
+  That is the same with or without limit switches.
+- **Software limits do the same job.** The drive stops the carriage at a set position. With an
+  absolute encoder this works at once after power-on, without a homing run.
+- **The weak point is a position that is wrong but looks right**, for example when the scale
+  moved or was stuck on in the wrong place. A separate switch would catch that, software limits
+  do not. Then the carriage hits the dampers. So the dampers must hold the worst case (H2), and
+  the assembly instructions must include a check of the software limits after assembly and after
+  every change of the scale or the read head.
+- **The drive still stops on an encoder fault** (lost data or a bad check sum, DRV-13).
+
+If a customer controller needs a hardware end signal, the customer can add switches. The base
+has no fixed place for them now.
 
 ## Safety features the drive must have
 
@@ -196,12 +262,57 @@ What this means for the choice:
 - **No drive documents a limit switch signal from BiSS-C.** Software limits from the absolute
   position are the way to go.
 
+## When the STO must work, and how to make it compliant
+
+Safe Torque Off (STO) cuts the power that makes the motor push. It does not brake the carriage,
+and it does not cut the mains.
+
+### When it must work
+
+| Situation | What STO does | Standard |
+| --- | --- | --- |
+| Someone presses the emergency stop | Stop category 0: STO at once. Or stop category 1: a braked stop, then STO (Safe Stop 1) | EN ISO 13850, EN 60204-1 |
+| A guard door opens, or a light curtain is broken | The motor cannot push while a person can reach the carriage | EN ISO 14119, EN ISO 13855 |
+| A person works in the danger zone: set-up, loading a part, cleaning | Prevents an unexpected start. After a reset, the motor must not start by itself | EN ISO 14118 |
+| Electrical work on the motor, the cable or the drive | **STO is not enough.** The DC bus stays charged. Use the main switch, lock it, and wait for the discharge time | EN 60204-1 |
+
+**The stopping distance matters.** After STO alone, a linear motor coasts: it has no brake and
+little friction. At 3 m/s the carriage may run into the end stop. The guard distance of the
+customer (EN ISO 13855) depends on this time and distance. A braked stop first (Safe Stop 1)
+makes both much shorter. That is why DRV-P5 prefers it.
+
+### How to make it compliant
+
+The customer builds the stop circuit, because it belongs to their machine. The steps:
+
+1. **Set the required level.** The customer's risk assessment sets the required Performance
+   Level (PLr). We advise PL d, or PL e when people often work close to the moving carriage.
+2. **Use certified parts only.** An emergency stop button or a door switch, then a safety relay
+   or a safety controller, then the two STO inputs of the drive. Each part has its own safety
+   rating from its maker.
+3. **Wire it as the drive's safety manual says.** Two channels. The safety relay reads the
+   drive's STO feedback output (Delta needs this for PL e). A 24 V safety supply (PELV). The
+   wiring stays inside the cabinet, or is protected against short circuits.
+4. **Calculate the level of the whole chain** with EN ISO 13849-1, for example with the free tool
+   SISTEMA from the German institute IFA. The result must reach the PLr.
+5. **Validate it on the real machine** (EN ISO 13849-2). Test every stop function, measure the
+   stopping time and distance, and write it all down.
+6. **Test it again** at the interval in the drive's safety manual.
+
+What we give the customer, in the assembly instructions:
+
+- the drive's safety manual and its STO certificate (when we supply the drive),
+- the measured stopping time and distance of the stage, after STO and after Safe Stop 1, at the
+  top speed and the largest payload,
+- a suggested wiring diagram for the stop circuit,
+- our advice on the required level, and the reason for it.
+
 ## What to do next
 
-1. **Fix the payload and the top speed** (H2). Put the largest payload in the stage requirements,
-   and either lower STG-09 or plan stronger end stops.
-2. **Tell us where the read head limit signal is described** (H3). Until then the two limit
-   switches stay in the parts list.
+1. **Fix the payload and the top speed** (H2). Put the largest payload in `maxPayload` and check
+   STG-15. Either lower STG-09 or plan stronger end stops.
+2. **Measure the stopping distance** after STO and after a braked stop, once the drive is chosen.
+   The customer needs it for the guard design.
 3. **Choose the drive with DRV-11 to DRV-13 included.** Ask each maker in the quotation request
    for the EU Declaration of Conformity and the STO certificate.
 4. **Add to the CAD**: a protective earth point on the base, strain relief for the motor cable,
@@ -209,14 +320,17 @@ What this means for the choice:
 5. **Measure** the carriage surface temperature at the continuous force (H8).
 6. **Ask MAXWELL (through Saho)** for the Declaration of Conformity of the MK21 and the MK2
    magnet tracks, and for their advice on handling the magnets.
-7. **Write the technical file**: the full risk assessment (EN ISO 12100), the Declaration of
-   Incorporation, and the assembly instructions with every point from the table above.
+7. **Write the technical file** for the Regulation: the full risk assessment (EN ISO 12100), the
+   technical documentation (Annex IV, Part B), the Declaration of Incorporation (Annex V, Part B),
+   and the assembly instructions (Annex XI) with every point from the table above.
+8. **Make the cooling leak test a fixed assembly step** with a written record per stage (H13).
 
 ## When to get a human specialist
 
 Ask a machine safety consultant or a notified body (an official testing body) to check the full
-risk assessment and the Declaration of Incorporation before the first sale. Do this before
-20 January 2027 if possible, because the new Machinery Regulation then applies. This document is
+risk assessment, the Declaration of Incorporation and the assembly instructions before the first
+sale. Ask them also to confirm the annex numbers of the Regulation and the list of harmonised
+standards on that date. This document is
 a first engineering check, not legal advice.
 
 <details>
@@ -244,7 +358,13 @@ a first engineering check, not legal advice.
   [Elmo Gold Oboe installation guide](https://inelso.ru/upload//specs/MAN-G-OBOEIG-EC.pdf) p. 7, 12, 16;
   [Servotronix CDHD2S manual V1.12](https://e-motors.tech/wp-content/uploads/2024/07/CDHD2S-Manual-V1.12-20231101-en.pdf) p. 20, 29, 52, 91, 242;
   [Agito AGD155 product manual rev 3.4](https://agito-akribis.com/wp-content/uploads/2026/10/Agito-AGD155-Product-Manual-Rev.3.4.pdf) p. 17, 22, 30 to 33.
-- Limit switches: `SW-001` and `ELC-001` in `modules/compact-stage/bom/bom.csv`, left in place.
+- Limit switches: `SW-001` and `ELC-001` removed from `modules/compact-stage/bom/bom.csv` on
+  2026-11-09. They appear elsewhere only in old log entries.
+- Regulation (EU) 2023/1230: application date and annexes from the
+  [EUR-Lex summary](https://eur-lex.europa.eu/EN/legal-content/summary/machinery-safety-requirements.html),
+  [EU-OSHA](https://osha.europa.eu/es/legislation/directive/regulation-20231230eu-machinery) and
+  published Declarations of Incorporation. The full EUR-Lex text was blocked by the network.
+- Water cooling: `docs/decisions/2026-11-06_forcer-cooling-sealed-with-standard-o-rings.md`.
 - Mistake rules applied: deciding values only from the maker's own document
   (`docs/mistakes/2026-09-29_loop-rate-from-a-trade-article.md`), and search the whole repository
   when a bought part is removed (`docs/mistakes/2026-11-04_drive-check-used-the-old-encoder.md`).
