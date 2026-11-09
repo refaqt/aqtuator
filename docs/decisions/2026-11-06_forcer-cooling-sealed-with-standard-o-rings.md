@@ -1,7 +1,7 @@
 # ADR — The forcer cooling is sealed with standard O-rings and a printed block
 
 - **Date:** 2026-11-06
-- **Status:** Proposed. Niels Bosmans chose this layout ("option 2") on 2026-11-06. The design is
+- **Status:** Partly replaced by [2026-11-09](2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md): the hose barbs, the hose slot and the side cable clamp are gone. Niels Bosmans chose this layout ("option 2") on 2026-11-06. The design is
   a first version for review, not yet built or tested.
 
 Write this file in B2 English. Follow `.agents/rules/communication.md`.

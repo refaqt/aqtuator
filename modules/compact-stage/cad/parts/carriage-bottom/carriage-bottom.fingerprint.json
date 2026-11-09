@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "Body": {
-      "area": 119025.0,
+      "area": 119030.0,
       "bbox": [
         0.0,
         0.0,
@@ -14,21 +14,133 @@
       ],
       "closed": true,
       "com": [
-        104.184,
-        84.1478,
-        16.2713
+        104.322,
+        84.0942,
+        16.2983
       ],
       "counts": {
-        "edges": 1127,
-        "faces": 400,
+        "edges": 1210,
+        "faces": 430,
         "shells": 1,
         "solids": 1,
-        "verts": 745
+        "verts": 799
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 441660.0
+      "volume": 442437.0
+    },
+    "CableDip": {
+      "area": 118985.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        104.374,
+        84.1118,
+        16.3013
+      ],
+      "counts": {
+        "edges": 1138,
+        "faces": 406,
+        "shells": 1,
+        "solids": 1,
+        "verts": 751
+      },
+      "label": "CableDip (motor cable dip under the cooling block)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 442687.0
+    },
+    "CableDipSketch": {
+      "area": 0.0,
+      "bbox": [
+        158.819,
+        101.067,
+        18.5,
+        186.75,
+        119.0,
+        18.5
+      ],
+      "closed": true,
+      "com": [
+        173.702,
+        111.0,
+        18.5
+      ],
+      "counts": {
+        "edges": 4,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 4
+      },
+      "label": "CableDipSketch (motor cable dip under the cooling block)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "CoolingPocket": {
+      "area": 118678.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        104.567,
+        84.1817,
+        16.3012
+      ],
+      "counts": {
+        "edges": 1114,
+        "faces": 395,
+        "shells": 1,
+        "solids": 1,
+        "verts": 737
+      },
+      "label": "CoolingPocket (cooling block pocket)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 443852.0
+    },
+    "CoolingPocketSketch": {
+      "area": 0.0,
+      "bbox": [
+        108.5,
+        78.5,
+        27.5,
+        212.0,
+        106.5,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        158.143,
+        94.3083,
+        27.5
+      ],
+      "counts": {
+        "edges": 16,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 16
+      },
+      "label": "CoolingPocketSketch (cooling block pocket)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     },
     "Hole": {
       "area": 99075.7,
@@ -171,7 +283,7 @@
       "volume": 457172.0
     },
     "Hole006": {
-      "area": 118384.0,
+      "area": 118075.0,
       "bbox": [
         0.0,
         0.0,
@@ -182,24 +294,24 @@
       ],
       "closed": true,
       "com": [
-        105.041,
-        84.2701,
-        16.3504
+        105.255,
+        84.3189,
+        16.4312
       ],
       "counts": {
-        "edges": 1076,
-        "faces": 381,
+        "edges": 1052,
+        "faces": 375,
         "shells": 1,
         "solids": 1,
-        "verts": 712
+        "verts": 696
       },
       "label": "Hole006 (cooling block screw, countersunk)",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 446397.0
+      "volume": 450607.0
     },
     "Hole007": {
-      "area": 118441.0,
+      "area": 118177.0,
       "bbox": [
         0.0,
         0.0,
@@ -210,24 +322,24 @@
       ],
       "closed": true,
       "com": [
-        105.039,
-        84.2698,
-        16.3501
+        105.25,
+        84.3182,
+        16.4303
       ],
       "counts": {
-        "edges": 1081,
-        "faces": 384,
+        "edges": 1057,
+        "faces": 378,
         "shells": 1,
         "solids": 1,
-        "verts": 715
+        "verts": 699
       },
       "label": "Hole007 (cooling block screw, countersunk)",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 446369.0
+      "volume": 450546.0
     },
-    "Hole008": {
-      "area": 119025.0,
+    "HoleCD": {
+      "area": 118855.0,
       "bbox": [
         0.0,
         0.0,
@@ -238,21 +350,21 @@
       ],
       "closed": true,
       "com": [
-        104.184,
-        84.1478,
-        16.2713
+        104.546,
+        84.1779,
+        16.3006
       ],
       "counts": {
-        "edges": 1127,
-        "faces": 400,
+        "edges": 1124,
+        "faces": 401,
         "shells": 1,
         "solids": 1,
-        "verts": 745
+        "verts": 743
       },
-      "label": "Hole008 (cable clamp M3)",
+      "label": "HoleCD (block screws near the side face)",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 441660.0
+      "volume": 443750.0
     },
     "Mirrored": {
       "area": 94461.8,
@@ -281,6 +393,62 @@
       "type": "PartDesign::Mirrored",
       "valid": true,
       "volume": 824063.0
+    },
+    "MotorClampPocket": {
+      "area": 119026.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        104.325,
+        84.0959,
+        16.2986
+      ],
+      "counts": {
+        "edges": 1174,
+        "faces": 418,
+        "shells": 1,
+        "solids": 1,
+        "verts": 775
+      },
+      "label": "MotorClampPocket (Motor cable clamp pocket)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 442455.0
+    },
+    "MotorClampSketch": {
+      "area": 0.0,
+      "bbox": [
+        193.9,
+        109.05,
+        27.5,
+        204.1,
+        119.95,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        199.0,
+        114.5,
+        27.5
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "MotorClampSketch (Motor cable clamp pocket)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     },
     "Pad": {
       "area": 96220.0,
@@ -339,7 +507,7 @@
       "volume": 821827.0
     },
     "Part": {
-      "area": 119025.0,
+      "area": 119030.0,
       "bbox": [
         0.0,
         0.0,
@@ -350,21 +518,21 @@
       ],
       "closed": true,
       "com": [
-        104.184,
-        84.1478,
-        16.2713
+        104.322,
+        84.0942,
+        16.2983
       ],
       "counts": {
-        "edges": 1127,
-        "faces": 400,
+        "edges": 1210,
+        "faces": 430,
         "shells": 1,
         "solids": 1,
-        "verts": 745
+        "verts": 799
       },
       "label": "carriage_bottom",
       "type": "App::Part",
       "valid": true,
-      "volume": 441660.0
+      "volume": 442437.0
     },
     "Pocket": {
       "area": 93010.8,
@@ -982,36 +1150,8 @@
       "valid": true,
       "volume": 450683.0
     },
-    "Pocket024": {
-      "area": 118324.0,
-      "bbox": [
-        0.0,
-        0.0,
-        0.0,
-        208.0,
-        180.0,
-        27.5
-      ],
-      "closed": true,
-      "com": [
-        105.043,
-        84.2706,
-        16.3509
-      ],
-      "counts": {
-        "edges": 1065,
-        "faces": 376,
-        "shells": 1,
-        "solids": 1,
-        "verts": 705
-      },
-      "label": "Pocket024 (cooling block pocket)",
-      "type": "PartDesign::Pocket",
-      "valid": true,
-      "volume": 446440.0
-    },
     "Pocket026": {
-      "area": 118328.0,
+      "area": 117973.0,
       "bbox": [
         0.0,
         0.0,
@@ -1022,52 +1162,24 @@
       ],
       "closed": true,
       "com": [
-        105.042,
-        84.2704,
-        16.3507
+        105.258,
+        84.3196,
+        16.4321
       ],
       "counts": {
-        "edges": 1071,
-        "faces": 378,
+        "edges": 1047,
+        "faces": 372,
         "shells": 1,
         "solids": 1,
-        "verts": 709
+        "verts": 693
       },
       "label": "Pocket026 (cooling ports)",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 446425.0
-    },
-    "Pocket027": {
-      "area": 118897.0,
-      "bbox": [
-        0.0,
-        0.0,
-        0.0,
-        208.0,
-        180.0,
-        27.5
-      ],
-      "closed": true,
-      "com": [
-        104.202,
-        84.1526,
-        16.2727
-      ],
-      "counts": {
-        "edges": 1117,
-        "faces": 396,
-        "shells": 1,
-        "solids": 1,
-        "verts": 739
-      },
-      "label": "Pocket027 (hose slot)",
-      "type": "PartDesign::Pocket",
-      "valid": true,
-      "volume": 441741.0
+      "volume": 450669.0
     },
     "Pocket028": {
-      "area": 118343.0,
+      "area": 118079.0,
       "bbox": [
         0.0,
         0.0,
@@ -1078,36 +1190,120 @@
       ],
       "closed": true,
       "com": [
-        105.037,
-        84.2696,
-        16.3499
+        105.249,
+        84.318,
+        16.4301
       ],
       "counts": {
-        "edges": 1087,
-        "faces": 386,
+        "edges": 1063,
+        "faces": 380,
         "shells": 1,
         "solids": 1,
-        "verts": 719
+        "verts": 703
       },
       "label": "Pocket028 (screw head recess)",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 446351.0
+      "volume": 450528.0
+    },
+    "ReadHeadClampPocket": {
+      "area": 119030.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        104.322,
+        84.0942,
+        16.2983
+      ],
+      "counts": {
+        "edges": 1210,
+        "faces": 430,
+        "shells": 1,
+        "solids": 1,
+        "verts": 799
+      },
+      "label": "ReadHeadClampPocket (ReadHead cable clamp pocket)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 442437.0
+    },
+    "ReadHeadClampSketch": {
+      "area": 0.0,
+      "bbox": [
+        164.9,
+        120.85,
+        27.5,
+        175.1,
+        127.15,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        170.0,
+        124.0,
+        27.5
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "ReadHeadClampSketch (ReadHead cable clamp pocket)",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "RecessCD": {
+      "area": 118764.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        208.0,
+        180.0,
+        27.5
+      ],
+      "closed": true,
+      "com": [
+        104.542,
+        84.1773,
+        16.3006
+      ],
+      "counts": {
+        "edges": 1134,
+        "faces": 404,
+        "shells": 1,
+        "solids": 1,
+        "verts": 749
+      },
+      "label": "RecessCD (screw head recess near the side face)",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 443731.0
     },
     "Sk_Hole006": {
       "area": 0.0,
       "bbox": [
         126.65,
-        87.65,
+        88.15,
         20.3,
         129.35,
-        90.35,
+        90.85,
         20.3
       ],
       "closed": true,
       "com": [
         128.0,
-        89.0,
+        89.5,
         20.3
       ],
       "counts": {
@@ -1126,16 +1322,16 @@
       "area": 0.0,
       "bbox": [
         138.65,
-        87.65,
+        88.15,
         20.3,
         141.35,
-        90.35,
+        90.85,
         20.3
       ],
       "closed": true,
       "com": [
         140.0,
-        89.0,
+        89.5,
         20.3
       ],
       "counts": {
@@ -1146,6 +1342,34 @@
         "verts": 1
       },
       "label": "Hole007 (cooling block screw, in relief) sketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sk_HoleCD": {
+      "area": 0.0,
+      "bbox": [
+        191.65,
+        99.1598,
+        16.8,
+        204.35,
+        101.84,
+        16.8
+      ],
+      "closed": true,
+      "com": [
+        198.0,
+        100.5,
+        16.8
+      ],
+      "counts": {
+        "edges": 2,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 2
+      },
+      "label": "Sk_HoleCD (block screws near the side face)",
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
@@ -1962,34 +2186,6 @@
       "valid": true,
       "volume": 0.0
     },
-    "Sketch037": {
-      "area": 0.0,
-      "bbox": [
-        108.5,
-        78.5,
-        27.5,
-        150.0,
-        100.5,
-        27.5
-      ],
-      "closed": true,
-      "com": [
-        129.25,
-        89.5,
-        27.5
-      ],
-      "counts": {
-        "edges": 8,
-        "faces": 0,
-        "shells": 0,
-        "solids": 0,
-        "verts": 8
-      },
-      "label": "Sketch037 (cooling block pocket)",
-      "type": "Sketcher::SketchObject",
-      "valid": true,
-      "volume": 0.0
-    },
     "Sketch039": {
       "area": 0.0,
       "bbox": [
@@ -2018,48 +2214,20 @@
       "valid": true,
       "volume": 0.0
     },
-    "Sketch041": {
-      "area": 0.0,
-      "bbox": [
-        160.0,
-        83.0,
-        27.5,
-        212.0,
-        106.5,
-        27.5
-      ],
-      "closed": true,
-      "com": [
-        185.144,
-        95.597,
-        27.5
-      ],
-      "counts": {
-        "edges": 14,
-        "faces": 0,
-        "shells": 0,
-        "solids": 0,
-        "verts": 14
-      },
-      "label": "Sketch041 (hose slot)",
-      "type": "Sketcher::SketchObject",
-      "valid": true,
-      "volume": 0.0
-    },
     "Sketch042": {
       "area": 0.0,
       "bbox": [
         124.9,
-        85.9226,
+        86.4226,
         20.0,
         143.1,
-        92.0774,
+        92.5774,
         20.0
       ],
       "closed": true,
       "com": [
         134.0,
-        89.0,
+        89.5,
         20.0
       ],
       "counts": {
@@ -2074,21 +2242,21 @@
       "valid": true,
       "volume": 0.0
     },
-    "Sketch043": {
+    "Sketch_RecessCD": {
       "area": 0.0,
       "bbox": [
-        208.0,
-        80.0,
-        22.3109,
-        208.0,
-        140.0,
-        25.2891
+        189.9,
+        97.4226,
+        16.5,
+        206.1,
+        103.577,
+        16.5
       ],
       "closed": true,
       "com": [
-        208.0,
-        110.0,
-        23.8
+        198.0,
+        100.5,
+        16.5
       ],
       "counts": {
         "edges": 2,
@@ -2097,14 +2265,14 @@
         "solids": 0,
         "verts": 2
       },
-      "label": "Sketch043 (cable clamp screws)",
+      "label": "Sketch_RecessCD (screw head recess near the side face)",
       "type": "Sketcher::SketchObject",
       "valid": true,
       "volume": 0.0
     }
   },
   "parametric": {
-    "audited": 90,
+    "audited": 97,
     "objects": {
       "Hole": {
         "label": "Hole",
@@ -2154,13 +2322,6 @@
         "type": "PartDesign::Hole",
         "unlinked": [
           "Diameter is a typed number: 2.9"
-        ]
-      },
-      "Hole008": {
-        "label": "Hole008 (cable clamp M3)",
-        "type": "PartDesign::Hole",
-        "unlinked": [
-          "Depth is a typed number: 8"
         ]
       },
       "Pad": {
@@ -2233,25 +2394,11 @@
           "Length is a typed number: 1.5"
         ]
       },
-      "Pocket024": {
-        "label": "Pocket024 (cooling block pocket)",
-        "type": "PartDesign::Pocket",
-        "unlinked": [
-          "Length is a typed number: 5"
-        ]
-      },
       "Pocket026": {
         "label": "Pocket026 (cooling ports)",
         "type": "PartDesign::Pocket",
         "unlinked": [
           "Length is a typed number: 2"
-        ]
-      },
-      "Pocket027": {
-        "label": "Pocket027 (hose slot)",
-        "type": "PartDesign::Pocket",
-        "unlinked": [
-          "Length is a typed number: 7.5"
         ]
       },
       "Pocket028": {
@@ -2266,9 +2413,7 @@
         "label": "Hole006 (cooling block screw, countersunk) sketch",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "Hole006_d (Diameter) is a typed number: 2.7 mm",
-          "Hole006_x (DistanceX) is a typed number: 128 mm",
-          "Hole006_y (DistanceY) is a typed number: 89 mm"
+          "Hole006_d (Diameter) is a typed number: 2.7 mm"
         ]
       },
       "Sk_Hole007": {
@@ -2276,9 +2421,7 @@
         "label": "Hole007 (cooling block screw, in relief) sketch",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "Hole007_d (Diameter) is a typed number: 2.7 mm",
-          "Hole007_x (DistanceX) is a typed number: 140 mm",
-          "Hole007_y (DistanceY) is a typed number: 89 mm"
+          "Hole007_d (Diameter) is a typed number: 2.7 mm"
         ]
       },
       "Sketch": {
@@ -2567,41 +2710,12 @@
           "lead_y_end (DistanceY) is a typed number: 84.5 mm"
         ]
       },
-      "Sketch037": {
-        "dof": 0,
-        "label": "Sketch037 (cooling block pocket)",
-        "type": "Sketcher::SketchObject",
-        "unlinked": [
-          "block_r (Radius) is a typed number: 3 mm",
-          "block_y0 (DistanceY) is a typed number: 78.5 mm",
-          "block_x1 (DistanceX) is a typed number: 150 mm",
-          "block_y2 (DistanceY) is a typed number: 100.5 mm",
-          "block_x3 (DistanceX) is a typed number: 108.5 mm"
-        ]
-      },
       "Sketch039": {
         "dof": 0,
         "label": "Sketch039 (cooling ports)",
         "type": "Sketcher::SketchObject",
         "unlinked": [
-          "port_d (Diameter) is a typed number: 2.5 mm",
-          "port_b_y (DistanceY) is a typed number: 94.5 mm"
-        ]
-      },
-      "Sketch041": {
-        "dof": 0,
-        "label": "Sketch041 (hose slot)",
-        "type": "Sketcher::SketchObject",
-        "unlinked": [
-          "hose_r (Radius) is a typed number: 3 mm",
-          "hose_y0 (DistanceY) is a typed number: 83 mm",
-          "hose_x1 (DistanceX) is a typed number: 186 mm",
-          "hose_y2 (DistanceY) is a typed number: 94.5 mm",
-          "hose_x3 (DistanceX) is a typed number: 212 mm",
-          "hose_y4 (DistanceY) is a typed number: 106.5 mm",
-          "hose_x5 (DistanceX) is a typed number: 183 mm",
-          "hose_y6 (DistanceY) is a typed number: 99 mm",
-          "hose_x7 (DistanceX) is a typed number: 160 mm"
+          "port_d (Diameter) is a typed number: 2.5 mm"
         ]
       },
       "Sketch042": {
@@ -2611,24 +2725,91 @@
         "unlinked": [
           "recess_d (Diameter) is a typed number: 6.2 mm"
         ]
-      },
-      "Sketch043": {
-        "dof": 0,
-        "label": "Sketch043 (cable clamp screws)",
-        "type": "Sketcher::SketchObject",
-        "unlinked": [
-          "clamp_screw_d (Diameter) is a typed number: 3 mm",
-          "clamp_screw_a_y (DistanceX) is a typed number: 81.5 mm",
-          "clamp_screw_z (DistanceY) is a typed number: 23.8 mm",
-          "clamp_screw_b_y (DistanceX) is a typed number: 138.5 mm"
-        ]
       }
     }
   },
-  "params": {},
+  "params": {
+    "bearing_d_out": 6.0,
+    "bearing_flange_w": 0.8,
+    "cable_clamp_l": 10.0,
+    "cable_clamp_r": 1.5,
+    "cable_clamp_side_gap": 0.1,
+    "cable_clamp_side_wall": 1.2,
+    "cable_clamp_squeeze": 0.2,
+    "cable_clamp_wall": 0.8,
+    "carriage_edge_x": 208.0,
+    "carriage_side_bottom_z": 16.5,
+    "carriage_top_z": 27.5,
+    "cooling_arm_bend_x": 186.0,
+    "cooling_arm_r": 10.0,
+    "cooling_arm_w": 12.0,
+    "cooling_arm_x0": 150.0,
+    "cooling_arm_y": 100.5,
+    "cooling_arm_y0": 89.5,
+    "cooling_block_gap": 0.15,
+    "cooling_block_top_gap": 0.1,
+    "cooling_body_r": 3.0,
+    "cooling_body_x0": 108.5,
+    "cooling_body_y0": 78.5,
+    "cooling_body_y1": 100.5,
+    "cooling_end_r": 3.0,
+    "cooling_passage_d": 2.0,
+    "cooling_passage_offset": 3.5,
+    "cooling_pocket_depth": 5.0,
+    "cooling_pocket_end_x": 212.0,
+    "cooling_screw_a_x": 128.0,
+    "cooling_screw_b_x": 140.0,
+    "cooling_screw_c_x": 193.0,
+    "cooling_screw_d": 2.5,
+    "cooling_screw_d_x": 203.0,
+    "cooling_tap_depth": 4.0,
+    "fit_head_l": 9.0,
+    "fit_head_r": 2.0,
+    "fit_hex_af": 9.0,
+    "fit_jog_x0": 209.0,
+    "fit_jog_x1": 211.5,
+    "fit_pitch": 11.0,
+    "fit_tap_depth": 5.0,
+    "fit_thread_d": 5.0,
+    "fit_thread_l": 4.0,
+    "fit_wall": 2.0,
+    "hose_id": 2.6,
+    "hose_od": 4.0,
+    "motor_cable_bend_x": 186.75,
+    "motor_cable_bend_y": 79.5,
+    "motor_cable_d": 8.3,
+    "motor_cable_dip": 5.0,
+    "motor_cable_dip_angle": 45.0,
+    "motor_cable_y": 114.5,
+    "motor_clamp_x": 199.0,
+    "motor_slot_depth": 9.0,
+    "motor_slot_w": 9.0,
+    "port_a_x": 118.35,
+    "port_a_y": 84.5,
+    "port_b_x": 114.25,
+    "port_b_y": 94.5,
+    "port_groove_depth": 1.1,
+    "port_groove_w": 2.0,
+    "port_oring_cs": 1.5,
+    "port_oring_id": 5.0,
+    "read_head_cable_d": 3.7,
+    "read_head_cable_y": 124.0,
+    "read_head_clamp_x": 170.0,
+    "roller_d": 10.0,
+    "roller_l": 20.0,
+    "screw_recess_depth": 0.3,
+    "sleeve_l": 18.4,
+    "strip_corner_hole_d": 4.5,
+    "strip_corner_slot_l": 1.0,
+    "strip_edge_gap": 0.2,
+    "strip_end_gap": 1.0,
+    "strip_preload_hole_d": 5.0,
+    "strip_pull": 270.0,
+    "strip_t": 0.15
+  },
   "saved": true,
   "schema": 1,
   "sources": {
-    "carriage-bottom.FCStd": "54150a5b6908fa7fe0eedf50b76b29e672fa039244be873322488c2900be66d6"
+    "carriage-bottom.FCStd": "67df899fcb31cd12f2d0acf4a0f6a5b12ba0597b962e3a0c6119317c6e78c8b8"
   }
 }

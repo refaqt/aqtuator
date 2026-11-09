@@ -1,0 +1,402 @@
+{
+  "document": "read_head_cable_clamp",
+  "errors": [],
+  "objects": {
+    "Body": {
+      "area": 206.95,
+      "bbox": [
+        -5.0,
+        -3.05,
+        0.0,
+        5.0,
+        3.05,
+        2.65
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        1.04268
+      ],
+      "counts": {
+        "edges": 30,
+        "faces": 12,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "Lower",
+      "type": "PartDesign::Body",
+      "valid": true,
+      "volume": 102.777
+    },
+    "Body001": {
+      "area": 206.95,
+      "bbox": [
+        -5.0,
+        -3.05,
+        2.65,
+        5.0,
+        3.05,
+        5.3
+      ],
+      "closed": true,
+      "com": [
+        -8.14106e-09,
+        3.67136e-09,
+        4.25732
+      ],
+      "counts": {
+        "edges": 30,
+        "faces": 12,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "Upper",
+      "type": "PartDesign::Body",
+      "valid": true,
+      "volume": 102.777
+    },
+    "LowerGroove": {
+      "area": 206.95,
+      "bbox": [
+        -5.0,
+        -3.05,
+        0.0,
+        5.0,
+        3.05,
+        2.65
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        1.04268
+      ],
+      "counts": {
+        "edges": 30,
+        "faces": 12,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "LowerGroove",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 102.777
+    },
+    "LowerGrooveSketch": {
+      "area": 0.0,
+      "bbox": [
+        0.0,
+        -1.85,
+        0.8,
+        0.0,
+        1.85,
+        4.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        2.65
+      ],
+      "counts": {
+        "edges": 1,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 1
+      },
+      "label": "LowerGrooveSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "LowerOutline": {
+      "area": 0.0,
+      "bbox": [
+        -5.0,
+        -3.05,
+        0.0,
+        5.0,
+        3.05,
+        0.0
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "LowerOutline",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "LowerPad": {
+      "area": 196.643,
+      "bbox": [
+        -5.0,
+        -3.05,
+        0.0,
+        5.0,
+        3.05,
+        2.65
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        1.325
+      ],
+      "counts": {
+        "edges": 24,
+        "faces": 10,
+        "shells": 1,
+        "solids": 1,
+        "verts": 16
+      },
+      "label": "LowerPad",
+      "type": "PartDesign::Pad",
+      "valid": true,
+      "volume": 156.532
+    },
+    "Part": {
+      "area": 413.9,
+      "bbox": [
+        -5.0,
+        -3.05,
+        0.0,
+        5.0,
+        3.05,
+        5.3
+      ],
+      "closed": true,
+      "com": [
+        -4.08803e-09,
+        1.84281e-09,
+        2.65
+      ],
+      "counts": {
+        "edges": 60,
+        "faces": 24,
+        "shells": 2,
+        "solids": 2,
+        "verts": 40
+      },
+      "label": "read-head-cable-clamp",
+      "type": "App::Part",
+      "valid": true,
+      "volume": 205.554
+    },
+    "UpperGroove": {
+      "area": 206.95,
+      "bbox": [
+        -5.0,
+        -3.05,
+        2.65,
+        5.0,
+        3.05,
+        5.3
+      ],
+      "closed": true,
+      "com": [
+        -8.14106e-09,
+        3.67136e-09,
+        4.25732
+      ],
+      "counts": {
+        "edges": 30,
+        "faces": 12,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "UpperGroove",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 102.777
+    },
+    "UpperGrooveSketch": {
+      "area": 0.0,
+      "bbox": [
+        0.0,
+        -1.85,
+        0.8,
+        0.0,
+        1.85,
+        4.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        2.65
+      ],
+      "counts": {
+        "edges": 1,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 1
+      },
+      "label": "UpperGrooveSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "UpperOutline": {
+      "area": 0.0,
+      "bbox": [
+        -5.0,
+        -3.05,
+        2.65,
+        5.0,
+        3.05,
+        2.65
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        2.65
+      ],
+      "counts": {
+        "edges": 8,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 8
+      },
+      "label": "UpperOutline",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "UpperPad": {
+      "area": 196.643,
+      "bbox": [
+        -5.0,
+        -3.05,
+        2.65,
+        5.0,
+        3.05,
+        5.3
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        0.0,
+        3.975
+      ],
+      "counts": {
+        "edges": 24,
+        "faces": 10,
+        "shells": 1,
+        "solids": 1,
+        "verts": 16
+      },
+      "label": "UpperPad",
+      "type": "PartDesign::Pad",
+      "valid": true,
+      "volume": 156.532
+    }
+  },
+  "parametric": {
+    "audited": 9,
+    "objects": {}
+  },
+  "params": {
+    "bearing_d_out": 6.0,
+    "bearing_flange_w": 0.8,
+    "cable_clamp_l": 10.0,
+    "cable_clamp_r": 1.5,
+    "cable_clamp_side_gap": 0.1,
+    "cable_clamp_side_wall": 1.2,
+    "cable_clamp_squeeze": 0.2,
+    "cable_clamp_wall": 0.8,
+    "carriage_edge_x": 208.0,
+    "carriage_side_bottom_z": 16.5,
+    "carriage_top_z": 27.5,
+    "cooling_arm_bend_x": 186.0,
+    "cooling_arm_r": 10.0,
+    "cooling_arm_w": 12.0,
+    "cooling_arm_x0": 150.0,
+    "cooling_arm_y": 100.5,
+    "cooling_arm_y0": 89.5,
+    "cooling_block_gap": 0.15,
+    "cooling_block_top_gap": 0.1,
+    "cooling_body_r": 3.0,
+    "cooling_body_x0": 108.5,
+    "cooling_body_y0": 78.5,
+    "cooling_body_y1": 100.5,
+    "cooling_end_r": 3.0,
+    "cooling_passage_d": 2.0,
+    "cooling_passage_offset": 3.5,
+    "cooling_pocket_depth": 5.0,
+    "cooling_pocket_end_x": 212.0,
+    "cooling_screw_a_x": 128.0,
+    "cooling_screw_b_x": 140.0,
+    "cooling_screw_c_x": 193.0,
+    "cooling_screw_d": 2.5,
+    "cooling_screw_d_x": 203.0,
+    "cooling_tap_depth": 4.0,
+    "fit_head_l": 9.0,
+    "fit_head_r": 2.0,
+    "fit_hex_af": 9.0,
+    "fit_jog_x0": 209.0,
+    "fit_jog_x1": 211.5,
+    "fit_pitch": 11.0,
+    "fit_tap_depth": 5.0,
+    "fit_thread_d": 5.0,
+    "fit_thread_l": 4.0,
+    "fit_wall": 2.0,
+    "hose_id": 2.6,
+    "hose_od": 4.0,
+    "motor_cable_bend_x": 186.75,
+    "motor_cable_bend_y": 79.5,
+    "motor_cable_d": 8.3,
+    "motor_cable_dip": 5.0,
+    "motor_cable_dip_angle": 45.0,
+    "motor_cable_y": 114.5,
+    "motor_clamp_x": 199.0,
+    "motor_slot_depth": 9.0,
+    "motor_slot_w": 9.0,
+    "port_a_x": 118.35,
+    "port_a_y": 84.5,
+    "port_b_x": 114.25,
+    "port_b_y": 94.5,
+    "port_groove_depth": 1.1,
+    "port_groove_w": 2.0,
+    "port_oring_cs": 1.5,
+    "port_oring_id": 5.0,
+    "read_head_cable_d": 3.7,
+    "read_head_cable_y": 124.0,
+    "read_head_clamp_x": 170.0,
+    "roller_d": 10.0,
+    "roller_l": 20.0,
+    "screw_recess_depth": 0.3,
+    "sleeve_l": 18.4,
+    "strip_corner_hole_d": 4.5,
+    "strip_corner_slot_l": 1.0,
+    "strip_edge_gap": 0.2,
+    "strip_end_gap": 1.0,
+    "strip_preload_hole_d": 5.0,
+    "strip_pull": 270.0,
+    "strip_t": 0.15
+  },
+  "saved": true,
+  "schema": 1,
+  "sources": {
+    "read-head-cable-clamp.FCStd": "1b9873f5dff62a5f953f8c4fd120ca50cdca41f245b4f694eabd80a4d3aa46d2"
+  }
+}

@@ -17,12 +17,62 @@ port_oring_id,5,mm,catalogue,ERIKS O-ring NBR 70 36624 5x1.5,Inside diameter of 
 port_oring_cs,1.5,mm,catalogue,ERIKS O-ring NBR 70 36624 5x1.5,Cross-section of the port O-ring
 port_groove_depth,1.1,mm,design,Face seal 25 to 30 % squeeze,Depth of the port O-ring groove in the bottom of the block
 port_groove_w,2.0,mm,design,Face seal groove width about 1.35 x cross-section,Width of the port O-ring groove. The outer wall touches the O-ring outside diameter; water pushes from inside
-hose_od,4,mm,catalogue,PU tube 4 x 2.5 (Festo PUN-H-4),Outside diameter of the cooling hose
-hose_id,2.5,mm,catalogue,PU tube 4 x 2.5 (Festo PUN-H-4),Inside diameter of the cooling hose
-barb_d_max,3.4,mm,design,About 35 % stretch on hose_id,Largest diameter of a hose barb ring on the cooling block
-barb_d_min,2.8,mm,design,About 12 % stretch on hose_id,Smallest diameter of a hose barb ring: the hose still seals here
-barb_l,8,mm,design,,Length of a hose barb from the end face of the cooling block to its tip
-barb_collar_l,1,mm,design,,Length of the collar at the root of a hose barb
-barb_rings,3,,design,,Number of rings on a hose barb
-barb_bore_d,1.4,mm,design,Leaves 0.7 mm resin under the smallest ring,Bore through a hose barb
 cooling_passage_d,2.0,mm,design,,Diameter of the water passages inside the cooling block. With the port groove under it and the top over it, it leaves 0.9 mm walls
+hose_od,4,mm,catalogue,stoq:festo/pun-h#197383,Outside diameter of the cooling hose (Festo PUN-H-4X0,75)
+hose_id,2.6,mm,catalogue,stoq:festo/pun-h#197383,Inside diameter of the cooling hose (Festo PUN-H-4X0,75)
+carriage_top_z,27.5,mm,design,carriage-bottom Pad,Height of the top face of carriage-bottom above its bottom face
+carriage_edge_x,208,mm,design,carriage-bottom w_carrier,X of the side face of carriage-bottom where the hoses and cables leave
+cooling_pocket_depth,5,mm,design,carriage-bottom Pocket024,Depth of the cooling block pocket in the top of carriage-bottom
+cooling_body_x0,108.5,mm,design,carriage-bottom Sketch037 block_x3,Left end of the cooling block pocket
+cooling_body_y0,78.5,mm,design,carriage-bottom Sketch037 block_y0,Lower side of the wide part of the cooling block pocket
+cooling_body_y1,100.5,mm,design,carriage-bottom Sketch037 block_y2,Upper side of the wide part of the cooling block pocket
+cooling_body_r,3,mm,design,6 mm end mill,Corner radius of the wide part of the pocket
+cooling_arm_w,12,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Width of the arm of the pocket from the wide part to the side face
+cooling_arm_x0,150,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,X where the centre line of the arm leaves the wide part
+cooling_arm_y0,=(cooling_body_y0 + cooling_body_y1) / 2,mm,,,Y of the centre line of the wide part. The screws in the wide part sit on it
+cooling_arm_bend_x,186,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,X where the centre line of the arm turns parallel to X
+cooling_arm_y,100.5,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Y of the centre line of the arm at the side face. Between the carriage-top joint screw (y 90) and the motor cable slot (y 110)
+cooling_arm_r,10,mm,design,Niels Bosmans 2026-11-09 (a fluent curved pocket),Radius of the four bends of the arm
+cooling_end_r,3,mm,design,6 mm end mill,Corner radius at the open end of the arm pocket
+cooling_pocket_end_x,=carriage_edge_x + 4,mm,,,End of the arm pocket outside the side face: the pocket is open to the side
+port_a_x,118.35,mm,design,carriage-bottom Sketch039 port_a_x,X of cooling port A (end of the port lead)
+port_a_y,84.5,mm,design,carriage-bottom Sketch039 port_a_y,Y of cooling port A
+port_b_x,114.25,mm,design,carriage-bottom Sketch039 port_b_x,X of cooling port B (on the second channel pass)
+port_b_y,94.5,mm,design,carriage-bottom Sketch039 port_b_y,Y of cooling port B
+cooling_passage_offset,3.5,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Distance from the centre line of the arm to each water passage. Leaves 1.5 mm to the tapped screw holes on the centre line
+cooling_screw_a_x,128,mm,design,carriage-bottom Hole006,X of the first block screw in the wide part
+cooling_screw_b_x,140,mm,design,carriage-bottom Hole007,X of the second block screw in the wide part
+cooling_screw_c_x,193,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,X of the first block screw near the side face
+cooling_screw_d_x,203,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,X of the second block screw near the side face
+cooling_screw_d,2.5,mm,catalogue,ISO 10642 M2.5,Nominal diameter of the M2.5 block screws
+cooling_tap_depth,4,mm,design,2026-11-06 cooling block,Depth of the M2.5 holes tapped in the printed block
+fit_thread_d,5,mm,catalogue,"https://ftp.festo.com/public/PNEUMATIC/SOFTWARE_SERVICE/Documentation/2025/JA/NPQH_EN.PDF",M5 thread of the Festo NPQH-D-M5-Q4-P10 (page 5 D1)
+fit_thread_l,4,mm,catalogue,"https://ftp.festo.com/public/PNEUMATIC/SOFTWARE_SERVICE/Documentation/2025/JA/NPQH_EN.PDF",Thread length of the NPQH-D-M5-Q4-P10 (page 5 L2)
+fit_hex_af,9,mm,catalogue,"https://ftp.festo.com/public/PNEUMATIC/SOFTWARE_SERVICE/Documentation/2025/JA/NPQH_EN.PDF",Hex of the NPQH-D-M5-Q4-P10 across flats (page 5)
+fit_tap_depth,5,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Depth of the M5 tapped hole: thread length plus 1 mm
+fit_wall,2,mm,design,Niels Bosmans 2026-11-09,Printed wall around each M5 thread
+fit_pitch,11,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Distance between the two fittings. The hex is 10.4 mm across corners; an internal 2.5 mm hex key tightens them
+fit_head_l,=fit_tap_depth + 4,mm,,,Length of the head of the block outside the side face
+fit_head_r,2,mm,design,,Corner radius of the head in the plan view
+fit_jog_x0,=carriage_edge_x + 1,mm,,,Where each passage leaves the arm line and turns towards its fitting
+fit_jog_x1,=carriage_edge_x + 3.5,mm,,,Where each passage is on the axis of its fitting
+motor_cable_d,8.3,mm,catalogue,MK21 data sheet,Outside diameter of the MK21 motor cable
+read_head_cable_d,3.7,mm,catalogue,docs/log/2026-11-06_forcer-water-cooling-seal-and-block.md,Outside diameter of the read head cable
+motor_cable_y,114.5,mm,design,carriage-bottom Sketch025,Y of the motor cable slot centre line at the side face
+read_head_cable_y,124,mm,design,carriage-bottom Sketch030,Y of the read head slot centre line
+cable_clamp_l,10,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Length of a cable clamp along the cable
+cable_clamp_side_gap,0.1,mm,design,Niels Bosmans 2026-11-09,Room between a cable clamp and its pocket on each side
+cable_clamp_squeeze,0.2,mm,design,Niels Bosmans 2026-11-09,How much higher the clamp stack (both halves and the cable) is than its pocket
+cable_clamp_wall,0.8,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Printed wall under and over the cable in each clamp half
+cable_clamp_side_wall,1.2,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Printed wall beside the cable in each clamp half
+motor_clamp_x,199,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,X of the centre of the motor cable clamp
+read_head_clamp_x,170,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,X of the centre of the read head cable clamp. Away from the motor cable bend
+motor_cable_dip,5,mm,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Extra depth of the motor cable slot in its bend. The cable stays low under the cooling block
+carriage_side_bottom_z,16.5,mm,design,carriage-bottom Pocket010 (up to face),Height of the underside of carriage-bottom near the side face
+screw_recess_depth,0.3,mm,design,carriage-bottom Pocket028,Recess under each countersunk screw head in the underside of carriage-bottom
+motor_cable_bend_x,186.75,mm,design,carriage-bottom Sketch025,X of the centre of the motor cable bend
+motor_cable_bend_y,79.5,mm,design,carriage-bottom Sketch025,Y of the centre of the motor cable bend
+motor_slot_w,9,mm,design,carriage-bottom Sketch025,Width of the motor cable slot
+motor_slot_depth,9,mm,design,carriage-bottom Pocket014,Depth of the motor cable slot
+motor_cable_dip_angle,45,deg,design,docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md,Part of the bend (from where the bend is parallel to Y) that is motor_cable_dip deeper
+cable_clamp_r,1.5,mm,design,3 mm end mill,Corner radius of a cable clamp in the plan view. Its pocket has cable_clamp_side_gap more
