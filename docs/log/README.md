@@ -194,3 +194,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-05 | [The MK21 thermal sensor is now known](2026-11-05_mk21-thermal-sensor-known.md) | electrical engineering |  |
 | 2026-11-05 | [Price request to HIWIN for the E1 drive and class H guides](2026-11-05_hiwin-e1-and-class-h-guides-request.md) | engineering, purchasing |  |
 | 2026-11-06 | [Preliminary CE assessment of the compact stage](2026-11-06_compact-stage-ce-assessment.md) | engineering, safety |  |
+| 2026-11-06 | [Forcer water cooling: O-ring seal, printed cooling block, hose route, cable clamp](2026-11-06_forcer-water-cooling-seal-and-block.md) | cad, engineering, purchasing |  |

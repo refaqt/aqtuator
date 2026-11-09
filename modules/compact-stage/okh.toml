@@ -45,6 +45,16 @@ part  = "stoq:ace/ta-damper#TA17-7"
 sysml = "EndStopDamper"
 
 [[part]]
+name   = "Cooling Block"
+source = ["cad/parts/cooling-block/cooling-block.FCStd"]
+sysml  = "CoolingBlock"
+
+[[part]]
+name   = "Cable Clamp"
+source = ["cad/parts/cable-clamp/cable-clamp.FCStd"]
+sysml  = "CableClamp"
+
+[[part]]
 name   = "Roller Sleeve"
 source = ["cad/parts/roller-sleeve/roller-sleeve.FCStd"]
 sysml  = "RollerSleeve"

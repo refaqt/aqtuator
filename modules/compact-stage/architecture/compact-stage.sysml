@@ -451,6 +451,44 @@ package CompactStage {
         attribute measuringLength : LengthValue = 240 [mm];
     }
 
+    port def CoolingBlockInterface_v1 {
+        doc /*
+         * The printed cooling block lies in a 5 mm pocket in the top of
+         * carriage-bottom, over the two ends of the cooling channel. Its head
+         * hangs into the opening for the motor cable. Two ports go from the
+         * pocket floor into the channel. A 5 x 1.5 NBR 70 O-ring in the
+         * bottom of the block seals each port. Two M2.5 screws come up from
+         * below, through carriage-bottom, and are tapped into the block.
+         *
+         * In the CAD, the frame IF_cooling_block sits on the pocket floor,
+         * on the axis of the countersunk screw (Hole006). Z points up, X and
+         * Y as in carriage-bottom. It joins the frame IF_carriage of the
+         * block. See docs/decisions/2026-11-06_forcer-cooling-sealed-with-standard-o-rings.md.
+         */
+        attribute portCount : Natural = 2;
+        attribute portDiameter : LengthValue = 2.5 [mm];
+        attribute portSpacing : LengthValue = 10.8 [mm];
+        attribute screwCount : Natural = 2;
+        attribute screwPitch : LengthValue = 12 [mm];
+    }
+
+    port def CableClampInterface_v1 {
+        doc /*
+         * The printed cable clamp sits against the outside of the side face
+         * of carriage-bottom, at the side exit of the motor cable, the
+         * cooling hoses and the read head cable. Two countersunk M3 screws
+         * go through the towers of its lower half into two tapped holes in
+         * the side face (Hole008).
+         *
+         * In the CAD, the frame IF_cable_clamp sits on the side face, at
+         * y = 110 mm and z = 23 mm (the split plane of the clamp halves).
+         * X points out of the side face. It joins the frame IF_carriage of
+         * the clamp.
+         */
+        attribute screwCount : Natural = 2;
+        attribute screwPitch : LengthValue = 57 [mm];
+    }
+
     port def DamperMountInterface_v1 {
         doc /*
          * End face of carriage-bottom where one TA17-7 damper screws on. M4
@@ -580,6 +618,8 @@ package CompactStage {
         port rollerBStart : RollerMountInterface_v1;
         port rollerAEnd : RollerMountInterface_v1;
         port rollerBEnd : RollerMountInterface_v1;
+        port coolingBlock : CoolingBlockInterface_v1;
+        port cableClamp : CableClampInterface_v1;
     }
 
     part def GuideBlock {
@@ -723,6 +763,8 @@ package CompactStage {
         part rollerTopBStart : SealRoller;
         part rollerTopAEnd : SealRoller;
         part rollerTopBEnd : SealRoller;
+        part coolingBlock : CoolingBlock;
+        part cableClamp : CableClamp;
 
         // Interfaces of the whole stage
         port machineMount : BaseMountInterface_v1;
@@ -790,6 +832,32 @@ package CompactStage {
         connect carriageTop.rollerBStart to rollerTopBStart.axle;
         connect carriageTop.rollerAEnd to rollerTopAEnd.axle;
         connect carriageTop.rollerBEnd to rollerTopBEnd.axle;
+
+        // CoolingBlock: the printed block that connects the cooling channel to the hoses
+        connect carriageBottom.coolingBlock to coolingBlock.carriage;
+
+        // CableClamp: closes the side exit around the hoses and cables
+        connect carriageBottom.cableClamp to cableClamp.carriage;
+    }
+
+    part def CoolingBlock {
+        doc /*
+         * The printed cooling block (SLA resin) between the cooling channel
+         * in carriage-bottom and two 4 x 2.5 PU hoses. Two hose barbs are
+         * part of the print; the hoses push over them. CAD:
+         * cad/parts/cooling-block/.
+         */
+        port carriage : ~CoolingBlockInterface_v1;
+    }
+
+    part def CableClamp {
+        doc /*
+         * The printed cable clamp at the side exit of carriage-bottom, in a
+         * lower and an upper half. It closes the exit around the two cooling
+         * hoses, the motor cable and the read head cable, and holds the
+         * hoses. CAD: cad/parts/cable-clamp/.
+         */
+        port carriage : ~CableClampInterface_v1;
     }
 
     part def EndStopDamper {
