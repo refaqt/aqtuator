@@ -5,16 +5,16 @@
     "AK_MC15_B_0_5M_SUBD15": {
       "area": 2791.11,
       "bbox": [
-        184.376,
+        184.482,
         18.0,
         26.5,
-        237.476,
+        237.582,
         32.8,
         40.0
       ],
       "closed": true,
       "com": [
-        218.738,
+        218.844,
         25.5089,
         33.2493
       ],
@@ -31,32 +31,32 @@
       "volume": 7010.7
     },
     "Assembly": {
-      "area": 644774.0,
+      "area": 644034.0,
       "bbox": [
         0.0,
         0.0,
         0.0,
         440.0,
-        429.0,
-        78.0
+        242.65,
+        52.0962
       ],
       "closed": true,
       "com": [
-        215.991,
-        105.966,
-        20.3273
+        216.547,
+        104.805,
+        20.1875
       ],
       "counts": {
-        "edges": 7489,
-        "faces": 2979,
-        "shells": 122,
-        "solids": 86,
-        "verts": 4899
+        "edges": 7660,
+        "faces": 3080,
+        "shells": 132,
+        "solids": 96,
+        "verts": 4981
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 2612200.0
+      "volume": 2606310.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -145,16 +145,16 @@
     "MK21": {
       "area": 31715.6,
       "bbox": [
-        136.476,
+        136.582,
         59.0,
         20.3,
-        304.476,
+        304.582,
         145.0,
         44.0
       ],
       "closed": true,
       "com": [
-        196.466,
+        196.572,
         100.869,
         31.9203
       ],
@@ -229,16 +229,16 @@
     "QEH15SAZAP_E001": {
       "area": 8739.46,
       "bbox": [
-        243.927,
+        244.033,
         157.0,
         14.0,
-        299.926,
+        300.032,
         191.0,
         34.0
       ],
       "closed": true,
       "com": [
-        271.587,
+        271.693,
         173.945,
         24.898
       ],
@@ -257,16 +257,16 @@
     "QEH15SAZAP_E002": {
       "area": 8739.46,
       "bbox": [
-        119.027,
+        119.133,
         19.0,
         14.0,
-        175.025,
+        175.131,
         53.0,
         34.0
       ],
       "closed": true,
       "com": [
-        147.365,
+        147.471,
         36.0549,
         24.898
       ],
@@ -285,16 +285,16 @@
     "QEH15SAZAP_E003": {
       "area": 8739.46,
       "bbox": [
-        243.927,
+        244.033,
         19.0,
         14.0,
-        299.926,
+        300.032,
         53.0,
         34.0
       ],
       "closed": true,
       "com": [
-        271.587,
+        271.693,
         35.9451,
         24.898
       ],
@@ -313,16 +313,16 @@
     "QEH15SAZAP_E2": {
       "area": 8739.46,
       "bbox": [
-        119.027,
+        119.133,
         157.0,
         14.0,
-        175.025,
+        175.131,
         191.0,
         34.0
       ],
       "closed": true,
       "com": [
-        147.365,
+        147.471,
         174.055,
         24.898
       ],
@@ -341,16 +341,16 @@
     "TA17_7_a_end": {
       "area": 1734.26,
       "bbox": [
-        103.476,
+        103.582,
         56.0403,
         21.0403,
-        123.476,
+        123.582,
         72.9597,
         37.9597
       ],
       "closed": true,
       "com": [
-        112.066,
+        112.172,
         64.5,
         29.5
       ],
@@ -369,16 +369,16 @@
     "TA17_7_a_start": {
       "area": 1734.26,
       "bbox": [
-        295.476,
+        295.582,
         56.0403,
         21.0403,
-        315.476,
+        315.582,
         72.9597,
         37.9597
       ],
       "closed": true,
       "com": [
-        306.886,
+        306.992,
         64.5,
         29.5
       ],
@@ -397,16 +397,16 @@
     "TA17_7_b_end": {
       "area": 1734.26,
       "bbox": [
-        103.476,
+        103.582,
         137.04,
         21.0403,
-        123.476,
+        123.582,
         153.96,
         37.9597
       ],
       "closed": true,
       "com": [
-        112.066,
+        112.172,
         145.5,
         29.5
       ],
@@ -425,16 +425,16 @@
     "TA17_7_b_start": {
       "area": 1734.26,
       "bbox": [
-        295.476,
+        295.582,
         137.04,
         21.0403,
-        315.476,
+        315.582,
         153.96,
         37.9597
       ],
       "closed": true,
       "com": [
-        306.886,
+        306.992,
         145.5,
         29.5
       ],
@@ -478,75 +478,47 @@
       "valid": true,
       "volume": 1387260.0
     },
-    "cable_clamp": {
-      "area": 11557.5,
-      "bbox": [
-        47.4762,
-        209.1,
-        40.6,
-        221.476,
-        429.0,
-        78.0
-      ],
-      "closed": true,
-      "com": [
-        134.681,
-        319.029,
-        59.3461
-      ],
-      "counts": {
-        "edges": 324,
-        "faces": 112,
-        "shells": 4,
-        "solids": 4,
-        "verts": 224
-      },
-      "label": "cable-clamp",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 18375.0
-    },
     "carriage_bottom001": {
-      "area": 119025.0,
+      "area": 118933.0,
       "bbox": [
-        119.476,
+        119.582,
         1.0,
         24.0,
-        299.476,
+        299.582,
         209.0,
         51.5
       ],
       "closed": true,
       "com": [
-        215.328,
-        105.184,
-        40.2713
+        215.47,
+        105.383,
+        40.3016
       ],
       "counts": {
-        "edges": 1127,
-        "faces": 400,
+        "edges": 1128,
+        "faces": 401,
         "shells": 1,
         "solids": 1,
-        "verts": 745
+        "verts": 746
       },
       "label": "carriage_bottom",
       "type": "App::Link",
       "valid": true,
-      "volume": 441660.0
+      "volume": 442726.0
     },
     "carriage_top": {
       "area": 109751.0,
       "bbox": [
-        104.476,
+        104.582,
         1.0,
         40.5,
-        314.476,
+        314.582,
         209.0,
         60.0
       ],
       "closed": true,
       "com": [
-        209.476,
+        209.582,
         105.0,
         53.7399
       ],
@@ -563,32 +535,116 @@
       "volume": 417780.0
     },
     "cooling_block": {
-      "area": 3025.61,
+      "area": 6630.17,
       "bbox": [
-        199.126,
+        189.082,
         109.65,
-        46.5,
-        220.826,
-        156.1,
+        42.4,
+        220.932,
+        218.15,
         51.4
       ],
       "closed": true,
       "com": [
-        209.989,
-        129.627,
-        48.9848
+        205.18,
+        162.112,
+        48.5825
       ],
       "counts": {
-        "edges": 84,
-        "faces": 44,
+        "edges": 217,
+        "faces": 78,
         "shells": 1,
         "solids": 1,
-        "verts": 54
+        "verts": 131
       },
       "label": "cooling-block",
       "type": "App::Link",
       "valid": true,
-      "volume": 3849.69
+      "volume": 8489.77
+    },
+    "cooling_screw_a": {
+      "area": 86.666,
+      "bbox": [
+        207.635,
+        126.55,
+        44.3,
+        212.529,
+        131.437,
+        50.3
+      ],
+      "closed": true,
+      "com": [
+        210.082,
+        129.0,
+        46.8173
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M2.5x6-Screw",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 35.2924
+    },
+    "cooling_screw_b": {
+      "area": 86.666,
+      "bbox": [
+        207.635,
+        138.55,
+        44.3,
+        212.529,
+        143.437,
+        50.3
+      ],
+      "closed": true,
+      "com": [
+        210.082,
+        141.0,
+        46.8173
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M2.5x6-Screw002",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 35.2924
+    },
+    "cooling_screw_c": {
+      "area": 102.374,
+      "bbox": [
+        196.636,
+        196.55,
+        40.8,
+        201.529,
+        201.436,
+        48.8
+      ],
+      "closed": true,
+      "com": [
+        199.082,
+        199.0,
+        44.2827
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M2.5x8-Screw",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 45.1098
     },
     "corner_screw_a_end": {
       "area": 294.042,
@@ -701,6 +757,118 @@
       "type": "Part::FeaturePython",
       "valid": true,
       "volume": 203.866
+    },
+    "fitting_a": {
+      "area": 925.011,
+      "bbox": [
+        200.082,
+        214.15,
+        41.7038,
+        209.082,
+        235.65,
+        52.0962
+      ],
+      "closed": true,
+      "com": [
+        204.582,
+        225.631,
+        46.9
+      ],
+      "counts": {
+        "edges": 45,
+        "faces": 22,
+        "shells": 1,
+        "solids": 1,
+        "verts": 28
+      },
+      "label": "NPQH-D-M5-Q4-P10_a",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 989.44
+    },
+    "fitting_b": {
+      "area": 925.011,
+      "bbox": [
+        189.082,
+        214.15,
+        41.7038,
+        198.082,
+        235.65,
+        52.0962
+      ],
+      "closed": true,
+      "com": [
+        193.582,
+        225.631,
+        46.9
+      ],
+      "counts": {
+        "edges": 45,
+        "faces": 22,
+        "shells": 1,
+        "solids": 1,
+        "verts": 28
+      },
+      "label": "NPQH-D-M5-Q4-P10_b",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 989.44
+    },
+    "hose_stub_a": {
+      "area": 429.204,
+      "bbox": [
+        202.597,
+        222.65,
+        44.9,
+        206.568,
+        242.65,
+        48.9
+      ],
+      "closed": true,
+      "com": [
+        204.582,
+        232.65,
+        46.9
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 4,
+        "shells": 1,
+        "solids": 1,
+        "verts": 4
+      },
+      "label": "PUN-H-4X0,75-BL_stub_a",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 145.142
+    },
+    "hose_stub_b": {
+      "area": 429.204,
+      "bbox": [
+        191.597,
+        222.65,
+        44.9,
+        195.568,
+        242.65,
+        48.9
+      ],
+      "closed": true,
+      "com": [
+        193.582,
+        232.65,
+        46.9
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 4,
+        "shells": 1,
+        "solids": 1,
+        "verts": 4
+      },
+      "label": "PUN-H-4X0,75-BL_stub_b",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 145.142
     },
     "magnet_end_a1": {
       "area": 153.5,
@@ -982,6 +1150,90 @@
       "valid": true,
       "volume": 32.25
     },
+    "motor_cable_clamp": {
+      "area": 684.46,
+      "bbox": [
+        180.682,
+        199.0,
+        42.5,
+        189.482,
+        209.0,
+        51.7
+      ],
+      "closed": true,
+      "com": [
+        185.082,
+        204.0,
+        47.1
+      ],
+      "counts": {
+        "edges": 36,
+        "faces": 16,
+        "shells": 2,
+        "solids": 2,
+        "verts": 24
+      },
+      "label": "motor-cable-clamp",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 268.539
+    },
+    "port_oring_a": {
+      "area": 96.2286,
+      "bbox": [
+        211.088,
+        115.373,
+        46.5055,
+        219.076,
+        123.35,
+        47.9945
+      ],
+      "closed": true,
+      "com": [
+        215.082,
+        119.35,
+        47.25
+      ],
+      "counts": {
+        "edges": 2,
+        "faces": 1,
+        "shells": 1,
+        "solids": 1,
+        "verts": 1
+      },
+      "label": "5X1.5-NBR70_port_a",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 36.0857
+    },
+    "port_oring_b": {
+      "area": 96.2286,
+      "bbox": [
+        201.088,
+        111.273,
+        46.5055,
+        209.076,
+        119.25,
+        47.9945
+      ],
+      "closed": true,
+      "com": [
+        205.082,
+        115.25,
+        47.25
+      ],
+      "counts": {
+        "edges": 2,
+        "faces": 1,
+        "shells": 1,
+        "solids": 1,
+        "verts": 1
+      },
+      "label": "5X1.5-NBR70_port_b",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 36.0857
+    },
     "preload_screw_end": {
       "area": 233.58,
       "bbox": [
@@ -1038,19 +1290,47 @@
       "valid": true,
       "volume": 165.834
     },
+    "read_head_cable_clamp": {
+      "area": 417.055,
+      "bbox": [
+        172.682,
+        199.0,
+        46.5,
+        178.482,
+        209.0,
+        51.7
+      ],
+      "closed": true,
+      "com": [
+        175.582,
+        204.0,
+        49.1
+      ],
+      "counts": {
+        "edges": 36,
+        "faces": 16,
+        "shells": 2,
+        "solids": 2,
+        "verts": 24
+      },
+      "label": "read-head-cable-clamp",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 194.079
+    },
     "roller_bottom_a_end": {
       "area": 1591.15,
       "bbox": [
-        148.476,
+        148.582,
         20.5,
         41.5,
-        158.476,
+        158.582,
         48.5,
         51.5
       ],
       "closed": true,
       "com": [
-        153.476,
+        153.582,
         34.5,
         46.5
       ],
@@ -1069,16 +1349,16 @@
     "roller_bottom_a_start": {
       "area": 1591.15,
       "bbox": [
-        260.476,
+        260.582,
         20.5,
         41.5,
-        270.476,
+        270.582,
         48.5,
         51.5
       ],
       "closed": true,
       "com": [
-        265.476,
+        265.582,
         34.5,
         46.5
       ],
@@ -1097,16 +1377,16 @@
     "roller_bottom_b_end": {
       "area": 1591.15,
       "bbox": [
-        148.476,
+        148.582,
         161.5,
         41.5,
-        158.476,
+        158.582,
         189.5,
         51.5
       ],
       "closed": true,
       "com": [
-        153.476,
+        153.582,
         175.5,
         46.5
       ],
@@ -1125,16 +1405,16 @@
     "roller_bottom_b_start": {
       "area": 1591.15,
       "bbox": [
-        260.476,
+        260.582,
         161.5,
         41.5,
-        270.476,
+        270.582,
         189.5,
         51.5
       ],
       "closed": true,
       "com": [
-        265.476,
+        265.582,
         175.5,
         46.5
       ],
@@ -1153,16 +1433,16 @@
     "roller_top_a_end": {
       "area": 1591.15,
       "bbox": [
-        111.643,
+        111.749,
         20.5,
         40.0,
-        121.643,
+        121.749,
         48.5,
         50.0
       ],
       "closed": true,
       "com": [
-        116.643,
+        116.749,
         34.5,
         45.0
       ],
@@ -1181,16 +1461,16 @@
     "roller_top_a_start": {
       "area": 1591.15,
       "bbox": [
-        297.31,
+        297.416,
         20.5,
         40.0,
-        307.31,
+        307.416,
         48.5,
         50.0
       ],
       "closed": true,
       "com": [
-        302.31,
+        302.416,
         34.5,
         45.0
       ],
@@ -1209,16 +1489,16 @@
     "roller_top_b_end": {
       "area": 1591.15,
       "bbox": [
-        111.643,
+        111.749,
         161.5,
         40.0,
-        121.643,
+        121.749,
         189.5,
         50.0
       ],
       "closed": true,
       "com": [
-        116.643,
+        116.749,
         175.5,
         45.0
       ],
@@ -1237,16 +1517,16 @@
     "roller_top_b_start": {
       "area": 1591.15,
       "bbox": [
-        297.31,
+        297.416,
         161.5,
         40.0,
-        307.31,
+        307.416,
         189.5,
         50.0
       ],
       "closed": true,
       "com": [
-        302.31,
+        302.416,
         175.5,
         45.0
       ],
@@ -1295,10 +1575,85 @@
     "audited": 0,
     "objects": {}
   },
-  "params": {},
+  "params": {
+    "bearing_d_out": 6.0,
+    "bearing_flange_w": 0.8,
+    "cable_clamp_l": 10.0,
+    "cable_clamp_side_gap": 0.1,
+    "cable_clamp_squeeze": 0.2,
+    "carriage_edge_x": 208.0,
+    "carriage_side_bottom_z": 16.5,
+    "carriage_top_z": 27.5,
+    "cooling_arm_bend_x": 186.0,
+    "cooling_arm_r": 10.0,
+    "cooling_arm_w": 12.0,
+    "cooling_arm_x0": 150.0,
+    "cooling_arm_y": 100.5,
+    "cooling_arm_y0": 89.5,
+    "cooling_block_gap": 0.15,
+    "cooling_block_top_gap": 0.1,
+    "cooling_body_r": 3.0,
+    "cooling_body_x0": 108.5,
+    "cooling_body_y0": 78.5,
+    "cooling_body_y1": 100.5,
+    "cooling_end_r": 3.0,
+    "cooling_passage_d": 2.0,
+    "cooling_passage_offset": 3.5,
+    "cooling_pocket_depth": 5.0,
+    "cooling_pocket_end_x": 212.0,
+    "cooling_screw_a_x": 128.0,
+    "cooling_screw_b_x": 140.0,
+    "cooling_screw_c_x": 198.0,
+    "cooling_screw_d": 2.5,
+    "cooling_tap_depth": 4.0,
+    "fit_head_l": 9.0,
+    "fit_head_r": 2.0,
+    "fit_hex_af": 9.0,
+    "fit_jog_x0": 209.0,
+    "fit_jog_x1": 211.5,
+    "fit_pitch": 11.0,
+    "fit_tap_depth": 5.0,
+    "fit_thread_d": 5.0,
+    "fit_thread_l": 4.0,
+    "fit_wall": 2.0,
+    "hose_id": 2.6,
+    "hose_od": 4.0,
+    "motor_cable_bend_x": 186.75,
+    "motor_cable_bend_y": 79.5,
+    "motor_cable_d": 8.3,
+    "motor_cable_dip": 5.0,
+    "motor_cable_dip_angle": 45.0,
+    "motor_cable_dip_start": 5.0,
+    "motor_cable_y": 114.5,
+    "motor_slot_depth": 9.0,
+    "motor_slot_w": 9.0,
+    "port_a_x": 118.35,
+    "port_a_y": 84.5,
+    "port_b_x": 114.25,
+    "port_b_y": 94.5,
+    "port_groove_depth": 1.1,
+    "port_groove_w": 2.0,
+    "port_oring_cs": 1.5,
+    "port_oring_id": 5.0,
+    "read_head_cable_d": 3.7,
+    "read_head_cable_y": 124.0,
+    "read_head_slot_depth": 5.0,
+    "read_head_slot_w": 6.0,
+    "roller_d": 10.0,
+    "roller_l": 20.0,
+    "screw_recess_depth": 0.3,
+    "sleeve_l": 18.4,
+    "strip_corner_hole_d": 4.5,
+    "strip_corner_slot_l": 1.0,
+    "strip_edge_gap": 0.2,
+    "strip_end_gap": 1.0,
+    "strip_preload_hole_d": 5.0,
+    "strip_pull": 270.0,
+    "strip_t": 0.15
+  },
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "89a48e338b353fde2cde1fc077dc3e9feca960dba376ffbddebcaa643062a257"
+    "compact-stage.FCStd": "32cb8e04f9edae3283e17e49eda8be314c6d965e270e1a39af5e7614303dd875"
   }
 }

@@ -1,23 +1,37 @@
 """Rebuild the printed cooling block from `cad/params/default.csv`, in the GUI or headless.
 
 The cooling block takes the water from the two ends of the cooling channel in
-carriage-bottom and gives it to two 4 x 2.5 mm PU hoses. It lies in a 5 mm
-pocket in the top of carriage-bottom (Pocket024). Two hose barbs are part of
-the print. They stick out into the opening for the motor cable, and the hoses
-push over them. From there the hoses cross over the motor cable and run in the
-hose slot (Pocket027) to the side of the carriage.
+carriage-bottom and brings it to the side face of the carriage. It lies in a
+5 mm pocket in the top of carriage-bottom. Its arm crosses over the motor
+cable where the cable comes up through the carriage, and runs to the side
+face. Outside the side face, a head holds two Festo push-in fittings
+NPQH-D-M5-Q4-P10, screwed into M5 threads tapped in the print. The hoses
+push into the fittings.
 
 Seals:
 
 * Two standard 5 x 1.5 NBR 70 O-rings, as face seals in the bottom of the
-  block, one around each port. Two countersunk M2.5 screws come up from below
-  and pull the block onto the pocket floor.
-* The hoses seal on the barb rings. The clamp at the side exit holds the hoses,
-  so they cannot be pulled off the barbs.
+  block, one around each port.
+* Each fitting has its own sealing ring under its hex. The end face of the
+  head is flat for it.
 
-Print it in SLA resin (for example a tough resin), bottom face down. The
-passages inside are closed, so a resin print is needed: an FDM print is not
-water-tight. Tap the two screw holes M2.5 in the resin.
+Three countersunk M2.5 screws come up from below through carriage-bottom and
+pull the block onto the pocket floor: two in the wide part, one near the side
+face. All three sit on the centre line of the block.
+
+The block is a chain of PartDesign features. Every sketch is fully
+constrained, and every size is an expression on the `Params` sheet, which
+this script fills from the module parameters. The sketches use
+carriage-bottom coordinates: their attachment offset moves them to the block
+origin. The outline is the same function as the pocket in carriage-bottom
+(`cooling_outline.py`), smaller by `cooling_block_gap`.
+
+Print it in SLA resin (for example a tough resin), with the top face on the
+build plate: the top of the block and of the head is one flat face. The head
+hangs down outside the side face, so the M5 threads sit lower than the
+passages; a short drop in the head joins them. The passages inside are
+closed, so a resin print is needed: an FDM print is not water-tight. Tap the
+three M2.5 holes and the two M5 holes in the resin.
 
 Run headless with:
 
@@ -48,146 +62,235 @@ def _doqs_scripts(start):
 
 
 sys.path.insert(0, str(_doqs_scripts(_HERE)))
+sys.path.append(str(_HERE))
 
-from cad_build import body, frame, main, part  # noqa: E402
+from cad_build import bind, body, frame, main, part  # noqa: E402
+import cooling_outline as co  # noqa: E402
 
+P = "Params."
 
 #: The axes and origin of this part.
 AXES = (
-    "Origin on the bottom face of the block, on the axis of screw A. "
+    "Origin on the bottom face of the block, on the axis of screw A "
+    "(x = cooling_screw_a_x, y = cooling_arm_y0 in carriage-bottom). "
     "X and Y run the same way as in carriage-bottom, Z up. "
-    "In carriage-bottom the origin sits at x = 128, y = 89, z = 22.5 mm."
+    "In carriage-bottom the origin sits on the pocket floor, "
+    "z = carriage_top_z - cooling_pocket_depth."
 )
 
-# Where things sit, in carriage-bottom coordinates (mm). These come from
-# carriage-bottom: the pocket Sketch037, the ports Sketch039 and the screw
-# holes Hole006 and Hole007. Change them together with that part.
-ORIGIN = (128.0, 89.0, 22.5)          # screw A axis on the pocket floor
-POCKET = (108.5, 78.5, 150.0, 100.5)  # Sketch037: x0, y0, x1, y1
-POCKET_R = 3.0                        # corner radius of the pocket
-TOP_Z = 27.5                          # top face of carriage-bottom
-OPENING_X = 147.25                    # wall of the motor cable opening (Sketch023)
-PORT_A = (118.35, 84.5)               # end of the port lead (Sketch036)
-PORT_B = (114.25, 94.5)               # on the second channel pass
-SCREW_B = (140.0, 89.0)               # Hole007
-TAP_D = 2.05                          # tap drill for M2.5 in resin
-TAP_DEPTH = 4.0
+#: Sizes made from the module parameters. They go on the sheet too.
+DERIVED = {
+    "ox": "=cooling_screw_a_x",
+    "oy": "=cooling_arm_y0",
+    "block_t": "=cooling_pocket_depth - cooling_block_top_gap",
+    "passage_z": "=(port_groove_depth + cooling_pocket_depth - cooling_block_top_gap) / 2",
+    "ring_od": "=port_oring_id + 2 * port_oring_cs",
+    "head_x0": "=carriage_edge_x + cooling_block_gap",
+    "head_x1": "=carriage_edge_x + cooling_block_gap + fit_head_l",
+    "head_half_w": "=fit_pitch / 2 + fit_thread_d / 2 + fit_wall",
+    "head_half_h": "=fit_thread_d / 2 + fit_wall",
+    "fit_z": "=cooling_pocket_depth - cooling_block_top_gap - fit_thread_d / 2 - fit_wall",
+}
+
+#: Parameters the block reads. They are copied to its sheet.
+USED = (
+    "carriage_top_z", "carriage_edge_x", "cooling_pocket_depth", "cooling_block_gap",
+    "cooling_block_top_gap", "cooling_body_x0", "cooling_body_y0", "cooling_body_y1",
+    "cooling_body_r", "cooling_arm_w", "cooling_arm_x0", "cooling_arm_y0",
+    "cooling_arm_bend_x", "cooling_arm_y", "cooling_arm_r", "cooling_end_r",
+    "port_a_x", "port_a_y", "port_b_x", "port_b_y", "port_oring_id", "port_oring_cs",
+    "port_groove_depth", "port_groove_w", "cooling_passage_d", "cooling_passage_offset",
+    "cooling_screw_a_x", "cooling_screw_b_x", "cooling_screw_c_x",
+    "cooling_tap_depth", "cooling_screw_d", "fit_thread_d", "fit_tap_depth", "fit_wall", "fit_pitch",
+    "fit_head_l", "fit_head_r", "fit_jog_x0", "fit_jog_x1",
+)
 
 
-def _rounded_box(x0, y0, x1, y1, z0, z1, r):
-    import Part
-    from FreeCAD import Vector as V
-
-    box = Part.makeBox(x1 - x0, y1 - y0, z1 - z0, V(x0, y0, z0))
-    vertical = [e for e in box.Edges
-                if abs(e.Vertexes[0].Z - e.Vertexes[1].Z) > 1e-6
-                and e.Vertexes[0].X < x0 + 1e-6]
-    return box.makeFillet(r, vertical)
-
-
-def _cyl(r, p0, p1):
-    import Part
-
-    d = p1 - p0
-    return Part.makeCylinder(r, d.Length, p0, d)
-
-
-def barb(p, root):
-    """One hose barb along +X, starting at `root` on the end face of the block.
-
-    A short collar, then `barb_rings` rings. Each ring grows from the small
-    diameter at its tip side to the large diameter at its root side, so the
-    hose slides on easily and grips when it is pulled back.
-    """
-    import Part
-    from FreeCAD import Vector as V
-
-    r_small = p["barb_d_min"] / 2
-    r_large = p["barb_d_max"] / 2
-    ring_l = (p["barb_l"] - p["barb_collar_l"]) / p["barb_rings"]
-    shape = _cyl(r_small, root, root + V(p["barb_l"], 0, 0))
-    shape = shape.fuse(_cyl(r_large, root, root + V(p["barb_collar_l"], 0, 0)))
-    for i in range(int(p["barb_rings"])):
-        start = root + V(p["barb_collar_l"] + i * ring_l, 0, 0)
-        cone = Part.makeCone(r_large, r_small, ring_l, start, V(1, 0, 0))
-        shape = shape.fuse(cone)
-    return shape.removeSplitter()
+def _fill_sheet(doc, params):
+    """The `Params` sheet: one aliased cell per parameter, then the derived sizes."""
+    found = doc.getObjectsByLabel("Params")
+    sheet = found[0] if found else doc.addObject("Spreadsheet::Sheet", "Params")
+    sheet.clearAll()
+    row = 1
+    for alias in USED:
+        value = getattr(params[alias], "Value", params[alias])
+        sheet.set(f"A{row}", alias)
+        sheet.set(f"B{row}", f"={value} mm")
+        sheet.setAlias(f"B{row}", alias)
+        row += 1
+    for alias, expr in DERIVED.items():
+        sheet.set(f"A{row}", alias)
+        sheet.set(f"B{row}", expr)
+        sheet.setAlias(f"B{row}", alias)
+        row += 1
+    doc.recompute()
+    return sheet
 
 
-def block_shape(p):
-    """The block as one solid, in part coordinates."""
-    import Part
-    from FreeCAD import Vector as V
-
-    ox, oy, oz = ORIGIN
-    g = p["cooling_block_gap"]
-
-    def L(x, y, z):
-        return V(x - ox, y - oy, z - oz)
-
-    top = TOP_Z - p["cooling_block_top_gap"] - oz
-    x0, y0, x1, y1 = POCKET
-    end_x = OPENING_X - g
-    solid = _rounded_box(x0 + g - ox, y0 + g - oy, end_x - ox, y1 - g - oy,
-                         0, top, POCKET_R - g)
-
-    # Port O-ring grooves in the bottom face. The groove outer wall is the
-    # O-ring outside diameter, so water pressure pushes the ring onto it.
-    ring_od = p["port_oring_id"] + 2 * p["port_oring_cs"]
-    for px, py in (PORT_A, PORT_B):
-        c = L(px, py, oz)
-        outer = Part.makeCylinder(ring_od / 2, p["port_groove_depth"], c)
-        inner = Part.makeCylinder(ring_od / 2 - p["port_groove_w"], p["port_groove_depth"], c)
-        solid = solid.cut(outer.cut(inner))
-
-    # Half way between the bottom of the port grooves and the top face.
-    pz = (p["port_groove_depth"] + top) / 2
-    # Barbs first, so the bore through them is cut together with the passages.
-    for px, py in (PORT_A, PORT_B):
-        solid = solid.fuse(barb(p, V(end_x - ox, py - oy, pz)))
-    solid = solid.removeSplitter()
-
-    # Water passages: up from each port, then straight along X through the
-    # barb. Each port and its barb lie on one line, so the block is the same
-    # for both.
-    rp = p["cooling_passage_d"] / 2
-    tip_x = end_x - ox + p["barb_l"]
-    for px, py in (PORT_A, PORT_B):
-        a = L(px, py, oz)
-        b = V(a.x, a.y, pz)
-        c = V(end_x - ox, a.y, pz)
-        for piece in (_cyl(rp, a - V(0, 0, 0.1), b), _cyl(rp, b, c), Part.makeSphere(rp, b)):
-            solid = solid.cut(piece)
-        solid = solid.cut(_cyl(p["barb_bore_d"] / 2, c - V(0.5, 0, 0), V(tip_x + 0.1, a.y, pz)))
-
-    # Two tapped holes for the M2.5 screws that come up from below.
-    for sx, sy in ((ORIGIN[0], ORIGIN[1]), SCREW_B):
-        solid = solid.cut(Part.makeCylinder(TAP_D / 2, TAP_DEPTH, L(sx, sy, oz)))
-    return solid
+def _reader(sheet):
+    def v(alias):
+        value = getattr(sheet, alias)
+        return float(getattr(value, "Value", value))
+    return v
 
 
-def build(doc, params):
-    """The printed cooling block between the cooling channel and the hoses."""
-    container = part(doc, "cooling-block")
-    block_body = body(doc, "Body", container=container)
+def _xy(body_obj):
+    return next(f for f in body_obj.Origin.OriginFeatures if getattr(f, "Role", "") == "XY_Plane")
+
+
+def _yz(body_obj):
+    return next(f for f in body_obj.Origin.OriginFeatures if getattr(f, "Role", "") == "YZ_Plane")
+
+
+def _sketch(body_obj, name, plane, offset):
+    """A sketch on `plane`, moved by `offset`: (x, y, z) expressions in the sketch's own axes."""
+    sk = body_obj.newObject("Sketcher::SketchObject", name)
+    sk.AttachmentSupport = [(plane, "")]
+    sk.MapMode = "FlatFace"
+    for axis, expr in zip("xyz", offset):
+        if expr is not None:
+            bind(sk, f".AttachmentOffset.Base.{axis}", expr)
+    return sk
+
+
+def _clear(doc, block_body):
     for obj in list(block_body.Group):
-        if obj.TypeId.startswith("PartDesign::") and obj.TypeId != "PartDesign::CoordinateSystem":
-            block_body.removeObject(obj)
-            doc.removeObject(obj.Name)
+        if obj.TypeId in ("App::Origin", "PartDesign::CoordinateSystem"):
+            continue
+        block_body.removeObject(obj)
+        doc.removeObject(obj.Name)
     old = doc.getObject("BlockShape")
     if old is not None:
         block_body.BaseFeature = None
         doc.removeObject(old.Name)
-    shape = doc.addObject("Part::Feature", "BlockShape")
-    shape.Label = "BlockShape (printed cooling block)"
-    shape.Shape = block_shape(params)
-    container.addObject(shape)
-    block_body.BaseFeature = shape
-    shape.Visibility = False
+
+
+def build(doc, params):
+    """The printed cooling block between the cooling channel and the two fittings."""
+    import FreeCAD
+
+    container = part(doc, "cooling-block")
+    block_body = body(doc, "Body", container=container)
+    _clear(doc, block_body)
+    v = _reader(_fill_sheet(doc, params))
+    to_carriage = (f"-{P}ox", f"-{P}oy")
+
+    # The outline, padded up from the bottom face.
+    gap = v("cooling_block_gap")
+    end_x = v("head_x0") + v("fit_head_l") / 2
+    sk = _sketch(block_body, "OutlineSketch", _xy(block_body), (*to_carriage, None))
+    co.outline(sk, v, gap, f"{P}cooling_block_gap", end_x, f"{P}head_x0 + {P}fit_head_l / 2")
+    pad = block_body.newObject("PartDesign::Pad", "BlockPad")
+    pad.Profile = sk
+    bind(pad, "Length", f"{P}block_t")
+
+    # The head outside the side face. Its top is flush with the top of the
+    # block (the print base), and it hangs down. It holds the two M5 threads
+    # with fit_wall of resin around each.
+    sk = _sketch(block_body, "HeadSketch", _xy(block_body),
+                 (*to_carriage, f"{P}block_t - 2 * {P}head_half_h"))
+    x0, x1 = v("head_x0"), v("head_x1")
+    ya, hw = v("cooling_arm_y"), v("head_half_w")
+    co.rounded_rect(sk, x0, x1, ya - hw, ya + hw, v("fit_head_r"), {
+        "x0": f"{P}head_x0", "x1": f"{P}head_x1",
+        "y0": f"{P}cooling_arm_y - {P}head_half_w", "y1": f"{P}cooling_arm_y + {P}head_half_w",
+        "r": f"{P}fit_head_r"})
+    head = block_body.newObject("PartDesign::Pad", "HeadPad")
+    head.Profile = sk
+    bind(head, "Length", f"2 * {P}head_half_h")
+
+    # Port O-ring grooves in the bottom face, and a riser from each port up
+    # to the passage level.
+    for tag in ("a", "b"):
+        px, py = f"{P}port_{tag}_x - {P}ox", f"{P}port_{tag}_y - {P}oy"
+        outer = block_body.newObject("PartDesign::SubtractiveCylinder", f"Groove_{tag}")
+        bind(outer, "Radius", f"{P}ring_od / 2")
+        bind(outer, "Height", f"{P}port_groove_depth")
+        core = block_body.newObject("PartDesign::AdditiveCylinder", f"GrooveCore_{tag}")
+        bind(core, "Radius", f"{P}ring_od / 2 - {P}port_groove_w")
+        bind(core, "Height", f"{P}port_groove_depth")
+        riser = block_body.newObject("PartDesign::SubtractiveCylinder", f"Riser_{tag}")
+        bind(riser, "Radius", f"{P}cooling_passage_d / 2")
+        bind(riser, "Height", f"{P}passage_z")
+        for feat in (outer, core, riser):
+            bind(feat, "Placement.Base.x", px)
+            bind(feat, "Placement.Base.y", py)
+
+    # The two passages: a circle swept along each path.
+    for tag, side in (("a", -1), ("b", 1)):
+        spine = _sketch(block_body, f"PassageSketch_{tag}", _xy(block_body),
+                        (*to_carriage, f"{P}passage_z"))
+        co.passage_spine(spine, v, side)
+        prof = _sketch(block_body, f"PassageProfile_{tag}", _yz(block_body),
+                       (f"-{P}oy", None, f"{P}port_{tag}_x - {P}ox"))
+        co.circles(prof, [((v(f"port_{tag}_y"), v("passage_z"), v("cooling_passage_d") / 2),
+                           (f"{P}port_{tag}_y", f"{P}passage_z", f"{P}cooling_passage_d / 2"))])
+        pipe = block_body.newObject("PartDesign::SubtractivePipe", f"Passage_{tag}")
+        pipe.Profile = prof
+        pipe.Spine = (spine, [f"Edge{i}" for i in range(1, 6)])
+        pipe.Transition = "Round corner"
+        spine.Visibility = prof.Visibility = False
+        # In the head, a short drop from the passage level down to the axis
+        # of the M5 thread, at the bottom face of the tapped hole.
+        drop = block_body.newObject("PartDesign::SubtractiveCylinder", f"Drop_{tag}")
+        bind(drop, "Radius", f"{P}cooling_passage_d / 2")
+        bind(drop, "Height", f"{P}passage_z - {P}fit_z")
+        bind(drop, "Placement.Base.x", f"{P}head_x1 - {P}fit_tap_depth - {P}ox")
+        bind(drop, "Placement.Base.y",
+             f"{P}cooling_arm_y {'-' if side < 0 else '+'} {P}fit_pitch / 2 - {P}oy")
+        bind(drop, "Placement.Base.z", f"{P}fit_z")
+
+    # The M5 threads for the fittings, in the end face of the head.
+    sk = _sketch(block_body, "FittingSketch", _yz(block_body),
+                 (f"-{P}oy", None, f"{P}head_x1 - {P}ox"))
+    co.circles(sk, [((ya + s * v("fit_pitch") / 2, v("fit_z"), v("fit_thread_d") / 2),
+                     (f"{P}cooling_arm_y {'+' if s > 0 else '-'} {P}fit_pitch / 2",
+                      f"{P}fit_z", f"{P}fit_thread_d / 2")) for s in (-1, 1)])
+    hole = block_body.newObject("PartDesign::Hole", "FittingThreads")
+    hole.Profile = sk
+    hole.Threaded = True
+    hole.ThreadType = "ISOMetricProfile"
+    hole.ThreadSize = "M5x0.8"
+    hole.DepthType = "Dimension"
+    bind(hole, "Depth", f"{P}fit_tap_depth")
+    hole.DrillPoint = "Flat"
+
+    # The three M2.5 threads for the screws from below, on the centre line.
+    sk = _sketch(block_body, "ScrewSketch", _xy(block_body), (*to_carriage, None))
+    pts = []
+    for tag, y_alias in (("a", "cooling_arm_y0"), ("b", "cooling_arm_y0"),
+                         ("c", "cooling_arm_y")):
+        pts.append(((v(f"cooling_screw_{tag}_x"), v(y_alias), v("cooling_screw_d") / 2),
+                    (f"{P}cooling_screw_{tag}_x", f"{P}{y_alias}", f"{P}cooling_screw_d / 2")))
+    co.circles(sk, pts)
+    hole = block_body.newObject("PartDesign::Hole", "ScrewThreads")
+    hole.Profile = sk
+    hole.Threaded = True
+    hole.ThreadType = "ISOMetricProfile"
+    hole.ThreadSize = "M2.5x0.45"
+    hole.DepthType = "Dimension"
+    bind(hole, "Depth", f"{P}cooling_tap_depth")
+    hole.Reversed = True
+
+    for obj in block_body.Group:
+        if obj.TypeId == "Sketcher::SketchObject":
+            obj.Visibility = False
+    doc.recompute()
 
     # Frame on the bottom face, on the axis of screw A. It joins the frame
     # IF_cooling_block of carriage-bottom.
     frame(doc, "IF_carriage", x="0", y="0", z="0", container=container)
+    # One frame on the axis of each fitting, on the end face of the head.
+    # Z points out of the head, along the fitting.
+    for tag, s in (("a", "-"), ("b", "+")):
+        frame(doc, f"IF_fitting_{tag}", x=f"{P}head_x1 - {P}ox",
+                  y=f"{P}cooling_arm_y {s} {P}fit_pitch / 2 - {P}oy", z=f"{P}fit_z",
+                  angle="90 deg", axis=(0, 1, 0), container=container)
+    # One frame at each port, on the bottom face: the seat of its O-ring.
+    for tag in ("a", "b"):
+        frame(doc, f"IF_oring_{tag}", x=f"{P}port_{tag}_x - {P}ox",
+              y=f"{P}port_{tag}_y - {P}oy", z="0", container=container)
+    doc.recompute()
 
 
 main(build, globals(), cad_dir=_HERE)

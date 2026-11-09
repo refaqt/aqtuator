@@ -451,42 +451,80 @@ package CompactStage {
         attribute measuringLength : LengthValue = 240 [mm];
     }
 
-    port def CoolingBlockInterface_v1 {
+    port def CoolingBlockInterface_v2 {
         doc /*
          * The printed cooling block lies in a 5 mm pocket in the top of
-         * carriage-bottom, over the two ends of the cooling channel. Its head
-         * hangs into the opening for the motor cable. Two ports go from the
-         * pocket floor into the channel. A 5 x 1.5 NBR 70 O-ring in the
-         * bottom of the block seals each port. Two M2.5 screws come up from
-         * below, through carriage-bottom, and are tapped into the block.
+         * carriage-bottom. The pocket has a wide part over the two ends of
+         * the cooling channel and an arm with smooth bends to the side face.
+         * The arm crosses over the motor cable where the cable comes up.
+         * Two ports go from the pocket floor into the channel. A 5 x 1.5
+         * NBR 70 O-ring in the bottom of the block seals each port. Three
+         * countersunk M2.5 screws come up from below, through
+         * carriage-bottom, and are tapped into the block: two in the wide
+         * part, one near the side face. All three sit on the centre line of
+         * the block.  The motor cable slot is deeper under the arm, with
+         * rounded ends, so the cable stays low there.
          *
          * In the CAD, the frame IF_cooling_block sits on the pocket floor,
-         * on the axis of the countersunk screw (Hole006). Z points up, X and
-         * Y as in carriage-bottom. It joins the frame IF_carriage of the
-         * block. See docs/decisions/2026-11-06_forcer-cooling-sealed-with-standard-o-rings.md.
+         * on the axis of screw A (Hole006). Z points up, X and Y as in
+         * carriage-bottom. It joins the frame IF_carriage of the block.
+         * See docs/decisions/2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md.
          */
         attribute portCount : Natural = 2;
         attribute portDiameter : LengthValue = 2.5 [mm];
-        attribute portSpacing : LengthValue = 10.8 [mm];
-        attribute screwCount : Natural = 2;
-        attribute screwPitch : LengthValue = 12 [mm];
+        attribute screwCount : Natural = 3;
+        attribute pocketDepth : LengthValue = 5 [mm];
+        attribute armWidth : LengthValue = 12 [mm];
     }
 
-    port def CableClampInterface_v1 {
+    port def CableClampInterface_v2 {
         doc /*
-         * The printed cable clamp sits against the outside of the side face
-         * of carriage-bottom, at the side exit of the motor cable, the
-         * cooling hoses and the read head cable. Two countersunk M3 screws
-         * go through the towers of its lower half into two tapped holes in
-         * the side face (Hole008).
+         * The end of a cable slot in the top of carriage-bottom, at the
+         * side face. Two printed halves with a half-round groove hold the
+         * cable there and close the slot end, so almost no dirt gets in.
+         * Carriage-top closes the slot. The stack of both halves and the
+         * cable is 0.2 mm higher than the slot is deep, so carriage-top
+         * presses the cable. Each half is 0.1 mm narrower than the slot on
+         * each side, and ends flush with the side face. One for the motor
+         * cable, one for the read head cable.
          *
-         * In the CAD, the frame IF_cable_clamp sits on the side face, at
-         * y = 110 mm and z = 23 mm (the split plane of the clamp halves).
-         * X points out of the side face. It joins the frame IF_carriage of
-         * the clamp.
+         * In the CAD, the frames IF_motor_cable_clamp and
+         * IF_read_head_cable_clamp sit on the slot floor, under the cable
+         * axis, in the middle of the clamp length. They join the frame
+         * IF_carriage of each clamp.
          */
-        attribute screwCount : Natural = 2;
-        attribute screwPitch : LengthValue = 57 [mm];
+        attribute squeeze : LengthValue = 0.2 [mm];
+        attribute sideGap : LengthValue = 0.1 [mm];
+    }
+
+    port def PortSealInterface_v1 {
+        doc /*
+         * O-ring groove around a cooling port in the bottom face of the
+         * cooling block: 8 mm outside, 2 mm wide, 1.1 mm deep, for a 5 x 1.5
+         * O-ring. In the CAD, the frames IF_oring_a and IF_oring_b of the
+         * block join the frame IF_seat of the O-ring.
+         */
+        attribute grooveDepth : LengthValue = 1.1 [mm];
+    }
+
+    port def FittingPortInterface_v1 {
+        doc /*
+         * M5 thread tapped in the printed head of the cooling block, 5 mm
+         * deep, with 2 mm of resin around it and a flat face for the sealing
+         * ring under the hex of the fitting. Tightening torque 1 Nm (Festo
+         * data sheet 578334). In the CAD, the frames IF_fitting_a and
+         * IF_fitting_b of the block join the frame IF_port of the fitting.
+         */
+        attribute threadDepth : LengthValue = 5 [mm];
+    }
+
+    port def HoseInterface_v1 {
+        doc /*
+         * Push-in connection for 4 mm tubing, 13 mm insertion depth (Festo
+         * data sheet 578334). In the CAD, the frame IF_hose of the fitting
+         * joins the frame IF_end of the hose stub.
+         */
+        attribute tubeOutsideDiameter : LengthValue = 4 [mm];
     }
 
     port def DamperMountInterface_v1 {
@@ -618,8 +656,9 @@ package CompactStage {
         port rollerBStart : RollerMountInterface_v1;
         port rollerAEnd : RollerMountInterface_v1;
         port rollerBEnd : RollerMountInterface_v1;
-        port coolingBlock : CoolingBlockInterface_v1;
-        port cableClamp : CableClampInterface_v1;
+        port coolingBlock : CoolingBlockInterface_v2;
+        port motorCableClamp : CableClampInterface_v2;
+        port readHeadCableClamp : CableClampInterface_v2;
     }
 
     part def GuideBlock {
@@ -771,7 +810,14 @@ package CompactStage {
         part rollerTopAEnd : SealRoller;
         part rollerTopBEnd : SealRoller;
         part coolingBlock : CoolingBlock;
-        part cableClamp : CableClamp;
+        part motorCableClamp : CableClamp;
+        part readHeadCableClamp : CableClamp;
+        part portORingA : PortORing;
+        part portORingB : PortORing;
+        part fittingA : CoolingFitting;
+        part fittingB : CoolingFitting;
+        part hoseA : CoolingHose;
+        part hoseB : CoolingHose;
 
         // Interfaces of the whole stage
         port machineMount : BaseMountInterface_v1;
@@ -840,31 +886,70 @@ package CompactStage {
         connect carriageTop.rollerAEnd to rollerTopAEnd.axle;
         connect carriageTop.rollerBEnd to rollerTopBEnd.axle;
 
-        // CoolingBlock: the printed block that connects the cooling channel to the hoses
+        // CoolingBlock: the printed block that brings the water from the cooling channel to the side face
         connect carriageBottom.coolingBlock to coolingBlock.carriage;
+        connect coolingBlock.portSealA to portORingA.seat;
+        connect coolingBlock.portSealB to portORingB.seat;
+        connect coolingBlock.fittingPortA to fittingA.port;
+        connect coolingBlock.fittingPortB to fittingB.port;
+        connect fittingA.hose to hoseA.end;
+        connect fittingB.hose to hoseB.end;
 
-        // CableClamp: closes the side exit around the hoses and cables
-        connect carriageBottom.cableClamp to cableClamp.carriage;
+        // CableClamp: two printed halves hold each cable where it leaves carriage-bottom
+        connect carriageBottom.motorCableClamp to motorCableClamp.carriage;
+        connect carriageBottom.readHeadCableClamp to readHeadCableClamp.carriage;
     }
 
     part def CoolingBlock {
         doc /*
          * The printed cooling block (SLA resin) between the cooling channel
-         * in carriage-bottom and two 4 x 2.5 PU hoses. Two hose barbs are
-         * part of the print; the hoses push over them. CAD:
+         * in carriage-bottom and the two hoses. Its arm runs to the side
+         * face. A head outside the side face holds two Festo push-in
+         * fittings NPQH-D-M5-Q4-P10 in M5 threads tapped in the print. CAD:
          * cad/parts/cooling-block/.
          */
-        port carriage : ~CoolingBlockInterface_v1;
+        port carriage : ~CoolingBlockInterface_v2;
+        port portSealA : PortSealInterface_v1;
+        port portSealB : PortSealInterface_v1;
+        port fittingPortA : FittingPortInterface_v1;
+        port fittingPortB : FittingPortInterface_v1;
     }
 
     part def CableClamp {
         doc /*
-         * The printed cable clamp at the side exit of carriage-bottom, in a
-         * lower and an upper half. It closes the exit around the two cooling
-         * hoses, the motor cable and the read head cable, and holds the
-         * hoses. CAD: cad/parts/cable-clamp/.
+         * A printed cable clamp in two halves with square corners, in the
+         * end of a cable slot of carriage-bottom. Carriage-top presses the
+         * halves onto the cable.
+         * CAD: cad/parts/motor-cable-clamp/ and
+         * cad/parts/read-head-cable-clamp/.
          */
-        port carriage : ~CableClampInterface_v1;
+        port carriage : ~CableClampInterface_v2;
+    }
+
+    part def PortORing {
+        doc /*
+         * Port O-Ring, bought: stoq:generic/o-ring-metric#5X1.5-NBR70. From
+         * the parts library in modules/stoq/.
+         */
+        port seat : ~PortSealInterface_v1;
+    }
+
+    part def CoolingFitting {
+        doc /*
+         * Cooling Fitting, bought: stoq:festo/npqh#NPQH-D-M5-Q4-P10. From the
+         * parts library in modules/stoq/.
+         */
+        port port : ~FittingPortInterface_v1;
+        port hose : HoseInterface_v1;
+    }
+
+    part def CoolingHose {
+        doc /*
+         * Cooling Hose, bought: stoq:festo/pun-h#197383 (Festo
+         * PUN-H-4X0,75-BL), sold by the metre. The assembly shows a 20 mm
+         * stub at each fitting. From the parts library in modules/stoq/.
+         */
+        port end : ~HoseInterface_v1;
     }
 
     part def EndStopDamper {

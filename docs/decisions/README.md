@@ -40,5 +40,6 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-10-28 | [The seal strip is 0.15 mm thick](2026-10-28_seal-strip-0-15-mm.md) |
 | 2026-10-28 | [The seal strip rollers turn on two flanged ball bearings](2026-10-28_seal-strip-rollers-on-flanged-ball-bearings.md) |
 | 2026-11-06 | [The forcer cooling is sealed with standard O-rings and a printed block](2026-11-06_forcer-cooling-sealed-with-standard-o-rings.md) |
+| 2026-11-09 | [The cooling block runs to the side face and holds two Festo fittings](2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md) |
 | 2026-11-09 | [The compact stage is partly completed machinery, without limit switches](2026-11-09_compact-stage-is-partly-completed-machinery.md) |
 | 2026-11-09 | [We do not continue with DGSMARTWIN for now](2026-11-09_no-dgsmartwin-for-now.md) |

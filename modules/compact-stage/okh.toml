@@ -50,8 +50,13 @@ source = ["cad/parts/cooling-block/cooling-block.FCStd"]
 sysml  = "CoolingBlock"
 
 [[part]]
-name   = "Cable Clamp"
-source = ["cad/parts/cable-clamp/cable-clamp.FCStd"]
+name   = "Motor Cable Clamp"
+source = ["cad/parts/motor-cable-clamp/motor-cable-clamp.FCStd"]
+sysml  = "CableClamp"
+
+[[part]]
+name   = "Read Head Cable Clamp"
+source = ["cad/parts/read-head-cable-clamp/read-head-cable-clamp.FCStd"]
 sysml  = "CableClamp"
 
 [[part]]
@@ -73,3 +78,22 @@ sysml = "RollerAxle"
 bom   = "MEC-004"
 part  = "stoq:iso/iso-7092#2-200HV-A2"
 sysml = "RollerWasher"
+
+[[bought-part]]
+bom   = "MEC-009"
+part  = "stoq:generic/o-ring-metric#5X1.5-NBR70"
+sysml = "PortORing"
+
+[[bought-part]]
+bom   = "MEC-010"
+part  = "stoq:generic/o-ring-metric#90X2-NBR70"
+
+[[bought-part]]
+bom   = "MEC-011"
+part  = "stoq:festo/npqh#NPQH-D-M5-Q4-P10"
+sysml = "CoolingFitting"
+
+[[bought-part]]
+bom   = "MEC-012"
+part  = "stoq:festo/pun-h#197383"
+sysml = "CoolingHose"
