@@ -84,13 +84,14 @@ jobs:
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <title>AQTUATOR pages</title>
           <style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px 16px;background:#f2f4f4;color:#1a2227}
-          @media (prefers-color-scheme:dark){body{background:#12181b;color:#e3e9ec}a{color:#5cb8c2}}</style>
+          @media (prefers-color-scheme:dark){body{background:#12181b;color:#e3e9ec}a{color:#5cb8c2}}li{margin:0 0 12px}</style>
           <h1>AQTUATOR pages</h1>
+          <p>These pages are design tools and study results for the AQTUATOR project. Each page runs in your browser. You can change the inputs and see the result at once.</p>
           <ul>
-          <li><a href="strip-seal/">Strip Seal Designer</a></li>
-          <li><a href="cutting-force/">Cutting Force Rejection</a></li>
-          <li><a href="damper/">Damper Sizing</a></li>
-          <li><a href="crash/">End-Stop Crash Results</a></li>
+          <li><a href="strip-seal/">Strip Seal Designer</a><br>Shows how the spring steel strip lies over the carriage rollers, and how much pull and force it needs.</li>
+          <li><a href="cutting-force/">Cutting Force Rejection</a><br>Shows how well the position controller holds the stage while a milling cutter pushes on it.</li>
+          <li><a href="damper/">Damper Sizing</a><br>Finds the force and stroke needed when the stage hits an end stop at full motor force.</li>
+          <li><a href="crash/">End-Stop Crash Results</a><br>Shows the results of the crash simulation: loads, stress in the base, guide block life, and the checks behind the numbers.</li>
           </ul>
           HTML
 
