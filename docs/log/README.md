@@ -202,4 +202,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-10 | [Carriage-bottom stress analysis runs again on the new part](2026-11-10_carriage-bottom-stress-analysis-rerun.md) | simulation, cad |  |
 | 2026-11-10 | [Crash of the compact stage into its end stops at 2 m/s](2026-11-10_end-stop-crash-simulation.md) | simulation, engineering, safety |  |
 | 2026-11-10 | [Interactive results page for the end-stop crash study](2026-11-10_crash-results-page.md) | simulation, engineering |  |
+| 2026-11-10 | [HIWIN answers on the E1 drive and the EGR15U / QEH15SA guides](2026-11-10_hiwin-answers-e1-drive-and-guides.md) | engineering, purchasing |  |
 | 2026-11-10 | [Short descriptions on the web pages overview](2026-11-10_describe-the-pages-overview.md) | engineering |  |
