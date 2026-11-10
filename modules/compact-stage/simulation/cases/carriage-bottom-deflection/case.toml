@@ -19,7 +19,7 @@ density = 2.7e-6           # kg/mm^3
 # These are the faces where the four QEH15SA guide blocks sit. The size
 # (x by y, outer edges) tells them apart from other faces at that height.
 face_z = 10.0
-face_size = [35.0, 48.0]
+face_size = [35.0, 58.0]
 expected_faces = 4
 
 [load]
@@ -28,7 +28,7 @@ force = 200.0
 direction = [0.0, 0.0, -1.0]
 # Load edges: straight edges on the top face, along x, with this length.
 edge_z = 27.5
-edge_length = 6.0
+edge_length = 7.0
 expected_edges = 4
 # Stress closer than this to a load edge is not reported as the
 # "away from the load" peak. A load on a line gives a stress peak that

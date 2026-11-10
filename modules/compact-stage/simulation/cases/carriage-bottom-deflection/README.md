@@ -11,7 +11,16 @@ installer. Nothing else to install.
 "C:/Program Files/FreeCAD 1.1/bin/freecadcmd.exe" modules/compact-stage/simulation/cases/carriage-bottom-deflection/run_fem.py
 ```
 
-Run it from the repository root. It takes about two minutes. The numbers go to
+On Linux, the FreeCAD package may come without CalculiX. Install it first, so that `ccx` is on the
+path (for example from conda-forge, package `calculix`), then run:
+
+```bash
+freecadcmd modules/compact-stage/simulation/cases/carriage-bottom-deflection/run_fem.py
+```
+
+The part file is in Git LFS (large file storage). Run `git lfs pull` first, or FreeCAD reads a
+small text pointer instead of the part. Run the script from the repository root. It takes about two
+minutes. The numbers go to
 [`results.json`](../../results/carriage-bottom-deflection/results.json).
 
 **To see the colours:** open
@@ -51,8 +60,8 @@ All inputs are in [`case.toml`](case.toml).
 | Input | Value | Note |
 | --- | --- | --- |
 | Material | 6061-T6, E = 69 GPa, ν = 0.33 | Stand-in until the alloy is chosen |
-| Fixed | The four flat faces at z = 10 mm where the QEH15SA blocks sit | Fully fixed. The real blocks give a little |
-| Force | 200 N down in total | Spread over four 6 mm edges on the top face, at y = 10 mm and y = 170 mm, at both ends in x |
+| Fixed | The four flat faces at z = 10 mm where the QEH15SA blocks sit, each 35 × 58 mm | Fully fixed. The real blocks give a little |
+| Force | 200 N down in total | Spread over four 7 mm edges on the top face, at y = 10 mm and y = 170 mm, at both ends in x |
 | Mesh | Second order tetrahedra, 0.5 to 5 mm | Straight middle nodes, see below |
 
 ## What went wrong in the first setup
