@@ -97,7 +97,10 @@ def fem_curves(fem, cfg, out_dir):
                                     ("band", "End wall face (carriage end hits)"))):
         cv = fem[key]["curve"]
         F = np.array([c["force"] for c in cv]) / 1e3
-        axes[0].plot(F, [c["von_mises_max"] for c in cv], color=SERIES[i], label=lab)
+        m = cfg["material_base"]
+        sig = [m["rp02"] + (m["rm"] - m["rp02"]) * min(c["peeq_max"] / m["plastic_strain_at_rm"], 1.0)
+               if c["peeq_max"] > 1e-6 else min(c["von_mises_max"], m["rp02"]) for c in cv]
+        axes[0].plot(F, sig, color=SERIES[i], label=lab)
         axes[1].plot(F, [100 * c["peeq_max"] for c in cv], color=SERIES[i], label=lab)
     mat = cfg["material_base"]
     axes[0].axhline(mat["rp02"], color=INK2, linewidth=1, linestyle="--")

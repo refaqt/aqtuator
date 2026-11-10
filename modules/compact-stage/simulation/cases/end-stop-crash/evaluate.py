@@ -131,6 +131,19 @@ def joint_check(j, cfg, F, M):
 # One crash case
 # ---------------------------------------------------------------------------
 
+def stress_from(cfg, nodal, peeq):
+    """Peak stress that the material can carry at this plastic strain.
+
+    CalculiX extrapolates the stress from the integration points to the
+    nodes. Where the wall yields, that overshoots the material curve. Once
+    there is plastic strain, the stress is read from the curve instead.
+    """
+    m = cfg["material_base"]
+    if peeq > 1e-6:
+        return m["rp02"] + (m["rm"] - m["rp02"]) * min(peeq / m["plastic_strain_at_rm"], 1.0)
+    return min(nodal, m["rp02"])
+
+
 def run_case(cfg, fem, parts, label, push=True, speed=None, solid=None, rate=1.0, joints=True,
              upper=None):
     model = cm.CrashModel(cfg, parts, fem=fem, solid_stiffness=solid, rate=rate, push=push, speed=speed)
@@ -163,7 +176,8 @@ def run_case(cfg, fem, parts, label, push=True, speed=None, solid=None, rate=1.0
             base[key] = {
                 "force": force,
                 "beyond_fem_range": force > fmax,
-                "von_mises_max": at("von_mises_max"),
+                "von_mises_max": stress_from(cfg, at("von_mises_max"), at("peeq_max")),
+                "von_mises_nodal_max": at("von_mises_max"),
                 "plastic_strain_max": at("peeq_max"),
                 "displacement": disp,
                 "lasting_dent": max(0.0, disp - force / k_el),
@@ -208,7 +222,8 @@ def run_case(cfg, fem, parts, label, push=True, speed=None, solid=None, rate=1.0
         "peak_force_bumpers": float(fbs.max()),
         "peak_force_metal": float(fm.max()),
         "peak_force_total": float(ftot.max()),
-        "peak_deceleration_g": float(-rec["a"][:, 0].min() / G),
+        # The carriage moves towards -x, so the stop pushes it towards +x.
+        "peak_deceleration_g": float(rec["a"][:, 0].max() / G),
         "rebound_speed": float(max(rec["v"][:, 0].max(), 0.0)),
         "base": base,
         "blocks": blocks,

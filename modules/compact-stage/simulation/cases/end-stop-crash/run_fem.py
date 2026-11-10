@@ -303,7 +303,7 @@ def write_static_job(path, mesh_file, mat, fixed_nodes, faces, area, f_max, n_in
             f.write(", ".join(str(int(n)) for n in fixed_nodes[k:k + 12]) + "\n")
         f.write(material_block(mat))
         f.write("*BOUNDARY\nFIX, 1, 3\n")
-        f.write("*STEP, NLGEOM, INC=400\n*STATIC\n%g, 1.0, 1e-4, %g\n" % (1.0 / n_inc, 1.0 / n_inc))
+        f.write("*STEP, NLGEOM, INC=400\n*STATIC\n%g, 1.0, 2e-3, %g\n" % (1.0 / n_inc, 1.0 / n_inc))
         f.write("*DLOAD\n")
         f.write(dload_lines(faces, f_max / area))
         f.write("*NODE FILE\nU\n*EL FILE\nS, PEEQ\n*END STEP\n")

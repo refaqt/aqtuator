@@ -191,10 +191,10 @@ class CrashModel:
         pocket_curve = None
         band_curve = None
         if fem is not None:
-            lv = fem["pocket"]["levels"]
-            pocket_curve = ([0.0] + [v["force"] for v in lv], [0.0] + [v["displacement_at_peak"] * mm for v in lv])
-            lv = fem["band"]["levels"]
-            band_curve = ([v["force"] for v in lv], [v["displacement_at_peak"] * mm for v in lv])
+            cv = [c for c in fem["pocket"]["curve"] if c["force"] > 0]
+            pocket_curve = ([0.0] + [c["force"] for c in cv], [0.0] + [c["displacement"] * mm for c in cv])
+            cv = [c for c in fem["band"]["curve"] if c["force"] > 0]
+            band_curve = ([c["force"] for c in cv], [c["displacement"] * mm for c in cv])
         self.bumper = BumperLaw(cfg, solid_stiffness, rate, pocket_curve)
         self.metal = MetalLaw(band_curve) if band_curve else None
         self.gap = (cfg["bumper"]["stroke"] + cfg["metal_contact"]["gap_after_stroke"]) * mm

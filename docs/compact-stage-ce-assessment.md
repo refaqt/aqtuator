@@ -237,6 +237,13 @@ The measures:
 3. guards that can hold small thrown parts (the customer's job, stated in the instructions);
 4. an inspection of the dampers, the guides and the read head after every crash.
 
+**Crash simulation of 2026-11-10.** A model of a crash at 2 m/s with the motor pushing confirms
+this picture. With no payload, the read head gets about its 1000 m/s² rating. From 1 kg it gets more.
+With a second stage on top, the guide blocks are dented, the screws between the two carriage halves
+shear off, and the upper stage and the base slide on their screws. Thread locker does not stop a
+joint from slipping. Dowel pins or a stop edge do. The base itself keeps a dent of 0.004 mm at most.
+See the [crash results](../modules/compact-stage/simulation/results/end-stop-crash/summary.md).
+
 ### Payload and top speed are design limits
 
 Telling the customer is not enough on its own. The risk assessment standard EN ISO 12100 sets a
