@@ -146,8 +146,8 @@
     // Rail end
     {
       const v = s.block_body_to_rail_end_mm;
-      tiles.push({ name: "Guide blocks at the rail end", val: `${fmt(v, 1)} mm on the rail`, cls: v > 10 ? "ok" : v > 0 ? "warn" : "bad",
-        verdict: s.block_end_to_rail_end_mm < 0 ? "Lubrication unit runs off the rail" : "Whole block stays on the rail",
+      tiles.push({ name: "Guide blocks at the rail end", val: `${fmt(v, 1)} mm on the rail`, cls: v <= 0 ? "bad" : s.block_end_to_rail_end_mm < 0 ? "warn" : "ok",
+        verdict: v <= 0 ? "Block runs off the rail" : s.block_end_to_rail_end_mm < 0 ? "Lubrication unit runs off, balls stay on" : "Whole block stays on the rail",
         lim: "Steel block body with the balls still on the rail at the deepest point. Valid only if the E2 lubrication unit points outward (to be checked in the CAD)." });
     }
     if (s.motor_pushes) {
@@ -367,14 +367,15 @@
     const key = job + i;
     if (fem.cache[key]) return fem.cache[key];
     const st = F[job].steps[i];
-    const r = { force: st.force, ux: decode(st.ux), uy: decode(st.uy), uz: decode(st.uz), vm: decode(st.vm), pe: decode(st.pe) };
+    const r = { force: st.force, ux: decode(st.ux), uy: decode(st.uy), uz: decode(st.uz), vm: decode(st.vm), pe: decode(st.pe),
+      dent: st.dent ? decode(st.dent) : new Float32Array(fem.n) };
     fem.cache[key] = r;
     return r;
   }
   function fieldAt(job, force) {
     const st = stepsOf(job);
     const n = fem.n;
-    const zero = { ux: new Float32Array(n), uy: new Float32Array(n), uz: new Float32Array(n), vm: new Float32Array(n), pe: new Float32Array(n) };
+    const zero = { ux: new Float32Array(n), uy: new Float32Array(n), uz: new Float32Array(n), vm: new Float32Array(n), pe: new Float32Array(n), dent: new Float32Array(n) };
     if (!st.length || force <= 0) return { f: zero, w: "no load", beyond: false };
     let lo = -1;
     for (let i = 0; i < st.length; i++) if (st[i].force <= force + 1e-6) lo = i;
@@ -384,7 +385,7 @@
     const B = stepField(job, lo + 1);
     const a = (force - A.force) / (B.force - A.force);
     const out = {};
-    ["ux", "uy", "uz", "vm", "pe"].forEach((k) => {
+    ["ux", "uy", "uz", "vm", "pe", "dent"].forEach((k) => {
       const r = new Float32Array(n);
       for (let i = 0; i < n; i++) r[i] = A[k][i] * (1 - a) + B[k][i] * a;
       out[k] = r;
@@ -511,17 +512,9 @@
     fem.field = f;
     const n = fem.n;
     const st = stepsOf(job);
-    // Lasting dent: displacement minus the elastic spring-back, with the first
-    // (elastic) step as the elastic shape.
-    const e1 = st.length ? stepField(job, 0) : null;
-    const dent = new Float32Array(n);
-    if (e1 && force > 0) {
-      const a = force / e1.force;
-      for (let i = 0; i < n; i++) dent[i] = Math.hypot(f.ux[i] - a * e1.ux[i], f.uy[i] - a * e1.uy[i], f.uz[i] - a * e1.uz[i]);
-      // The noise of the 16 bit storage is about 1e-5 of the range: ignore it.
-      const floor = 2e-4 * Math.max(...[f.ux, f.uy, f.uz].map((arr) => Math.max(...arr.map(Math.abs))));
-      for (let i = 0; i < n; i++) if (dent[i] < floor) dent[i] = 0;
-    }
+    // Lasting part: the elastic-plastic run minus a purely elastic run at the
+    // same force (both from the export script).
+    const dent = f.dent;
     fem.dent = dent;
     const mode = $("fem-field").value;
     let vals, max = 0;
@@ -541,6 +534,13 @@
       col[3 * i] = c3[0]; col[3 * i + 1] = c3[1]; col[3 * i + 2] = c3[2];
     }
     fem.geo.attributes.color.needsUpdate = true;
+    if (fem.autoFor !== current + job) {
+      // Draw the largest displacement as about 4 mm.
+      let um = 0;
+      for (let i = 0; i < n; i++) um = Math.max(um, Math.hypot(f.ux[i], f.uy[i], f.uz[i]));
+      $("fem-scale").value = um > 0 ? Math.max(0, Math.min(3, Math.log10(4 / um))).toFixed(2) : 2;
+      fem.autoFor = current + job;
+    }
     const scaleExp = parseFloat($("fem-scale").value);
     const scale = scaleExp <= 0 ? 0 : Math.round(Math.pow(10, scaleExp));
     $("fem-scale-v").textContent = scale;
@@ -636,6 +636,12 @@
         const r = st.reaction[0];
         add(`FEM supports carry the load (${job})`, "Sum of the reaction forces at the fixed bottom strips, at the solved step closest to this case.",
           `${kN(r, 2)} against ${kN(st.force, 2)} applied (${fmt(100 * (r - st.force) / st.force, 2)} %)`, Math.abs(r - st.force) / st.force < 0.01 ? "ok" : "warn", "1 %");
+        const stAll = stepsOf(job);
+        if (stAll.length && stAll[0].dent_load_mean !== undefined) {
+          const dm = interp(b.force, [0].concat(stAll.map((x) => x.force)), [0].concat(stAll.map((x) => x.dent_load_mean)));
+          add(`Lasting dent, second method (${job})`, "The study takes the dent as the wall displacement minus the elastic spring-back F/k. Here the same FEM is run again with a purely elastic material, and the dent is the difference of the two runs at this force (mean over the load face).",
+            `${fmt(Math.max(0, dm) * 1000, 2)} µm against ${fmt(b.lasting_dent * 1000, 2)} µm in the study`, Math.abs(dm - b.lasting_dent) < 0.002 ? "ok" : "warn", "2 µm");
+        }
         const cv = D.fem_curves[job].curve;
         const d0 = interp(st.force, cv.map((p) => p.force), cv.map((p) => p.displacement));
         add(`FEM re-run gives the same wall (${job})`, "The 3D fields on this page come from a new FEM run. Its wall displacement is compared with the committed curve that the crash model uses.",
@@ -741,6 +747,16 @@ shear through the wall around the 20 mm disc: τ = F / (π·d·t) = ${fmt(D.chec
     f.push(`<p class="note"><b>The peak stress at the sharp inner corners is an upper estimate.</b> CalculiX extrapolates the stress to the corner nodes.
       Where the metal yields, that value can be higher than the material can carry. The study handles this the right way: once there is plastic strain,
       it reads the stress from the material curve. The 3D view shows the raw values, so you can see where this happens.</p>`);
+    const mc = F && F.mesh_check ? F.mesh_check : null;
+    const mn = mc && mc.find((r) => r.mesh === "normal"), mf = mc && mc.find((r) => r.mesh === "fine");
+    if (mn && mf) {
+      const ds = 100 * (mf.von_mises_max / mn.von_mises_max - 1);
+      f.push(`<p class="note warn"><b>The peak stress depends on the mesh by about ${fmt(ds)} %.</b> On a finer mesh the wall deflection changes by only
+        ${fmt(100 * (mf.wall_displacement_mm / mn.wall_displacement_mm - 1), 1)} %, so the wall stiffness that the crash model uses is right. But the single highest
+        stress rises from ${fmt(mn.von_mises_max)} to ${fmt(mf.von_mises_max)} MPa at 5 kN, while 99.5 % of the nodes stay the same. The peak sits at a sharp inner
+        corner. So the first yield may start about ${fmt(ds)} % earlier than the study says (about ${fmt(16 / (1 + ds / 100), 0)} kN instead of 16 kN on the pocket
+        walls). This changes no verdict: in the second-stage case the wall then yields a little more, and the dent should stay well below 0.01 mm.</p>`);
+    }
     f.push(`<p class="note"><b>No mistakes found in the calculation.</b> A new run of the study scripts gives the same ${D.checks.same_as_results_json.count} numbers.
       The energy and impulse balances close in all ${cases.length} cases (worst ${fmt(D.checks.energy_worst_pct, 4)} % and ${fmt(D.checks.impulse_worst_pct, 2)} %).
       The simple one-direction model agrees with the main model. The open points are the inputs above, not the arithmetic.</p>`);

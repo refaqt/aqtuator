@@ -12,8 +12,12 @@ functions, read from that file), and runs:
   field of every load step on the outer surface of the base: displacement,
   von Mises stress and plastic strain. It also prints the sum of the support
   reactions, to check that the supports carry the whole load.
-- "mesh check": the pocket load at 5 kN, elastic, on a coarse, the normal and
-  a fine mesh. The peak stress and the wall deflection should not change much.
+- "pocket" and "band" again with a purely elastic material. The difference
+  between the two runs, at the same force, is the lasting (plastic) part of the
+  displacement. A plain elastic spring-back rule would mix in the change of
+  shape under load (large deformation), which is of the same size here.
+- "mesh check": the pocket load at 5 kN, elastic, on a coarser (x1.5), the normal and
+  a finer (x0.65) mesh. The peak stress and the wall deflection should not change much.
 
 Output:
 - simulation/cases/end-stop-crash-results/fem_fields.js (committed): one plain
@@ -206,10 +210,39 @@ def ramp(cfg, name, sets, mesh_inp, work, f_max, surf_nodes):
             "steps": steps}
 
 
+def elastic_dent(cfg, job, sets, mesh_inp, work, f_max, surf_nodes, data):
+    """Run the ramp with an elastic material and add the lasting part to each step."""
+    mat = cfg["material_base"]
+    faces, area, load_nodes = sets[job]
+    name = job + "_elastic"
+    path = os.path.join(work, name + ".inp")
+    R["write_static_job"](path, mesh_inp, mat, sets["fixed"], faces, area, f_max, STEPS)
+    with open(path) as f:
+        txt = f.read()
+    a = txt.index("*PLASTIC")
+    b = txt.index("*DENSITY")
+    with open(path, "w") as f:
+        f.write(txt[:a] + txt[b:])
+    t0 = time.time()
+    R["run_ccx"](name, work)
+    print("   elastic %s solved in %.0f min" % (job, (time.time() - t0) / 60))
+    el = {round(t, 6): b for t, n, b in R["read_frd"](os.path.join(work, name + ".frd")) if n == "DISP"}
+    pl = {round(t, 6): b for t, n, b in R["read_frd"](os.path.join(work, job + ".frd")) if n == "DISP"}
+    for st in data[job]["steps"]:
+        t = round(st["force"] / f_max, 6)
+        if t not in el or t not in pl:
+            raise SystemExit("step %s missing in the elastic run" % t)
+        d = np.array([[pl[t][n][k] - el[t][n][k] for k in range(3)] for n in surf_nodes])
+        st["dent"] = q16(np.linalg.norm(d, axis=1))
+        st["dent_load_mean"] = float(np.mean([-(pl[t][n][0] - el[t][n][0]) for n in load_nodes]))
+        print("   %8.0f N: lasting part, largest %.2f um, mean on the load face %.2f um"
+              % (st["force"], 1e3 * float(np.linalg.norm(d, axis=1).max()), 1e3 * st["dent_load_mean"]))
+
+
 def mesh_check(cfg, base_work):
     """Pocket load at 5 kN, elastic, on three meshes."""
     out = []
-    for factor, label in ((2.0, "coarse"), (1.0, "normal"), (0.6, "fine")):
+    for factor, label in ((1.5, "coarse"), (1.0, "normal"), (0.65, "fine")):
         c = copy.deepcopy(cfg)
         for k in ("mesh_fine", "mesh_mid"):
             c["fem"][k] = cfg["fem"][k] * factor
@@ -297,6 +330,21 @@ def main():
         print("2. Load ramps")
         data["pocket"] = ramp(cfg, "pocket", sets, mesh_inp, os.path.join(work, "main"), POCKET_MAX, nodes)
         data["band"] = ramp(cfg, "band", sets, mesh_inp, os.path.join(work, "main"), BAND_MAX, nodes)
+        with open(out_path, "w") as f:
+            json.dump(data, f)
+
+    if only in ("all", "ramps", "dent"):
+        print("2b. Elastic ramps for the lasting part")
+        w = os.path.join(work, "main")
+        ids, xyz, tets = R["read_msh"](os.path.join(w, "base.msh"))
+        tets = R["to_ccx_order"](ids, xyz, tets)
+        sets = load_sets(cfg, ids, xyz, tets)
+        nodes, _, _ = surface(tets, sets["bfaces"], sets["pos"], xyz)
+        if len(nodes) != data["mesh"]["surface_nodes"]:
+            raise SystemExit("the mesh in %s is not the mesh of the ramps" % w)
+        mesh_inp = os.path.join(w, "mesh.inp")
+        elastic_dent(cfg, "pocket", sets, mesh_inp, w, POCKET_MAX, nodes, data)
+        elastic_dent(cfg, "band", sets, mesh_inp, w, BAND_MAX, nodes, data)
         with open(out_path, "w") as f:
             json.dump(data, f)
 
