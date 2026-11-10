@@ -6,6 +6,7 @@ name: Pages
 #   https://refaqt.github.io/aqtuator/strip-seal/
 #   https://refaqt.github.io/aqtuator/cutting-force/
 #   https://refaqt.github.io/aqtuator/damper/
+#   https://refaqt.github.io/aqtuator/crash/
 
 on:
   push:
@@ -14,6 +15,7 @@ on:
       - "simulation/cases/strip-seal-designer/**"
       - "simulation/cases/cutting-force-rejection/**"
       - "simulation/cases/damper-sizing/**"
+      - "simulation/cases/end-stop-crash-results/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -47,16 +49,21 @@ jobs:
           node simulation/cases/strip-seal-designer/check_model.mjs
           node simulation/cases/cutting-force-rejection/check_model.mjs
           node simulation/cases/damper-sizing/check_model.mjs
+          node simulation/cases/end-stop-crash-results/check_data.mjs
 
       - name: Collect the site
         run: |
-          mkdir -p _site/strip-seal _site/cutting-force _site/damper
+          mkdir -p _site/strip-seal _site/cutting-force _site/damper _site/crash
           cp simulation/cases/strip-seal-designer/index.html \
              simulation/cases/strip-seal-designer/strip_model.js _site/strip-seal/
           cp simulation/cases/cutting-force-rejection/index.html \
              simulation/cases/cutting-force-rejection/control_model.js _site/cutting-force/
           cp simulation/cases/damper-sizing/index.html \
              simulation/cases/damper-sizing/damper_model.js _site/damper/
+          cp simulation/cases/end-stop-crash-results/index.html \
+             simulation/cases/end-stop-crash-results/page.js \
+             simulation/cases/end-stop-crash-results/crash_data.js \
+             simulation/cases/end-stop-crash-results/fem_fields.js _site/crash/
           # Add the commit to the model address. A browser that still holds the
           # old model file in its cache then fetches the new one, instead of
           # running the new page against the old model.
@@ -66,6 +73,10 @@ jobs:
           sed -i "s#src=\"./damper_model.js\"#src=\"./damper_model.js?v=$v\"#" _site/damper/index.html
           grep -q "strip_model.js?v=$v" _site/strip-seal/index.html
           grep -q "control_model.js?v=$v" _site/cutting-force/index.html
+          for f in crash_data.js fem_fields.js page.js; do
+            sed -i "s#src=\"./$f\"#src=\"./$f?v=$v\"#" _site/crash/index.html
+            grep -q "$f?v=$v" _site/crash/index.html
+          done
           grep -q "damper_model.js?v=$v" _site/damper/index.html
           cat > _site/index.html <<'HTML'
           <!doctype html>
@@ -79,6 +90,7 @@ jobs:
           <li><a href="strip-seal/">Strip Seal Designer</a></li>
           <li><a href="cutting-force/">Cutting Force Rejection</a></li>
           <li><a href="damper/">Damper Sizing</a></li>
+          <li><a href="crash/">End-Stop Crash Results</a></li>
           </ul>
           HTML
 

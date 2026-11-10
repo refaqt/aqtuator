@@ -15,6 +15,9 @@ It runs for no payload, 1 kg, a second stage on top in cross configuration, and 
 (0 to 20 kg) against the height of its centre of mass (20 to 200 mm above the carriage top).
 
 Results: [`results/end-stop-crash/summary.md`](../../results/end-stop-crash/summary.md).
+Interactive results page, with the 3D stress and the checks:
+<https://refaqt.github.io/aqtuator/crash/>. `export_web_crash.py` and `export_web_fem.py` make its
+data (see [its README](../../../../../simulation/cases/end-stop-crash-results/README.md)).
 
 ## Tools
 
