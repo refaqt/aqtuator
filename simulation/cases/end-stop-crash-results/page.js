@@ -639,8 +639,8 @@
         const stAll = stepsOf(job);
         if (stAll.length && stAll[0].dent_load_mean !== undefined) {
           const dm = interp(b.force, [0].concat(stAll.map((x) => x.force)), [0].concat(stAll.map((x) => x.dent_load_mean)));
-          add(`Lasting dent, second method (${job})`, "The study takes the dent as the wall displacement minus the elastic spring-back F/k. Here the same FEM is run again with a purely elastic material, and the dent is the difference of the two runs at this force (mean over the load face).",
-            `${fmt(Math.max(0, dm) * 1000, 2)} µm against ${fmt(b.lasting_dent * 1000, 2)} µm in the study`, Math.abs(dm - b.lasting_dent) < 0.002 ? "ok" : "warn", "2 µm");
+          add(`Lasting dent, second method (${job})`, "The study takes the dent as the wall displacement minus the elastic spring-back F/k. Here the same FEM is run again with a purely elastic material, and the difference of the two runs at this force is taken (mean over the load face). It is measured with the load on, so it still holds a small elastic part. Both are estimates; they should agree to a few µm.",
+            `${fmt(Math.max(0, dm) * 1000, 2)} µm against ${fmt(b.lasting_dent * 1000, 2)} µm in the study`, Math.abs(dm - b.lasting_dent) < 0.005 ? "ok" : "warn", "5 µm");
         }
         const cv = D.fem_curves[job].curve;
         const d0 = interp(st.force, cv.map((p) => p.force), cv.map((p) => p.displacement));

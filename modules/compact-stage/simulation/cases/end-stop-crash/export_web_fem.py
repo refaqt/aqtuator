@@ -25,7 +25,7 @@ Output:
 - simulation/results/end-stop-crash/exports/web-fem/ (not committed): the work
   files of CalculiX.
 
-It takes about 30 minutes on four cores.
+It takes about 45 minutes on four cores.
 """
 
 import base64

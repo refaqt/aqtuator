@@ -53,7 +53,7 @@ freecadcmd modules/compact-stage/simulation/cases/end-stop-crash/export_web_cras
 freecadcmd modules/compact-stage/simulation/cases/end-stop-crash/export_web_fem.py
 ```
 
-The first takes about two minutes. The second runs the stress analysis again and takes about 30
+The first takes about two minutes. The second runs the stress analysis again and takes about 45
 minutes on four cores. Then check the data:
 
 ```bash
