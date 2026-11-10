@@ -1,0 +1,259 @@
+# Crash of the compact stage into its end stops.
+# crash_model.py, run_fem.py and evaluate.py read this file.
+# Units: mm, kg, N, MPa, s unless a key says otherwise.
+#
+# Coordinates are the base coordinates of the assembly: x along the travel
+# (0 to 440), y across (0 to 210), z up from the base bottom. The carriage is
+# drawn at x_carriage_centre in the assembly. The crash runs towards x = 0.
+
+[crash]
+speed_clamp = 2.0            # m/s, drive speed limit (the clamp the user gave)
+speed_trip = 2.2             # m/s, variant: overspeed trip 10 % above the clamp
+motor_force = 670.0          # N, MK21 limiting force (0.5 s), datasheet
+motor_keeps_pushing = true   # main case: the drive does not stop the motor (STG-15)
+# The speed-up stroke. With 670 N, even 24 kg reaches 2 m/s after about
+# 75 mm, so every case hits at the speed clamp.
+run_up = 200.0
+
+[geometry]
+base_part = "cad/parts/base/base.FCStd"
+carriage_bottom_part = "cad/parts/carriage-bottom/carriage-bottom.FCStd"
+x_carriage_centre = 209.58   # assembly, middle of carriage-bottom (119.58 to 299.58)
+y_carriage_centre = 105.0
+carriage_top_plane = 60.0    # top face of carriage-top
+# Bumper tips (TA17-7) at the start end, and the pocket back face they hit.
+bumper_tip_x = 103.58
+bumper_y = [64.5, 145.5]
+bumper_z = 29.5
+pocket_back_x = 3.0
+# The end face of carriage-bottom (x = 119.58) meets the inner face of the
+# base end wall (x = 10) after the bumper stroke plus this gap.
+carriage_end_x = 119.58
+end_wall_inner_x = 10.0
+metal_band_z = [24.0, 39.9]   # where carriage-bottom end face overlaps the end wall
+# Guide blocks: centres of the ball tracks, rails and rail ends.
+block_x = [147.47, 271.69]
+block_y = [36.0, 174.0]
+block_z = 18.0                # estimate: height of the ball rows, 4.5 mm under the rail top
+block_outer_x = 119.13        # outer end of the leading blocks (with the E2 unit)
+block_body_length = 40.1      # steel body, HIWIN Table 3.45
+block_e2_length = 15.9
+rail_end_x = 11.0
+read_head = [218.84, 25.51, 33.25]   # centre of the RSF head
+forcer_force_point = [196.57, 100.87, 20.3]  # thrust and magnetic pull act at the forcer face
+
+# Moving parts of one stage: mass (kg) and centre of mass (assembly).
+# Source: docs/compact-stage-ce-assessment.md (masses), assembly fingerprint (centres).
+# size = box used for the own inertia of each part (mm, estimate).
+[[moving]]
+name = "carriage-bottom"
+mass = 1.19
+com = [215.47, 105.38, 40.30]
+size = [180.0, 208.0, 27.5]
+[[moving]]
+name = "carriage-top"
+mass = 1.13
+com = [209.58, 105.0, 53.74]
+size = [210.0, 208.0, 19.5]
+[[moving]]
+name = "forcer"
+mass = 1.10
+com = [196.57, 100.87, 31.92]
+size = [168.0, 86.0, 23.7]
+[[moving]]
+name = "blocks"
+mass = 0.60
+com = [209.58, 105.0, 24.9]
+size = [180.0, 155.0, 20.0]
+[[moving]]
+name = "read-head"
+mass = 0.05
+com = [218.84, 25.51, 33.25]
+size = [36.0, 14.8, 13.5]
+[[moving]]
+name = "dampers-cables-screws"
+mass = 0.17
+com = [209.58, 105.0, 40.0]
+size = [210.0, 208.0, 20.0]
+
+# Parts of the stage that do not move. Used for the upper stage in the
+# cross configuration. Base mass: CAD volume 1,387,260 mm3 x 2.80 g/cm3 (7075).
+[[fixed]]
+name = "base"
+mass = 3.884
+com = [220.0, 105.09, 12.18]
+size = [440.0, 210.0, 40.0]
+[[fixed]]
+name = "rails"
+mass = 1.028
+com = [220.0, 105.0, 16.21]
+size = [418.0, 153.0, 12.5]
+[[fixed]]
+name = "stators"
+mass = 1.648
+com = [220.0, 105.0, 14.41]
+size = [363.0, 86.0, 9.6]
+[[fixed]]
+name = "seal-strip-scale-screws"
+mass = 0.15
+com = [220.0, 105.0, 40.0]
+size = [440.0, 210.0, 5.0]
+
+[bumper]
+# ACE TUBUS TA17-7, two per end. ACE operating instructions 21_22_0019 (05.2022) p. 3-4.
+stroke = 7.0
+energy_per_stroke = 6.0      # J per bumper
+energy_emergency = 9.0       # J per bumper
+absorbed = 0.65              # part of the work turned into heat (ACE: 0.58 to 0.73)
+curve_exponent = 1.8         # ACE TA curve g(u) = 1 - (1 - u)^1.8, fitted to the TA37-16
+# Past the 7 mm stroke the tube is flat and the force rises steeply. ACE
+# gives no data. Estimate: a solid co-polyester ring (Shore 55D, E about 200
+# MPa), about 160 mm2, 9 mm high: 3.6 kN/mm. The sweep shows the spread.
+solid_stiffness = 3600.0     # N/mm per bumper
+solid_stiffness_sweep = [1800.0, 3600.0, 9000.0]
+rate_factor_sweep = [0.7, 1.0, 1.3]   # elastomer stiffer when fast or cold
+
+[metal_contact]
+# Gap between the end face of carriage-bottom and the end wall when both
+# bumpers are pressed in by their full stroke: 119.58 - 7 - 100.58 - 10 = 2 mm.
+gap_after_stroke = 2.0
+# The base side of the contact follows the force-displacement curve from
+# run_fem.py (load case "band"). The carriage is taken as rigid there.
+
+[guides]
+# HIWIN QEH15SA, catalogue GW-13-1-EN-2606-K, Tables 2.1, 3.43, 3.44, 3.45.
+c_dyn = 8560.0
+c0 = 8790.0
+m0x = 70.0e3                 # N mm, roll
+m0y = 30.0e3                 # N mm, pitch
+m0z = 30.0e3                 # N mm, yaw
+k_radial = 115.0e3           # N/mm, ZA preload
+k_lateral = 115.0e3          # N/mm, estimate: QE takes the same load in four directions
+ball_track_length = 23.1     # mm, L1, for the own moment stiffness of one block
+ball_row_width = 15.0        # mm, estimate, for the own roll stiffness of one block
+fsl_shock = [3.0, 5.0]       # HIWIN Table 2.1, "with jolting and vibration"
+nominal_life_km = 50.0
+
+[read_head]
+# RSF AK MC 15 mounting instructions, section 2.1.1, p. 4.
+shock_limit = 1000.0         # m/s2
+shock_duration = 6.0         # ms, half sine, EN 60068-2-27
+gap_nominal = 0.55
+gap_tolerance = 0.25
+mass = 0.051                 # kg with the cable stub, BOM SW-002
+
+[magnet]
+attraction = 963.0           # N, MK21 datasheet
+gravity = 9.80665
+
+[cross_stage]
+# A second, identical stage turned by 90 degrees. Its base sits on the
+# carriage top, 40 mm off the carriage centre along its own travel (the
+# lower y), on the outer hole rows x = +-100 mm (CarriageMountInterface_v1).
+offset_y = 40.0
+# Positions of the upper carriage along its own travel, from its middle.
+carriage_positions = [0.0, 108.0]
+
+[table]
+payload = [0.0, 1.0, 2.0, 5.0, 10.0, 15.0, 20.0]
+com_height = [20.0, 50.0, 100.0, 150.0, 200.0]   # above the carriage top plane
+# Own inertia of the payload: a block of this footprint, 2 x com_height high.
+footprint = [120.0, 120.0]
+
+[material_base]
+# EN AW-7075-T651 plate 25 to 50 mm, minimum values to EN 485-2 (IBL data
+# sheet PD 7075 Platten 11/2022). E and density: GLEICH data sheet EN AW-7075.
+name = "EN AW-7075-T651"
+youngs_modulus = 71000.0
+poisson_ratio = 0.33
+density = 2.80e-6
+rp02 = 460.0
+rm = 530.0
+elongation = 0.05            # A50, minimum
+# Bilinear hardening from Rp0.2 to Rm at 4.5 % plastic strain (estimate).
+plastic_strain_at_rm = 0.045
+
+[fem]
+# Load cases on the start end of the base. Forces in N.
+cut_x = 100.0                # only the start end of the base is meshed (x = 0 to 100)
+pocket_disc_diameter = 20.0  # bumper contact on the pocket back face (22 mm when fully in)
+pocket_force_levels = [2000.0, 5000.0, 10000.0, 20000.0, 30000.0, 45000.0]
+band_force_levels = [20000.0, 50000.0, 100000.0, 150000.0, 200000.0, 300000.0]
+mesh_fine = 1.2              # mm, at the pocket walls
+mesh_mid = 3.0               # mm, in the end wall
+mesh_coarse = 6.0            # mm, elsewhere
+increments = 16              # load increments in each ramp
+
+[joints]
+# No torques are given in the repository. Table torques for class 8.8 from
+# VDI 2230:2014 at a friction of 0.12 (Designwerk DW_009BAIAZD-EN), except
+# where the part maker sets a lower limit. Clamp force from the torque with
+# the VDI 2230 torque formula. Joint friction aluminium on aluminium, dry.
+friction_thread = 0.12
+friction_joint = 0.10
+friction_joint_high = 0.15
+load_factor = 0.2            # part of an outside pull the screw takes (estimate)
+settling = 0.10              # clamp force lost by settling (estimate)
+
+[[joint]]
+name = "payload to carriage-top"
+size = "M5"
+torque = 5.9
+pitch = 0.8
+d2 = 4.480
+d_km = 6.75
+holes = [[109.58, 25.0], [109.58, 105.0], [109.58, 185.0], [309.58, 25.0], [309.58, 105.0], [309.58, 185.0]]
+plane_z = 60.0
+clearance = 0.25             # mm, radial play of M5 in a 5.5 mm hole
+[[joint]]
+name = "carriage-top to carriage-bottom"
+size = "M4"
+torque = 3.0
+pitch = 0.7
+d2 = 3.545
+d_km = 5.5
+holes = [[135.48, 6.5], [209.58, 6.5], [283.68, 6.5], [135.48, 203.5], [209.58, 203.5], [283.68, 203.5]]
+plane_z = 51.5
+clearance = 0.2
+[[joint]]
+name = "forcer to carriage-bottom"
+size = "M4"
+torque = 3.0
+pitch = 0.7
+d2 = 3.545
+d_km = 5.5
+# ForcerMountInterface_v1: 2 rows of 3, 35 mm pitch, rows 50 mm apart, the
+# pattern 16 mm off the carriage centre (towards the forcer centre of mass).
+holes = [[158.58, 80.0], [193.58, 80.0], [228.58, 80.0], [158.58, 130.0], [193.58, 130.0], [228.58, 130.0]]
+plane_z = 44.0
+clearance = 0.2
+[[joint]]
+name = "read head to carriage-bottom"
+size = "M3"
+torque = 1.2                 # RSF limit
+pitch = 0.5
+d2 = 2.675
+d_km = 4.45
+holes = [[205.84, 25.51], [231.84, 25.51]]
+plane_z = 40.0
+clearance = 0.2
+[[joint]]
+name = "carriage-bottom to one guide block"
+size = "M4"
+torque = 3.0
+pitch = 0.7
+d2 = 3.545
+d_km = 5.5
+holes = [[0.0, -13.0], [0.0, 13.0]]
+plane_z = 34.0
+clearance = 0.2
+[[joint]]
+name = "base to machine table"
+size = "M5"
+torque = 5.9
+pitch = 0.8
+d2 = 4.480
+d_km = 6.75
+holes = [[20.0, 5.0], [100.0, 5.0], [180.0, 5.0], [260.0, 5.0], [340.0, 5.0], [420.0, 5.0], [20.0, 205.0], [100.0, 205.0], [180.0, 205.0], [260.0, 205.0], [340.0, 205.0], [420.0, 205.0]]
+plane_z = 0.0
+clearance = 0.25
