@@ -6,6 +6,7 @@ build them. Studies that are not about one stage family stay in the repository-w
 
 | Case | Tool | Question |
 | --- | --- | --- |
+| [`brass-tpu-scraper`](cases/brass-tpu-scraper/) | Python with cadquery-ocp (no FreeCAD) | Does the brass block with height adjustment and the TPU wiper fit at each end of carriage-top, and does it clear the strip corner screws? |
 | [`carriage-bottom-deflection`](cases/carriage-bottom-deflection/) | FreeCAD 1.1 (Gmsh, CalculiX) | How much does the bottom carriage bend under a load on its top, and how high is the stress? (Blocks taken as rigid, one load case.) |
 | [`end-stop-crash`](cases/end-stop-crash/) | FreeCAD 1.1 (Gmsh, CalculiX), numpy | What does a crash into the end stops at 2 m/s and full motor force do to the base, the guide blocks, the read head and the screw joints, for payloads up to 20 kg and a second stage on top? |
 | [`scraper-fit`](cases/scraper-fit/) | Python with cadquery-ocp (no FreeCAD) | Does a printed scraper with M3 countersunk screws fit at each end of carriage-top, and how close does it come to the seal strip? |
