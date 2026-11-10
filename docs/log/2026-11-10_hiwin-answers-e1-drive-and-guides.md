@@ -47,7 +47,7 @@ Record the answers and the open points.
 | Does the ESC box delay the position signal? | HIWIN GmbH has no information. They ask Taiwan |
 | Can the 400 W drive give 5.9 A rms for 1 s? | "The 400 W drive can give a peak current of 10 A for 1 s" |
 | Does the PTC input of the ESC box read our motor sensor (3 PTC in series, SNM120)? | "The ESC has temperature monitoring with a PTC input." No switching point or resistance range given. Not confirmed |
-| Can "SW method 1" find the commutation angle on a MAXWELL MK21 without Hall sensors? | "See the attachment." Table 7.2 lists a linear motor with BiSS-C and the ESC-SS. Table 7.4 for SW method 1 does not list serial signals. The method for our case is not named. Partly confirmed |
+| Can "SW method 1" find the commutation angle on a MAXWELL MK21 without Hall sensors? | "See the attachment." Table 7.2 lists a linear motor with BiSS-C and the ESC-SS. Table 7.4 for SW method 1 does not list serial signals. The method for our case is not named. The tables say "linear motor", not a brand, so the combination holds for a MAXWELL motor too. Partly confirmed |
 | Does the ESC-SS-S02 read the RSF AK MC 15 B (BiSS-C) without extra settings? | "The ESC-SS is suitable for the BiSS-C protocol." Nothing said about extra settings |
 | Is the order code right for the EU? | Not answered. The distributor quotes |
 
@@ -88,8 +88,13 @@ What this means:
 - **Not confirmed:** that the drive finds the angle on our motor without Hall sensors. Table 7.4
   leaves serial signals out of SW method 1. The pages do not say if STABS test/tune, or another
   method, covers this case.
-- **Not confirmed:** that it works for a motor from another brand. The tables say "linear
-  motor", not a brand. HIWIN did not say anything about MAXWELL.
+- **Brand is not a limit.** The tables say "linear motor", not "HIWIN linear motor". Niels
+  Bosmans reads this as: the combination works with a linear motor of any brand. We follow that
+  reading. So the MAXWELL MK21 does not need a separate yes from HIWIN. HIWIN did not write this
+  sentence itself, so it stays a reading of the table.
+- **What the brand reading changes:** one open question falls away. Two stay open. The first is
+  the method that finds the angle. The second is whether no Hall sensors are needed. Our MK21 has
+  none.
 - **The drive check of 2026-11-05 said "Yes" for this point.** That was too strong. The
   evidence is "the combination is listed". Mark that cell as "combination listed, method not
   confirmed" until HIWIN names the method.
@@ -106,8 +111,8 @@ What this means:
 2. The delay that the ESC-SS-S02 adds to the position signal. HIWIN asks Taiwan.
 3. Is the 10 A for 1 s an rms value or a peak value? We need 5.9 A rms.
 4. Which method finds the commutation angle with a BiSS-C encoder, the ESC-SS-S02 and a
-   third-party ironless linear motor without Hall sensors? Is it SW method 1 or another one?
-   Does it work for a non-HIWIN motor? Ask for the manual section.
+   ironless linear motor without Hall sensors? Is it SW method 1 or another one? Ask for the
+   manual section. The brand of the motor is no longer a question.
 5. The switching point and the resistance range of the ESC PTC input, against the SNM120 values.
 6. The oil in the E2 lubrication unit, and the order code of the set of 2 rails and 4 blocks.
 7. Price and delivery time from Vansichen BV.
