@@ -1,0 +1,347 @@
+{
+ "mesh": {
+  "nodes": 70194,
+  "elements": 41098
+ },
+ "material": {
+  "name": "EN AW-7075-T651",
+  "youngs_modulus": 71000.0,
+  "poisson_ratio": 0.33,
+  "density": 2.8e-06,
+  "rp02": 460.0,
+  "rm": 530.0,
+  "elongation": 0.05,
+  "plastic_strain_at_rm": 0.045
+ },
+ "load_area": {
+  "pocket": 564.1652439395882,
+  "band": 1468.2598153725935
+ },
+ "pocket": {
+  "levels": [
+   {
+    "force": 2000.0,
+    "displacement_at_peak": 0.04066863091358025,
+    "von_mises_max_at_peak": 58.93819110121343,
+    "peeq_max": 0.0,
+    "lasting_dent": 0.0
+   },
+   {
+    "force": 5000.0,
+    "displacement_at_peak": 0.1015823906584362,
+    "von_mises_max_at_peak": 147.1811024387191,
+    "peeq_max": 0.0,
+    "lasting_dent": 0.0
+   },
+   {
+    "force": 10000.0,
+    "displacement_at_peak": 0.20280240055555554,
+    "von_mises_max_at_peak": 293.70379348751885,
+    "peeq_max": 0.0,
+    "lasting_dent": 0.0
+   },
+   {
+    "force": 20000.0,
+    "displacement_at_peak": 0.40434849423868313,
+    "von_mises_max_at_peak": 557.3308297505799,
+    "peeq_max": 0.001383952222222222,
+    "lasting_dent": 0.0
+   },
+   {
+    "force": 30000.0,
+    "displacement_at_peak": 0.6139984561728395,
+    "von_mises_max_at_peak": 626.938459787803,
+    "peeq_max": 0.01101208,
+    "lasting_dent": 0.003968992469135735
+   },
+   {
+    "force": 45000.0,
+    "displacement_at_peak": 1.0317811092592593,
+    "von_mises_max_at_peak": 769.7004174464959,
+    "peeq_max": 0.0474432,
+    "lasting_dent": 0.11673691370370365
+   }
+  ],
+  "curve": [
+   {
+    "force": 0.0,
+    "displacement": 0.0,
+    "von_mises_max": 0.0,
+    "peeq_max": 0.0
+   },
+   {
+    "force": 2812.5,
+    "displacement": 0.057190262222222225,
+    "von_mises_max": 82.88183123608138,
+    "peeq_max": 0.0
+   },
+   {
+    "force": 5625.0,
+    "displacement": 0.11426585592592592,
+    "von_mises_max": 165.55232278232987,
+    "peeq_max": 0.0
+   },
+   {
+    "force": 8437.5,
+    "displacement": 0.17122486722222222,
+    "von_mises_max": 248.0119144589925,
+    "peeq_max": 0.0
+   },
+   {
+    "force": 11250.0,
+    "displacement": 0.22806442722222223,
+    "von_mises_max": 330.2572967103399,
+    "peeq_max": 0.0
+   },
+   {
+    "force": 14062.5,
+    "displacement": 0.28478188703703705,
+    "von_mises_max": 412.28602511577844,
+    "peeq_max": 0.0
+   },
+   {
+    "force": 16875.0,
+    "displacement": 0.34137925,
+    "von_mises_max": 491.8759443335,
+    "peeq_max": 0.000214553
+   },
+   {
+    "force": 19687.5,
+    "displacement": 0.39800930185185185,
+    "von_mises_max": 556.0584770502635,
+    "peeq_max": 0.00119912
+   },
+   {
+    "force": 22500.0,
+    "displacement": 0.45506203333333334,
+    "von_mises_max": 567.5096513531115,
+    "peeq_max": 0.00286261
+   },
+   {
+    "force": 25312.5,
+    "displacement": 0.5130971333333333,
+    "von_mises_max": 568.7565146073765,
+    "peeq_max": 0.00534238
+   },
+   {
+    "force": 28125.0,
+    "displacement": 0.572734661111111,
+    "von_mises_max": 605.5235402032426,
+    "peeq_max": 0.00850164
+   },
+   {
+    "force": 30937.5,
+    "displacement": 0.6346303537037038,
+    "von_mises_max": 637.6459195800832,
+    "peeq_max": 0.0122673
+   },
+   {
+    "force": 33750.0,
+    "displacement": 0.6995770222222221,
+    "von_mises_max": 662.3047119113604,
+    "peeq_max": 0.0169706
+   },
+   {
+    "force": 36562.5,
+    "displacement": 0.7689714981481481,
+    "von_mises_max": 698.6105501027527,
+    "peeq_max": 0.0225692
+   },
+   {
+    "force": 39375.0,
+    "displacement": 0.8451393111111111,
+    "von_mises_max": 727.9859011671234,
+    "peeq_max": 0.029162
+   },
+   {
+    "force": 42187.5,
+    "displacement": 0.9309628444444443,
+    "von_mises_max": 748.041945999494,
+    "peeq_max": 0.0371382
+   },
+   {
+    "force": 45000.0,
+    "displacement": 1.0317811092592593,
+    "von_mises_max": 769.7004174464959,
+    "peeq_max": 0.0474432
+   }
+  ],
+  "elastic_stiffness_n_per_mm": 49177.952517013575,
+  "force_reached": 45000.0
+ },
+ "band": {
+  "levels": [
+   {
+    "force": 20000.0,
+    "displacement_at_peak": 0.2999524215920398,
+    "von_mises_max_at_peak": 331.35368511285606,
+    "peeq_max": 0.0001931533333333333,
+    "lasting_dent": 0.00012010517412935906
+   },
+   {
+    "force": 50000.0,
+    "displacement_at_peak": 0.7626353878109453,
+    "von_mises_max_at_peak": 587.0018122613917,
+    "peeq_max": 0.0101103,
+    "lasting_dent": 0.013054596766169269
+   },
+   {
+    "force": 100000.0,
+    "displacement_at_peak": 2.4891374912935325,
+    "von_mises_max_at_peak": 763.098367278057,
+    "peeq_max": 0.10993466666666667,
+    "lasting_dent": 0.9899759092039804
+   }
+  ],
+  "curve": [
+   {
+    "force": 0.0,
+    "displacement": 0.0,
+    "von_mises_max": 0.0,
+    "peeq_max": 0.0
+   },
+   {
+    "force": 18750.0,
+    "displacement": 0.28109279664179104,
+    "von_mises_max": 316.7392191413361,
+    "peeq_max": 0.0
+   },
+   {
+    "force": 37500.0,
+    "displacement": 0.5639871708955223,
+    "von_mises_max": 535.9562087141355,
+    "peeq_max": 0.0028973
+   },
+   {
+    "force": 56250.0,
+    "displacement": 0.8619594962686568,
+    "von_mises_max": 612.5246140350198,
+    "peeq_max": 0.0137168
+   },
+   {
+    "force": 75000.0,
+    "displacement": 1.2257502276119403,
+    "von_mises_max": 700.4979861826299,
+    "peeq_max": 0.0300934
+   },
+   {
+    "force": 93750.0,
+    "displacement": 1.9115451977611937,
+    "von_mises_max": 731.5939457424657,
+    "peeq_max": 0.0704592
+   },
+   {
+    "force": 98437.5,
+    "displacement": 2.2817865410447764,
+    "von_mises_max": 757.450651435115,
+    "peeq_max": 0.0951275
+   },
+   {
+    "force": 103125.0,
+    "displacement": 2.903839391791045,
+    "von_mises_max": 774.3937989639411,
+    "peeq_max": 0.139549
+   },
+   {
+    "force": 107812.5,
+    "displacement": 3.998920130597015,
+    "von_mises_max": 834.7762041669491,
+    "peeq_max": 0.218243
+   },
+   {
+    "force": 108984.3,
+    "displacement": 4.366029294776119,
+    "von_mises_max": 837.5890178126979,
+    "peeq_max": 0.242404
+   },
+   {
+    "force": 110156.40000000001,
+    "displacement": 4.795550843283583,
+    "von_mises_max": 839.8068532489121,
+    "peeq_max": 0.270377
+   },
+   {
+    "force": 110742.3,
+    "displacement": 5.030220335820895,
+    "von_mises_max": 840.9143452774248,
+    "peeq_max": 0.285124
+   },
+   {
+    "force": 111328.2,
+    "displacement": 5.287748391791045,
+    "von_mises_max": 842.2045218084916,
+    "peeq_max": 0.301307
+   },
+   {
+    "force": 111621.0,
+    "displacement": 5.421150138059701,
+    "von_mises_max": 843.198783679596,
+    "peeq_max": 0.309473
+   },
+   {
+    "force": 111914.1,
+    "displacement": 5.560565145522388,
+    "von_mises_max": 844.2878150115635,
+    "peeq_max": 0.317979
+   },
+   {
+    "force": 112023.9,
+    "displacement": 5.612900929104477,
+    "von_mises_max": 844.7226994893176,
+    "peeq_max": 0.321112
+   },
+   {
+    "force": 112078.79999999999,
+    "displacement": 5.640393985074628,
+    "von_mises_max": 844.9594343445843,
+    "peeq_max": 0.322781
+   },
+   {
+    "force": 112133.7,
+    "displacement": 5.667378910447761,
+    "von_mises_max": 845.1910874390004,
+    "peeq_max": 0.3244
+   },
+   {
+    "force": 112188.6,
+    "displacement": 5.6945793843283585,
+    "von_mises_max": 845.4222984897843,
+    "peeq_max": 0.326033
+   },
+   {
+    "force": 112243.79999999999,
+    "displacement": 5.721728604477611,
+    "von_mises_max": 845.6535066680678,
+    "peeq_max": 0.327654
+   },
+   {
+    "force": 112284.9,
+    "displacement": 5.742760033582089,
+    "von_mises_max": 845.835582166221,
+    "peeq_max": 0.328922
+   },
+   {
+    "force": 112325.99999999999,
+    "displacement": 5.763323742537313,
+    "von_mises_max": 846.0158179790021,
+    "peeq_max": 0.330148
+   }
+  ],
+  "elastic_stiffness_n_per_mm": 66703.95052454494,
+  "force_reached": 112325.99999999999
+ },
+ "modes_hz": [
+  2893.687,
+  4513.271,
+  4828.846,
+  7325.899,
+  7625.24,
+  8119.574,
+  9206.114,
+  9760.133,
+  10117.51,
+  10273.1,
+  10380.09,
+  10972.12
+ ]
+}

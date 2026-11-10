@@ -200,3 +200,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-09 | [Payload against speed table, damper overload, and earthing of the carriage](2026-11-09_payload-speed-table-and-earthing.md) | engineering, safety |  |
 | 2026-11-09 | [DGSMARTWIN answers on the AKS drive and the SA32 encoder. We stop with them for now](2026-11-09_dgsmartwin-answers-and-stop.md) | engineering, purchasing |  |
 | 2026-11-10 | [Carriage-bottom stress analysis runs again on the new part](2026-11-10_carriage-bottom-stress-analysis-rerun.md) | simulation, cad |  |
+| 2026-11-10 | [Crash of the compact stage into its end stops at 2 m/s](2026-11-10_end-stop-crash-simulation.md) | simulation, engineering, safety |  |
