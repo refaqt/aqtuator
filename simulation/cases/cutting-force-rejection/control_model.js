@@ -961,7 +961,7 @@ function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
 // opened straight from disk (file://), so the page would never calculate.
 // The page and the checks both read the functions from this one object.
 globalThis.ControlModel = {
-  DEFAULTS, CASES, cabs, expm, mechanics, plantFor, stepMatrices, plantResp, sections, plantAt,
+  DEFAULTS, CASES, cabs, carg, cmul, cdiv, cadd, csub, csolve, expm, mechanics, plantFor, stepMatrices, plantResp, sections, plantAt,
   controllerAt, loopAt, complianceAt, forceRatioAt, sampledSteadyAt, sineComplianceAt, lobePoint, lobes, chatter, tune, margins, spectralRadius,
   plantFamily, robustness,
   logspace, toothFreq, frequencyData, simulate, settleSamples, steadyState, steadyAmplitude,

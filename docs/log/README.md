@@ -204,3 +204,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-10 | [Interactive results page for the end-stop crash study](2026-11-10_crash-results-page.md) | simulation, engineering |  |
 | 2026-11-10 | [HIWIN answers on the E1 drive and the EGR15U / QEH15SA guides](2026-11-10_hiwin-answers-e1-drive-and-guides.md) | engineering, purchasing |  |
 | 2026-11-10 | [Short descriptions on the web pages overview](2026-11-10_describe-the-pages-overview.md) | engineering |  |
+| 2026-11-11 | [Hard turning on two stacked compact stages](2026-11-11_hard-turning-stability.md) | simulation, engineering |  |

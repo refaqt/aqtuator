@@ -7,6 +7,7 @@ name: Pages
 #   https://refaqt.github.io/aqtuator/cutting-force/
 #   https://refaqt.github.io/aqtuator/damper/
 #   https://refaqt.github.io/aqtuator/crash/
+#   https://refaqt.github.io/aqtuator/hard-turning/
 
 on:
   push:
@@ -16,6 +17,7 @@ on:
       - "simulation/cases/cutting-force-rejection/**"
       - "simulation/cases/damper-sizing/**"
       - "simulation/cases/end-stop-crash-results/**"
+      - "simulation/cases/hard-turning-stability/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -50,10 +52,11 @@ jobs:
           node simulation/cases/cutting-force-rejection/check_model.mjs
           node simulation/cases/damper-sizing/check_model.mjs
           node simulation/cases/end-stop-crash-results/check_data.mjs
+          node simulation/cases/hard-turning-stability/check_model.mjs
 
       - name: Collect the site
         run: |
-          mkdir -p _site/strip-seal _site/cutting-force _site/damper _site/crash
+          mkdir -p _site/strip-seal _site/cutting-force _site/damper _site/crash _site/hard-turning
           cp simulation/cases/strip-seal-designer/index.html \
              simulation/cases/strip-seal-designer/strip_model.js _site/strip-seal/
           cp simulation/cases/cutting-force-rejection/index.html \
@@ -64,6 +67,11 @@ jobs:
              simulation/cases/end-stop-crash-results/page.js \
              simulation/cases/end-stop-crash-results/crash_data.js \
              simulation/cases/end-stop-crash-results/fem_fields.js _site/crash/
+          # The hard turning page loads the model of the cutting force page from
+          # its folder. On the site both files sit next to the page.
+          cp simulation/cases/hard-turning-stability/index.html \
+             simulation/cases/hard-turning-stability/turning_model.js \
+             simulation/cases/cutting-force-rejection/control_model.js _site/hard-turning/
           # Add the commit to the model address. A browser that still holds the
           # old model file in its cache then fetches the new one, instead of
           # running the new page against the old model.
@@ -78,6 +86,10 @@ jobs:
             grep -q "$f?v=$v" _site/crash/index.html
           done
           grep -q "damper_model.js?v=$v" _site/damper/index.html
+          sed -i "s#src=\"../cutting-force-rejection/control_model.js\"#src=\"./control_model.js?v=$v\"#" _site/hard-turning/index.html
+          sed -i "s#src=\"./turning_model.js\"#src=\"./turning_model.js?v=$v\"#" _site/hard-turning/index.html
+          grep -q "control_model.js?v=$v" _site/hard-turning/index.html
+          grep -q "turning_model.js?v=$v" _site/hard-turning/index.html
           cat > _site/index.html <<'HTML'
           <!doctype html>
           <meta charset="utf-8">
@@ -91,6 +103,7 @@ jobs:
           <li><a href="strip-seal/">Strip Seal Designer</a><br>Shows how the spring steel strip lies over the carriage rollers, and how much pull and force it needs.</li>
           <li><a href="cutting-force/">Cutting Force Rejection</a><br>Shows how well the position controller holds the stage while a milling cutter pushes on it.</li>
           <li><a href="damper/">Damper Sizing</a><br>Finds the force and stroke needed when the stage hits an end stop at full motor force.</li>
+          <li><a href="hard-turning/">Hard Turning Stability</a><br>Shows the stiffness at the tool tip and where chatter starts when two stacked stages carry a lathe tool in hardened steel.</li>
           <li><a href="crash/">End-Stop Crash Results</a><br>Shows the results of the crash simulation: loads, stress in the base, guide block life, and the checks behind the numbers.</li>
           </ul>
           HTML
