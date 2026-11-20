@@ -11,7 +11,8 @@ HIWIN Taiwan answered the two open drive questions from 2026-11-10. Record the a
 ### Short answer
 
 - **Speed loop bandwidth: 3.2 kHz. Current loop bandwidth: 5 kHz.** HIWIN wrote "bandbreedte"
-  (bandwidth) for both. These are not loop rates.
+  (bandwidth) for both. HIWIN confirmed the same day that this is the maximum -3 dB bandwidth of
+  the transfer function, not the update rate of the loop. That is a good result.
 - **The position loop rate is still unknown.** HIWIN did not give it. DRV-09 (a position loop at
   4 kHz or faster) stays not confirmed for the E1.
 - **The ESC-SS-S02 box delays the position signal by 31.25 µs at most.** HIWIN calls this
@@ -24,6 +25,7 @@ HIWIN Taiwan answered the two open drive questions from 2026-11-10. Record the a
 | --- | --- |
 | Frequencies of the current, speed and position loops, with a linear motor and the ESC-SS-S02 | "The bandwidth of the speed loop is 3.2 kHz and the current loop is 5 kHz." No position loop value |
 | Does the ESC box delay the position signal? How much? | "The maximum delay is 31.25 µs. It is negligible in practice." |
+| Follow-up by Niels Bosmans (2026-11-20, 10:46 Belgian time): is it the maximum -3 dB bandwidth of the transfer function, or the update rate of the loop? | "It is the maximum -3 dB bandwidth of the transfer function." (2026-11-20, 11:38 Belgian time) |
 
 ### Bandwidth is not the loop rate
 
@@ -32,6 +34,8 @@ bandwidth says how fast the loop can follow a change. The update rate is normall
 higher than the bandwidth. So a speed loop bandwidth of 3.2 kHz is a high value. It does not mean
 the loop is slow. The E1 manual uses the word in the same way: "the current bandwidth is 5 KHz
 (maximum)" (section 10.5.1).
+
+HIWIN confirmed this reading in writing: the numbers are the maximum -3 dB bandwidth.
 
 At first the team read 3.2 kHz as a loop rate and dropped the HIWIN drives. That was corrected the
 same day. The drives stay on the list.
@@ -58,7 +62,8 @@ same day. The drives stay on the list.
 
 - Email from Harjot Singh (HIWIN GmbH, application engineer), 2026-11-20, in the thread
   "Offerteaanvraag – servodrive E2 Advanced en lineaire geleidingen EGR15U / QEH15SA". In Dutch,
-  translated here. Earlier answers: [log of 2026-11-10](2026-11-10_hiwin-answers-e1-drive-and-guides.md).
+  translated here. The follow-up question and HIWIN's answer on the -3 dB bandwidth are in the
+  same thread, later the same day. Earlier answers: [log of 2026-11-10](2026-11-10_hiwin-answers-e1-drive-and-guides.md).
 - HIWIN Mikrosystem "E1 Series Servo Drive User Manual", MD09UE01-2607 V3.3, section 10.5.1, page
   10-17. The file is in the parts library, refaqt/stoq, `modules/hiwin/docs/datasheets/`.
 
