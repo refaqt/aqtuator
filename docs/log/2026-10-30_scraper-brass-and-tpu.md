@@ -135,6 +135,32 @@ light contact. The design is not in CAD yet.
 - **Will carriage-top be anodised?** A hard anodised edge is much harder than bare aluminium. No
   finish is given in the repository yet.
 
+## Update, 2026-11-19: hard plastic in front, felt behind?
+
+Niels Bosmans asked about another layout. A hard plastic scraper sits in front and floats 0.2 mm
+above the strip. A felt wiper sits behind it.
+
+- **The plastic scraper in front works.** It is close to the printed scraper of 2026-10-22, with a
+  slightly larger gap. A gap of 0.2 mm is easier to hold with a plastic part than 0.15 mm. It
+  still needs shims and a feeler gauge to set it.
+- **More fine chips pass under it.** Chips up to 0.2 mm get through, so the part behind it matters
+  more.
+- **Plastic is gentler than brass.** When a chip gets stuck in the gap, plastic gives way a little,
+  so it is less likely to scratch the strip. But hot chips can wear down or dent a plastic edge.
+- **It must still fit the strip ends.** The lips step back behind the strip end inserts, and the
+  scraper must clear the corner screw heads.
+- **The felt behind it is not recommended.** The reasons are the same as above. It soaks up the
+  coolant. It holds the fine chips that pass the 0.2 mm gap and rubs them on the strip. A felt
+  pressed across the full width pushes the middle of the strip down into the 176 mm slot. Its
+  friction changes as it gets wet and dirty, and it changes direction each time the carriage
+  turns. At the top rollers there are only 6.4 mm of length, which leaves little room for a felt
+  that must be pressed in.
+- **Recommended instead:** keep the plastic scraper at 0.2 mm in front, and put a printed TPU lip
+  with light contact behind it. Felt only makes sense as a third layer, full of oil, behind the
+  TPU lip, and only for cutting without coolant.
+
+No decision yet.
+
 ## Next Steps
 
 - [ ] Niels confirms the reading of the sketch and the job of the adjustment screw.
@@ -142,6 +168,8 @@ light contact. The design is not in CAD yet.
       with the scraper fit case.
 - [ ] Print a short TPU lip and measure its friction on a piece of strip, dry and with coolant.
 - [ ] After the first run, look for a track on the strip behind the brass and the TPU.
+- [ ] Choose the front scraper: brass at 0.15 mm, or hard plastic at 0.2 mm. For any rear
+      wiper, measure the friction dry and wet, and how far it pushes the strip down.
 
 <details>
 <summary>Technical notes</summary>
