@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hard Turning Stability</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f2f4f4; --panel: #ffffff; --ink: #1a2227; --muted: #5d6a72; --line: #d5dcdf;
+  --grid: #e6ebed; --accent: #1d6b74;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --ref: #8a959b;
+  --ok: #2f7d4a; --warn: #a86b00; --bad: #b3261e;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cond: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab; --line: #2d3a40;
+    --grid: #233036; --accent: #5cb8c2;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --ref: #7d8a91;
+    --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab; --line: #2d3a40;
+  --grid: #233036; --accent: #5cb8c2;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --ref: #7d8a91;
+  --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans); padding-inline: 16px; padding-block: 20px 40px; }
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font: 600 26px/1.15 var(--cond); margin: 0; letter-spacing: 0.01em; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 85ch; }
+.layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+aside { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 14px; position: sticky; top: 12px; }
+@media (max-width: 900px) { aside { position: static; } }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+legend { font: 600 11px/1 var(--sans); text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); padding: 0 0 6px; }
+.field { display: grid; grid-template-columns: 1fr 92px; gap: 8px; align-items: center; }
+.field small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+input[type="number"] { width: 100%; font: 13px var(--mono); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 5px 6px; text-align: right; }
+input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.derived { font: 12px var(--mono); color: var(--muted); }
+main { display: grid; gap: 20px; min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; min-width: 0; }
+.panel h2 { font: 600 16px/1.2 var(--cond); margin: 0 0 10px; letter-spacing: 0.02em; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.panel h2 span { font: 400 12px var(--sans); color: var(--muted); }
+.verdict { padding: 10px 12px; border-left: 4px solid var(--ok); background: var(--bg); border-radius: 0 4px 4px 0; font-size: 14.5px; }
+.verdict.warn { border-color: var(--warn); }
+.verdict.bad { border-color: var(--bad); }
+.verdict p { margin: 0 0 6px; max-width: 95ch; }
+.verdict p:last-child { margin: 0; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+.kpi { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+.kpi b { display: block; font: 500 20px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 12px; color: var(--muted); }
+.kpi.bad b { color: var(--bad); } .kpi.warn b { color: var(--warn); } .kpi.ok b { color: var(--ok); }
+.res-wrap { overflow-x: auto; }
+table.res { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
+table.res th, table.res td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+table.res th:first-child, table.res td:first-child { text-align: left; color: var(--muted); font-weight: 400; }
+table.res thead th { font: 600 12.5px/1.3 var(--sans); border-bottom: 3px solid var(--line); }
+table.res td { font: 13px var(--mono); font-variant-numeric: tabular-nums; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 800px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.chart-box { position: relative; }
+.chart { width: 100%; height: auto; touch-action: pan-y; display: block; }
+svg text { font-family: var(--mono); fill: var(--ink); }
+.chart-title { font: 500 13px var(--sans); margin: 0 0 4px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+.legend i { display: inline-block; width: 16px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+.legend i.dash { border-top-style: dashed; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; font: 12px/1.45 var(--mono); white-space: nowrap; box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); z-index: 2; }
+.tip[hidden] { display: none; }
+.tip .n { color: var(--muted); }
+.tip i { display: inline-block; width: 12px; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+.note { color: var(--muted); font-size: 13px; }
+.note p, .note ul { max-width: 95ch; }
+.note p { margin: 0 0 8px; }
+.note ul { margin: 0 0 8px; padding-left: 18px; }
+.status { font: 12px var(--mono); color: var(--muted); }
+.status.bad { color: var(--bad); }
+#stack { width: 100%; max-width: 520px; height: auto; display: block; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Hard Turning Stability</h1>
+    <p>Can we turn hardened steel (61 to 63 HRC) with the tool on two stacked compact stages? The page
+      works out the stiffness at the tool tip and the depth of cut where chatter starts. The lathe bed
+      and the spindle count as rigid. Change any input; the result follows at once.</p>
+    <p class="status" id="status">Calculating…</p>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <fieldset>
+        <legend>Cut</legend>
+        <label class="field"><span>Depth of cut a<sub>p</sub><small>mm</small></span><input type="number" id="ap" step="0.05" min="0.01"></label>
+        <label class="field"><span>Feed f<small>mm per turn</small></span><input type="number" id="feed" step="0.01" min="0.01"></label>
+        <label class="field"><span>Cutting speed v<sub>c</sub><small>m/min</small></span><input type="number" id="vc" step="10" min="1"></label>
+        <label class="field"><span>Part diameter<small>mm</small></span><input type="number" id="D" step="5" min="1"></label>
+        <label class="field"><span>Nose radius r<sub>ε</sub><small>mm</small></span><input type="number" id="rNose" step="0.4" min="0.1"></label>
+        <label class="field"><span>Entering angle κ<sub>r</sub><small>degrees</small></span><input type="number" id="kappa" step="5" min="30" max="120"></label>
+        <div class="derived" id="dCut"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Material and insert</legend>
+        <label class="field"><span>k<sub>c1</sub><small>N/mm², for 1 mm² chip</small></span><input type="number" id="kc1" step="100" min="100"></label>
+        <label class="field"><span>m<sub>c</sub><small>chip thickness factor</small></span><input type="number" id="mc" step="0.01" min="0" max="0.9"></label>
+        <label class="field"><span>Thrust over cutting force<small>F<sub>t</sub>/F<sub>c</sub>, an estimate</small></span><input type="number" id="rt" step="0.1" min="0"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Drive</legend>
+        <label class="field"><span>Loop rate<small>Hz. DRV-09 asks at least 4000</small></span><input type="number" id="fs" step="1000" min="1000"></label>
+        <label class="field"><span>Tool holder mass<small>kg, an estimate</small></span><input type="number" id="mHolder" step="0.5" min="0"></label>
+        <div class="derived" id="dDrive"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Guide blocks</legend>
+        <label class="field"><span>Block stiffness<small>N/µm, up and down</small></span><input type="number" id="kRadial" step="5" min="1"></label>
+        <label class="field"><span>Sideways over up/down<small>an estimate</small></span><input type="number" id="kLatRatio" step="0.1" min="0.05"></label>
+        <label class="field"><span>Damping ratio<small>an estimate</small></span><input type="number" id="zetaGuide" step="0.01" min="0.001"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Tool</legend>
+        <label class="field"><span>Tip above carriage<small>mm</small></span><input type="number" id="tipHeightMm" step="5" min="0"></label>
+        <label class="field"><span>Tip ahead of carriage centre<small>mm, along X</small></span><input type="number" id="tipReachMm" step="10" min="0"></label>
+        <label class="field"><span>Upper carriage position<small>mm from the middle, ±100</small></span><input type="number" id="xPosMm" step="20" min="-100" max="100"></label>
+        <label class="field"><span>Shank size<small>mm, square</small></span><input type="number" id="shankMm" step="4" min="4"></label>
+        <label class="field"><span>Shank overhang<small>mm</small></span><input type="number" id="overhangMm" step="5" min="1"></label>
+        <label class="field"><span>Shank damping ratio<small>an estimate</small></span><input type="number" id="zetaTool" step="0.01" min="0.001"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Chart</legend>
+        <label class="field"><span>Lowest speed<small>rev/min</small></span><input type="number" id="rpmLo" step="100" min="100"></label>
+        <label class="field"><span>Highest speed<small>rev/min</small></span><input type="number" id="rpmHi" step="500" min="200"></label>
+      </fieldset>
+    </aside>
+
+    <main>
+      <section class="panel">
+        <h2>Answer <span>at the inputs on the left</span></h2>
+        <div class="verdict" id="verdict"></div>
+        <div class="kpis" id="kpis"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Stability lobes <span>depth of cut where chatter starts, against spindle speed</span></h2>
+        <div class="legend" id="lgLobes"></div>
+        <div class="chart-box"><svg id="cLobes" class="chart" viewBox="0 0 880 300"></svg></div>
+        <p class="note">Below the solid line the cut is stable. The dashed line is the depth that is stable at every
+          speed. At low spindle speed the lobes lie so close together that this line decides. The two dotted lines
+          show what the motor loops alone and the guide blocks with the shank alone would allow.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Stiffness at the tool tip <span>static and lowest dynamic value, in N/µm</span></h2>
+        <div class="res-wrap"><table class="res" id="tblK"></table></div>
+        <div class="two" style="margin-top:14px">
+          <div><p class="chart-title">Compliance at the tool tip, µm/N</p>
+            <div class="legend" id="lgComp"></div>
+            <div class="chart-box"><svg id="cComp" class="chart" viewBox="0 0 440 280"></svg></div></div>
+          <div><p class="chart-title">Real part of the compliance that drives chatter, µm/N</p>
+            <div class="legend" id="lgRe"></div>
+            <div class="chart-box"><svg id="cRe" class="chart" viewBox="0 0 440 280"></svg></div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>The stack <span>side view, looking along the spindle</span></h2>
+        <svg id="stack" viewBox="0 0 520 250" role="img" aria-label="Two stages stacked on the lathe bed, with the tool holder on the upper carriage"></svg>
+      </section>
+
+      <section class="panel note">
+        <h2>How the page works</h2>
+        <p><b>The machine.</b> The lower stage moves along the spindle axis (Z). The upper stage sits on its carriage and
+          moves the tool into the part (X). The tool holder sits on the upper carriage. Both stages are compact stages:
+          MAXWELL MK21 linear motor, four HIWIN QEH15SA blocks with medium preload (ZA) on EGR15U rails.</p>
+        <p><b>Stiffness at the tool tip.</b> Two parts add up in series.</p>
+        <ul>
+          <li>The position loop of each motor, the same model as the cutting force page: one rigid mass, a digital
+            controller at the loop rate, tuned with the same robustness rules (sensitivity peak at most 6 dB, phase
+            margin at least 30°, gain margin at least 6 dB). The upper motor moves the upper carriage and the tool
+            holder. The lower motor moves everything on the lower blocks.</li>
+          <li>A model of the two carriages as rigid bodies on their guide blocks, and the tool shank. Each block is a
+            spring up and down and a spring sideways. Along its travel each carriage is held by its motor, which is
+            already in the first part. The tilt of each carriage moves the tool tip too, because the tip sits high
+            above the blocks. A downward cutting force therefore also pushes the tip along X.</li>
+        </ul>
+        <p><b>Forces.</b> Kienzle: F<sub>c</sub> = k<sub>c1</sub> · b · h<sup>1 − m<sub>c</sub></sup>. The chip width b
+          is the length of the cutting edge in the cut, on the nose and on the straight edge. The chip thickness is
+          h = a<sub>p</sub> · f / b. The thrust F<sub>t</sub> = (F<sub>t</sub>/F<sub>c</sub>) · F<sub>c</sub> acts
+          at right angles to the line between the two ends of the cutting edge in the cut.</p>
+        <p><b>Chatter.</b> Each turn cuts the wave the last turn left. The loop is
+          1 + b · K<sub>t</sub> · (1 − e<sup>−jωT</sup>) · Φ = 0, with T one spindle turn,
+          K<sub>t</sub> = dF<sub>c</sub>/dh per mm of chip width, and Φ the tip compliance seen from the direction of
+          the chip thickness, under the force direction. The lobes come from the same function as the lobes of the
+          cutting force page. The limit chip width is turned back into a depth of cut through the edge shape.</p>
+        <p><b>Sources.</b> k<sub>c1</sub> and m<sub>c</sub>: ISCAR material table, hardened steel 60 HRC (4700 N/mm²,
+          0.25). A row for 62 HRC is not given. Block stiffness: HIWIN catalogue GW-13-1-EN-2606-K, Table 3.44
+          (QE15S, ZA: 115 N/µm). The sideways stiffness is not in the catalogue. Masses and block positions: the
+          compact stage CAD, as in the end stop crash case. F<sub>t</sub>/F<sub>c</sub>: an estimate. Published values for
+          chamfered CBN inserts lie around 1.1 to 1.5 with a sharp tool, and rise with wear (not confirmed from the
+          paper itself).</p>
+        <p><b>Limits.</b></p>
+        <ul>
+          <li>The motor loop and the guide blocks are added in series. The loop does not see the guide modes, and the
+            guide modes do not see the loop. Near 450 Hz both act together, so the real answer may differ.</li>
+          <li>The carriage masses sit in one point each; their tilt inertia comes from boxes of about their size.</li>
+          <li>No process damping. At low cutting speed the flank of the insert rubs on the wave and damps it. In hard
+            turning this helps, so the page is on the safe side.</li>
+          <li>Kienzle is used far below its 1 mm chip thickness. At 30 µm the real force can differ a lot. Measure it.</li>
+          <li>The clamp of the shank in the holder, the holder on the carriage and the screws are rigid here.</li>
+          <li>The damping ratios are estimates. They decide the height of every peak.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- Plain scripts, so the page also works when opened straight from disk. -->
+<script src="../cutting-force-rejection/control_model.js"></script>
+<script src="./turning_model.js"></script>
+<script>
+(() => {
+const TM = window.TurningModel;
+const $ = (id) => document.getElementById(id);
+const IDS = ["ap", "feed", "vc", "D", "rNose", "kappa", "kc1", "mc", "rt", "fs", "mHolder", "kRadial", "kLatRatio",
+  "zetaGuide", "tipHeightMm", "tipReachMm", "xPosMm", "shankMm", "overhangMm", "zetaTool", "rpmLo", "rpmHi"];
+const DIR = [
+  { name: "X, into the part", short: "X", color: "var(--s1)" },
+  { name: "Y, up", short: "Y", color: "var(--s3)" },
+  { name: "Z, along the spindle", short: "Z", color: "var(--s2)" },
+];
+
+function sig(v, n = 3) {
+  if (!Number.isFinite(v)) return "–";
+  if (v === 0) return "0";
+  const a = Math.abs(v);
+  if (a >= 1000) return Math.round(v).toLocaleString("en-US");
+  return String(+v.toPrecision(n));
+}
+
+// ----- A small line chart with log axes and a hover readout ----------------
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function niceTicks(lo, hi, n = 5) {
+  const span = hi - lo || 1, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= step0);
+  const out = [];
+  for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9 * span; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(lo, hi) {
+  const out = [];
+  for (let e = Math.ceil(Math.log10(lo) - 1e-9); e <= Math.floor(Math.log10(hi) + 1e-9); e++) out.push(10 ** e);
+  return out;
+}
+const logLabel = (v) => (v >= 1000 ? `${v / 1000}k` : String(+v.toPrecision(2)));
+
+function chart(svg, o) {
+  const [, , W, H] = svg.getAttribute("viewBox").split(" ").map(Number);
+  svg.replaceChildren();
+  const m = { l: 58, r: 14, t: 12, b: 36 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const ys = o.series.slice(0, o.yFromN ?? o.series.length).flatMap((s) => s.pts.map((p) => p[1]))
+    .filter((y) => Number.isFinite(y) && (!o.yLog || y > 0));
+  const [x0, x1] = o.xRange;
+  let [y0, y1] = o.yRange ?? [Math.min(...ys), Math.max(...ys)];
+  if (o.yLog) { y0 = 10 ** Math.floor(Math.log10(y0)); y1 = 10 ** Math.ceil(Math.log10(y1)); if (y1 <= y0) y1 = y0 * 10; }
+  else if (!o.yRange) { const pad = (y1 - y0) * 0.06 || 1; y0 = o.yZero ? Math.min(0, y0) : y0 - pad; y1 += pad; }
+  const fx = o.xLog ? (x) => Math.log10(x / x0) / Math.log10(x1 / x0) : (x) => (x - x0) / (x1 - x0);
+  const fy = o.yLog ? (y) => Math.log10(y / y0) / Math.log10(y1 / y0) : (y) => (y - y0) / (y1 - y0);
+  const X = (x) => m.l + pw * fx(x), Y = (y) => m.t + ph * (1 - fy(y));
+  const g = el("g");
+  for (const v of o.xLog ? logTicks(x0, x1) : niceTicks(x0, x1, 7)) {
+    g.append(el("line", { x1: X(v), x2: X(v), y1: m.t, y2: m.t + ph, stroke: "var(--grid)" }));
+    g.append(el("text", { x: X(v), y: m.t + ph + 14, "font-size": 10.5, fill: "var(--muted)", "text-anchor": X(v) > m.l + pw - 16 ? "end" : "middle" }, o.xLog ? logLabel(v) : sig(v)));
+  }
+  for (const v of o.yLog ? logTicks(y0, y1) : niceTicks(y0, y1, 5)) {
+    g.append(el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: "var(--grid)" }));
+    g.append(el("text", { x: m.l - 6, y: Y(v) + 3.5, "font-size": 10.5, "text-anchor": "end", fill: "var(--muted)" },
+      o.yLog ? (v >= 0.01 ? String(+v.toPrecision(2)) : `1e${Math.round(Math.log10(v))}`) : sig(v)));
+  }
+  g.append(el("rect", { x: m.l, y: m.t, width: pw, height: ph, fill: "none", stroke: "var(--line)" }));
+  g.append(el("text", { x: m.l + pw / 2, y: H - 4, "font-size": 11, "text-anchor": "middle", fill: "var(--muted)" }, o.xLabel));
+  g.append(el("text", { x: 12, y: m.t + ph / 2, "font-size": 11, "text-anchor": "middle", fill: "var(--muted)", transform: `rotate(-90 12 ${m.t + ph / 2})` }, o.yLabel));
+  const clip = `clip-${svg.id}`;
+  const defs = el("defs"), cp = el("clipPath", { id: clip });
+  cp.append(el("rect", { x: m.l, y: m.t, width: pw, height: ph }));
+  defs.append(cp);
+  g.append(defs);
+  const plot = el("g", { "clip-path": `url(#${clip})` });
+  for (const h of o.hlines ?? []) {
+    if (!(h.y > y0 && h.y < y1)) continue;
+    plot.append(el("line", { x1: m.l, x2: m.l + pw, y1: Y(h.y), y2: Y(h.y), stroke: h.color ?? "var(--muted)", "stroke-dasharray": h.dot ? "1.5 3" : "5 4", "stroke-width": h.dot ? 1.6 : 1.4 }));
+    if (h.label) plot.append(el("text", { x: m.l + pw - 4, y: Y(h.y) - 4, "font-size": 10.5, "text-anchor": "end", fill: h.color ?? "var(--muted)" }, h.label));
+  }
+  for (const s of o.series) {
+    // Break the line where a value is missing.
+    let d = "", pen = false;
+    for (const p of s.pts) {
+      const ok = Number.isFinite(p[1]) && (!o.yLog || p[1] > 0);
+      if (!ok) { pen = false; continue; }
+      d += `${pen ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(Math.min(Math.max(p[1], y0 - (y1 - y0)), y1 + (y1 - y0))).toFixed(1)}`;
+      pen = true;
+    }
+    plot.append(el("path", { d, fill: "none", stroke: s.color, "stroke-width": s.width ?? 2, "stroke-dasharray": s.dash ? "5 4" : "none", "stroke-linejoin": "round" }));
+  }
+  for (const mk of o.markers ?? []) {
+    if (!(mk.x >= x0 && mk.x <= x1)) continue;
+    const yy = Math.min(Math.max(mk.y, y0), y1);
+    plot.append(el("circle", { cx: X(mk.x), cy: Y(yy), r: 5, fill: mk.color, stroke: "var(--panel)", "stroke-width": 2 }));
+    const right = X(mk.x) < m.l + pw * 0.6;
+    plot.append(el("text", { x: X(mk.x) + (right ? 9 : -9), y: Y(yy) + 18, "font-size": 11, "text-anchor": right ? "start" : "end", "font-weight": 500 }, mk.label));
+  }
+  g.append(plot);
+  const hair = el("line", { y1: m.t, y2: m.t + ph, stroke: "var(--muted)", visibility: "hidden" });
+  const hit = el("rect", { x: m.l, y: m.t, width: pw, height: ph, fill: "transparent" });
+  g.append(hair, hit);
+  svg.append(g);
+  const box = svg.parentElement;
+  let tip = box.querySelector(".tip");
+  if (!tip) { tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; box.append(tip); }
+  const inv = (px) => { const u = (px - m.l) / pw; return o.xLog ? x0 * (x1 / x0) ** u : x0 + u * (x1 - x0); };
+  const nearest = (pts, x) => pts.reduce((b, p) => (Math.abs(p[0] - x) < Math.abs(b[0] - x) ? p : b), pts[0]);
+  const move = (ev) => {
+    const r = svg.getBoundingClientRect();
+    const x = inv(Math.min(m.l + pw, Math.max(m.l, (ev.clientX - r.left) * W / r.width)));
+    const ref = nearest(o.series[0].pts, x);
+    hair.setAttribute("x1", X(ref[0])); hair.setAttribute("x2", X(ref[0])); hair.setAttribute("visibility", "visible");
+    tip.replaceChildren();
+    const head = document.createElement("div"); head.className = "n"; head.textContent = o.xTip(ref[0]); tip.append(head);
+    for (const s of o.series) {
+      const p = nearest(s.pts, ref[0]);
+      const row = document.createElement("div"), key = document.createElement("i");
+      key.style.borderColor = s.color;
+      if (s.dash) key.style.borderTopStyle = "dashed";
+      row.append(key, `${(s.fmt ?? sig)(p[1])} `);
+      const n = document.createElement("span"); n.className = "n"; n.textContent = s.label; row.append(n);
+      tip.append(row);
+    }
+    tip.hidden = false;
+    const bx = box.getBoundingClientRect(), left = ev.clientX - bx.left, top = ev.clientY - bx.top, tw = tip.offsetWidth;
+    tip.style.left = `${left + 14 + tw > bx.width ? left - 14 - tw : left + 14}px`;
+    tip.style.top = `${Math.max(0, top - 10 - tip.offsetHeight)}px`;
+  };
+  hit.addEventListener("pointermove", move);
+  hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", () => { tip.hidden = true; hair.setAttribute("visibility", "hidden"); });
+}
+function legend(box, items) {
+  box.replaceChildren(...items.map(([color, text, dash]) => {
+    const s = document.createElement("span"), i = document.createElement("i");
+    i.style.borderColor = color;
+    if (dash) i.className = "dash";
+    s.append(i, text);
+    return s;
+  }));
+}
+
+// ----- The stack, side view --------------------------------------------------
+function stackDiagram(q) {
+  const svg = $("stack");
+  svg.replaceChildren();
+  const rect = (x, y, w, h, fill, label) => {
+    svg.append(el("rect", { x, y, width: w, height: h, rx: 3, fill, stroke: "var(--ink)", "stroke-width": 1.2 }));
+    if (label) svg.append(el("text", { x: x + w / 2, y: y + h / 2 + 4, "text-anchor": "middle", "font-size": 11 }, label));
+  };
+  svg.append(el("rect", { x: 10, y: 222, width: 500, height: 18, fill: "var(--grid)", stroke: "var(--line)" }));
+  svg.append(el("text", { x: 20, y: 235, "font-size": 10.5, fill: "var(--muted)" }, "lathe bed, rigid"));
+  rect(60, 182, 300, 40, "var(--panel)", "lower stage base (moves along Z)");
+  rect(80, 152, 260, 30, "var(--bg)", "lower carriage");
+  rect(40, 112, 360, 40, "var(--panel)", "upper stage base, travel along X");
+  rect(150 + q.xPosMm * 0.6, 82, 140, 30, "var(--bg)", "upper carriage");
+  const hx = 150 + q.xPosMm * 0.6, tipX = hx + 70 + q.tipReachMm * 0.9;
+  rect(hx + 40, 52, Math.max(30, tipX - hx - 50), 30, "var(--panel)", "tool holder");
+  svg.append(el("polygon", { points: `${tipX - 12},${60} ${tipX + 4},${66} ${tipX - 12},${72}`, fill: "var(--accent)" }));
+  svg.append(el("circle", { cx: tipX + 46, cy: 66, r: 38, fill: "var(--grid)", stroke: "var(--ink)" }));
+  svg.append(el("text", { x: tipX + 46, y: 70, "text-anchor": "middle", "font-size": 10.5 }, "part"));
+  svg.append(el("text", { x: tipX - 30, y: 98, "text-anchor": "end", "font-size": 10.5, fill: "var(--accent)" }, "tool tip"));
+  svg.append(el("text", { x: 20, y: 20, "font-size": 10.5, fill: "var(--muted)" }, "X →  into the part        Y ↑  up        Z  along the spindle (into the page)"));
+}
+
+// ----- Update ----------------------------------------------------------------
+function read() {
+  const q = {};
+  for (const id of IDS) {
+    const v = Number($(id).value);
+    if (!Number.isFinite(v)) throw new Error(`"${id}" is not a number`);
+    q[id] = v;
+  }
+  if (q.ap <= 0 || q.feed <= 0 || q.rNose <= 0) throw new Error("depth of cut, feed and nose radius must be above 0");
+  if (q.rpmHi <= q.rpmLo) throw new Error("the highest speed must be above the lowest speed");
+  if (q.feed >= 2 * q.rNose) throw new Error("the feed must be less than twice the nose radius");
+  return q;
+}
+
+function update() {
+  const status = $("status");
+  try {
+    const q = read();
+    const t0 = performance.now();
+    const r = TM.analyse(q);
+    const c = r.cut;
+    $("dCut").textContent = `${sig(c.rpm)} rev/min · chip ${sig(c.b)} mm wide, ${sig(c.h * 1000)} µm thick · ` +
+      (c.nose ? "on the nose only" : "nose and straight edge");
+    $("dDrive").textContent = `loops: X ${sig(r.loops.x.tuned.fb)} Hz for ${sig(r.loops.x.m)} kg, Z ${sig(r.loops.z.tuned.fb)} Hz for ${sig(r.loops.z.m)} kg`;
+
+    // Verdict.
+    const stable = r.margin >= 1, close = r.margin < 1.5;
+    const motorOver = Math.max(r.motorUse.x, r.motorUse.z) > 1;
+    const v = $("verdict");
+    v.className = `verdict ${!stable ? "bad" : close || motorOver ? "warn" : ""}`;
+    const limiter = r.split.servo.ap < r.split.struct.ap ? "the motor loops" : "the guide blocks and the shank";
+    v.replaceChildren(...[
+      stable
+        ? `The cut is stable, with ${sig(r.margin, 2)} times the depth in hand: chatter starts at a depth of ${sig(r.apAtRpm.ap)} mm at ${sig(c.rpm)} rev/min. ${close ? "That margin is small for a model with estimated damping." : ""}`
+        : `The cut chatters. At ${sig(c.rpm)} rev/min the limit is a depth of ${sig(r.apAtRpm.ap)} mm, only ${sig(r.margin, 2)} times the depth asked for.`,
+      `Alone, the motor loops would allow ${sig(r.split.servo.ap)} mm and the guide blocks with the shank ${sig(r.split.struct.ap)} mm. Together they allow less, because both are weak near the same frequency. The weaker part is ${limiter}.`,
+      `The thrust into the part is ${sig(c.Fx)} N, which is ${Math.round(100 * r.motorUse.x)} % of the continuous force of the MK21 motor (181 N). ${r.motorUse.x > 1 ? "The motor cannot hold this force for long." : ""}`,
+    ].map((t) => { const p = document.createElement("p"); p.textContent = t; return p; }));
+
+    const kpi = (val, unit, label, cls = "") => {
+      const d = document.createElement("div"); d.className = `kpi ${cls}`;
+      const b = document.createElement("b"); b.textContent = `${val} ${unit}`;
+      const s = document.createElement("span"); s.textContent = label;
+      d.append(b, s); return d;
+    };
+    $("kpis").replaceChildren(
+      kpi(sig(r.apAtRpm.ap), "mm", `stable depth at ${sig(c.rpm)} rev/min`, stable ? (close ? "warn" : "ok") : "bad"),
+      kpi(sig(r.lobes.apFloor), "mm", "stable depth at every speed"),
+      kpi(sig(Math.min(...r.lowest.map((o) => o.k)) / 1e6), "N/µm", "lowest dynamic stiffness at the tip"),
+      kpi(sig(c.Fc), "N", "cutting force, down"),
+      kpi(sig(c.Fx), "N", "thrust into the part (X motor)", r.motorUse.x > 1 ? "bad" : ""),
+      kpi(sig(c.Fz), "N", "feed force (Z motor)", r.motorUse.z > 1 ? "bad" : ""),
+      kpi(sig(Math.abs(r.diameterError) * 1e6), "µm", "diameter error from the springs"),
+    );
+
+    // Stiffness table.
+    const tb = $("tblK");
+    const head = `<thead><tr><th></th>${DIR.map((d) => `<th>${d.name}</th>`).join("")}</tr></thead>`;
+    const row = (name, vals) => `<tr><td>${name}</td>${vals.map((x) => `<td>${x}</td>`).join("")}</tr>`;
+    tb.innerHTML = head + "<tbody>" +
+      row("Static, guide blocks and shank (the motors hold zero error)", r.staticK.map((k) => sig(k / 1e6))) +
+      row("Lowest dynamic, with the motor loops", r.lowest.map((o) => sig(o.k / 1e6))) +
+      row("At", r.lowest.map((o) => `${sig(o.f)} Hz`)) +
+      row("Highest peak of the guide blocks and shank alone", r.structPeaks.map((f) => `${sig(f)} Hz`)) +
+      "</tbody>";
+
+    // Lobes.
+    const lob = r.lobes;
+    legend($("lgLobes"), [["var(--s1)", "stability limit"], ["var(--ref)", "stable at every speed", true],
+      ["var(--s2)", "motor loops alone"], ["var(--s3)", "guide blocks and shank alone"]]);
+    const shown = [r.split.servo.ap, r.split.struct.ap].filter((v) => Number.isFinite(v) && v < 8 * q.ap);
+    const yMax = Math.max(3 * q.ap, 2.2 * lob.apFloor, 1.2 * r.apAtRpm.ap, ...shown.map((v) => 1.15 * v));
+    chart($("cLobes"), {
+      xRange: [q.rpmLo, q.rpmHi], yRange: [0, yMax], xLabel: "spindle speed, rev/min", yLabel: "depth of cut, mm",
+      series: [{ pts: lob.rpm.map((x, i) => [x, lob.ap[i]]), color: "var(--s1)", label: "mm, limit", fmt: (y) => sig(y) }],
+      hlines: [
+        { y: lob.apFloor, color: "var(--ref)", label: `${sig(lob.apFloor)} mm at every speed` },
+        { y: r.split.servo.ap, color: "var(--s2)", dot: true, label: `motor loops alone ${sig(r.split.servo.ap)} mm` },
+        { y: r.split.struct.ap, color: "var(--s3)", dot: true, label: `guide blocks and shank alone ${sig(r.split.struct.ap)} mm` },
+      ],
+      markers: [{ x: c.rpm, y: q.ap, color: stable ? "var(--ok)" : "var(--bad)", label: `your cut: ${q.ap} mm at ${sig(c.rpm)} rev/min` }],
+      xTip: (x) => `${sig(x)} rev/min`,
+    });
+
+    // Compliance charts.
+    legend($("lgComp"), DIR.map((d) => [d.color, d.name]));
+    chart($("cComp"), {
+      xLog: true, yLog: true, xRange: [r.grid[0], r.grid[r.grid.length - 1]],
+      xLabel: "frequency, Hz", yLabel: "µm/N",
+      series: DIR.map((d, k) => ({ pts: r.grid.map((f, i) => [f, Math.hypot(...r.tip[i][k][k]) * 1e6]), color: d.color, label: d.short, fmt: (y) => `${sig(y)} µm/N` })),
+      xTip: (x) => `${sig(x)} Hz`,
+    });
+    legend($("lgRe"), [["var(--s1)", "seen by the cut, Re Φ"]]);
+    chart($("cRe"), {
+      xLog: true, xRange: [r.grid[0], r.grid[r.grid.length - 1]], xLabel: "frequency, Hz", yLabel: "µm/N",
+      series: [{ pts: r.grid.map((f, i) => [f, r.phiChart[i][0] * 1e6]), color: "var(--s1)", label: "Re Φ", fmt: (y) => `${sig(y)} µm/N` }],
+      hlines: [{ y: lob.minRe * 1e6, color: "var(--ref)", label: `lowest ${sig(lob.minRe * 1e6)} µm/N at ${sig(lob.fMin)} Hz` }],
+      xTip: (x) => `${sig(x)} Hz`,
+    });
+
+    stackDiagram(q);
+    status.className = "status";
+    status.textContent = `Calculated in ${Math.round(performance.now() - t0)} ms.`;
+  } catch (err) {
+    status.className = "status bad";
+    status.textContent = `Could not calculate: ${err.message}`;
+  }
+}
+
+let timer = 0;
+const schedule = () => { clearTimeout(timer); timer = setTimeout(update, 150); };
+try {
+  if (!TM || !window.ControlModel) throw new Error("the model files did not load");
+  for (const id of IDS) { $(id).value = TM.TURNING_DEFAULTS[id]; $(id).addEventListener("input", schedule); }
+  update();
+} catch (err) {
+  $("status").className = "status bad";
+  $("status").textContent = `Could not start: ${err.message}`;
+}
+})();
+</script>
+</body>
+</html>

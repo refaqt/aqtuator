@@ -5,7 +5,7 @@ version = "0.1.0"
 # Hardware licence (this manifest describes the hardware project).
 # Firmware/software is GPL-3.0; docs/media is CC BY-SA 4.0. See README.md / LICENSE.
 license = "CERN-OHL-S-2.0"
-licensor = "Niels Bosmans"
+licensor = "Refaqt"
 function = "Product line of linear stages. Each stage family is a module of this project. A Mekanika Pro milling machine is the test bench the stages are measured on."
 
 [[hasComponent]]

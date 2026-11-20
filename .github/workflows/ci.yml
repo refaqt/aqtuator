@@ -37,6 +37,9 @@ jobs:
       - name: Damper sizing model checks
         run: node simulation/cases/damper-sizing/check_model.mjs
 
+      - name: Hard turning stability model checks
+        run: node simulation/cases/hard-turning-stability/check_model.mjs
+
       - name: Install host software
         run: |
           pip install -e modules/flexure-ball-screw-servo-stage/software/measurement-tools
