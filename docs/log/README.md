@@ -207,6 +207,7 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-10 | [Scraper: brass block with height adjustment and a TPU wiper, first sketches](2026-11-10_brass-block-and-tpu-wiper.md) | engineering, cad | 2 |
 | 2026-11-11 | [Hard turning on two stacked compact stages](2026-11-11_hard-turning-stability.md) | simulation, engineering |  |
 | 2026-11-19 | [Can a Renishaw or Lamotion absolute encoder replace the RSF encoder?](2026-11-19_renishaw-and-lamotion-heads-fit-check.md) | cad, engineering |  |
+| 2026-11-20 | [HIWIN answers on the E1 loop bandwidth and the encoder box delay](2026-11-20_hiwin-loop-bandwidth-answers.md) | engineering, purchasing |  |
 | 2026-11-20 | [Seal strip corner screws are now DIN 7984, with working joints](2026-11-20_strip-corner-screws-din7984.md) | cad |  |
 | 2026-11-20 | [Seal strip held by a printed end clamp on a ramp](2026-11-20_strip-held-by-an-end-clamp.md) | cad |  |
 | 2026-11-20 | [Preload slot: the screw touches only the outer edge of the strip](2026-11-20_preload-slot-on-the-ramp.md) | cad |  |
