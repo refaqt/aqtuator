@@ -3,69 +3,69 @@
   "errors": [],
   "objects": {
     "BaseFeature": {
-      "area": 164885.0,
+      "area": 163448.0,
       "bbox": [
-        1.0,
-        3.2,
-        39.8476,
-        439.0,
-        206.8,
+        0.955224,
+        12.2,
+        36.8835,
+        439.045,
+        197.8,
         52.7148
       ],
       "closed": true,
       "com": [
-        220.003,
+        220.015,
         105.0,
-        44.2573
+        44.2592
       ],
       "counts": {
-        "edges": 138,
-        "faces": 48,
+        "edges": 156,
+        "faces": 50,
         "shells": 1,
         "solids": 1,
-        "verts": 92
+        "verts": 108
       },
       "label": "BaseFeature",
       "type": "PartDesign::FeatureBase",
       "valid": true,
-      "volume": 12376.6
+      "volume": 12268.5
     },
     "Body": {
-      "area": 164885.0,
+      "area": 163448.0,
       "bbox": [
-        1.0,
-        3.2,
-        39.8476,
-        439.0,
-        206.8,
+        0.955224,
+        12.2,
+        36.8835,
+        439.045,
+        197.8,
         52.7148
       ],
       "closed": true,
       "com": [
-        220.003,
+        220.015,
         105.0,
-        44.2573
+        44.2592
       ],
       "counts": {
-        "edges": 138,
-        "faces": 48,
+        "edges": 156,
+        "faces": 50,
         "shells": 1,
         "solids": 1,
-        "verts": 92
+        "verts": 108
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 12376.6
+      "volume": 12268.5
     },
     "Body001": {
-      "area": 164877.0,
+      "area": 163439.0,
       "bbox": [
-        -0.9765,
-        3.2,
+        -1.62105,
+        12.2,
         0.0,
-        440.976,
-        206.8,
+        441.621,
+        197.8,
         0.15
       ],
       "closed": true,
@@ -75,25 +75,25 @@
         0.075
       ],
       "counts": {
-        "edges": 102,
-        "faces": 36,
+        "edges": 120,
+        "faces": 42,
         "shells": 1,
         "solids": 1,
-        "verts": 68
+        "verts": 80
       },
       "label": "FlatBody",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 12350.0
+      "volume": 12241.9
     },
     "FlatHoles": {
-      "area": 164877.0,
+      "area": 163439.0,
       "bbox": [
-        -0.9765,
-        3.2,
+        -1.62105,
+        12.2,
         0.0,
-        440.976,
-        206.8,
+        441.621,
+        197.8,
         0.15
       ],
       "closed": true,
@@ -103,25 +103,25 @@
         0.075
       ],
       "counts": {
-        "edges": 102,
-        "faces": 36,
+        "edges": 120,
+        "faces": 42,
         "shells": 1,
         "solids": 1,
-        "verts": 68
+        "verts": 80
       },
       "label": "FlatHoles",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 12350.0
+      "volume": 12241.9
     },
     "FlatHolesSketch": {
       "area": 0.0,
       "bbox": [
-        1.2732,
-        5.75,
+        -5.82105,
+        42.0,
         0.0,
-        438.727,
-        204.25,
+        445.821,
+        168.0,
         0.0
       ],
       "closed": true,
@@ -131,11 +131,11 @@
         0.0
       ],
       "counts": {
-        "edges": 18,
+        "edges": 36,
         "faces": 0,
         "shells": 0,
         "solids": 0,
-        "verts": 18
+        "verts": 36
       },
       "label": "FlatHolesSketch",
       "type": "Sketcher::SketchObject",
@@ -145,11 +145,11 @@
     "FlatOutline": {
       "area": 0.0,
       "bbox": [
-        -0.9765,
-        3.2,
+        -1.62105,
+        12.2,
         0.0,
-        440.976,
-        206.8,
+        441.621,
+        197.8,
         0.0
       ],
       "closed": true,
@@ -159,11 +159,11 @@
         0.0
       ],
       "counts": {
-        "edges": 16,
+        "edges": 4,
         "faces": 0,
         "shells": 0,
         "solids": 0,
-        "verts": 16
+        "verts": 4
       },
       "label": "FlatOutline",
       "type": "Sketcher::SketchObject",
@@ -171,13 +171,13 @@
       "volume": 0.0
     },
     "FlatPad": {
-      "area": 165104.0,
+      "area": 164720.0,
       "bbox": [
-        -0.9765,
-        3.2,
+        -1.62105,
+        12.2,
         0.0,
-        440.976,
-        206.8,
+        441.621,
+        197.8,
         0.15
       ],
       "closed": true,
@@ -187,53 +187,53 @@
         0.075
       ],
       "counts": {
-        "edges": 48,
-        "faces": 18,
+        "edges": 12,
+        "faces": 6,
         "shells": 1,
         "solids": 1,
-        "verts": 32
+        "verts": 8
       },
       "label": "FlatPad",
       "type": "PartDesign::Pad",
       "valid": true,
-      "volume": 12368.1
+      "volume": 12339.9
     },
     "Part": {
-      "area": 164885.0,
+      "area": 163448.0,
       "bbox": [
-        1.0,
-        3.2,
-        39.8476,
-        439.0,
-        206.8,
+        0.955224,
+        12.2,
+        36.8835,
+        439.045,
+        197.8,
         52.7148
       ],
       "closed": true,
       "com": [
-        220.003,
+        220.015,
         105.0,
-        44.2573
+        44.2592
       ],
       "counts": {
-        "edges": 138,
-        "faces": 48,
+        "edges": 156,
+        "faces": 50,
         "shells": 1,
         "solids": 1,
-        "verts": 92
+        "verts": 108
       },
       "label": "sealing-strip",
       "type": "App::Part",
       "valid": true,
-      "volume": 12376.6
+      "volume": 12268.5
     },
     "Part001": {
-      "area": 164877.0,
+      "area": 163439.0,
       "bbox": [
-        -0.9765,
-        3.2,
+        -1.62105,
+        12.2,
         0.0,
-        440.976,
-        206.8,
+        441.621,
+        197.8,
         0.15
       ],
       "closed": true,
@@ -243,44 +243,44 @@
         0.075
       ],
       "counts": {
-        "edges": 102,
-        "faces": 36,
+        "edges": 120,
+        "faces": 42,
         "shells": 1,
         "solids": 1,
-        "verts": 68
+        "verts": 80
       },
       "label": "sealing-strip-flat",
       "type": "App::Part",
       "valid": true,
-      "volume": 12350.0
+      "volume": 12241.9
     },
     "StripShape": {
-      "area": 164885.0,
+      "area": 163448.0,
       "bbox": [
-        1.0,
-        3.2,
-        39.8476,
-        439.0,
-        206.8,
+        0.955224,
+        12.2,
+        36.8835,
+        439.045,
+        197.8,
         52.7148
       ],
       "closed": true,
       "com": [
-        220.003,
+        220.015,
         105.0,
-        44.2573
+        44.2592
       ],
       "counts": {
-        "edges": 138,
-        "faces": 48,
+        "edges": 156,
+        "faces": 50,
         "shells": 1,
         "solids": 1,
-        "verts": 92
+        "verts": 108
       },
       "label": "StripShape (preloaded, carriage in the middle)",
       "type": "Part::Feature",
       "valid": true,
-      "volume": 12376.6
+      "volume": 12268.5
     }
   },
   "parametric": {
@@ -291,6 +291,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "sealing-strip.FCStd": "c19439dec825dbac0afbb015f4ade8caf2b6f5f120b8774c7383f24410e8f564"
+    "sealing-strip.FCStd": "da0a0d38daf43c20cc9d51961195d97405227caa456d5897f3a4fca24a69de68"
   }
 }

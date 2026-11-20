@@ -7,9 +7,30 @@ sleeve_l,=roller_l - 2 * bearing_flange_w,mm,,,Length of the sleeve: the roller 
 strip_t,0.15,mm,design,docs/decisions/2026-10-28_seal-strip-0-15-mm.md,Thickness of the seal strip. The strip pocket in the base is as deep
 strip_end_gap,1,mm,design,Niels Bosmans 2026-10-29,Room between each end of the seal strip and the end face of the base
 strip_edge_gap,0.2,mm,design,base Pocket005,Room between the seal strip outline and the wall of its pocket in the base. The pocket body is 186 mm wide; the strip 185.6 mm. The strip keeps 0.2 mm to the slope openings of the carriage (186 mm) on each side
-strip_corner_hole_d,4.5,mm,design,ISO 273 medium for M4,Width of the slot in each strip corner for the ISO 7380-2 M4 clamp screw
-strip_corner_slot_l,1,mm,design,Niels Bosmans 2026-10-30,Length of each corner slot along X (centre to centre). It is centred on the screw. So the strip can slide 0.5 mm each way under the collar while the preload is set. The 45° steps of the strip ears sit half this length further towards the strip ends than the pocket steps; so the strip keeps strip_edge_gap at the steps over the whole slide
-strip_preload_hole_d,5,mm,design,simulation/cases/strip-seal-fit,Hole at each strip end for the ISO 10642 M4 preload screw. It sits off the screw axis towards the strip middle
+base_l,440,mm,design,base Block,Length of the base along X (the travel)
+base_w,210,mm,design,base Block,Width of the base along Y
+base_h,40,mm,design,base Block,Height of the base. The strip pocket and the end clamps are measured from its top
+strip_pocket_w,186,mm,design,base Sketch007,Width of the strip pocket in the base. It is centred on the base width. The strip is strip_edge_gap narrower on each side
+preload_screw_x,4.75,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,X of each ISO 10642 M4 preload screw from its base end. The screws sit in the middle of the width. Moved out from 6.5 mm so the strip hole and the countersink stay clear of the base cavity
+ramp_r,15,mm,design,Niels Bosmans 2026-11-20,Radius of the ramp at each base end. The strip bends down over it under the end clamp
+ramp_x,10,mm,design,Niels Bosmans 2026-11-20,Distance from the base end to where the ramp meets the strip pocket floor. The ramp is tangent to the floor there
+clamp_h,3.5,mm,design,Niels Bosmans 2026-11-20,Height of the printed end clamp at its outer edge
+clamp_top_gap,0.2,mm,design,Niels Bosmans 2026-11-20,How far the top of the end clamp sits below the top of the base. The carriage passes over it
+clamp_end_gap,0.2,mm,design,Niels Bosmans 2026-11-20,Room between the outer edge of the end clamp and the end face of the base
+clamp_edge_t,0.4,mm,design,docs/decisions/2026-11-20_strip-held-by-an-end-clamp.md,Thickness of the end clamp at its inner edge. Two printed layers of 0.2 mm. This sets the clamp width
+clamp_screw_inset,5,mm,design,Niels Bosmans 2026-11-20,Distance from the outer edge of the end clamp to the axis of its M3 screws
+clamp_screw_y0,7,mm,design,Niels Bosmans 2026-11-20,Y of the first end clamp screw. Six screws sit at equal pitch with the last one this far from the other side of the base
+clamp_screw_hole_d,3.4,mm,catalogue,ISO 273 medium for M3,Clearance hole for the M3 countersunk screws in the end clamp
+clamp_boss_d,8,mm,design,Niels Bosmans 2026-11-20,Diameter of the boss of the end clamp around each M3 countersunk screw
+clamp_boss_drop,1.1,mm,design,Niels Bosmans 2026-11-20,How far each boss reaches below the lowest point of the end clamp. It goes through the strip into a pocket in the base
+boss_gap,0.2,mm,design,docs/decisions/2026-11-20_strip-held-by-an-end-clamp.md,Room around each clamp boss in its base pocket and in its strip slot
+boss_pocket_extra,0.3,mm,design,docs/decisions/2026-11-20_strip-held-by-an-end-clamp.md,Room between the bottom of each clamp boss and the floor of its base pocket
+clamp_tap_depth,8,mm,design,docs/decisions/2026-11-20_strip-held-by-an-end-clamp.md,Depth of the M3 tapped hole under each boss pocket. An M3 x 10 screw engages about 5 mm
+clamp_notch_d,8.4,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,Hole in the end clamp over the preload screw. The ISO 10642 M4 head (8 mm) comes out through it
+strip_boss_slide,0.5,mm,design,docs/decisions/2026-11-20_strip-held-by-an-end-clamp.md,How far the strip can slide towards its end around each clamp boss while the preload screw pulls it
+strip_preload_hole_d,4.3,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,Small circle of the preload hole at each strip end, centred on the screw axis, seen from above: 2 + strip_t from the axis. The cone of the ISO 10642 M4 touches its outer side. Cut square to the sloped strip, it is larger by 1 / cos(slope)
+strip_preload_relief_d,6.4,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,Large circle of the preload hole, seen from above. It frees the strip where the rising ramp would meet the screw head
+strip_preload_relief_x,1.5,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,Distance seen from above from the screw axis to the centre of the large circle of the preload hole, towards the strip middle
 strip_pull,270,N,design,simulation/cases/strip-seal-fit,Pull in the seal strip after the preload screws are tight. No carriage contact from 190 to 350 N
 cooling_block_gap,0.15,mm,design,carriage-bottom Sketch037,Room on each side between the printed cooling block and the wall of its pocket in carriage-bottom
 cooling_block_top_gap,0.1,mm,design,carriage-bottom Pad,Room between the top of the cooling block and the top face of carriage-bottom. The seal strip runs 1 mm above that face

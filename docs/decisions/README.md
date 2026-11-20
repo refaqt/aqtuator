@@ -43,3 +43,4 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-11-09 | [The cooling block runs to the side face and holds two Festo fittings](2026-11-09_cooling-block-to-the-edge-with-festo-fittings.md) |
 | 2026-11-09 | [The compact stage is partly completed machinery, without limit switches](2026-11-09_compact-stage-is-partly-completed-machinery.md) |
 | 2026-11-09 | [We do not continue with DGSMARTWIN for now](2026-11-09_no-dgsmartwin-for-now.md) |
+| 2026-11-20 | [The seal strip ends are held by a printed clamp on a ramp](2026-11-20_strip-held-by-an-end-clamp.md) |

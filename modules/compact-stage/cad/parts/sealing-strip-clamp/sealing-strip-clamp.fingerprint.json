@@ -1,0 +1,268 @@
+{
+  "document": "sealing_strip_clamp",
+  "errors": [],
+  "objects": {
+    "Body": {
+      "area": 4186.61,
+      "bbox": [
+        0.0,
+        0.0,
+        -1.1,
+        210.0,
+        9.0,
+        3.5
+      ],
+      "closed": true,
+      "com": [
+        105.0,
+        3.01282,
+        1.87036
+      ],
+      "counts": {
+        "edges": 104,
+        "faces": 38,
+        "shells": 1,
+        "solids": 1,
+        "verts": 68
+      },
+      "label": "Body",
+      "type": "PartDesign::Body",
+      "valid": true,
+      "volume": 2687.16
+    },
+    "Hole": {
+      "area": 4237.42,
+      "bbox": [
+        0.0,
+        0.0,
+        -1.1,
+        210.0,
+        9.0,
+        3.5
+      ],
+      "closed": true,
+      "com": [
+        105.0,
+        3.00563,
+        1.88431
+      ],
+      "counts": {
+        "edges": 96,
+        "faces": 36,
+        "shells": 1,
+        "solids": 1,
+        "verts": 62
+      },
+      "label": "Hole",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 2736.05
+    },
+    "Pad": {
+      "area": 3326.83,
+      "bbox": [
+        0.0,
+        0.0,
+        0.103463,
+        210.0,
+        5.57863,
+        3.5
+      ],
+      "closed": true,
+      "com": [
+        105.0,
+        1.95201,
+        2.4516
+      ],
+      "counts": {
+        "edges": 12,
+        "faces": 6,
+        "shells": 1,
+        "solids": 1,
+        "verts": 8
+      },
+      "label": "Pad",
+      "type": "PartDesign::Pad",
+      "valid": true,
+      "volume": 1926.58
+    },
+    "Pad001": {
+      "area": 4092.25,
+      "bbox": [
+        0.0,
+        0.0,
+        -1.1,
+        210.0,
+        9.0,
+        3.5
+      ],
+      "closed": true,
+      "com": [
+        105.0,
+        3.24097,
+        1.86995
+      ],
+      "counts": {
+        "edges": 66,
+        "faces": 24,
+        "shells": 1,
+        "solids": 1,
+        "verts": 44
+      },
+      "label": "Pad001",
+      "type": "PartDesign::Pad",
+      "valid": true,
+      "volume": 3102.1
+    },
+    "Part": {
+      "area": 4186.61,
+      "bbox": [
+        0.0,
+        0.0,
+        -1.1,
+        210.0,
+        9.0,
+        3.5
+      ],
+      "closed": true,
+      "com": [
+        105.0,
+        3.01282,
+        1.87036
+      ],
+      "counts": {
+        "edges": 104,
+        "faces": 38,
+        "shells": 1,
+        "solids": 1,
+        "verts": 68
+      },
+      "label": "sealing-strip-clamp",
+      "type": "App::Part",
+      "valid": true,
+      "volume": 2687.16
+    },
+    "Pocket": {
+      "area": 4186.61,
+      "bbox": [
+        0.0,
+        0.0,
+        -1.1,
+        210.0,
+        9.0,
+        3.5
+      ],
+      "closed": true,
+      "com": [
+        105.0,
+        3.01282,
+        1.87036
+      ],
+      "counts": {
+        "edges": 104,
+        "faces": 38,
+        "shells": 1,
+        "solids": 1,
+        "verts": 68
+      },
+      "label": "Pocket",
+      "type": "PartDesign::Pocket",
+      "valid": true,
+      "volume": 2687.16
+    },
+    "Sketch": {
+      "area": 0.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.103463,
+        0.0,
+        5.57863,
+        3.5
+      ],
+      "closed": true,
+      "com": [
+        0.0,
+        2.21608,
+        2.43963
+      ],
+      "counts": {
+        "edges": 4,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 4
+      },
+      "label": "Sketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch001": {
+      "area": 0.0,
+      "bbox": [
+        3.0,
+        1.02916,
+        3.5,
+        207.0,
+        8.97084,
+        3.5
+      ],
+      "closed": true,
+      "com": [
+        105.0,
+        5.0,
+        3.5
+      ],
+      "counts": {
+        "edges": 6,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 6
+      },
+      "label": "Sketch001",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    },
+    "Sketch003": {
+      "area": 0.0,
+      "bbox": [
+        100.8,
+        0.35,
+        3.5,
+        109.2,
+        8.75,
+        3.5
+      ],
+      "closed": true,
+      "com": [
+        105.0,
+        4.55,
+        3.5
+      ],
+      "counts": {
+        "edges": 1,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 1
+      },
+      "label": "Sketch003",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
+    }
+  },
+  "parametric": {
+    "audited": 8,
+    "objects": {}
+  },
+  "params": {},
+  "saved": true,
+  "schema": 1,
+  "sources": {
+    "sealing-strip-clamp.FCStd": "fefed095768c1b72a536d8f9b52c71ddac569e2d582b167365403beb5e21ed39"
+  }
+}
