@@ -60,6 +60,11 @@ source = ["cad/parts/read-head-cable-clamp/read-head-cable-clamp.FCStd"]
 sysml  = "CableClamp"
 
 [[part]]
+name   = "Seal Strip Clamp"
+source = ["cad/parts/sealing-strip-clamp/sealing-strip-clamp.FCStd"]
+sysml  = "SealingStripClamp"
+
+[[part]]
 name   = "Roller Sleeve"
 source = ["cad/parts/roller-sleeve/roller-sleeve.FCStd"]
 sysml  = "RollerSleeve"

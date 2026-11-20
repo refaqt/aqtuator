@@ -5,16 +5,16 @@
     "AK_MC15_B_0_5M_SUBD15": {
       "area": 2791.11,
       "bbox": [
-        184.482,
+        236.36,
         18.0,
         26.5,
-        237.582,
+        289.46,
         32.8,
         40.0
       ],
       "closed": true,
       "com": [
-        218.844,
+        270.722,
         25.5089,
         33.2493
       ],
@@ -31,32 +31,32 @@
       "volume": 7010.7
     },
     "Assembly": {
-      "area": 644034.0,
+      "area": 924984.0,
       "bbox": [
         0.0,
         0.0,
         0.0,
         440.0,
         242.65,
-        52.0962
+        60.0
       ],
       "closed": true,
       "com": [
-        216.547,
-        104.805,
-        20.1875
+        237.026,
+        104.833,
+        24.8942
       ],
       "counts": {
-        "edges": 7660,
-        "faces": 3080,
-        "shells": 132,
-        "solids": 96,
-        "verts": 4981
+        "edges": 8776,
+        "faces": 3510,
+        "shells": 136,
+        "solids": 100,
+        "verts": 5695
       },
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 2606310.0
+      "volume": 3034670.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -145,16 +145,16 @@
     "MK21": {
       "area": 31715.6,
       "bbox": [
-        136.582,
+        188.46,
         59.0,
         20.3,
-        304.582,
+        356.46,
         145.0,
         44.0
       ],
       "closed": true,
       "com": [
-        196.572,
+        248.45,
         100.869,
         31.9203
       ],
@@ -229,16 +229,16 @@
     "QEH15SAZAP_E001": {
       "area": 8739.46,
       "bbox": [
-        244.033,
+        295.911,
         157.0,
         14.0,
-        300.032,
+        351.91,
         191.0,
         34.0
       ],
       "closed": true,
       "com": [
-        271.693,
+        323.571,
         173.945,
         24.898
       ],
@@ -257,16 +257,16 @@
     "QEH15SAZAP_E002": {
       "area": 8739.46,
       "bbox": [
-        119.133,
+        171.011,
         19.0,
         14.0,
-        175.131,
+        227.009,
         53.0,
         34.0
       ],
       "closed": true,
       "com": [
-        147.471,
+        199.349,
         36.0549,
         24.898
       ],
@@ -285,16 +285,16 @@
     "QEH15SAZAP_E003": {
       "area": 8739.46,
       "bbox": [
-        244.033,
+        295.911,
         19.0,
         14.0,
-        300.032,
+        351.91,
         53.0,
         34.0
       ],
       "closed": true,
       "com": [
-        271.693,
+        323.571,
         35.9451,
         24.898
       ],
@@ -313,16 +313,16 @@
     "QEH15SAZAP_E2": {
       "area": 8739.46,
       "bbox": [
-        119.133,
+        171.011,
         157.0,
         14.0,
-        175.131,
+        227.009,
         191.0,
         34.0
       ],
       "closed": true,
       "com": [
-        147.471,
+        199.349,
         174.055,
         24.898
       ],
@@ -341,16 +341,16 @@
     "TA17_7_a_end": {
       "area": 1734.26,
       "bbox": [
-        103.582,
+        155.46,
         56.0403,
         21.0403,
-        123.582,
+        175.46,
         72.9597,
         37.9597
       ],
       "closed": true,
       "com": [
-        112.172,
+        164.05,
         64.5,
         29.5
       ],
@@ -369,16 +369,16 @@
     "TA17_7_a_start": {
       "area": 1734.26,
       "bbox": [
-        295.582,
+        347.46,
         56.0403,
         21.0403,
-        315.582,
+        367.46,
         72.9597,
         37.9597
       ],
       "closed": true,
       "com": [
-        306.992,
+        358.87,
         64.5,
         29.5
       ],
@@ -397,16 +397,16 @@
     "TA17_7_b_end": {
       "area": 1734.26,
       "bbox": [
-        103.582,
+        155.46,
         137.04,
         21.0403,
-        123.582,
+        175.46,
         153.96,
         37.9597
       ],
       "closed": true,
       "com": [
-        112.172,
+        164.05,
         145.5,
         29.5
       ],
@@ -425,16 +425,16 @@
     "TA17_7_b_start": {
       "area": 1734.26,
       "bbox": [
-        295.582,
+        347.46,
         137.04,
         21.0403,
-        315.582,
+        367.46,
         153.96,
         37.9597
       ],
       "closed": true,
       "com": [
-        306.992,
+        358.87,
         145.5,
         29.5
       ],
@@ -451,7 +451,7 @@
       "volume": 2716.57
     },
     "base": {
-      "area": 285449.0,
+      "area": 285367.0,
       "bbox": [
         0.0,
         0.0,
@@ -464,33 +464,33 @@
       "com": [
         220.0,
         105.088,
-        12.1827
+        12.0528
       ],
       "counts": {
-        "edges": 646,
-        "faces": 225,
+        "edges": 664,
+        "faces": 242,
         "shells": 1,
         "solids": 1,
-        "verts": 426
+        "verts": 436
       },
       "label": "base",
       "type": "App::Link",
       "valid": true,
-      "volume": 1387260.0
+      "volume": 1380230.0
     },
     "carriage_bottom001": {
       "area": 118933.0,
       "bbox": [
-        119.582,
+        171.46,
         1.0,
         24.0,
-        299.582,
+        351.46,
         209.0,
         51.5
       ],
       "closed": true,
       "com": [
-        215.47,
+        267.348,
         105.383,
         40.3016
       ],
@@ -509,16 +509,16 @@
     "carriage_top": {
       "area": 109751.0,
       "bbox": [
-        104.582,
+        156.46,
         1.0,
         40.5,
-        314.582,
+        366.46,
         209.0,
         60.0
       ],
       "closed": true,
       "com": [
-        209.582,
+        261.46,
         105.0,
         53.7399
       ],
@@ -534,19 +534,75 @@
       "valid": true,
       "volume": 417780.0
     },
+    "clamp_end": {
+      "area": 4186.61,
+      "bbox": [
+        430.8,
+        0.0,
+        35.2,
+        439.8,
+        210.0,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        436.787,
+        105.0,
+        38.1704
+      ],
+      "counts": {
+        "edges": 104,
+        "faces": 38,
+        "shells": 1,
+        "solids": 1,
+        "verts": 68
+      },
+      "label": "sealing-strip-clamp_end",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 2687.16
+    },
+    "clamp_start": {
+      "area": 4186.61,
+      "bbox": [
+        0.2,
+        0.0,
+        35.2,
+        9.2,
+        210.0,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        3.21282,
+        105.0,
+        38.1704
+      ],
+      "counts": {
+        "edges": 104,
+        "faces": 38,
+        "shells": 1,
+        "solids": 1,
+        "verts": 68
+      },
+      "label": "sealing-strip-clamp_start",
+      "type": "App::Link",
+      "valid": true,
+      "volume": 2687.16
+    },
     "cooling_block": {
       "area": 6630.17,
       "bbox": [
-        189.082,
+        240.96,
         109.65,
         42.4,
-        220.932,
+        272.81,
         218.15,
         51.4
       ],
       "closed": true,
       "com": [
-        205.18,
+        257.058,
         162.112,
         48.5825
       ],
@@ -565,16 +621,16 @@
     "cooling_screw_a": {
       "area": 86.666,
       "bbox": [
-        207.635,
+        259.513,
         126.55,
         44.3,
-        212.529,
+        264.407,
         131.437,
         50.3
       ],
       "closed": true,
       "com": [
-        210.082,
+        261.96,
         129.0,
         46.8173
       ],
@@ -593,16 +649,16 @@
     "cooling_screw_b": {
       "area": 86.666,
       "bbox": [
-        207.635,
+        259.513,
         138.55,
         44.3,
-        212.529,
+        264.407,
         143.437,
         50.3
       ],
       "closed": true,
       "com": [
-        210.082,
+        261.96,
         141.0,
         46.8173
       ],
@@ -613,7 +669,7 @@
         "solids": 1,
         "verts": 20
       },
-      "label": "M2.5x6-Screw002",
+      "label": "M2.5x6-Screw003",
       "type": "Part::FeaturePython",
       "valid": true,
       "volume": 35.2924
@@ -621,16 +677,16 @@
     "cooling_screw_c": {
       "area": 102.374,
       "bbox": [
-        196.636,
+        248.514,
         196.55,
         40.8,
-        201.529,
+        253.407,
         201.436,
         48.8
       ],
       "closed": true,
       "com": [
-        199.082,
+        250.96,
         199.0,
         44.2827
       ],
@@ -646,131 +702,19 @@
       "valid": true,
       "volume": 45.1098
     },
-    "corner_screw_a_end": {
-      "area": 294.042,
-      "bbox": [
-        429.303,
-        3.30292,
-        30.0,
-        438.697,
-        12.6971,
-        42.2
-      ],
-      "closed": true,
-      "com": [
-        434.0,
-        8.0,
-        37.2342
-      ],
-      "counts": {
-        "edges": 35,
-        "faces": 17,
-        "shells": 1,
-        "solids": 1,
-        "verts": 22
-      },
-      "label": "M4x10-Screw018",
-      "type": "Part::FeaturePython",
-      "valid": true,
-      "volume": 203.866
-    },
-    "corner_screw_a_start": {
-      "area": 294.042,
-      "bbox": [
-        1.30292,
-        3.30292,
-        30.0,
-        10.6971,
-        12.6971,
-        42.2
-      ],
-      "closed": true,
-      "com": [
-        6.0,
-        8.0,
-        37.2342
-      ],
-      "counts": {
-        "edges": 35,
-        "faces": 17,
-        "shells": 1,
-        "solids": 1,
-        "verts": 22
-      },
-      "label": "M4x10-Screw016",
-      "type": "Part::FeaturePython",
-      "valid": true,
-      "volume": 203.866
-    },
-    "corner_screw_b_end": {
-      "area": 294.042,
-      "bbox": [
-        429.303,
-        197.303,
-        30.0,
-        438.697,
-        206.697,
-        42.2
-      ],
-      "closed": true,
-      "com": [
-        434.0,
-        202.0,
-        37.2342
-      ],
-      "counts": {
-        "edges": 35,
-        "faces": 17,
-        "shells": 1,
-        "solids": 1,
-        "verts": 22
-      },
-      "label": "M4x10-Screw019",
-      "type": "Part::FeaturePython",
-      "valid": true,
-      "volume": 203.866
-    },
-    "corner_screw_b_start": {
-      "area": 294.042,
-      "bbox": [
-        1.30292,
-        197.303,
-        30.0,
-        10.6971,
-        206.697,
-        42.2
-      ],
-      "closed": true,
-      "com": [
-        6.0,
-        202.0,
-        37.2342
-      ],
-      "counts": {
-        "edges": 35,
-        "faces": 17,
-        "shells": 1,
-        "solids": 1,
-        "verts": 22
-      },
-      "label": "M4x10-Screw017",
-      "type": "Part::FeaturePython",
-      "valid": true,
-      "volume": 203.866
-    },
     "fitting_a": {
       "area": 925.011,
       "bbox": [
-        200.082,
+        251.96,
         214.15,
         41.7038,
-        209.082,
+        260.96,
         235.65,
         52.0962
       ],
       "closed": true,
       "com": [
-        204.582,
+        256.46,
         225.631,
         46.9
       ],
@@ -789,16 +733,16 @@
     "fitting_b": {
       "area": 925.011,
       "bbox": [
-        189.082,
+        240.96,
         214.15,
         41.7038,
-        198.082,
+        249.96,
         235.65,
         52.0962
       ],
       "closed": true,
       "com": [
-        193.582,
+        245.46,
         225.631,
         46.9
       ],
@@ -817,16 +761,16 @@
     "hose_stub_a": {
       "area": 429.204,
       "bbox": [
-        202.597,
+        254.475,
         222.65,
         44.9,
-        206.568,
+        258.446,
         242.65,
         48.9
       ],
       "closed": true,
       "com": [
-        204.582,
+        256.46,
         232.65,
         46.9
       ],
@@ -845,16 +789,16 @@
     "hose_stub_b": {
       "area": 429.204,
       "bbox": [
-        191.597,
+        243.475,
         222.65,
         44.9,
-        195.568,
+        247.446,
         242.65,
         48.9
       ],
       "closed": true,
       "com": [
-        193.582,
+        245.46,
         232.65,
         46.9
       ],
@@ -869,118 +813,6 @@
       "type": "App::Link",
       "valid": true,
       "volume": 145.142
-    },
-    "magnet_end_a1": {
-      "area": 153.5,
-      "bbox": [
-        430.0,
-        30.0,
-        39.35,
-        433.0,
-        51.5,
-        39.85
-      ],
-      "closed": true,
-      "com": [
-        431.5,
-        40.75,
-        39.6
-      ],
-      "counts": {
-        "edges": 12,
-        "faces": 6,
-        "shells": 1,
-        "solids": 1,
-        "verts": 8
-      },
-      "label": "3X0.5X21.5_end_a1",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 32.25
-    },
-    "magnet_end_a2": {
-      "area": 153.5,
-      "bbox": [
-        430.0,
-        76.75,
-        39.35,
-        433.0,
-        98.25,
-        39.85
-      ],
-      "closed": true,
-      "com": [
-        431.5,
-        87.5,
-        39.6
-      ],
-      "counts": {
-        "edges": 12,
-        "faces": 6,
-        "shells": 1,
-        "solids": 1,
-        "verts": 8
-      },
-      "label": "3X0.5X21.5_end_a2",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 32.25
-    },
-    "magnet_end_b1": {
-      "area": 153.5,
-      "bbox": [
-        430.0,
-        158.5,
-        39.35,
-        433.0,
-        180.0,
-        39.85
-      ],
-      "closed": true,
-      "com": [
-        431.5,
-        169.25,
-        39.6
-      ],
-      "counts": {
-        "edges": 12,
-        "faces": 6,
-        "shells": 1,
-        "solids": 1,
-        "verts": 8
-      },
-      "label": "3X0.5X21.5_end_b1",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 32.25
-    },
-    "magnet_end_b2": {
-      "area": 153.5,
-      "bbox": [
-        430.0,
-        111.75,
-        39.35,
-        433.0,
-        133.25,
-        39.85
-      ],
-      "closed": true,
-      "com": [
-        431.5,
-        122.5,
-        39.6
-      ],
-      "counts": {
-        "edges": 12,
-        "faces": 6,
-        "shells": 1,
-        "solids": 1,
-        "verts": 8
-      },
-      "label": "3X0.5X21.5_end_b2",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 32.25
     },
     "magnet_long_a": {
       "area": 2925.5,
@@ -1038,131 +870,19 @@
       "valid": true,
       "volume": 626.25
     },
-    "magnet_start_a1": {
-      "area": 153.5,
-      "bbox": [
-        7.0,
-        30.0,
-        39.35,
-        10.0,
-        51.5,
-        39.85
-      ],
-      "closed": true,
-      "com": [
-        8.5,
-        40.75,
-        39.6
-      ],
-      "counts": {
-        "edges": 12,
-        "faces": 6,
-        "shells": 1,
-        "solids": 1,
-        "verts": 8
-      },
-      "label": "3X0.5X21.5_start_a1",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 32.25
-    },
-    "magnet_start_a2": {
-      "area": 153.5,
-      "bbox": [
-        7.0,
-        76.75,
-        39.35,
-        10.0,
-        98.25,
-        39.85
-      ],
-      "closed": true,
-      "com": [
-        8.5,
-        87.5,
-        39.6
-      ],
-      "counts": {
-        "edges": 12,
-        "faces": 6,
-        "shells": 1,
-        "solids": 1,
-        "verts": 8
-      },
-      "label": "3X0.5X21.5_start_a2",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 32.25
-    },
-    "magnet_start_b1": {
-      "area": 153.5,
-      "bbox": [
-        7.0,
-        158.5,
-        39.35,
-        10.0,
-        180.0,
-        39.85
-      ],
-      "closed": true,
-      "com": [
-        8.5,
-        169.25,
-        39.6
-      ],
-      "counts": {
-        "edges": 12,
-        "faces": 6,
-        "shells": 1,
-        "solids": 1,
-        "verts": 8
-      },
-      "label": "3X0.5X21.5_start_b1",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 32.25
-    },
-    "magnet_start_b2": {
-      "area": 153.5,
-      "bbox": [
-        7.0,
-        111.75,
-        39.35,
-        10.0,
-        133.25,
-        39.85
-      ],
-      "closed": true,
-      "com": [
-        8.5,
-        122.5,
-        39.6
-      ],
-      "counts": {
-        "edges": 12,
-        "faces": 6,
-        "shells": 1,
-        "solids": 1,
-        "verts": 8
-      },
-      "label": "3X0.5X21.5_start_b2",
-      "type": "App::Link",
-      "valid": true,
-      "volume": 32.25
-    },
     "motor_cable_clamp": {
       "area": 684.46,
       "bbox": [
-        180.682,
+        232.56,
         199.0,
         42.5,
-        189.482,
+        241.36,
         209.0,
         51.7
       ],
       "closed": true,
       "com": [
-        185.082,
+        236.96,
         204.0,
         47.1
       ],
@@ -1181,16 +901,16 @@
     "port_oring_a": {
       "area": 96.2286,
       "bbox": [
-        211.088,
+        262.966,
         115.373,
         46.5055,
-        219.076,
+        270.954,
         123.35,
         47.9945
       ],
       "closed": true,
       "com": [
-        215.082,
+        266.96,
         119.35,
         47.25
       ],
@@ -1209,16 +929,16 @@
     "port_oring_b": {
       "area": 96.2286,
       "bbox": [
-        201.088,
+        252.966,
         111.273,
         46.5055,
-        209.076,
+        260.954,
         119.25,
         47.9945
       ],
       "closed": true,
       "com": [
-        205.082,
+        256.96,
         115.25,
         47.25
       ],
@@ -1237,18 +957,18 @@
     "preload_screw_end": {
       "area": 233.58,
       "bbox": [
-        429.521,
+        431.271,
         101.005,
-        32.33,
-        437.5,
+        30.8687,
+        439.25,
         108.995,
-        42.33
+        40.8687
       ],
       "closed": true,
       "com": [
-        433.5,
+        435.25,
         105.0,
-        38.4055
+        36.9441
       ],
       "counts": {
         "edges": 33,
@@ -1257,7 +977,7 @@
         "solids": 1,
         "verts": 20
       },
-      "label": "M4x10-Screw011",
+      "label": "M4x10-Screw044",
       "type": "Part::FeaturePython",
       "valid": true,
       "volume": 165.834
@@ -1265,18 +985,18 @@
     "preload_screw_start": {
       "area": 233.58,
       "bbox": [
-        2.52052,
+        0.770523,
         101.005,
-        32.33,
-        10.5,
+        30.8687,
+        8.75,
         108.995,
-        42.33
+        40.8687
       ],
       "closed": true,
       "com": [
-        6.5,
+        4.75,
         105.0,
-        38.4055
+        36.9441
       ],
       "counts": {
         "edges": 33,
@@ -1290,19 +1010,355 @@
       "valid": true,
       "volume": 165.834
     },
+    "preload_screw_start001": {
+      "area": 155.407,
+      "bbox": [
+        2.2044,
+        200.0,
+        29.8,
+        8.1956,
+        205.982,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        5.2,
+        203.0,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start002": {
+      "area": 155.407,
+      "bbox": [
+        2.2044,
+        160.8,
+        29.8,
+        8.1956,
+        166.782,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        5.2,
+        163.8,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw030",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start003": {
+      "area": 155.407,
+      "bbox": [
+        2.2044,
+        121.6,
+        29.8,
+        8.1956,
+        127.582,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        5.2,
+        124.6,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw031",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start004": {
+      "area": 155.407,
+      "bbox": [
+        2.2044,
+        82.4,
+        29.8,
+        8.1956,
+        88.3824,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        5.2,
+        85.4,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw032",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start005": {
+      "area": 155.407,
+      "bbox": [
+        2.2044,
+        43.2,
+        29.8,
+        8.1956,
+        49.1824,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        5.2,
+        46.2,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw033",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start006": {
+      "area": 155.407,
+      "bbox": [
+        2.2044,
+        4.0,
+        29.8,
+        8.1956,
+        9.98241,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        5.2,
+        7.0,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw034",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start007": {
+      "area": 155.407,
+      "bbox": [
+        431.804,
+        4.01759,
+        29.8,
+        437.796,
+        10.0,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        434.8,
+        7.0,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw035",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start008": {
+      "area": 155.407,
+      "bbox": [
+        431.804,
+        43.2176,
+        29.8,
+        437.796,
+        49.2,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        434.8,
+        46.2,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw036",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start009": {
+      "area": 155.407,
+      "bbox": [
+        431.804,
+        82.4176,
+        29.8,
+        437.796,
+        88.4,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        434.8,
+        85.4,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw037",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start010": {
+      "area": 155.407,
+      "bbox": [
+        431.804,
+        121.618,
+        29.8,
+        437.796,
+        127.6,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        434.8,
+        124.6,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw038",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start011": {
+      "area": 155.407,
+      "bbox": [
+        431.804,
+        160.818,
+        29.8,
+        437.796,
+        166.8,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        434.8,
+        163.8,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw039",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
+    "preload_screw_start012": {
+      "area": 155.407,
+      "bbox": [
+        431.804,
+        200.018,
+        29.8,
+        437.796,
+        206.0,
+        39.8
+      ],
+      "closed": true,
+      "com": [
+        434.8,
+        203.0,
+        35.6713
+      ],
+      "counts": {
+        "edges": 33,
+        "faces": 16,
+        "shells": 1,
+        "solids": 1,
+        "verts": 20
+      },
+      "label": "M3x10-Screw040",
+      "type": "Part::FeaturePython",
+      "valid": true,
+      "volume": 86.9811
+    },
     "read_head_cable_clamp": {
       "area": 417.055,
       "bbox": [
-        172.682,
+        224.56,
         199.0,
         46.5,
-        178.482,
+        230.36,
         209.0,
         51.7
       ],
       "closed": true,
       "com": [
-        175.582,
+        227.46,
         204.0,
         49.1
       ],
@@ -1321,16 +1377,16 @@
     "roller_bottom_a_end": {
       "area": 1591.15,
       "bbox": [
-        148.582,
+        200.46,
         20.5,
         41.5,
-        158.582,
+        210.46,
         48.5,
         51.5
       ],
       "closed": true,
       "com": [
-        153.582,
+        205.46,
         34.5,
         46.5
       ],
@@ -1349,16 +1405,16 @@
     "roller_bottom_a_start": {
       "area": 1591.15,
       "bbox": [
-        260.582,
+        312.46,
         20.5,
         41.5,
-        270.582,
+        322.46,
         48.5,
         51.5
       ],
       "closed": true,
       "com": [
-        265.582,
+        317.46,
         34.5,
         46.5
       ],
@@ -1377,16 +1433,16 @@
     "roller_bottom_b_end": {
       "area": 1591.15,
       "bbox": [
-        148.582,
+        200.46,
         161.5,
         41.5,
-        158.582,
+        210.46,
         189.5,
         51.5
       ],
       "closed": true,
       "com": [
-        153.582,
+        205.46,
         175.5,
         46.5
       ],
@@ -1405,16 +1461,16 @@
     "roller_bottom_b_start": {
       "area": 1591.15,
       "bbox": [
-        260.582,
+        312.46,
         161.5,
         41.5,
-        270.582,
+        322.46,
         189.5,
         51.5
       ],
       "closed": true,
       "com": [
-        265.582,
+        317.46,
         175.5,
         46.5
       ],
@@ -1433,16 +1489,16 @@
     "roller_top_a_end": {
       "area": 1591.15,
       "bbox": [
-        111.749,
+        163.627,
         20.5,
         40.0,
-        121.749,
+        173.627,
         48.5,
         50.0
       ],
       "closed": true,
       "com": [
-        116.749,
+        168.627,
         34.5,
         45.0
       ],
@@ -1461,16 +1517,16 @@
     "roller_top_a_start": {
       "area": 1591.15,
       "bbox": [
-        297.416,
+        349.293,
         20.5,
         40.0,
-        307.416,
+        359.293,
         48.5,
         50.0
       ],
       "closed": true,
       "com": [
-        302.416,
+        354.293,
         34.5,
         45.0
       ],
@@ -1489,16 +1545,16 @@
     "roller_top_b_end": {
       "area": 1591.15,
       "bbox": [
-        111.749,
+        163.627,
         161.5,
         40.0,
-        121.749,
+        173.627,
         189.5,
         50.0
       ],
       "closed": true,
       "com": [
-        116.749,
+        168.627,
         175.5,
         45.0
       ],
@@ -1517,16 +1573,16 @@
     "roller_top_b_start": {
       "area": 1591.15,
       "bbox": [
-        297.416,
+        349.293,
         161.5,
         40.0,
-        307.416,
+        359.293,
         189.5,
         50.0
       ],
       "closed": true,
       "com": [
-        302.416,
+        354.293,
         175.5,
         45.0
       ],
@@ -1543,117 +1599,42 @@
       "volume": 1196.35
     },
     "sealing_strip": {
-      "area": 164885.0,
+      "area": 163448.0,
       "bbox": [
-        1.0,
-        3.2,
-        39.8487,
-        439.0,
-        206.8,
+        0.955224,
+        12.2,
+        36.8835,
+        439.045,
+        197.8,
         52.7148
       ],
       "closed": true,
       "com": [
-        220.003,
+        220.015,
         105.0,
-        44.2573
+        44.2592
       ],
       "counts": {
-        "edges": 138,
-        "faces": 48,
+        "edges": 156,
+        "faces": 50,
         "shells": 1,
         "solids": 1,
-        "verts": 92
+        "verts": 108
       },
       "label": "sealing-strip",
       "type": "App::Link",
       "valid": true,
-      "volume": 12376.6
+      "volume": 12268.5
     }
   },
   "parametric": {
     "audited": 0,
     "objects": {}
   },
-  "params": {
-    "bearing_d_out": 6.0,
-    "bearing_flange_w": 0.8,
-    "cable_clamp_l": 10.0,
-    "cable_clamp_side_gap": 0.1,
-    "cable_clamp_squeeze": 0.2,
-    "carriage_edge_x": 208.0,
-    "carriage_side_bottom_z": 16.5,
-    "carriage_top_z": 27.5,
-    "cooling_arm_bend_x": 186.0,
-    "cooling_arm_r": 10.0,
-    "cooling_arm_w": 12.0,
-    "cooling_arm_x0": 150.0,
-    "cooling_arm_y": 100.5,
-    "cooling_arm_y0": 89.5,
-    "cooling_block_gap": 0.15,
-    "cooling_block_top_gap": 0.1,
-    "cooling_body_r": 3.0,
-    "cooling_body_x0": 108.5,
-    "cooling_body_y0": 78.5,
-    "cooling_body_y1": 100.5,
-    "cooling_end_r": 3.0,
-    "cooling_passage_d": 2.0,
-    "cooling_passage_offset": 3.5,
-    "cooling_pocket_depth": 5.0,
-    "cooling_pocket_end_x": 212.0,
-    "cooling_screw_a_x": 128.0,
-    "cooling_screw_b_x": 140.0,
-    "cooling_screw_c_x": 198.0,
-    "cooling_screw_d": 2.5,
-    "cooling_tap_depth": 4.0,
-    "fit_head_l": 9.0,
-    "fit_head_r": 2.0,
-    "fit_hex_af": 9.0,
-    "fit_jog_x0": 209.0,
-    "fit_jog_x1": 211.5,
-    "fit_pitch": 11.0,
-    "fit_tap_depth": 5.0,
-    "fit_thread_d": 5.0,
-    "fit_thread_l": 4.0,
-    "fit_wall": 2.0,
-    "hose_id": 2.6,
-    "hose_od": 4.0,
-    "motor_cable_bend_x": 186.75,
-    "motor_cable_bend_y": 79.5,
-    "motor_cable_d": 8.3,
-    "motor_cable_dip": 5.0,
-    "motor_cable_dip_angle": 45.0,
-    "motor_cable_dip_start": 5.0,
-    "motor_cable_y": 114.5,
-    "motor_slot_depth": 9.0,
-    "motor_slot_w": 9.0,
-    "port_a_x": 118.35,
-    "port_a_y": 84.5,
-    "port_b_x": 114.25,
-    "port_b_y": 94.5,
-    "port_groove_depth": 1.1,
-    "port_groove_w": 2.0,
-    "port_oring_cs": 1.5,
-    "port_oring_id": 5.0,
-    "read_head_cable_d": 3.7,
-    "read_head_cable_y": 124.0,
-    "read_head_slot_depth": 5.0,
-    "read_head_slot_w": 6.0,
-    "roller_d": 10.0,
-    "roller_l": 20.0,
-    "screw_recess_depth": 0.3,
-    "sleeve_l": 18.4,
-    "strip_corner_hole_d": 4.5,
-    "strip_corner_slot_l": 1.0,
-    "strip_edge_gap": 0.2,
-    "strip_end_gap": 1.0,
-    "strip_preload_hole_d": 5.0,
-    "strip_pull": 270.0,
-    "strip_t": 0.15
-  },
+  "params": {},
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "32cb8e04f9edae3283e17e49eda8be314c6d965e270e1a39af5e7614303dd875"
+    "compact-stage.FCStd": "df23bef6c7fb6362c065e77618d846647b0e614395b85caf0ee48261b9f79c4f"
   }
 }

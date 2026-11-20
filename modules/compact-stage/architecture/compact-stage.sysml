@@ -228,19 +228,16 @@ package CompactStage {
 
     port def MagnetRingInterface_v1 {
         doc /*
-         * The ring pocket for the magnet strips, in the floor of the strip
-         * pocket: 3 mm wide, 0.5 mm deep, R4 outer corners. It is cut in two
-         * at each preload screw. Ten straight strips lie in it: one 417.5 mm
-         * strip on each long side, and four 21.5 mm strips in each end leg.
-         * In the end legs the floor has holes (a cavity at each corner and
-         * the damper slots), so each short strip sits on one piece of solid
-         * floor. The strips lie adhesive face down on the ring floor, and
-         * their top is level with the floor of the strip pocket.
+         * Two slots for the magnet strips, in the floor of the strip pocket,
+         * one along each long side of the slot in the base: 3 mm wide,
+         * 0.5 mm deep, with round ends. One 417.5 mm strip lies in each slot,
+         * adhesive face down. Its top is level with the floor of the strip
+         * pocket. The ends of the strip have no magnets: the end clamps hold
+         * them.
          *
          * Base frame IF_magnet_* at a corner of the adhesive face of each
          * strip, Z up, X along the strip. It joins the frame IF_end of the
-         * strip. "start" is the low-x end of the base, a the low-y side, 1
-         * the piece nearest the corner.
+         * strip. a is the low-y side.
          */
         attribute ringWidth : LengthValue = 3 [mm];
         attribute ringDepth : LengthValue = 0.5 [mm];
@@ -248,23 +245,44 @@ package CompactStage {
 
     port def StripScrewInterface_v1 {
         doc /*
-         * Six M4 screws hold the sealing strip on the base. The holes are
-         * tapped M4, 12 mm deep, in the floor of the strip pocket.
-         *
          * Preload: one countersunk screw ISO 10642 M4 x 10 at each strip end,
-         * on the middle line (base holes 6.5 mm from each base end). The
-         * strip hole (5 mm) sits 0.35 mm off the screw axis, towards the
-         * strip middle. Tightening the screw pushes the outer edge of the
-         * hole outwards, so the strip is pulled. Both ends together move
-         * 0.21 mm for the design pull of 270 N. See
-         * simulation/cases/strip-seal-fit/.
-         *
-         * Clamp: one button head screw with collar ISO 7380-2 M4 x 10 at
-         * each corner (base holes 5 mm from the end, 8 mm from the side).
-         * Strip holes 4.5 mm. Tighten them when the pull is set, then take
-         * the two preload screws out. The corner screws then hold the pull.
+         * upright, on the middle line, 4.75 mm from each base end. The base
+         * hole is tapped M4, 12 mm deep, under a 90 degree countersink whose
+         * rim on the ramp ends 0.5 mm before the base cavity. The strip lies
+         * on the ramp there and slopes about 20 degrees. Its hole is a small
+         * circle (4.3 mm seen from above) on the screw axis joined to a large
+         * circle (6.4 mm seen from above) centred 1.5 mm towards the middle.
+         * The cone first touches the two points where the circles meet, on
+         * the outer side, and pushes the strip outwards. The screw can sink
+         * 0.43 mm before it reaches the inner side. The strip hole ends
+         * 0.48 mm before the cavity, so the strip still closes it. Then the
+         * end clamps are tightened and the preload screws come out.
          */
         attribute pull : ForceValue = 270 [N];
+    }
+
+    port def StripClampInterface_v1 {
+        doc /*
+         * The printed end clamp of the seal strip on the base. At each base
+         * end the base has a ramp of radius 15 mm across its whole width,
+         * tangent to the strip pocket floor 10 mm from the end. The strip
+         * lies on it. The clamp underside has radius 15.15 mm on the same
+         * centre, so it presses the 0.15 mm strip on the ramp. The clamp top
+         * is 0.2 mm below the top of the base, and its outer edge is 0.2 mm
+         * from the base end.
+         *
+         * Six M3 countersunk screws ISO 10642 M3 x 10, 5.2 mm from the base
+         * end, the first 7 mm from the low-y side, 39.2 mm apart. An 8.4 mm
+         * hole over each preload screw lets its head out. Around
+         * each one the clamp has an 8 mm boss that goes through a slot in
+         * the strip into an 8.4 mm pocket in the base, with an M3 tapped
+         * hole 8 mm deep under it.
+         *
+         * Base frames IF_clamp_start and IF_clamp_end, clamp frame IF_base:
+         * at the clamp origin (outer edge, 3.5 mm below the clamp top),
+         * X along the clamp, Z up.
+         */
+        attribute screwCount : Natural = 6;
     }
 
     port def RailMountInterface_v1 {
@@ -602,14 +620,8 @@ package CompactStage {
         port stripScrews : StripScrewInterface_v1;
         port magnetLongA : MagnetRingInterface_v1;
         port magnetLongB : MagnetRingInterface_v1;
-        port magnetStartA1 : MagnetRingInterface_v1;
-        port magnetStartA2 : MagnetRingInterface_v1;
-        port magnetStartB2 : MagnetRingInterface_v1;
-        port magnetStartB1 : MagnetRingInterface_v1;
-        port magnetEndA1 : MagnetRingInterface_v1;
-        port magnetEndA2 : MagnetRingInterface_v1;
-        port magnetEndB2 : MagnetRingInterface_v1;
-        port magnetEndB1 : MagnetRingInterface_v1;
+        port clampStart : StripClampInterface_v1;
+        port clampEnd : StripClampInterface_v1;
         port referenceRailMount : RailMountInterface_v1;
         port secondRailMount : RailMountInterface_v1;
         port firstStatorMount : StatorMountInterface_v1;
@@ -727,6 +739,14 @@ package CompactStage {
         port stripScrews : ~StripScrewInterface_v1;
     }
 
+    part def SealingStripClamp {
+        doc /*
+         * Presses the seal strip on the ramp at one base end. Printed in
+         * PLA. CAD: cad/parts/sealing-strip-clamp/. Two per stage.
+         */
+        port base : ~StripClampInterface_v1;
+    }
+
     // ---------------------------------------------------------------------
     // The assembly
     // ---------------------------------------------------------------------
@@ -778,14 +798,8 @@ package CompactStage {
         part sealingStrip : SealingStrip;
         part magnetLongA : MagnetStrip;
         part magnetLongB : MagnetStrip;
-        part magnetStartA1 : MagnetStrip;
-        part magnetStartA2 : MagnetStrip;
-        part magnetStartB2 : MagnetStrip;
-        part magnetStartB1 : MagnetStrip;
-        part magnetEndA1 : MagnetStrip;
-        part magnetEndA2 : MagnetStrip;
-        part magnetEndB2 : MagnetStrip;
-        part magnetEndB1 : MagnetStrip;
+        part clampStart : SealingStripClamp;
+        part clampEnd : SealingStripClamp;
         part referenceRail : GuideRail;
         part secondRail : GuideRail;
         part firstStator : MagnetTrack;
@@ -835,14 +849,8 @@ package CompactStage {
         // MagnetRing: ten magnet strips in the ring pocket hold the seal strip flat
         connect base.magnetLongA to magnetLongA.ring;
         connect base.magnetLongB to magnetLongB.ring;
-        connect base.magnetStartA1 to magnetStartA1.ring;
-        connect base.magnetStartA2 to magnetStartA2.ring;
-        connect base.magnetStartB2 to magnetStartB2.ring;
-        connect base.magnetStartB1 to magnetStartB1.ring;
-        connect base.magnetEndA1 to magnetEndA1.ring;
-        connect base.magnetEndA2 to magnetEndA2.ring;
-        connect base.magnetEndB2 to magnetEndB2.ring;
-        connect base.magnetEndB1 to magnetEndB1.ring;
+        connect base.clampStart to clampStart.base;
+        connect base.clampEnd to clampEnd.base;
 
         // The guide rails
         connect base.referenceRailMount to referenceRail.baseMount;
