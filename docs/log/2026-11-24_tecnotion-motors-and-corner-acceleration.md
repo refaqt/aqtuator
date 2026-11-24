@@ -54,7 +54,7 @@ feed when the cutting force is high.
 ### The QARVE milling needs, per job
 
 Values from the QARVE sheet, tab "System model". Sideways acceleration = feed² / 0.5 mm. The X
-axis moves 19 kg with one motor.
+axis moves 19 kg with one motor. The last column adds the full cutting force to a 0.5 mm corner. That was the first, simpler rule. The update below replaces it with a separate check for inside and outside corners.
 
 | Job | Feed (mm/min) | Acceleration in a 0.5 mm corner (m/s²) | Cutting force (N) | X force needed at full feed (N) |
 | --- | ---: | ---: | ---: | ---: |
