@@ -5,7 +5,7 @@ requirements. It is an overview. The research is in the log entries and decision
 each row and in [Sources](#sources). If a number here differs from a log entry, the log entry and the
 maker's own manual win. Tell us, and we fix this page.
 
-Last updated: 2026-11-20. Prices were seen on 2026-09-29 and many are asking prices.
+Last updated: 2026-11-24. Prices were seen on 2026-09-29 and many are asking prices.
 
 ## Short answer
 
@@ -150,6 +150,8 @@ The two ACS drives are different: they need an ACS master controller. All are li
 | Novanta (Ingenia) | Everest, Capitan, Denali | [Everest](https://drives.novantamotion.com/eve-xcr/product-description) | 7 to 80 V | No 1 Vpp input. 25 kHz |
 | Synapticon | Circulo | [Specifications](https://doc.synapticon.com/circulo/technical_specs/tech_specs_circulo.html) | 14 to 58 V | No 1 Vpp input |
 | Beckhoff | ELM7211 | [Product page](https://www.beckhoff.com/en-us/products/i-o/ethercat-terminals/el-elm7xxx-compact-drive-technology/elm7211-0010.html) | 8 to 48 V | Only Beckhoff motor encoders |
+| miControl | mcDSA-E27XC-EtherCAT, mcDSA-E37, E47 and E57-EtherCAT, and the other mcDSA models | [E27XC-EtherCAT](https://www.micontrol.de/assets/datasheets/DataSheet_mcDSA-E27XC-EtherCAT-UL-STO_en.pdf), [E57-EtherCAT](https://www.micontrol.de/assets/datasheets/DataSheet_mcDSA-E57-EtherCAT_en.pdf) | 9 to 60 V | German maker. EtherCAT with CiA 402 and 1 Vpp sin/cos input on the -E27, -E37, -E47 and -E57 EtherCAT models. The E27XC has STO up to SIL 3. No position loop rate and no Bode plot tool in the data sheets. Checked 2026-11-24. [Log](log/2026-11-24_micontrol-drives-checked.md) |
+| miControl | mcDS-i3, m3, h3 (25 A peak) and mcDS-i5, m5, h5 (60 A peak) | [mcDS-h5-60-CT](https://www.micontrol.de/assets/datasheets/DataSheet_mcDS-h5-60cxx-E-CT_en.pdf), [mcDS-i3-25](https://www.micontrol.de/assets/datasheets/DataSheet_mcDS-i3-25cXX_en.pdf) | 10 to 60 V | Newer family. SSI and BiSS-C input. The h5 has EtherCAT. Checked 2026-11-24. [Log](log/2026-11-24_micontrol-drives-checked.md) |
 | ODrive, moteus, Granite Devices IONI | | No link in logs | Low voltage | Voltage too low. Granite Argon is no longer made |
 
 ## Controllers with their own software, and build-it-yourself routes
