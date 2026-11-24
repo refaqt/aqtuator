@@ -174,18 +174,17 @@ Tecnotion asked to continue through its partner Eltrex.
 
 ## Decisions Made
 
-- None yet. The motor choice for QARVE stays open.
+- We will not use Tecnotion motors for now. The motors that fit in the MK21 space are too weak,
+  and the stronger ones are too high. The MK21 stays the motor for now.
+- The QARVE sheet now checks the peak force per job, with separate inside and outside corners.
 
 ## Open Questions
 
-- Is about half the material removal rate in stainless steel roughing acceptable with the TD55-3?
-- Is a corner feed of about 2,000 to 3,300 mm/min acceptable? Lower feed in the corner also
-  lowers the chip thickness there.
+None.
 
 ## Next Steps
 
-- Ask Eltrex for a TD55-3 price, the lead time and the price for 2 sets.
-- Check the TD55-3 force against speed in the Tecnotion simulation tool, at our bus voltage.
+None for Tecnotion. Look at their motors again only if the 34 mm height limit changes.
 
 <details>
 <summary>Sources and calculation</summary>
