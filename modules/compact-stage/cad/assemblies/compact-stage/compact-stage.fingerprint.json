@@ -31,7 +31,7 @@
       "volume": 7010.7
     },
     "Assembly": {
-      "area": 924984.0,
+      "area": 924695.0,
       "bbox": [
         0.0,
         0.0,
@@ -43,8 +43,8 @@
       "closed": true,
       "com": [
         237.026,
-        104.833,
-        24.8942
+        104.834,
+        24.8941
       ],
       "counts": {
         "edges": 8776,
@@ -56,7 +56,7 @@
       "label": "compact-stage",
       "type": "Assembly::AssemblyObject",
       "valid": true,
-      "volume": 3034670.0
+      "volume": 3034640.0
     },
     "EGR15U418H": {
       "area": 25746.3,
@@ -114,13 +114,13 @@
       "valid": true,
       "volume": 66577.0
     },
-    "MB_MC15_MK_ML240": {
-      "area": 7520.4,
+    "MB_MC15_MK_ML230": {
+      "area": 7231.4,
       "bbox": [
-        101.0,
+        106.0,
         17.0,
         30.0,
-        361.0,
+        356.0,
         17.45,
         38.0
       ],
@@ -137,10 +137,10 @@
         "solids": 2,
         "verts": 16
       },
-      "label": "MB-MC15-MK-ML240",
+      "label": "MB-MC15-MK-ML230",
       "type": "App::Link",
       "valid": true,
-      "volume": 832.0
+      "volume": 800.0
     },
     "MK21": {
       "area": 31715.6,
@@ -1635,6 +1635,6 @@
   "saved": true,
   "schema": 1,
   "sources": {
-    "compact-stage.FCStd": "df23bef6c7fb6362c065e77618d846647b0e614395b85caf0ee48261b9f79c4f"
+    "compact-stage.FCStd": "35659861fde889afd907463516c4e0aeb4d2bcc698b525029810bf42122a56bb"
   }
 }
