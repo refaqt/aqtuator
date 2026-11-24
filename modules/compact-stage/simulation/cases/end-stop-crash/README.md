@@ -124,3 +124,8 @@ These change the numbers. The summary gives the spread for each of them.
 - **The top carriage must clear the screw heads.** In the CAD of 2026-11-10, carriage-top hits the
   heads of the seal strip corner screws about 7 mm before the bumpers touch. This is known and open
   (log of 2026-10-29). The crash model assumes the planned relief in carriage-top is made.
+- **The stress results are from the base before the end wall step.** On 2026-11-24 each end wall
+  got a low step between the guide blocks: 10 mm deep, from the cavity floor up to z = 17.5 mm.
+  It makes the wall stiffer, so the wall stress should be lower. A stiffer wall can make the
+  peaks on the carriage at a metal hit a little higher. Run `run_fem.py` and `evaluate.py` again
+  to get the new numbers.
