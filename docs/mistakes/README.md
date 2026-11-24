@@ -39,3 +39,4 @@ Entry format: [`.agents/skills/mistake-log/SKILL.md`](../../.agents/skills/mista
 | 2026-11-04 | [A drive check used the old encoder, because the drive requirements were not updated](2026-11-04_drive-check-used-the-old-encoder.md) |
 | 2026-11-09 | [The cooling block and the cable clamp were built as raw shapes](2026-11-09_cooling-block-built-as-a-raw-shape.md) |
 | 2026-11-09 | [A milled pocket with sharp corners, and other parts not made for their process](2026-11-09_milled-pocket-with-sharp-corners.md) |
+| 2026-11-24 | [An old guide block was compared instead of the part in the design](2026-11-24_compared-an-old-guide-block-instead-of-the-design-part.md) |
