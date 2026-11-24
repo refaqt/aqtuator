@@ -86,8 +86,7 @@ class Geometry:
         self.ps = f("preload_screw_x")
         self.y_mid = self.W / 2
         self.d_preload = f("strip_preload_hole_d")
-        self.d_relief = f("strip_preload_relief_d")
-        self.relief_x = f("strip_preload_relief_x")
+        self.hole_x = f("strip_preload_hole_x")
         self.sx = f("clamp_end_gap") + f("clamp_screw_inset")
         pitch = (self.W - 2 * f("clamp_screw_y0")) / 5
         self.boss_y = [f("clamp_screw_y0") + k * pitch for k in range(6)]
@@ -110,15 +109,10 @@ class Geometry:
         return self.sx + self.slide + self.rb
 
     def preload_phi(self):
-        """Angle of the centre of the small circle of the preload hole: on the screw axis.
-        The cone of the screw touches the outer side of this circle."""
-        return self.phi(self.ps)
-
-    def relief_phi(self):
-        """Angle of the centre of the large circle of the preload hole: `relief_x` (seen from
-        above) from the screw axis, towards the strip middle. It frees the strip where the
-        rising ramp would meet the screw head."""
-        return self.phi(self.ps + self.relief_x)
+        """Angle of the centre of the round preload hole: `hole_x` (seen from above) from the
+        screw axis, towards the strip middle. The cone of the screw touches only the outer
+        side of the hole, in line with the pull. Past the end of the ramp the strip is flat."""
+        return self.phi(min(self.ps + self.hole_x, self.rx))
 
     def cut_d(self, d, phi):
         """Diameter of a circle cut square to the strip at angle phi, so that seen from above
@@ -217,14 +211,13 @@ def strip_shape(g, profile):
                 box = Part.makeBox(x_in + 5, 2 * g.rb, hz, V(g.L - x_in, yb - g.rb, z0))
                 cyl = Part.makeCylinder(g.rb, hz, V(g.L - x_in, yb, z0))
             cuts += [box, cyl]
-        # Preload hole: a small circle on the screw axis and a large circle further in,
-        # each cut square to the strip at its centre.
-        for ph, d in ((g.preload_phi(), g.d_preload), (g.relief_phi(), g.d_relief)):
-            c = g.ramp_point(ph, g.Rc, side, g.y_mid)
-            cc = g.ramp_point(ph, 0.0, side, g.y_mid)
-            n = (c - cc)
-            n.normalize()
-            cuts.append(Part.makeCylinder(g.cut_d(d, ph) / 2, 2, c - n * 1, n))
+        # Preload hole: one round hole, cut square to the strip at its centre.
+        ph, d = g.preload_phi(), g.d_preload
+        c = g.ramp_point(ph, g.Rc, side, g.y_mid)
+        cc = g.ramp_point(ph, 0.0, side, g.y_mid)
+        n = (c - cc)
+        n.normalize()
+        cuts.append(Part.makeCylinder(g.cut_d(d, ph) / 2, 2, c - n * 1, n))
     result = strip.cut(Part.makeCompound(cuts)).removeSplitter()
     # The overlapping cylinders of a slot can leave a sliver with no volume. Keep the strip.
     return max(result.Solids, key=lambda s: s.Volume)
@@ -321,7 +314,7 @@ def flat_outline_sketch(doc, flat_body):
 
 
 def flat_holes_sketch(doc, flat_body):
-    """The slots round the clamp bosses and the two preload slots of the strip as cut.
+    """The slots round the clamp bosses and the two round preload holes of the strip as cut.
 
     Each slot is a stadium: its outer arc is centred on the strip end, so the slot is open
     there; its inner arc centre is `strip_flat_slot_x` from the strip end.
@@ -369,40 +362,14 @@ def flat_holes_sketch(doc, flat_body):
             dim(sk, C("DistanceY", -1, 1, a_out, 3, y),
                 f"{P}clamp_screw_y0 + {k} * {e_pitch}" if k else f"{P}clamp_screw_y0")
             dim(sk, C("DistanceX", -1, 1, a_in, 3, x_in), f"{e_xe} {sign} {P}strip_flat_slot_x")
-        # Preload hole: the outer part of a small circle (centre `strip_flat_preload_x` from
-        # the strip end) joined to a large circle (centre `strip_flat_relief_x` from the end).
+        # Preload hole: one circle, centre `strip_flat_preload_x` from the strip end.
         rs = val("strip_flat_preload_d") / 2
-        rl = val("strip_flat_relief_d") / 2
         yp = val("base_w") / 2
         xs = xe + sx * val("strip_flat_preload_x")
-        xl = xe + sx * val("strip_flat_relief_x")
-        d = abs(xl - xs)
-        a = (d * d + rs * rs - rl * rl) / (2 * d)       # from the small centre to the chord
-        hy = math.sqrt(rs * rs - a * a)
-        # Meeting points of the two circles, seen from each centre.
-        px = xs + sx * a
-        ang_s = math.atan2(hy, px - xs)
-        ang_l = math.atan2(hy, px - xl)
-        if sx > 0:   # small circle on the outer (low x) side: its arc runs over the left
-            small = Part.ArcOfCircle(Part.Circle(V(xs, yp, 0), V(0, 0, 1), rs), ang_s, 2 * math.pi - ang_s)
-            large = Part.ArcOfCircle(Part.Circle(V(xl, yp, 0), V(0, 0, 1), rl), -ang_l, ang_l)
-        else:
-            small = Part.ArcOfCircle(Part.Circle(V(xs, yp, 0), V(0, 0, 1), rs), -ang_s, ang_s)
-            large = Part.ArcOfCircle(Part.Circle(V(xl, yp, 0), V(0, 0, 1), rl), ang_l, 2 * math.pi - ang_l)
-        g_s = sk.addGeometry(small)
-        g_l = sk.addGeometry(large)
-        if sx > 0:
-            sk.addConstraint(C("Coincident", g_s, 1, g_l, 2))
-            sk.addConstraint(C("Coincident", g_s, 2, g_l, 1))
-        else:
-            sk.addConstraint(C("Coincident", g_s, 2, g_l, 1))
-            sk.addConstraint(C("Coincident", g_s, 1, g_l, 2))
-        dim(sk, C("Radius", g_s, rs), f"{P}strip_flat_preload_d / 2")
-        dim(sk, C("Radius", g_l, rl), f"{P}strip_flat_relief_d / 2")
+        g_s = sk.addGeometry(Part.Circle(V(xs, yp, 0), V(0, 0, 1), rs))
+        dim(sk, C("Diameter", g_s, 2 * rs), f"{P}strip_flat_preload_d")
         dim(sk, C("DistanceX", -1, 1, g_s, 3, xs), f"{e_xe} {sign} {P}strip_flat_preload_x")
         dim(sk, C("DistanceY", -1, 1, g_s, 3, yp), f"{P}base_w / 2")
-        dim(sk, C("DistanceX", -1, 1, g_l, 3, xl), f"{e_xe} {sign} {P}strip_flat_relief_x")
-        dim(sk, C("DistanceY", -1, 1, g_l, 3, yp), f"{P}base_w / 2")
     return sk
 
 
@@ -436,16 +403,13 @@ def build(doc, params):
     flat = lambda s: s / (1 + eps)  # noqa: E731 - length on the strip as cut
     s_end = along(g.x_end)
     s_hole = along(g.rx) - g.Rc * g.preload_phi()
-    s_relief = along(g.rx) - g.Rc * g.relief_phi()
     # Inner end of a slot: the plan point of the bent slot, then back by the radius.
     s_slot = along(g.slot_boss_in())
     derived = {
         "strip_flat_l": round(-2 * flat(s_end), 4),
         "strip_flat_preload_x": round(flat(s_hole) - flat(s_end), 4),
-        "strip_flat_relief_x": round(flat(s_relief) - flat(s_end), 4),
         # The two circles as cut: larger than seen from above by 1 / cos(slope).
         "strip_flat_preload_d": round(g.cut_d(g.d_preload, g.preload_phi()), 4),
-        "strip_flat_relief_d": round(g.cut_d(g.d_relief, g.relief_phi()), 4),
         "strip_flat_slot_x": round(flat(s_slot) - flat(s_end) - g.rb, 4),
     }
     units.update({k: "mm" for k in derived})

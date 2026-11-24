@@ -246,17 +246,18 @@ package CompactStage {
     port def StripScrewInterface_v1 {
         doc /*
          * Preload: one countersunk screw ISO 10642 M4 x 10 at each strip end,
-         * upright, on the middle line, 4.75 mm from each base end. The base
-         * hole is tapped M4, 12 mm deep, under a 90 degree countersink whose
-         * rim on the ramp ends 0.5 mm before the base cavity. The strip lies
-         * on the ramp there and slopes about 20 degrees. Its hole is a small
-         * circle (4.3 mm seen from above) on the screw axis joined to a large
-         * circle (6.4 mm seen from above) centred 1.5 mm towards the middle.
-         * The cone first touches the two points where the circles meet, on
-         * the outer side, and pushes the strip outwards. The screw can sink
-         * 0.43 mm before it reaches the inner side. The strip hole ends
-         * 0.48 mm before the cavity, so the strip still closes it. Then the
-         * end clamps are tightened and the preload screws come out.
+         * upright, on the middle line, 8.25 mm from each base end. Round the
+         * screw the base end wall bulges 3.5 mm into the cavity (carriage-
+         * bottom has a dent as deep, so the crash gap stays 2 mm). The base
+         * hole is tapped M4 under a 90 degree countersink whose rim ends
+         * 0.5 mm before the cavity at the bulge. The strip slopes about
+         * 7 degrees there. Its hole is one circle, 7.2 mm seen from above,
+         * centred 1.1 mm towards the middle. The cone touches only its outer
+         * side, 2.5 mm outside the screw axis and in line with the pull, and
+         * pushes the strip outwards. The screw can sink 0.42 mm before a
+         * point that pushes inwards touches. The strip hole ends 0.56 mm
+         * before the cavity, so the strip still closes it. Then the end
+         * clamps are tightened and the preload screws come out.
          */
         attribute pull : ForceValue = 270 [N];
     }

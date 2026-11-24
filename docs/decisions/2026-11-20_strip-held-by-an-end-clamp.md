@@ -46,5 +46,9 @@ printed clamp below the base top presses it there.
 - The strip now spans the open damper pockets on the ramp, as it already did on the flat floor.
 - All sizes come from `modules/compact-stage/cad/params/default.csv` and are linked in the base,
   the clamp and the strip.
+- **Update 2026-11-24:** the preload screw moved in to 8.25 mm from the base end, on a 3.5 mm
+  bulge of the end wall, and the strip hole is one round hole. The clamp keeps 3.85 mm of plastic
+  at its outer edge next to the screw. See
+  [the bulge log](../log/2026-11-24_preload-screw-on-the-bulge.md).
 - Supersedes the corner screws of
   [the 2026-10-28 strip end decision](../log/2026-10-28_strip-end-clamp-and-preload.md).

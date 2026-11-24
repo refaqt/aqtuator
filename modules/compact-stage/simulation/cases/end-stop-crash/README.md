@@ -129,3 +129,6 @@ These change the numbers. The summary gives the spread for each of them.
   It makes the wall stiffer, so the wall stress should be lower. A stiffer wall can make the
   peaks on the carriage at a metal hit a little higher. Run `run_fem.py` and `evaluate.py` again
   to get the new numbers.
+- **The end wall also has a 3.5 mm bulge round the preload screw** (2026-11-24), with a dent as
+  deep in carriage-bottom. The gap is 2 mm there too, so the bulge front (x = 13.5 mm) is hit at
+  the same moment as the wall. The "band" load case loads only the face at x = 10 mm.

@@ -59,7 +59,7 @@
       "volume": 0.0
     },
     "Body": {
-      "area": 285564.0,
+      "area": 285685.0,
       "bbox": [
         0.0,
         0.0,
@@ -72,22 +72,22 @@
       "com": [
         220.0,
         105.087,
-        12.0711
+        12.0894
       ],
       "counts": {
-        "edges": 720,
-        "faces": 258,
+        "edges": 764,
+        "faces": 272,
         "shells": 1,
         "solids": 1,
-        "verts": 476
+        "verts": 504
       },
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 1395230.0
+      "volume": 1396820.0
     },
     "ClampBossPocket": {
-      "area": 284414.0,
+      "area": 284571.0,
       "bbox": [
         0.0,
         0.0,
@@ -100,19 +100,19 @@
       "com": [
         220.0,
         105.088,
-        12.0606
+        12.0798
       ],
       "counts": {
-        "edges": 604,
-        "faces": 218,
+        "edges": 648,
+        "faces": 232,
         "shells": 1,
         "solids": 1,
-        "verts": 400
+        "verts": 428
       },
       "label": "ClampBossPocket",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 1380840.0
+      "volume": 1382980.0
     },
     "ClampBossSketch": {
       "area": 0.0,
@@ -143,7 +143,7 @@
       "volume": 0.0
     },
     "ClampTapHoles": {
-      "area": 285367.0,
+      "area": 285523.0,
       "bbox": [
         0.0,
         0.0,
@@ -156,19 +156,19 @@
       "com": [
         220.0,
         105.088,
-        12.0528
+        12.0721
       ],
       "counts": {
-        "edges": 664,
-        "faces": 242,
+        "edges": 708,
+        "faces": 256,
         "shells": 1,
         "solids": 1,
-        "verts": 436
+        "verts": 464
       },
       "label": "ClampTapHoles",
       "type": "PartDesign::Hole",
       "valid": true,
-      "volume": 1380230.0
+      "volume": 1382380.0
     },
     "DamperPocket": {
       "area": 276903.0,
@@ -227,7 +227,7 @@
       "volume": 0.0
     },
     "EndWallStep": {
-      "area": 285564.0,
+      "area": 285685.0,
       "bbox": [
         0.0,
         0.0,
@@ -240,19 +240,19 @@
       "com": [
         220.0,
         105.087,
-        12.0711
+        12.0894
       ],
       "counts": {
-        "edges": 720,
-        "faces": 258,
+        "edges": 764,
+        "faces": 272,
         "shells": 1,
         "solids": 1,
-        "verts": 476
+        "verts": 504
       },
       "label": "EndWallStep",
       "type": "PartDesign::Pad",
       "valid": true,
-      "volume": 1395230.0
+      "volume": 1396820.0
     },
     "EndWallStepSketch": {
       "area": 0.0,
@@ -339,35 +339,7 @@
       "volume": 1449660.0
     },
     "Hole002": {
-      "area": 284795.0,
-      "bbox": [
-        0.0,
-        0.0,
-        0.0,
-        440.0,
-        210.0,
-        40.0
-      ],
-      "closed": true,
-      "com": [
-        220.0,
-        105.088,
-        12.1963
-      ],
-      "counts": {
-        "edges": 542,
-        "faces": 183,
-        "shells": 1,
-        "solids": 1,
-        "verts": 360
-      },
-      "label": "Hole002",
-      "type": "PartDesign::Hole",
-      "valid": true,
-      "volume": 1388090.0
-    },
-    "Part": {
-      "area": 285564.0,
+      "area": 284935.0,
       "bbox": [
         0.0,
         0.0,
@@ -380,19 +352,47 @@
       "com": [
         220.0,
         105.087,
-        12.0711
+        12.2167
       ],
       "counts": {
-        "edges": 720,
-        "faces": 258,
+        "edges": 572,
+        "faces": 195,
         "shells": 1,
         "solids": 1,
-        "verts": 476
+        "verts": 380
+      },
+      "label": "Hole002",
+      "type": "PartDesign::Hole",
+      "valid": true,
+      "volume": 1390310.0
+    },
+    "Part": {
+      "area": 285685.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.087,
+        12.0894
+      ],
+      "counts": {
+        "edges": 764,
+        "faces": 272,
+        "shells": 1,
+        "solids": 1,
+        "verts": 504
       },
       "label": "base001",
       "type": "App::Part",
       "valid": true,
-      "volume": 1395230.0
+      "volume": 1396820.0
     },
     "Pocket": {
       "area": 269724.0,
@@ -563,7 +563,7 @@
       "volume": 1388510.0
     },
     "Pocket006": {
-      "area": 283257.0,
+      "area": 283413.0,
       "bbox": [
         0.0,
         0.0,
@@ -576,28 +576,84 @@
       "com": [
         220.0,
         105.088,
-        12.1083
+        12.1274
       ],
       "counts": {
-        "edges": 568,
-        "faces": 194,
+        "edges": 612,
+        "faces": 208,
         "shells": 1,
         "solids": 1,
-        "verts": 376
+        "verts": 404
       },
       "label": "Pocket006",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 1383490.0
+      "volume": 1385630.0
+    },
+    "PreloadBulge": {
+      "area": 284637.0,
+      "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        440.0,
+        210.0,
+        40.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.087,
+        12.2235
+      ],
+      "counts": {
+        "edges": 558,
+        "faces": 189,
+        "shells": 1,
+        "solids": 1,
+        "verts": 372
+      },
+      "label": "PreloadBulge",
+      "type": "PartDesign::Pad",
+      "valid": true,
+      "volume": 1390730.0
+    },
+    "PreloadBulgeSketch": {
+      "area": 0.0,
+      "bbox": [
+        6.0,
+        96.3856,
+        5.0,
+        434.0,
+        113.614,
+        5.0
+      ],
+      "closed": true,
+      "com": [
+        220.0,
+        105.0,
+        5.0
+      ],
+      "counts": {
+        "edges": 16,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "verts": 16
+      },
+      "label": "PreloadBulgeSketch",
+      "type": "Sketcher::SketchObject",
+      "valid": true,
+      "volume": 0.0
     },
     "PreloadHoleSketch": {
       "area": 0.0,
       "bbox": [
-        -0.158336,
-        100.127,
+        3.35,
+        100.136,
         40.0,
-        440.158,
-        109.873,
+        436.65,
+        109.864,
         40.0
       ],
       "closed": true,
@@ -928,7 +984,7 @@
     }
   },
   "parametric": {
-    "audited": 46,
+    "audited": 48,
     "objects": {
       "Hole001": {
         "label": "Hole001",
@@ -1034,14 +1090,30 @@
     }
   },
   "params": {
+    "base_h": 40.0,
+    "base_l": 440.0,
+    "base_w": 210.0,
     "bearing_d_out": 6.0,
     "bearing_flange_w": 0.8,
+    "boss_gap": 0.2,
+    "boss_pocket_extra": 0.3,
     "cable_clamp_l": 10.0,
     "cable_clamp_side_gap": 0.1,
     "cable_clamp_squeeze": 0.2,
     "carriage_edge_x": 208.0,
     "carriage_side_bottom_z": 16.5,
     "carriage_top_z": 27.5,
+    "clamp_boss_d": 8.0,
+    "clamp_boss_drop": 1.1,
+    "clamp_edge_t": 0.4,
+    "clamp_end_gap": 0.2,
+    "clamp_h": 3.5,
+    "clamp_notch_d": 8.4,
+    "clamp_screw_hole_d": 3.4,
+    "clamp_screw_inset": 5.0,
+    "clamp_screw_y0": 7.0,
+    "clamp_tap_depth": 8.0,
+    "clamp_top_gap": 0.2,
     "cooling_arm_bend_x": 186.0,
     "cooling_arm_r": 10.0,
     "cooling_arm_w": 12.0,
@@ -1093,6 +1165,12 @@
     "port_groove_w": 2.0,
     "port_oring_cs": 1.5,
     "port_oring_id": 5.0,
+    "preload_bulge_flat": 4.0,
+    "preload_bulge_r": 4.0,
+    "preload_bulge_t": 3.5,
+    "preload_screw_x": 8.25,
+    "ramp_r": 15.0,
+    "ramp_x": 10.0,
     "read_head_cable_d": 3.7,
     "read_head_cable_y": 124.0,
     "read_head_slot_depth": 5.0,
@@ -1101,17 +1179,18 @@
     "roller_l": 20.0,
     "screw_recess_depth": 0.3,
     "sleeve_l": 18.4,
-    "strip_corner_hole_d": 4.5,
-    "strip_corner_slot_l": 1.0,
+    "strip_boss_slide": 0.5,
     "strip_edge_gap": 0.2,
     "strip_end_gap": 1.0,
-    "strip_preload_hole_d": 5.0,
+    "strip_pocket_w": 186.0,
+    "strip_preload_hole_d": 7.2,
+    "strip_preload_hole_x": 1.1,
     "strip_pull": 270.0,
     "strip_t": 0.15
   },
   "saved": true,
   "schema": 1,
   "sources": {
-    "base.FCStd": "0851aec2bff83456c3dd73c015779a17bb3a787ae78b34ec6861df2734eea371"
+    "base.FCStd": "cf7bb086339089efbcf5ce323d32755cca0dfa4a657c9bd19e512043d7c9ba5b"
   }
 }

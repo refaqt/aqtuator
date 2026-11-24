@@ -77,11 +77,11 @@ com = [209.58, 105.0, 40.0]
 size = [210.0, 208.0, 20.0]
 
 # Parts of the stage that do not move. Used for the upper stage in the
-# cross configuration. Base mass: CAD volume 1,395,234 mm3 x 2.80 g/cm3 (7075).
+# cross configuration. Base mass: CAD volume 1,396,822 mm3 x 2.80 g/cm3 (7075).
 [[fixed]]
 name = "base"
-mass = 3.907
-com = [220.0, 105.09, 12.07]
+mass = 3.911
+com = [220.0, 105.09, 12.09]
 size = [440.0, 210.0, 40.0]
 [[fixed]]
 name = "rails"

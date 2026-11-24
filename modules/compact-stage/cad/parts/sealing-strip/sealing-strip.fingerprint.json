@@ -3,7 +3,7 @@
   "errors": [],
   "objects": {
     "BaseFeature": {
-      "area": 163448.0,
+      "area": 163429.0,
       "bbox": [
         0.955224,
         12.2,
@@ -14,13 +14,13 @@
       ],
       "closed": true,
       "com": [
-        220.015,
+        220.014,
         105.0,
-        44.2592
+        44.2593
       ],
       "counts": {
-        "edges": 156,
-        "faces": 50,
+        "edges": 158,
+        "faces": 48,
         "shells": 1,
         "solids": 1,
         "verts": 108
@@ -28,10 +28,10 @@
       "label": "BaseFeature",
       "type": "PartDesign::FeatureBase",
       "valid": true,
-      "volume": 12268.5
+      "volume": 12267.1
     },
     "Body": {
-      "area": 163448.0,
+      "area": 163429.0,
       "bbox": [
         0.955224,
         12.2,
@@ -42,13 +42,13 @@
       ],
       "closed": true,
       "com": [
-        220.015,
+        220.014,
         105.0,
-        44.2592
+        44.2593
       ],
       "counts": {
-        "edges": 156,
-        "faces": 50,
+        "edges": 158,
+        "faces": 48,
         "shells": 1,
         "solids": 1,
         "verts": 108
@@ -56,10 +56,10 @@
       "label": "Body",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 12268.5
+      "volume": 12267.1
     },
     "Body001": {
-      "area": 163439.0,
+      "area": 163421.0,
       "bbox": [
         -1.62105,
         12.2,
@@ -75,19 +75,19 @@
         0.075
       ],
       "counts": {
-        "edges": 120,
-        "faces": 42,
+        "edges": 114,
+        "faces": 40,
         "shells": 1,
         "solids": 1,
-        "verts": 80
+        "verts": 76
       },
       "label": "FlatBody",
       "type": "PartDesign::Body",
       "valid": true,
-      "volume": 12241.9
+      "volume": 12240.5
     },
     "FlatHoles": {
-      "area": 163439.0,
+      "area": 163421.0,
       "bbox": [
         -1.62105,
         12.2,
@@ -103,16 +103,16 @@
         0.075
       ],
       "counts": {
-        "edges": 120,
-        "faces": 42,
+        "edges": 114,
+        "faces": 40,
         "shells": 1,
         "solids": 1,
-        "verts": 80
+        "verts": 76
       },
       "label": "FlatHoles",
       "type": "PartDesign::Pocket",
       "valid": true,
-      "volume": 12241.9
+      "volume": 12240.5
     },
     "FlatHolesSketch": {
       "area": 0.0,
@@ -131,11 +131,11 @@
         0.0
       ],
       "counts": {
-        "edges": 36,
+        "edges": 34,
         "faces": 0,
         "shells": 0,
         "solids": 0,
-        "verts": 36
+        "verts": 34
       },
       "label": "FlatHolesSketch",
       "type": "Sketcher::SketchObject",
@@ -199,7 +199,7 @@
       "volume": 12339.9
     },
     "Part": {
-      "area": 163448.0,
+      "area": 163429.0,
       "bbox": [
         0.955224,
         12.2,
@@ -210,13 +210,13 @@
       ],
       "closed": true,
       "com": [
-        220.015,
+        220.014,
         105.0,
-        44.2592
+        44.2593
       ],
       "counts": {
-        "edges": 156,
-        "faces": 50,
+        "edges": 158,
+        "faces": 48,
         "shells": 1,
         "solids": 1,
         "verts": 108
@@ -224,10 +224,10 @@
       "label": "sealing-strip",
       "type": "App::Part",
       "valid": true,
-      "volume": 12268.5
+      "volume": 12267.1
     },
     "Part001": {
-      "area": 163439.0,
+      "area": 163421.0,
       "bbox": [
         -1.62105,
         12.2,
@@ -243,19 +243,19 @@
         0.075
       ],
       "counts": {
-        "edges": 120,
-        "faces": 42,
+        "edges": 114,
+        "faces": 40,
         "shells": 1,
         "solids": 1,
-        "verts": 80
+        "verts": 76
       },
       "label": "sealing-strip-flat",
       "type": "App::Part",
       "valid": true,
-      "volume": 12241.9
+      "volume": 12240.5
     },
     "StripShape": {
-      "area": 163448.0,
+      "area": 163429.0,
       "bbox": [
         0.955224,
         12.2,
@@ -266,13 +266,13 @@
       ],
       "closed": true,
       "com": [
-        220.015,
+        220.014,
         105.0,
-        44.2592
+        44.2593
       ],
       "counts": {
-        "edges": 156,
-        "faces": 50,
+        "edges": 158,
+        "faces": 48,
         "shells": 1,
         "solids": 1,
         "verts": 108
@@ -280,17 +280,115 @@
       "label": "StripShape (preloaded, carriage in the middle)",
       "type": "Part::Feature",
       "valid": true,
-      "volume": 12268.5
+      "volume": 12267.1
     }
   },
   "parametric": {
     "audited": 5,
     "objects": {}
   },
-  "params": {},
+  "params": {
+    "base_h": 40.0,
+    "base_l": 440.0,
+    "base_w": 210.0,
+    "bearing_d_out": 6.0,
+    "bearing_flange_w": 0.8,
+    "boss_gap": 0.2,
+    "boss_pocket_extra": 0.3,
+    "cable_clamp_l": 10.0,
+    "cable_clamp_side_gap": 0.1,
+    "cable_clamp_squeeze": 0.2,
+    "carriage_edge_x": 208.0,
+    "carriage_side_bottom_z": 16.5,
+    "carriage_top_z": 27.5,
+    "clamp_boss_d": 8.0,
+    "clamp_boss_drop": 1.1,
+    "clamp_edge_t": 0.4,
+    "clamp_end_gap": 0.2,
+    "clamp_h": 3.5,
+    "clamp_notch_d": 8.4,
+    "clamp_screw_hole_d": 3.4,
+    "clamp_screw_inset": 5.0,
+    "clamp_screw_y0": 7.0,
+    "clamp_tap_depth": 8.0,
+    "clamp_top_gap": 0.2,
+    "cooling_arm_bend_x": 186.0,
+    "cooling_arm_r": 10.0,
+    "cooling_arm_w": 12.0,
+    "cooling_arm_x0": 150.0,
+    "cooling_arm_y": 100.5,
+    "cooling_arm_y0": 89.5,
+    "cooling_block_gap": 0.15,
+    "cooling_block_top_gap": 0.1,
+    "cooling_body_r": 3.0,
+    "cooling_body_x0": 108.5,
+    "cooling_body_y0": 78.5,
+    "cooling_body_y1": 100.5,
+    "cooling_end_r": 3.0,
+    "cooling_passage_d": 2.0,
+    "cooling_passage_offset": 3.5,
+    "cooling_pocket_depth": 5.0,
+    "cooling_pocket_end_x": 212.0,
+    "cooling_screw_a_x": 128.0,
+    "cooling_screw_b_x": 140.0,
+    "cooling_screw_c_x": 198.0,
+    "cooling_screw_d": 2.5,
+    "cooling_tap_depth": 4.0,
+    "fit_head_l": 9.0,
+    "fit_head_r": 2.0,
+    "fit_hex_af": 9.0,
+    "fit_jog_x0": 209.0,
+    "fit_jog_x1": 211.5,
+    "fit_pitch": 11.0,
+    "fit_tap_depth": 5.0,
+    "fit_thread_d": 5.0,
+    "fit_thread_l": 4.0,
+    "fit_wall": 2.0,
+    "hose_id": 2.6,
+    "hose_od": 4.0,
+    "motor_cable_bend_x": 186.75,
+    "motor_cable_bend_y": 79.5,
+    "motor_cable_d": 8.3,
+    "motor_cable_dip": 5.0,
+    "motor_cable_dip_angle": 45.0,
+    "motor_cable_dip_start": 5.0,
+    "motor_cable_y": 114.5,
+    "motor_slot_depth": 9.0,
+    "motor_slot_w": 9.0,
+    "port_a_x": 118.35,
+    "port_a_y": 84.5,
+    "port_b_x": 114.25,
+    "port_b_y": 94.5,
+    "port_groove_depth": 1.1,
+    "port_groove_w": 2.0,
+    "port_oring_cs": 1.5,
+    "port_oring_id": 5.0,
+    "preload_bulge_flat": 4.0,
+    "preload_bulge_r": 4.0,
+    "preload_bulge_t": 3.5,
+    "preload_screw_x": 8.25,
+    "ramp_r": 15.0,
+    "ramp_x": 10.0,
+    "read_head_cable_d": 3.7,
+    "read_head_cable_y": 124.0,
+    "read_head_slot_depth": 5.0,
+    "read_head_slot_w": 6.0,
+    "roller_d": 10.0,
+    "roller_l": 20.0,
+    "screw_recess_depth": 0.3,
+    "sleeve_l": 18.4,
+    "strip_boss_slide": 0.5,
+    "strip_edge_gap": 0.2,
+    "strip_end_gap": 1.0,
+    "strip_pocket_w": 186.0,
+    "strip_preload_hole_d": 7.2,
+    "strip_preload_hole_x": 1.1,
+    "strip_pull": 270.0,
+    "strip_t": 0.15
+  },
   "saved": true,
   "schema": 1,
   "sources": {
-    "sealing-strip.FCStd": "da0a0d38daf43c20cc9d51961195d97405227caa456d5897f3a4fca24a69de68"
+    "sealing-strip.FCStd": "93bc11b04523a8300ca574d8cd0ed299a10b2e9b28a6b6e351dc567e60714332"
   }
 }

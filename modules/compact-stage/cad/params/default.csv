@@ -11,7 +11,10 @@ base_l,440,mm,design,base Block,Length of the base along X (the travel)
 base_w,210,mm,design,base Block,Width of the base along Y
 base_h,40,mm,design,base Block,Height of the base. The strip pocket and the end clamps are measured from its top
 strip_pocket_w,186,mm,design,base Sketch007,Width of the strip pocket in the base. It is centred on the base width. The strip is strip_edge_gap narrower on each side
-preload_screw_x,4.75,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,X of each ISO 10642 M4 preload screw from its base end. The screws sit in the middle of the width. Moved out from 6.5 mm so the strip hole and the countersink stay clear of the base cavity
+preload_screw_x,8.25,mm,design,docs/log/2026-11-24_preload-screw-on-the-bulge.md,X of each ISO 10642 M4 preload screw from its base end. The screws sit in the middle of the width. A 3.5 mm bulge of the end wall (base Params preload_bulge_t) lets it sit 3.5 mm further in than the 4.75 mm of 2026-11-20; the countersink stays 9.8 mm and 0.5 mm from the cavity
+preload_bulge_t,3.5,mm,design,docs/log/2026-11-24_preload-screw-on-the-bulge.md,How far each base end wall bulges into the cavity round the preload screw. carriage-bottom has a dent as deep at each end so the 2 mm crash gap stays. At the far end the forcer cable groove leaves 4.5 mm behind the end face of carriage-bottom; 1 mm stays
+preload_bulge_flat,4,mm,design,docs/log/2026-11-24_preload-screw-on-the-bulge.md,Length along y of the flat front of the bulge and of the dent. Centred on the preload screw
+preload_bulge_r,4,mm,design,8 mm cutter,Radius of the convex and concave arcs of the bulge and of the dent
 ramp_r,15,mm,design,Niels Bosmans 2026-11-20,Radius of the ramp at each base end. The strip bends down over it under the end clamp
 ramp_x,10,mm,design,Niels Bosmans 2026-11-20,Distance from the base end to where the ramp meets the strip pocket floor. The ramp is tangent to the floor there
 clamp_h,3.5,mm,design,Niels Bosmans 2026-11-20,Height of the printed end clamp at its outer edge
@@ -28,9 +31,8 @@ boss_pocket_extra,0.3,mm,design,docs/decisions/2026-11-20_strip-held-by-an-end-c
 clamp_tap_depth,8,mm,design,docs/decisions/2026-11-20_strip-held-by-an-end-clamp.md,Depth of the M3 tapped hole under each boss pocket. An M3 x 10 screw engages about 5 mm
 clamp_notch_d,8.4,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,Hole in the end clamp over the preload screw. The ISO 10642 M4 head (8 mm) comes out through it
 strip_boss_slide,0.5,mm,design,docs/decisions/2026-11-20_strip-held-by-an-end-clamp.md,How far the strip can slide towards its end around each clamp boss while the preload screw pulls it
-strip_preload_hole_d,4.3,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,Small circle of the preload hole at each strip end, centred on the screw axis, seen from above: 2 + strip_t from the axis. The cone of the ISO 10642 M4 touches its outer side. Cut square to the sloped strip, it is larger by 1 / cos(slope)
-strip_preload_relief_d,6.4,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,Large circle of the preload hole, seen from above. It frees the strip where the rising ramp would meet the screw head
-strip_preload_relief_x,1.5,mm,design,docs/log/2026-11-20_preload-on-the-ramp-sealed.md,Distance seen from above from the screw axis to the centre of the large circle of the preload hole, towards the strip middle
+strip_preload_hole_d,7.2,mm,design,docs/log/2026-11-24_preload-screw-on-the-bulge.md,Round preload hole at each strip end seen from above. The cone of the ISO 10642 M4 touches only its outer side: 2.5 mm outside the screw axis and in line with the pull. Cut square to the sloped strip it is larger by 1 / cos(slope)
+strip_preload_hole_x,1.1,mm,design,docs/log/2026-11-24_preload-screw-on-the-bulge.md,Distance seen from above from the screw axis to the centre of the preload hole towards the strip middle. The hole ends 0.56 mm before the cavity at the bulge
 strip_pull,270,N,design,simulation/cases/strip-seal-fit,Pull in the seal strip after the preload screws are tight. No carriage contact from 190 to 350 N
 cooling_block_gap,0.15,mm,design,carriage-bottom Sketch037,Room on each side between the printed cooling block and the wall of its pocket in carriage-bottom
 cooling_block_top_gap,0.1,mm,design,carriage-bottom Pad,Room between the top of the cooling block and the top face of carriage-bottom. The seal strip runs 1 mm above that face
