@@ -21,8 +21,9 @@ Answer two questions:
   size. The motor sets the acceleration limit, and LinuxCNC adapts the feed in the corner.
 - **The peak force of 591 N in the QARVE sheet is too high.** The sheet adds the highest
   acceleration (aluminium roughing) to the highest cutting force (stainless steel roughing). These
-  two never happen in the same job. Per job, the highest need is 478 N, in aluminium roughing.
-  The MK21 peak force (512 N for 1 s) already covers that.
+  two never happen in the same job. The sheet now checks each job, and inside and outside
+  corners, on their own. The highest need on X is now 364 N. The MK21 peak force (512 N for
+  1 s) covers that.
 - **The real weak point of the MK21 is the continuous force**: 181 N against the 228 N cutting
   force of stainless steel roughing.
 - **The TD55 cannot do all jobs at full rate.** The TD55-3 gives 106 N continuous and 161 N
@@ -135,26 +136,35 @@ So the TD55-3 works if we accept about half the material removal rate in stainle
 roughing, and a corner feed of about 2,000 to 3,300 mm/min. The slowdown only lasts while the
 tool is in the corner. The TD36-6 is weaker on every point and is not worth it.
 
-### Update: the peak force formula in the QARVE sheet
+### Update: the peak force formula in the QARVE sheet (done)
 
-The new rule checks each job on its own: peak force = moving mass × corner acceleration of that
-job + cutting force of that same job. The highest of these, and the rapid moves, sets the peak
-force.
-
-Why this is the worst case, kept simple:
+The QARVE sheet now checks each job on its own, and it treats inside and outside corners in a
+different way. The tool radius decides how tight an outside corner can be.
 
 - In a corner, the motor must pull the tool towards the centre of the arc.
-- In an outside corner, the part is on the inside of the arc. The cutting force pushes the tool
-  away from the part, so outwards. The motor must beat both: the forces add up.
-- In an inside corner, the part is on the outside of the arc. The cutting force pushes the tool
-  towards the centre. It helps the motor, so the forces partly cancel.
-- So the formula adds the full in-plane cutting force to the corner force. That covers the
-  outside corner, and it is on the safe side for the inside corner. It needs no force directions.
-- It still uses the 0.5 mm radius. In an outside corner, the tool centre runs on a radius at
-  least as large as the tool radius, so this is extra margin.
+- **Inside corner** (for example the corner of a pocket). The tool path can be as tight as the
+  "Min. corner radius feed" (0.5 mm). The part is on the outside of the arc, so the cutting force
+  pushes the tool towards the centre. It helps the motor. The formula leaves it out, which is on
+  the safe side. Force = moving mass × speed² / 0.5 mm.
+- **Outside corner** (the tool goes around the part). The tool centre runs on a radius of at least
+  the tool radius: 5 mm for a 10 mm cutter, 3 mm for a 6 mm cutter. The cutting force pushes the
+  tool away from the part, so outwards. The motor must beat both, so the forces add up.
+  Force = moving mass × speed² / tool radius + in-plane cutting force.
+- **Rapid moves**: no cutting, as before.
+- The peak force is the highest of these over all six jobs.
 
-With the new rule the peak force drops from 591 N to 478 N on X, and from 505 N to 392 N per motor
-on Y. On Z it goes from 332 N to 302 N.
+| Axis | Old peak force (N) | New peak force (N) | Deciding case |
+| --- | ---: | ---: | --- |
+| X | 591 | 364 | Aluminium roughing, inside corner |
+| Y, per motor | 505 | 277 | Aluminium roughing, inside corner |
+| Z | 332 | 268 | Aluminium roughing, inside corner |
+
+With the new rule, the MK21 peak force (512 N) passes in the sheet. The MK21 continuous force
+(181 N against 228 N) still fails.
+
+The table for the TD55-3 above does not change. LinuxCNC uses one acceleration limit per axis.
+While the tool cuts, the motor must also hold the cutting force, so that limit is still
+(peak force − cutting force) / moving mass.
 
 ### Where the offer is
 
@@ -174,8 +184,6 @@ Tecnotion asked to continue through its partner Eltrex.
 
 ## Next Steps
 
-- Put the new peak force formulas in the QARVE sheet (cells B294, B316 and B331 of the tab
-  "System model"). The formulas are below.
 - Ask Eltrex for a TD55-3 price, the lead time and the price for 2 sets.
 - Check the TD55-3 force against speed in the Tecnotion simulation tool, at our bus voltage.
 
@@ -200,14 +208,11 @@ Tecnotion asked to continue through its partner Eltrex.
   corner feed than X for every motor.
 - Heights from the brochure drawings: TD36 24.8 mm (page 11), TD55 32.1 mm (page 13), TD82 41 mm
   (page 15), TM and TMX 40 mm (pages 17 and 19). TD36 table on page 10, TMX table on page 18.
-- New formulas for the tab "System model". Each job block is 39 rows apart: corner acceleration in
-  B41, B80, B119, B158, B197, B236; in-plane cutting force in B32, B71, B110, B149, B188, B227;
-  axial force in B33, B72, B111, B150, B189, B228.
-  - B316, X-axis motor peak force:
-    `=MAX($B$311, $B$308*B41+B32, $B$308*B80+B71, $B$308*B119+B110, $B$308*B158+B149, $B$308*B197+B188, $B$308*B236+B227)`
-  - B331, Y-axis motor peak force (per motor, two motors):
-    `=MAX($B$327/2, $B$325*B41/2+B32, $B$325*B80/2+B71, $B$325*B119/2+B110, $B$325*B158/2+B149, $B$325*B197/2+B188, $B$325*B236/2+B227)`
-  - B294, Z-axis motor peak force:
-    `=MAX($B$290, $B$287*B41+B33, $B$287*B80+B72, $B$287*B119+B111, $B$287*B158+B150, $B$287*B197+B189, $B$287*B236+B228)`
+- Formulas now in the tab "System model" (cells B294, B316, B331). Each job block is 39 rows
+  apart: tool diameter in B8, B47, B86, B125, B164, B203; min. corner radius feed in B39 and so
+  on; feed in B40 and so on; corner acceleration in B41 and so on; in-plane cutting force in B32
+  and so on; axial force in B33 and so on. For each job the formula has an inside term
+  `mass*B41` and an outside term `mass*(B40/60)^2/MAX(B8/2,B39)/1000+B32`. Y divides the mass
+  terms by 2 (two motors). Z uses the axial force. Column E of the same rows explains the rule.
 
 </details>
