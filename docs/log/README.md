@@ -212,4 +212,5 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-20 | [Seal strip held by a printed end clamp on a ramp](2026-11-20_strip-held-by-an-end-clamp.md) | cad |  |
 | 2026-11-20 | [Preload slot: the screw touches only the outer edge of the strip](2026-11-20_preload-slot-on-the-ramp.md) | cad |  |
 | 2026-11-20 | [Preload screw on the ramp: the strip closes the base cavity again](2026-11-20_preload-on-the-ramp-sealed.md) | cad | 5 |
+| 2026-11-23 | [Copley manuals: control loops, filters and Bode plots, after the Eltrex call](2026-11-23_copley-cme-loops-filters-and-bode.md) | engineering, purchasing |  |
 | 2026-11-24 | [miControl servo drives checked against the drive requirements](2026-11-24_micontrol-drives-checked.md) | engineering, purchasing |  |
