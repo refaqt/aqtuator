@@ -334,7 +334,12 @@ class Model:
         o, m = self.offset[fi], len(self.xyz[fi])
         K = self.K_body[fi][o:o + m, o:o + m]
         f = self.f_unit_source[o:o + m]
-        fix = self.forcer_face_nodes
+        # The data sheet value holds the whole mounting face (the top face,
+        # dry and wetted parts) at one temperature.
+        xf = self.xyz[fi]
+        fix = np.unique(self.faces[fi]["tri"][self.faces[fi]["normal"][:, 2] > 0.99])
+        fix = fix[xf[fix, 2] > xf[:, 2].max() - 1e-6]
+        self.forcer_top_nodes = fix
         free = np.setdiff1d(np.arange(m), fix)
         T = np.zeros(m)
         solve = fem.solver(K[free][:, free].tocsr())
@@ -460,8 +465,10 @@ class Model:
         out["coil_max"] = out["bodies"]["forcer"]["max"]
         out["coil_mean"] = out["bodies"]["forcer"]["mean"]
         Tf = self.body_T(T, fi)
-        out["forcer_face_mean"] = float(Tf[self.forcer_face_nodes].mean())
-        out["forcer_face_max"] = float(Tf[self.forcer_face_nodes].max())
+        # mounting face: the whole top face (dry and wetted), as in the data sheet
+        out["forcer_face_mean"] = float(Tf[self.forcer_top_nodes].mean())
+        out["forcer_face_max"] = float(Tf[self.forcer_top_nodes].max())
+        out["forcer_dry_face_mean"] = float(Tf[self.forcer_face_nodes].mean())
         out["water_out"] = float(res["tw"][-1])
         out["water_rise"] = float(res["tw"][-1] - p["t_in"])
         out["coil_minus_water_in"] = out["coil_max"] - p["t_in"]
