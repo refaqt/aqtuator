@@ -863,9 +863,10 @@ def main():
                         **{"kind_%d" % i: model.fclass[i]["kind"].astype(str) for i in range(len(model.names))},
                         wxyz=model.wxyz, wtri=model.wfaces["tri"], s_water=model.s_water,
                         **fields)
-    with open(os.path.join(out_dir, "thermal.json"), "w") as f:
+    name = os.path.join("exports", "thermal_quick.json") if quick else "thermal.json"
+    with open(os.path.join(out_dir, name), "w") as f:
         json.dump(results, f, indent=1)
-    log("Done: %s" % os.path.join(out_dir, "thermal.json"))
+    log("Done: %s" % os.path.join(out_dir, name))
 
 
 if not os.environ.get("THERMAL_NO_MAIN"):
