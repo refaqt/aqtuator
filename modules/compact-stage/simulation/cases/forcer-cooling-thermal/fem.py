@@ -282,7 +282,7 @@ def link_scalar(slave, weight, master_nodes, shape, h, n):
     return _coo(rows, cols, ke, n)
 
 
-def solver(A, rigid=None, tol=1e-8):
+def solver(A, rigid=None, tol=3e-8):
     """A function that solves A x = b.
 
     The matrix is first scaled by its diagonal (D A D, D = diag(A)^-1/2). The

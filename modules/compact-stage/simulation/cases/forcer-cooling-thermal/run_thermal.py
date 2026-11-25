@@ -456,7 +456,7 @@ class Model:
                 np.add.at(q, b, qf)
         return edges, q
 
-    def steady(self, p, solve=None, T_init=None, tol=2e-3):
+    def steady(self, p, solve=None, T_init=None, tol=1e-2):
         cfg = self.cfg
         mo = cfg["motor"]
         mdot_c = cfg["water"]["rho"] * p["flow"] / 60000.0 * cfg["water"]["cp"]   # W/K
@@ -728,7 +728,7 @@ def transient(model, p, t_end=4 * 3600.0):
     edges = np.array([0.0, model.s_total * 1.0001])
     tw = np.array([p["t_in"], p["t_in"]])
     P = 1.5 * mo["current"] ** 2 * mo["r_ll_25"]
-    plan = [(5.0, 12), (30.0, 18), (120.0, 25), (600.0, int((t_end - 3600.0) / 600.0))]
+    plan = [(10.0, 6), (60.0, 9), (240.0, 12), (900.0, int((t_end - 3540.0) / 900.0))]
     t = 0.0
     hist = []
     fi = model.index["forcer"]
@@ -836,47 +836,75 @@ def main():
         results["mech_main"]["top_roll_urad"]))
 
     if not quick:
-        sweeps = []
         c = cfg["contact"]
-
-        def run(label, group, p, keep=None):
-            r = model.steady(p, T_init=main_res["T"])
-            s = model.summary(r, p)
-            s.pop("bodies_full", None)
-            sweeps.append({"label": label, "group": group, "params": {k: v for k, v in p.items()
-                                                                      if not callable(v)}, **s})
-            log("sweep %-34s coil %.2f C, block max %.2f C" % (label, s["coil_max"],
-                                                               s["bodies"]["cooling_block"]["max"]))
-            if keep:
-                fields[keep] = r["T"]
+        jobs = [("transient", "warm-up", p_main)]
         for q in cfg["water"]["flows_sweep"]:
-            run("flow %.2f l/min" % q, "flow", params(cfg, q))
+            jobs.append(("flow %.2f l/min" % q, "flow", params(cfg, q)))
         for tw in cfg["water"]["t_in_sweep"]:
             if tw != cfg["water"]["t_in"]:
-                run("water in %.0f C" % tw, "water in", params(cfg, flow, t_in=tw))
+                jobs.append(("water in %.0f C" % tw, "water in", params(cfg, flow, t_in=tw)))
         mo = cfg["motor"]
         for cur in cfg["motor"]["current_sweep"]:
-            run("current %.2f A (%.0f N)" % (cur, cur * mo["force_constant"]), "current", params(cfg, flow, current=cur))
+            jobs.append(("current %.2f A (%.0f N)" % (cur, cur * mo["force_constant"]), "current",
+                         params(cfg, flow, current=cur)))
         for ta in cfg["air"]["t_air_sweep"]:
             if ta != cfg["air"]["t_air"]:
-                run("air %.0f C" % ta, "air", params(cfg, flow, t_air=ta))
+                jobs.append(("air %.0f C" % ta, "air", params(cfg, flow, t_air=ta)))
         for key in ("forcer_face", "metal_bolted", "resin_block", "balls", "table"):
             lo, hi = c[key + "_range"]
-            run("%s low (%g W/m2K)" % (key, lo), "contact", params(cfg, flow, **{key: lo}))
-            run("%s high (%g W/m2K)" % (key, hi), "contact", params(cfg, flow, **{key: hi}))
-        run("anodised surfaces", "surface", params(cfg, flow, emissivity=cfg["air"]["emissivity_anodised"]))
-        run("water film x 0.5", "water film", params(cfg, flow, h_scale=0.5))
-        run("water film x 2", "water film", params(cfg, flow, h_scale=2.0))
+            jobs.append(("%s low (%g W/m2K)" % (key, lo), "contact", params(cfg, flow, **{key: lo})))
+            jobs.append(("%s high (%g W/m2K)" % (key, hi), "contact", params(cfg, flow, **{key: hi})))
+        jobs.append(("anodised surfaces", "surface", params(cfg, flow, emissivity=cfg["air"]["emissivity_anodised"])))
+        jobs.append(("water film x 0.5", "water film", params(cfg, flow, h_scale=0.5)))
+        jobs.append(("water film x 2", "water film", params(cfg, flow, h_scale=2.0)))
         mats = cfg["materials"]
-        run("7075 k -10 %", "alloy", params(cfg, flow, k_al=0.9 * mats["al7075"]["k"]))
+        jobs.append(("7075 k -10 %", "alloy", params(cfg, flow, k_al=0.9 * mats["al7075"]["k"])))
         for pump in cfg["pump"]:
             opp = hydraulics.operating_point(cfg, pump)
-            qa = opp["q_axes"][0]
-            run("pump: %s" % pump["name"], "pump", params(cfg, qa))
-        results["sweeps"] = sweeps
+            jobs.append(("pump: %s" % pump["name"], "pump", params(cfg, opp["q_axes"][0])))
 
-        log("warm-up from cold")
-        results["transient"] = transient(model, p_main)
+        def do(job):
+            label, group, p = job
+            if label == "transient":
+                return {"transient": transient(model, p)}
+            r = model.steady(p, T_init=main_res["T"])
+            s = model.summary(r, p)
+            log("sweep %-34s coil %.2f C, block max %.2f C" % (label, s["coil_max"],
+                                                               s["bodies"]["cooling_block"]["max"]))
+            return {"label": label, "group": group,
+                    "params": {k: v for k, v in p.items() if not callable(v)}, **s}
+
+        # Run the cases in a few forked processes at the same time. Each one
+        # writes its results to a file; the parent collects them in order.
+        n_proc = int(os.environ.get("THERMAL_PROCS", "3"))
+        tmp = os.path.join(out_dir, "exports", "jobs")
+        os.makedirs(tmp, exist_ok=True)
+        pids = []
+        for w in range(n_proc):
+            pid = os.fork()
+            if pid == 0:
+                try:
+                    for k in range(w, len(jobs), n_proc):
+                        out = do(jobs[k])
+                        with open(os.path.join(tmp, "job_%03d.json" % k), "w") as fh:
+                            json.dump(out, fh)
+                finally:
+                    os._exit(0)
+            pids.append(pid)
+        for pid in pids:
+            os.waitpid(pid, 0)
+        sweeps = []
+        for k, job in enumerate(jobs):
+            path = os.path.join(tmp, "job_%03d.json" % k)
+            if not os.path.exists(path):
+                raise SystemExit("ERROR: case '%s' did not finish" % job[0])
+            with open(path) as fh:
+                out = json.load(fh)
+            if "transient" in out:
+                results["transient"] = out["transient"]
+            else:
+                sweeps.append(out)
+        results["sweeps"] = sweeps
 
     np.savez_compressed(os.path.join(out_dir, "exports", "fields.npz"),
                         names=np.array(model.names), offsets=np.array(model.offset),
