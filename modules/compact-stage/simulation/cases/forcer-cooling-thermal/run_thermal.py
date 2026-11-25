@@ -327,28 +327,50 @@ class Model:
         log("matrices built: %d unknowns" % n)
 
     # -- forcer calibration --------------------------------------------------
-    def calibrate_forcer(self):
-        """Conductivity of the forcer block so that the hottest point is
-        rth * P above its mounting face when that face is held at one
-        temperature (the data sheet condition)."""
+    def calibrate_forcer(self, p):
+        """Conductivity of the forcer block that gives the data sheet thermal
+        resistance.
+
+        The data sheet test holds the mounting face at one temperature. Here
+        the whole top face of the forcer (dry and wetted parts) is held at one
+        temperature, inside the full model: some heat also leaves through the
+        bottom of the forcer, across the air gap to the magnet track, as it
+        does in a real test on a motor that sits on its track. The
+        conductivity is changed until the hottest point is rth * P above the
+        face. Counting the air gap path this way makes the forcer block more
+        resistive, so the coil comes out hotter: the safe side."""
         fi = self.index["forcer"]
-        o, m = self.offset[fi], len(self.xyz[fi])
-        K = self.K_body[fi][o:o + m, o:o + m]
-        f = self.f_unit_source[o:o + m]
-        # The data sheet value holds the whole mounting face (the top face,
-        # dry and wetted parts) at one temperature.
         xf = self.xyz[fi]
-        fix = np.unique(self.faces[fi]["tri"][self.faces[fi]["normal"][:, 2] > 0.99])
-        fix = fix[xf[fix, 2] > xf[:, 2].max() - 1e-6]
-        self.forcer_top_nodes = fix
-        free = np.setdiff1d(np.arange(m), fix)
-        T = np.zeros(m)
-        solve = fem.solver(K[free][:, free].tocsr())
-        T[free] = solve(f[free])
-        rth_unit = T.max()           # K per W, for k = 1 W/(mm K)
-        k = rth_unit / self.cfg["motor"]["rth"]    # W/(mm K)
+        top = np.unique(self.faces[fi]["tri"][self.faces[fi]["normal"][:, 2] > 0.99])
+        top = top[xf[top, 2] > xf[:, 2].max() - 1e-6]
+        self.forcer_top_nodes = top
+        fix = top + self.offset[fi]
+        free = np.setdiff1d(np.arange(self.n), fix)
+        q = dict(p, t_air=0.0, t_in=0.0)
+        f = self.loads(q, lambda s: np.zeros(len(s)), 1.0)       # 1 W, all sinks at 0
+        rth = self.cfg["motor"]["rth"]
+        k = 1.85e-3
+        T = None
+        hist = []
+        for it in range(6):
+            self.k_forcer = k
+            K = self.matrix(p)
+            solve = fem.solver(K[free][:, free].tocsr())
+            T = solve(f[free], x0=T)
+            Tf = np.zeros(self.n)
+            Tf[free] = T
+            r = float(self.body_T(Tf, fi).max())
+            hist.append((k * 1000, r))
+            log("forcer conductivity %.3f W/(m K): %.3f K/W" % (k * 1000, r))
+            if abs(r / rth - 1) < 2e-3:
+                break
+            # r is close to a / k; step in log space
+            k *= (r / rth) ** 1.05
         self.k_forcer = k
-        log("forcer conductivity %.3f W/(m K) gives %.2f K/W" % (k * 1000, self.cfg["motor"]["rth"]))
+        self.calibration = {"k_W_per_mK": k * 1000, "rth_model": r, "steps": hist,
+                            "face_area_mm2": float(self.faces[fi]["area"][
+                                (self.faces[fi]["normal"][:, 2] > 0.99) &
+                                (self.faces[fi]["centroid"][:, 2] > xf[:, 2].max() - 1e-6)].sum())}
         return k
 
     # -- steady solve ----------------------------------------------------------
@@ -729,8 +751,8 @@ def main():
     quick = os.environ.get("THERMAL_QUICK", "") == "1"
     out_dir = os.path.join(ROOT, "simulation", "results", CASE)
     model = Model(cfg, geom, gdir, scale=scale)
-    model.calibrate_forcer()
     flow, pump_name, op = main_flow(cfg)
+    model.calibrate_forcer(params(cfg, flow))
     log("main flow %.3f l/min per axis (%s)" % (flow, pump_name))
     t_ref = cfg["air"]["t_air"]
 
@@ -738,7 +760,7 @@ def main():
                "mesh": {nm: {"nodes": len(x), "elements": len(t)} for nm, x, t in
                         zip(model.names, model.xyz, model.tets)},
                "mesh_scale": scale, "removed_faces": model.removed_faces,
-               "k_forcer": model.k_forcer * 1000, "water_path_mm": model.s_total,
+               "k_forcer": model.k_forcer * 1000, "calibration": model.calibration, "water_path_mm": model.s_total,
                "wetted_area_mm2": model.wet_area, "forcer_face_area_mm2": model.forcer_face_area,
                "forcer_wet_area_mm2": model.forcer_wet_area, "V_forcer_mm3": model.V_forcer}
     face_area = {}
