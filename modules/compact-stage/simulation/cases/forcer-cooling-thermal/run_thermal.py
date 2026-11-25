@@ -764,7 +764,11 @@ def main():
     scale = float(os.environ.get("THERMAL_MESH_SCALE", "1.0"))
     quick = os.environ.get("THERMAL_QUICK", "") == "1"
     out_dir = os.path.join(ROOT, "simulation", "results", CASE)
-    model = Model(cfg, geom, gdir, scale=scale)
+    # Mesh check: refine the parts where the temperature changes fast. The
+    # other parts keep their mesh (carriage-top is hard to mesh finer).
+    mscale = scale if scale == 1.0 else {"_default": 1.0, "carriage_bottom": scale, "forcer": scale,
+                                         "cooling_block": scale, "water": scale, "base": scale}
+    model = Model(cfg, geom, gdir, scale=mscale)
     flow, pump_name, op = main_flow(cfg)
     model.calibrate_forcer(params(cfg, flow))
     log("main flow %.3f l/min per axis (%s)" % (flow, pump_name))

@@ -58,9 +58,12 @@ freecadcmd modules/compact-stage/simulation/cases/forcer-cooling-thermal/export_
 node simulation/cases/forcer-cooling-thermal-results/check_data.mjs
 ```
 
-`build_geometry.py` takes about 3 minutes. `run_thermal.py` takes about an hour on four cores: the
-main case, about 25 sweep cases, the warm-up and two growth solves. The third command is the mesh
-check (a finer mesh, main case only). `export_web.py` writes the data of the page.
+`build_geometry.py` takes about 3 minutes. `run_thermal.py` takes about 2.5 hours on four cores:
+the motor calibration, the main case, three growth solves, then 33 cases and the warm-up in three
+processes at the same time (`THERMAL_PROCS` sets how many). The calibration is kept in
+`exports/calibration.json` and reused while the mesh and the inputs stay the same. The third
+command is the mesh check: the main case on a finer mesh of base, carriage-bottom, forcer, cooling
+block and water. `export_web.py` writes the data of the page.
 
 ## Files
 
@@ -106,14 +109,19 @@ closest point of the other face, half from each side.
 
 **Forcer.** The copper loss 1.5 · R(T) · I² is spread evenly over the forcer block. The resistance
 is a straight line from 13.8 Ω at 25 °C to 19.0 Ω at 120 °C, taken at the hottest coil point. The
-conductivity of the block is set so that its hottest point is 0.87 K/W above its mounting face
-when that face is held at one temperature: the data sheet thermal resistance.
+conductivity of the block is set inside the full model: with the whole mounting face held at one
+temperature, the hottest point is 0.87 K/W above it (the data sheet thermal resistance). The air
+gap path to the magnet track stays in, as in a real test of a motor on its track; that makes the
+block more resistive, so the coil comes out hotter.
 
-**Growth.** Linear elasticity on the same mesh, with the steady temperatures relative to 20 °C.
+**Growth.** Linear elasticity, with the steady temperatures relative to 20 °C, on a mesh 2.5 times
+coarser than the heat mesh (the printed block keeps its fine mesh); the growth solve on the heat
+mesh needs more than 15 GB. The temperatures move to it by interpolation inside the heat elements.
 Bolted joints are tied with stiff penalty springs. Between rail and guide block, only the motion
 along the face normal is tied, with the ball stiffness of the QE15 at ZA preload; the block rolls
 freely along the rail. The base bottom stays on the table; main case: free to grow in its plane,
-held at one point; variant: the whole bottom clamped.
+held at one point; variants: the whole bottom clamped, and a soft forcer (a forcer that slides on
+its screws and does not hold carriage-bottom).
 
 **Pump.** `hydraulics.py` finds where the pump curve meets the curve of seven parallel branches
 (six axes and the spindle) between two manifolds. Only the maximum pressure and maximum flow of each

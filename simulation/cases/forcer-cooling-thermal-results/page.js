@@ -102,7 +102,7 @@
     t.push(tile("", "Water in → out", fmt(M.water_rise, 2) + " K", `out at ${C(M.water_out, 2)}`,
       `${fmt(R.flow_main, 2)} l/min per axis. ${fmt(M.balance.water, 0)} W go into the water.`));
     t.push(tile("", "Forcer mounting face", C(M.forcer_face_mean), `hottest ${C(M.forcer_face_max)}`,
-      "Mean over the face that touches carriage-bottom."));
+      "Mean over the whole mounting face, dry and wetted. The hottest point is at the face edge, far from the water."));
     for (const [k, lim] of [["carriage_bottom", "7075-T651. Strength drops above about 100 °C (no limit near these values)."],
       ["carriage_top", "Mounting face for the tool or the next stage."], ["base", "Sits on the machine table at the air temperature."]]) {
       t.push(tile("", NAME[k], C(B[k].max), `mean ${C(B[k].mean)}`, lim));
@@ -117,13 +117,16 @@
       `${esc(recPump.name)}, six axes and a spindle in parallel. Pump curve shape assumed between two maker points.`));
     if (G) {
       const tilt = Math.max(Math.abs(G.top_pitch_urad), Math.abs(G.top_roll_urad));
-      t.push(tile("", "Carriage-top lift and tilt", fmt(G.top_lift_um, 1) + " µm", `tilt up to ${fmt(tilt, 1)} µrad`,
-        `Flatness change ${fmt(G.top_flatness_um, 1)} µm over the top face.`));
-      t.push(tile("", "Table centre against read head", fmt(G.table_centre_minus_read_head_ux_um, 1) + " µm", "along the travel",
-        `Heat moves the top face centre against the encoder read head. The scale on the base moves ${fmt(G.scale_ux_um, 1)} µm.`));
+      t.push(tile("warn", "Carriage-top lift and tilt", fmt(G.top_lift_um, 1) + " µm", `tilt up to ${fmt(tilt, 1)} µrad`,
+        `Flatness change ${fmt(G.top_flatness_um, 1)} µm over the top face${R.mech_soft_forcer ? `; ${fmt(R.mech_soft_forcer.top_flatness_um, 1)} µm if the forcer slides on its screws` : ""}. It depends on how firmly the forcer holds the carriage.`));
+      const GS0 = R.mech_soft_forcer;
+      t.push(tile("warn", "Read head against the scale", fmt(G.read_head_minus_scale_um, 1) + " µm", "along the travel; the encoder cannot see it",
+        `Heat moves the read head against the scale on the base${GS0 ? ` (${fmt(GS0.read_head_minus_scale_um, 1)} µm if the forcer slides on its screws)` : ""}. The top face centre moves ${fmt(G.table_centre_minus_read_head_ux_um, 1)} µm against the read head.`));
+      if (GS0) t.push(tile("warn", "Motor air gap", "−" + fmt(-G.air_gap_change_um.mean, 0) + " µm", `closes, up to ${fmt(-G.air_gap_change_um.min, 0)} µm at one end`,
+        `Nominal gap 0.6 mm (−0.15 / +0.35 mm, data sheet). ${fmt(-GS0.air_gap_change_um.mean, 0)} µm if the forcer slides on its screws. The gap stays open.`));
     }
     $("tiles").innerHTML = t.join("");
-    $("answers-sub").innerHTML = `Motor at its rated current, ${cfg.motor.current} A rms (181 N), without a stop. Water at
+    $("answers-sub").innerHTML = `Motor at its rated current, ${fmt(cfg.motor.current, 1)} A rms (${fmt(cfg.motor.current * cfg.motor.force_constant, 0)} N), without a stop. Water at
       ${C(tIn, 0)} in, ${fmt(R.flow_main, 2)} l/min per axis (from the recommended pump). Still air at ${C(tAir, 0)}.
       Copper loss at the steady coil temperature: <b>${fmt(M.P_loss_W, 1)} W</b>.`;
     const forcerShare = 100 * M.balance.water / M.P_loss_W;
@@ -182,7 +185,7 @@
       2 mm passages: ${fmt(M.params.h_passage, 0)} W/(m² K) at Re ${fmt(M.params.re_passage, 0)}. The water temperature along
       the ${fmt(R.water_path_mm, 0)} mm path follows from the heat it takes up: dT<sub>w</sub>/ds = q'(s) / (ṁ c).</p>
       <p><b>Solve.</b> Steady heat conduction, then repeat: new water temperatures and new copper loss, until nothing
-      changes by more than 0.002 K (${M.iterations} rounds). The thermal growth is a linear elastic solve with the
+      changes by more than 0.01 K (${M.iterations} rounds). The thermal growth is a linear elastic solve with the
       steady temperatures, relative to 20 °C, on a mesh 2.5 times coarser (the printed block keeps its fine mesh):
       ${fmt(Object.values(R.mech_mesh || {}).reduce((a, m) => a + m.nodes, 0))} nodes. The temperatures move to it by
       interpolation inside the heat mesh elements.</p>`;
@@ -223,7 +226,7 @@
       ["Forcer heat capacity", `${m.c_specific} J/(kg K)`, "Estimate: copper, iron and resin"],
       ["Water at the inlet", `${w.t_in} °C`, "Given (chiller set point)"],
       ["Water flow per axis", `${fmt(R.flow_main, 3)} l/min`, "Operating point of the recommended pump (section Pump and flow)"],
-      ["Water properties", `ρ ${w.rho} kg/m³, c ${w.cp} J/(kg K), k ${w.k} W/(m K), μ ${w.mu * 1000} mPa s, Pr ${w.pr}`, "VDI Heat Atlas, 20 to 30 °C"],
+      ["Water properties", `ρ ${w.rho} kg/m³, c ${w.cp} J/(kg K), k ${w.k} W/(m K), μ ${fmt(w.mu * 1000, 2)} mPa s, Pr ${w.pr}`, "VDI Heat Atlas, 20 to 30 °C"],
       ["Channel", `${h.channel_w} × ${h.channel_d} mm, ${h.channel_length} mm long, ${h.channel_turns} turns`, "CAD (Sketch019 / Pocket008)"],
       ["Block passages", `Ø${h.passage_d} mm, ${h.passage_length} mm together`, "CAD (cooling_passage_d, feature volumes)"],
       ["Hoses", `PUN-H 4 × ${h.hose_id} mm, ${h.hose_length / 1000} m supply + ${h.hose_length / 1000} m return per axis`, "Festo; length is an estimate"],
@@ -261,7 +264,7 @@
       type: "bar", x: ["into the water", "air: convection", "air: radiation", "table: strips", "table: air gap"],
       y: [b.water, b.conv, b.rad, b.table, b.table_gap], marker: { color: [S("--s1"), S("--s3"), S("--s4"), S("--s2"), S("--ref")] },
       text: [b.water, b.conv, b.rad, b.table, b.table_gap].map((v) => fmt(v, 1) + " W"), textposition: "outside",
-    }], { title: { text: `Where the ${fmt(b.source, 1)} W go`, font: { size: 14 } }, yaxis: { title: "W", gridcolor: S("--grid") }, showlegend: false });
+    }], { title: { text: `Where the ${fmt(b.source, 1)} W go`, font: { size: 14 } }, yaxis: { title: "W", gridcolor: S("--grid"), range: [0, 1.18 * Math.max(b.water, b.table)] }, showlegend: false });
     const wp = M.water_profile;
     plot("plot-water", [{ x: wp.s, y: wp.T, mode: "lines", line: { color: S("--s1"), width: 2.5 }, name: "water" }],
       { xaxis: { title: "distance along the water path from the inlet fitting (mm)", gridcolor: S("--grid") },
@@ -403,6 +406,12 @@
       pushes them apart a little. Extra load on the guide blocks from the heat: ${bl || "—"}. HIWIN rates each QEH15SA block
       at C0 = 8 790 N. The heat moves the top face centre ${fmt(G.table_centre_minus_read_head_ux_um, 1)} µm against the encoder
       read head along the travel: this is a position error the encoder does not see.</p>
+      <p><b>Motor air gap.</b> The hot forcer grows downwards, so the air gap to the magnet track closes by
+      ${fmt(-G.air_gap_change_um.mean, 0)} µm on average and up to ${fmt(-G.air_gap_change_um.min, 0)} µm at one end
+      (${fmt(-(R.mech_soft_forcer || G).air_gap_change_um.mean, 0)} µm if the forcer slides). The data sheet gap is
+      0.6 mm with a lowest value of 0.45 mm, so the gap stays open. The magnetic pull rises a little as the gap closes.</p>
+      <p><b>Guide blocks.</b> The extra side loads from the heat stay below about ${fmt(Math.max(...Object.values(L).map((v) => Math.max(-v.Fy_neg, v.Fy_pos))), 0)} N per block,
+      against C0 = 8 790 N: no risk to the balls, but it adds to the load the blocks carry all the time and shortens their life a little.</p>
       <p><b>Why the top face bends.</b> The forcer is a steel block that runs at 25 to ${fmt(M.coil_max, 0)} °C inside. It is
       screwed under carriage-bottom. It grows more than the aluminium around its mounting face and bends the carriage a
       little, like a bimetal strip. How much depends on how firmly the six M4 screws hold the forcer, which is not known.
@@ -429,7 +438,7 @@
       { x: fl.map((s) => s.params.flow), y: fl.map((s) => s.forcer_face_mean), mode: "lines+markers", name: "forcer face, mean", line: { color: S("--s1") } },
       { x: fl.map((s) => s.params.flow), y: fl.map((s) => s.bodies.carriage_bottom.max), mode: "lines+markers", name: "carriage-bottom, hottest", line: { color: S("--s3") } },
       { x: fl.map((s) => s.params.flow), y: fl.map((s) => s.water_out), mode: "lines+markers", name: "water out", line: { color: S("--ref") } },
-    ], { title: { text: "Effect of the flow per axis", font: { size: 14 } }, xaxis: { title: "l/min per axis", gridcolor: S("--grid") }, yaxis: { title: "°C", gridcolor: S("--grid") } });
+    ], { title: { text: "Effect of the flow per axis", font: { size: 14 } }, xaxis: { title: "l/min per axis", gridcolor: S("--grid") }, yaxis: { title: "°C", gridcolor: S("--grid") }, legend: { orientation: "h", y: -0.35 }, margin: { l: 60, r: 16, t: 30, b: 90 } });
     const wi = sw.filter((s) => s.group === "water in" || (s.group === "flow" && false));
     const wiAll = wi.concat([{ params: { t_in: M.params.t_in }, coil_max: M.coil_max, forcer_face_mean: M.forcer_face_mean, bodies: M.bodies }])
       .sort((a, b) => a.params.t_in - b.params.t_in);
@@ -442,7 +451,8 @@
       ].concat(cu.map((c, i) => ({ x: [M.params.t_in], y: [c.coil_max], mode: "markers", marker: { size: 11, symbol: "diamond", color: [S("--s3"), S("--s4")][i % 2] },
         name: `coil at ${fmt(c.params.current, 2)} A (${fmt(c.params.current * cfg.motor.force_constant, 0)} N)` }))),
       { title: { text: "Effect of the water inlet temperature and the current", font: { size: 14 } },
-        xaxis: { title: "water at the inlet (°C)", gridcolor: S("--grid") }, yaxis: { title: "°C", gridcolor: S("--grid") } });
+        xaxis: { title: "water at the inlet (°C)", gridcolor: S("--grid") }, yaxis: { title: "°C", gridcolor: S("--grid") },
+        legend: { orientation: "h", y: -0.35 }, margin: { l: 60, r: 16, t: 30, b: 90 } });
     }
     table("sweep-table", ["Case", "Loss", "Coil", "Forcer face", "Water out", "Carriage-bottom", "Carriage-top", "Base", "Block (printed)"],
       sw.map((s) => [esc(s.label), fmt(s.P_loss_W, 1) + " W", C(s.coil_max), C(s.forcer_face_mean), C(s.water_out, 2),

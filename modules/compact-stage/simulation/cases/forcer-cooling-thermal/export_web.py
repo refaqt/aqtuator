@@ -48,6 +48,9 @@ import fem          # noqa: E402
 import hydraulics   # noqa: E402
 import meshing      # noqa: E402
 
+HEADER = ("// SPDX-FileCopyrightText: 2025-2026 Refaqt (BE 0804.145.539) and contributors\n"
+          "// SPDX-License-Identifier: GPL-3.0-or-later\n"
+          "// Made by modules/compact-stage/simulation/cases/forcer-cooling-thermal/export_web.py. Do not edit.\n")
 KINDS = ["air", "contact", "gap", "water", "table", "table_gap", "cavity"]
 
 
@@ -216,7 +219,7 @@ def main():
     rdir = os.path.join(REPO, "simulation", "cases", "forcer-cooling-thermal-results")
     os.makedirs(rdir, exist_ok=True)
     with open(os.path.join(rdir, "thermal_fields.js"), "w") as f:
-        f.write("// Made by modules/compact-stage/simulation/cases/forcer-cooling-thermal/export_web.py. Do not edit.\n")
+        f.write(HEADER)
         f.write("window.THERMAL_FIELDS = " + json.dumps(fields, separators=(",", ":")) + ";\n")
 
     # -- numbers ----------------------------------------------------------------
@@ -284,7 +287,7 @@ def main():
                           "nodes_coarse": sum(v["nodes"] for v in mesh_check["mesh"].values())}
     data["checks"] = checks
     with open(os.path.join(rdir, "thermal_data.js"), "w") as f:
-        f.write("// Made by modules/compact-stage/simulation/cases/forcer-cooling-thermal/export_web.py. Do not edit.\n")
+        f.write(HEADER)
         f.write("window.THERMAL_DATA = " + json.dumps(data, separators=(",", ":"), default=float) + ";\n")
     print("Done: %s" % rdir)
 

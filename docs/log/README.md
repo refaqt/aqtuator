@@ -218,3 +218,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-24 | [The compact stage will use the 230 mm RSF tape](2026-11-24_rsf-ml230-tape.md) | architecture, purchasing |  |
 | 2026-11-24 | [Price request to THK for SSR15 guides as a HIWIN replacement](2026-11-24_thk-quote-request-for-ssr15-guides.md) | engineering, purchasing |  |
 | 2026-11-25 | [Kollmorgen said our drives are too small. That is not true. Drives still in the running, with prices](2026-11-25_kollmorgen-too-small-answer-and-drive-comparison.md) | engineering, purchasing |  |
+| 2026-11-25 | [Water cooling of the compact stage motor at rated current](2026-11-25_forcer-cooling-thermal-study.md) | simulation, engineering, purchasing |  |
