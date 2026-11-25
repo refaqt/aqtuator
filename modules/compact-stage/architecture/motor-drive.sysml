@@ -157,6 +157,8 @@ package MotorDriveRequirements {
         attribute hasBrakeOutput : Boolean;                  // controls a holding brake that the customer adds
         attribute hasDynamicBraking : Boolean;               // shorts the motor phases to brake on a fault
         attribute locksParametersWithPassword : Boolean;     // speed, current and position limits locked by a password
+        attribute hasScriptableSetupLink : Boolean;          // serial, Ethernet service port, or EtherCAT (SDO or EoE)
+        attribute allParametersReachableByScript : Boolean;  // every setup parameter can be read and written over that link
     }
 
     // ---------------------------------------------------------------------
@@ -531,6 +533,33 @@ package MotorDriveRequirements {
              */
             subject drive : MotorDrive;
             require constraint { drive.locksParametersWithPassword }
+        }
+
+        requirement def <'DRV-P7'> ScriptedSetup {
+            doc /*
+             * We can set up and test the drive with our own script on a PC,
+             * and the script can read and write every setup parameter: gains,
+             * filters, limits, motor and encoder data. The maker's setup
+             * software alone is not enough.
+             *
+             * Any of these links counts, in this order of preference:
+             *
+             * - the EtherCAT cable we already have: parameters as CoE
+             *   objects (SDO), or Ethernet over EtherCAT (EoE);
+             * - an Ethernet service port with a documented protocol (for
+             *   example Telnet text commands or Modbus TCP);
+             * - a serial port (RS-232, or USB with an adapter) with a
+             *   documented text protocol.
+             *
+             * Why: we want to repeat tuning and frequency sweeps the same
+             * way on every stage, and keep the steps in a script under
+             * version control. Added on 2026-11-25.
+             */
+            subject drive : MotorDrive;
+            require constraint {
+                drive.hasScriptableSetupLink
+                and drive.allParametersReachableByScript
+            }
         }
     }
 

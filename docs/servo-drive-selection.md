@@ -70,6 +70,7 @@ That file is the source. This table is a copy for reading.
 | DRV-P4 | STO at SIL 3 and PL e | Preferred |
 | DRV-P5 | Safe Stop 1, a brake output and dynamic braking | Preferred |
 | DRV-P6 | Settings locked with a password: speed limit, peak current, overspeed trip, software position limits. Not yet checked for the drives below | Preferred |
+| DRV-P7 | Set up and test the drive with our own script on a PC, with every setup parameter reachable. Best over the EtherCAT cable (CoE objects or Ethernet over EtherCAT), else an Ethernet service port or a serial port with a documented protocol. Added 2026-11-25 | Preferred |
 
 Buying rules that are not in the SysML file (they change with each search):
 
