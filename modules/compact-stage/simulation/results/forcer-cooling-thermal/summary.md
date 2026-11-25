@@ -91,7 +91,9 @@ are far below C0 = 8 790 N.
 - Motor calibration: 0.867 K/W against the data sheet 0.87 K/W.
 - The warm-up ends at the steady coil temperature (124.74 °C).
 - The element code gives exact answers on test blocks (slab, free growth, film).
-- Mesh check: see the page (section Proof).
+- Mesh check: a finer mesh of base, carriage-bottom, forcer, cooling block and water (1.75 million
+  unknowns against 0.95 million) gives the coil 124.93 °C against 124.74 °C. Every other part
+  changes by 0.07 K or less.
 
 ## Inputs that are not known
 
