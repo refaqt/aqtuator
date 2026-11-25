@@ -95,7 +95,7 @@
     const bm = mainMat.hdt_045 - D.block_max_worst;
     const blkCls = bm >= 20 ? "ok" : bm >= 5 ? "warn" : "bad";
     const t = [];
-    t.push(tile(coilCls, "Coil, hottest point", C(M.coil_max), `${fmt(coilMargin, 0)} K below the limit`,
+    t.push(tile(coilCls, "Coil, hottest point", C(M.coil_max), coilMargin >= 0 ? `${fmt(coilMargin, 1)} K below the limit` : `${fmt(-coilMargin, 1)} K over the limit`,
       `Limit ${tMax} °C: highest coil temperature, MAXWELL MK2 data sheet. The PTC sensor trips near 120 °C.`));
     t.push(tile("", "Coil above the water inlet", fmt(M.coil_minus_water_in, 1) + " K", "",
       `Water in at ${C(tIn, 0)}. Of this, ${fmt(cfg.motor.rth * M.P_loss_W, 1)} K is inside the motor (data sheet 0.87 K/W × ${fmt(M.P_loss_W, 0)} W).`));
@@ -127,12 +127,32 @@
       ${C(tIn, 0)} in, ${fmt(R.flow_main, 2)} l/min per axis (from the recommended pump). Still air at ${C(tAir, 0)}.
       Copper loss at the steady coil temperature: <b>${fmt(M.P_loss_W, 1)} W</b>.`;
     const forcerShare = 100 * M.balance.water / M.P_loss_W;
-    $("answers-text").innerHTML = `<div class="note"><p><b>What this means.</b> With 20 °C water, the coil settles at
-      <b>${C(M.coil_max)}</b>, ${fmt(coilMargin, 0)} K under its 120 °C limit. The water takes ${fmt(forcerShare, 0)} % of the
-      heat; the rest goes to the air and through the base into the table. Most of the temperature difference sits
-      inside the motor itself (${fmt(cfg.motor.rth * M.P_loss_W, 0)} K over the data sheet thermal resistance), so better
-      cooling cannot bring the coil much closer to the water temperature. The printed cooling block stays at
-      ${C(M.bodies.cooling_block.max)}, far below the heat limit of a standard resin.</p></div>`;
+    const sw = R.sweeps || [];
+    const at = (g, f) => sw.filter((x) => x.group === g).find(f);
+    const c181 = at("current", (x) => Math.abs(x.params.current - 1.957) < 1e-3);
+    const w15 = at("water in", (x) => x.params.t_in === 15);
+    const inside = cfg.motor.rth * M.P_loss_W;
+    let lead;
+    if (M.coil_max > tMax) {
+      lead = `<p><b>What this means.</b> With 20 °C water and the full 2.0 A, the hottest point of the coil settles at
+        <b>${C(M.coil_max)}</b>: ${fmt(M.coil_max - tMax, 1)} K <b>over</b> its ${tMax} °C limit. The PTC sensor in the coil
+        switches near 120 °C, so the drive may stop the motor after a long time at full current. This is not a cooling
+        problem: the water holds the mounting face at ${C(M.forcer_face_mean)}, the same as the 25 °C of the data sheet test.
+        ${fmt(inside, 0)} K of the rise sits inside the motor (data sheet 0.87 K/W × ${fmt(M.P_loss_W, 0)} W). The data sheet
+        rounds the rated current up: its 181 N needs ${fmt(181 / cfg.motor.force_constant, 3)} A${c181 ? `, which gives
+        ${C(c181.coil_max)}` : ""}.</p>
+        <p><b>What to do.</b> Plan the continuous force at or below 181 N (1.96 A), or cool the water a little more${w15 ?
+        ` (15 °C water gives ${C(w15.coil_max)} at 2.0 A)` : ""}. Set the drive current limit (its motor heat model) to
+        1.96 A continuous. The water takes ${fmt(forcerShare, 0)} % of the heat; the rest goes to the air and through the
+        base into the table.</p>`;
+    } else {
+      lead = `<p><b>What this means.</b> With 20 °C water, the coil settles at <b>${C(M.coil_max)}</b>,
+        ${fmt(tMax - M.coil_max, 0)} K under its ${tMax} °C limit. The water takes ${fmt(forcerShare, 0)} % of the heat; the
+        rest goes to the air and through the base into the table. ${fmt(inside, 0)} K of the rise sits inside the motor
+        (data sheet 0.87 K/W), so better cooling cannot bring the coil much closer to the water temperature.</p>`;
+    }
+    $("answers-text").innerHTML = `<div class="note">${lead}<p>The printed cooling block stays at
+      ${C(M.bodies.cooling_block.max)}, far below the heat limit of every resin and filament checked.</p></div>`;
   }
 
   // ---------------------------------------------------------------- model text and tables
@@ -410,6 +430,20 @@
       { x: fl.map((s) => s.params.flow), y: fl.map((s) => s.bodies.carriage_bottom.max), mode: "lines+markers", name: "carriage-bottom, hottest", line: { color: S("--s3") } },
       { x: fl.map((s) => s.params.flow), y: fl.map((s) => s.water_out), mode: "lines+markers", name: "water out", line: { color: S("--ref") } },
     ], { title: { text: "Effect of the flow per axis", font: { size: 14 } }, xaxis: { title: "l/min per axis", gridcolor: S("--grid") }, yaxis: { title: "°C", gridcolor: S("--grid") } });
+    const wi = sw.filter((s) => s.group === "water in" || (s.group === "flow" && false));
+    const wiAll = wi.concat([{ params: { t_in: M.params.t_in }, coil_max: M.coil_max, forcer_face_mean: M.forcer_face_mean, bodies: M.bodies }])
+      .sort((a, b) => a.params.t_in - b.params.t_in);
+    const cu = sw.filter((s) => s.group === "current");
+    if (wiAll.length > 1) {
+      plot("plot-water-in", [
+        { x: wiAll.map((s) => s.params.t_in), y: wiAll.map((s) => s.coil_max), mode: "lines+markers", name: "coil at 2.0 A", line: { color: S("--bad") } },
+        { x: wiAll.map((s) => s.params.t_in), y: wiAll.map((s) => s.forcer_face_mean), mode: "lines+markers", name: "forcer face", line: { color: S("--s1") } },
+        { x: wiAll.map((s) => s.params.t_in), y: wiAll.map(() => tMax), mode: "lines", name: "coil limit", line: { color: S("--ref"), dash: "dash" } },
+      ].concat(cu.map((c, i) => ({ x: [M.params.t_in], y: [c.coil_max], mode: "markers", marker: { size: 11, symbol: "diamond", color: [S("--s3"), S("--s4")][i % 2] },
+        name: `coil at ${fmt(c.params.current, 2)} A (${fmt(c.params.current * cfg.motor.force_constant, 0)} N)` }))),
+      { title: { text: "Effect of the water inlet temperature and the current", font: { size: 14 } },
+        xaxis: { title: "water at the inlet (°C)", gridcolor: S("--grid") }, yaxis: { title: "°C", gridcolor: S("--grid") } });
+    }
     table("sweep-table", ["Case", "Loss", "Coil", "Forcer face", "Water out", "Carriage-bottom", "Carriage-top", "Base", "Block (printed)"],
       sw.map((s) => [esc(s.label), fmt(s.P_loss_W, 1) + " W", C(s.coil_max), C(s.forcer_face_mean), C(s.water_out, 2),
         C(s.bodies.carriage_bottom.max), C(s.bodies.carriage_top.max), C(s.bodies.base.max), C(s.bodies.cooling_block.max)]), [1, 2, 3, 4, 5, 6, 7, 8]);

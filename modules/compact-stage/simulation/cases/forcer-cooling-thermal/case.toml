@@ -10,6 +10,9 @@
 [motor]
 # MAXWELL MK21, data sheet page 010 (modules/stoq/modules/maxwell/docs/datasheets/).
 current = 2.0                 # A rms, continuous current Ic (the rated current)
+# 1.957 A = 181 N / 92.5 N/A: the current for the rated continuous force. The data
+# sheet rounds it to 2.0 A.
+current_sweep = [1.8, 1.957]
 force_constant = 92.5         # N per A rms
 r_ll_25 = 13.8                # ohm, line to line at 25 C
 r_ll_120 = 19.0               # ohm, line to line at 120 C
@@ -50,6 +53,7 @@ envelope = 56.0               # mm, length with the E2 unit, measured on the HIW
 t_in = 20.0                   # C, water at the inlet of the forcer
 flow_lpm = 0.5                # l/min per axis; replaced by the pump operating point in evaluate.py
 flows_sweep = [0.2, 0.3, 0.4, 0.5, 0.75, 1.0]
+t_in_sweep = [15.0, 18.0, 20.0, 22.0, 25.0]   # C, water at the inlet
 # Water at 20 to 30 C (VDI Heat Atlas, D3.1)
 rho = 997.0                   # kg/m3
 cp = 4180.0                   # J/(kg K)

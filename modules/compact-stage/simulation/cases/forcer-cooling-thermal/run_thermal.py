@@ -349,6 +349,16 @@ class Model:
         q = dict(p, t_air=0.0, t_in=0.0)
         f = self.loads(q, lambda s: np.zeros(len(s)), 1.0)       # 1 W, all sinks at 0
         rth = self.cfg["motor"]["rth"]
+        cache = os.path.join(ROOT, "simulation", "results", CASE, "exports", "calibration.json")
+        key = {"nodes": self.n, "rth": rth, "contact": self.cfg["contact"], "air": self.cfg["air"]}
+        if os.path.exists(cache):
+            with open(cache) as fh:
+                c = json.load(fh)
+            if c.get("key") == json.loads(json.dumps(key)):
+                self.k_forcer = c["k"]
+                self.calibration = c["calibration"]
+                log("forcer conductivity %.3f W/(m K) from the last calibration (same mesh and inputs)" % (c["k"] * 1000))
+                return c["k"]
         k = 1.85e-3
         T = None
         hist = []
@@ -371,6 +381,8 @@ class Model:
                             "face_area_mm2": float(self.faces[fi]["area"][
                                 (self.faces[fi]["normal"][:, 2] > 0.99) &
                                 (self.faces[fi]["centroid"][:, 2] > xf[:, 2].max() - 1e-6)].sum())}
+        with open(cache, "w") as fh:
+            json.dump({"key": key, "k": k, "calibration": self.calibration}, fh)
         return k
 
     # -- steady solve ----------------------------------------------------------
@@ -453,7 +465,8 @@ class Model:
         edges = np.array([0.0, self.s_total * 1.0001])
         tw = np.array([p["t_in"], p["t_in"]])
         T = T_init
-        P = 1.5 * mo["current"] ** 2 * mo["r_ll_25"]
+        cur = p.get("current", mo["current"])
+        P = 1.5 * cur ** 2 * mo["r_ll_25"]
         for it in range(40):
             Tw = lambda s, e=edges.copy(), v=tw.copy(): np.interp(s, e, v)
             T = solve(self.loads(p, Tw, P), x0=T)
@@ -463,7 +476,7 @@ class Model:
             Tf = T[self.offset[fi]:self.offset[fi] + len(self.xyz[fi])]
             t_coil = Tf.max()
             r = mo["r_ll_25"] + (mo["r_ll_120"] - mo["r_ll_25"]) * (t_coil - 25.0) / 95.0
-            P_new = 1.5 * mo["current"] ** 2 * r
+            P_new = 1.5 * cur ** 2 * r
             change = max(np.abs(np.interp(e2, edges, tw) - tw_new).max(), abs(P_new - P) * 0.87)
             edges, tw, P = e2, tw_new, P_new
             if change < tol and it > 1:
@@ -838,6 +851,12 @@ def main():
                 fields[keep] = r["T"]
         for q in cfg["water"]["flows_sweep"]:
             run("flow %.2f l/min" % q, "flow", params(cfg, q))
+        for tw in cfg["water"]["t_in_sweep"]:
+            if tw != cfg["water"]["t_in"]:
+                run("water in %.0f C" % tw, "water in", params(cfg, flow, t_in=tw))
+        mo = cfg["motor"]
+        for cur in cfg["motor"]["current_sweep"]:
+            run("current %.2f A (%.0f N)" % (cur, cur * mo["force_constant"]), "current", params(cfg, flow, current=cur))
         for ta in cfg["air"]["t_air_sweep"]:
             if ta != cfg["air"]["t_air"]:
                 run("air %.0f C" % ta, "air", params(cfg, flow, t_air=ta))
