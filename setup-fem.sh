@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Install the stress analysis tools on Linux: FreeCAD 1.1, Gmsh and the
-# CalculiX solver (ccx). The cloud environment and the stress cases in
+# CalculiX solver (ccx), plus scipy and pyamg in the FreeCAD Python. The
+# cloud environment and the stress and heat cases in
 # modules/*/simulation/cases/ need them.
 #
 #   bash setup-fem.sh
@@ -29,6 +30,11 @@ if [ -x "$PREFIX/bin/freecadcmd" ]; then
   fi
 else
   micromamba create -y -p "$PREFIX" -c conda-forge "freecad=1.1" calculix
+fi
+# The forcer cooling case solves its own heat and growth model with scipy;
+# pyamg (multigrid) makes it fast.
+if ! "$PREFIX/bin/python" -c "import scipy, pyamg" >/dev/null 2>&1; then
+  micromamba install -y -p "$PREFIX" -c conda-forge scipy pyamg
 fi
 
 for tool in freecadcmd ccx gmsh; do

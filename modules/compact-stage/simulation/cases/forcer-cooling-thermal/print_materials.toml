@@ -1,0 +1,164 @@
+# SPDX-FileCopyrightText: 2025-2026 Refaqt (BE 0804.145.539) and contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Heat limits of 3D printing materials for the cooling block.
+# Every number is from the maker's technical data sheet (link in "source").
+# HDT = heat deflection temperature (ISO 75 or ASTM D648): the temperature at
+# which a test bar bends a set amount under 0.45 MPa or 1.8 MPa.
+# Tg = glass transition temperature: above it the material gets soft.
+# A value of -1 means: not given in the data sheet.
+# Read on 2026-11-25.
+
+[[material]]
+name = "Formlabs Grey V5 (standard resin)"
+process = "SLA"
+condition = "post-cured 15 min at 60 C (Form Cure)"
+hdt_045 = 71.0
+hdt_18 = 59.0
+tg = -1
+modulus_mpa = 2675
+cte = -1
+source = "https://media.formlabs.com/m/2b42aa20e7da7db7/original/-ENUS-Grey-Resin-V5-TDS.pdf"
+
+[[material]]
+name = "Formlabs Grey V5 (standard resin), not post-cured"
+process = "SLA"
+condition = "green, as printed"
+hdt_045 = 62.0
+hdt_18 = 54.0
+tg = -1
+modulus_mpa = 2200
+cte = -1
+source = "https://media.formlabs.com/m/2b42aa20e7da7db7/original/-ENUS-Grey-Resin-V5-TDS.pdf"
+
+[[material]]
+name = "Formlabs Clear V5 (standard resin)"
+process = "SLA"
+condition = "post-cured 15 min at 60 C"
+hdt_045 = 69.0
+hdt_18 = 57.0
+tg = -1
+modulus_mpa = 2750
+cte = -1
+source = "https://media.formlabs.com/m/5fd5e7daf1460058/original/-ENUS-Clear-Resin-V5-TDS.pdf"
+
+[[material]]
+name = "Formlabs Tough 2000 V2"
+process = "SLA"
+condition = "post-cured 12 min at 70 C"
+hdt_045 = 70.0
+hdt_18 = 57.0
+tg = 112.2
+modulus_mpa = 1800
+cte = 134.2
+source = "https://formlabs-media.formlabs.com/datasheets/251013-MS-TDS-Tough_2000_V2.pdf"
+
+[[material]]
+name = "Formlabs Tough 1500 V2"
+process = "SLA"
+condition = "post-cured 12 min at 70 C"
+hdt_045 = 66.0
+hdt_18 = 53.0
+tg = 109.6
+modulus_mpa = 1460
+cte = 99.0
+source = "https://formlabs-media.formlabs.com/datasheets/25011041-TDS-ENUS-0.pdf"
+
+[[material]]
+name = "Formlabs Rigid 10K"
+process = "SLA"
+condition = "post-cured 60 min at 70 C"
+hdt_045 = 163.0
+hdt_18 = 82.0
+tg = -1
+modulus_mpa = 10200
+cte = 47.0
+source = "https://media.formlabs.com/m/522eb50e6c8ac0e3/original/-ENUS-Rigid-10K-TDS.pdf"
+
+[[material]]
+name = "Formlabs High Temp"
+process = "SLA"
+condition = "post-cured 120 min at 80 C"
+hdt_045 = 120.0
+hdt_18 = 78.0
+tg = -1
+modulus_mpa = 2800
+cte = 80.0
+source = "https://media.formlabs.com/m/41c07afd78a70b19/original/-ENUS-High-Temp-TDS.pdf"
+
+[[material]]
+name = "Siraya Tech Blu (low-cost tough resin)"
+process = "SLA"
+condition = "about 15 min UV at 395 to 405 nm"
+hdt_045 = 70.0
+hdt_18 = -1
+tg = -1
+modulus_mpa = 1800
+cte = -1
+source = "https://siraya.tech/pages/blu-tough-resin-tds-for-regular-blu"
+note = "The data sheet prints no unit for the HDT. Not confirmed."
+
+[[material]]
+name = "Prusament PLA"
+process = "FDM"
+condition = "not stated"
+hdt_045 = 55.0
+hdt_18 = 55.0
+tg = -1
+modulus_mpa = 2300
+cte = -1
+source = "https://prusament.com/wp-content/uploads/2022/10/PLA_Prusament_TDS_2021_10_EN.pdf"
+
+[[material]]
+name = "Prusament PETG"
+process = "FDM"
+condition = "not stated"
+hdt_045 = 68.0
+hdt_18 = 68.0
+tg = -1
+modulus_mpa = 1500
+cte = -1
+source = "https://storage.googleapis.com/prusa3d-content-prod-14e8-wordpress-prusament-prod/2023/10/9f8d2165-tds_prusament-petg_n_en.pdf"
+
+[[material]]
+name = "Polymaker PolyLite ABS"
+process = "FDM"
+condition = "printed in a 90 C chamber"
+hdt_045 = 100.0
+hdt_18 = 98.0
+tg = 101.0
+modulus_mpa = 2247
+cte = -1
+source = "https://polymaker.com/wp-content/uploads/lana-downloads/TDS_Polymaker_PolyLite-ABS_V5.6_2025-12-30_EN.pdf"
+
+[[material]]
+name = "Prusament ASA"
+process = "FDM"
+condition = "not stated"
+hdt_045 = 93.0
+hdt_18 = 86.0
+tg = -1
+modulus_mpa = 1600
+cte = -1
+source = "https://storage.googleapis.com/prusa3d-content-prod-14e8-wordpress-prusament-prod/2024/05/bc8551ef-tds_prusament-asa_2024_en.pdf"
+
+[[material]]
+name = "Prusament PC Blend"
+process = "FDM"
+condition = "not stated"
+hdt_045 = 113.0
+hdt_18 = 93.0
+tg = -1
+modulus_mpa = 1900
+cte = -1
+source = "https://prusament.com/wp-content/uploads/2022/10/PCBlend_Prusament_TDS_2022_16_EN.pdf"
+
+[[material]]
+name = "Prusament PA11 Carbon Fiber"
+process = "FDM"
+condition = "not stated"
+hdt_045 = 192.0
+hdt_18 = 152.0
+tg = -1
+modulus_mpa = 2500
+cte = -1
+source = "https://prusament.com/wp-content/uploads/2022/08/TDS_PA11CFB.pdf"

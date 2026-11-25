@@ -8,6 +8,7 @@ name: Pages
 #   https://refaqt.github.io/aqtuator/damper/
 #   https://refaqt.github.io/aqtuator/crash/
 #   https://refaqt.github.io/aqtuator/hard-turning/
+#   https://refaqt.github.io/aqtuator/thermal/
 
 on:
   push:
@@ -18,6 +19,7 @@ on:
       - "simulation/cases/damper-sizing/**"
       - "simulation/cases/end-stop-crash-results/**"
       - "simulation/cases/hard-turning-stability/**"
+      - "simulation/cases/forcer-cooling-thermal-results/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -53,10 +55,11 @@ jobs:
           node simulation/cases/damper-sizing/check_model.mjs
           node simulation/cases/end-stop-crash-results/check_data.mjs
           node simulation/cases/hard-turning-stability/check_model.mjs
+          node simulation/cases/forcer-cooling-thermal-results/check_data.mjs
 
       - name: Collect the site
         run: |
-          mkdir -p _site/strip-seal _site/cutting-force _site/damper _site/crash _site/hard-turning
+          mkdir -p _site/strip-seal _site/cutting-force _site/damper _site/crash _site/hard-turning _site/thermal
           cp simulation/cases/strip-seal-designer/index.html \
              simulation/cases/strip-seal-designer/strip_model.js _site/strip-seal/
           cp simulation/cases/cutting-force-rejection/index.html \
@@ -67,6 +70,10 @@ jobs:
              simulation/cases/end-stop-crash-results/page.js \
              simulation/cases/end-stop-crash-results/crash_data.js \
              simulation/cases/end-stop-crash-results/fem_fields.js _site/crash/
+          cp simulation/cases/forcer-cooling-thermal-results/index.html \
+             simulation/cases/forcer-cooling-thermal-results/page.js \
+             simulation/cases/forcer-cooling-thermal-results/thermal_data.js \
+             simulation/cases/forcer-cooling-thermal-results/thermal_fields.js _site/thermal/
           # The hard turning page loads the model of the cutting force page from
           # its folder. On the site both files sit next to the page.
           cp simulation/cases/hard-turning-stability/index.html \
@@ -86,6 +93,10 @@ jobs:
             grep -q "$f?v=$v" _site/crash/index.html
           done
           grep -q "damper_model.js?v=$v" _site/damper/index.html
+          for f in thermal_data.js thermal_fields.js page.js; do
+            sed -i "s#src=\"./$f\"#src=\"./$f?v=$v\"#" _site/thermal/index.html
+            grep -q "$f?v=$v" _site/thermal/index.html
+          done
           sed -i "s#src=\"../cutting-force-rejection/control_model.js\"#src=\"./control_model.js?v=$v\"#" _site/hard-turning/index.html
           sed -i "s#src=\"./turning_model.js\"#src=\"./turning_model.js?v=$v\"#" _site/hard-turning/index.html
           grep -q "control_model.js?v=$v" _site/hard-turning/index.html
@@ -105,6 +116,7 @@ jobs:
           <li><a href="damper/">Damper Sizing</a><br>Finds the force and stroke needed when the stage hits an end stop at full motor force.</li>
           <li><a href="hard-turning/">Hard Turning Stability</a><br>Shows the stiffness at the tool tip and where chatter starts when two stacked stages carry a lathe tool in hardened steel.</li>
           <li><a href="crash/">End-Stop Crash Results</a><br>Shows the results of the crash simulation: loads, stress in the base, guide block life, and the checks behind the numbers.</li>
+          <li><a href="thermal/">Forcer Cooling Results</a><br>Shows how hot the compact stage gets with the motor at rated current and 20 °C water, how much it grows, whether the printed cooling block stays below its heat limit, and which pump to use.</li>
           </ul>
           HTML
 
