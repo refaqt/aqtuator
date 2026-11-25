@@ -56,7 +56,11 @@ He chose EN AW-7075-T651 for carriage-bottom and carriage-top, and still air at 
 
 ## Decisions Made
 
-- None. The results support a choice of continuous current and pump, which Niels decides.
+- **The drive continuous current setting is 1.96 A rms** for the MK21 (Niels Bosmans, 2026-11-25).
+  It is now in the drive requirements (DRV-03, `continuousCurrentSetting` in
+  `modules/compact-stage/architecture/motor-drive.sysml`) and in the drive selection page. The
+  data sheet value of 2.0 A stays as the motor value, and DRV-01 still asks for a drive that can
+  give 2.0 A.
 
 ## Open Questions
 
@@ -69,8 +73,7 @@ He chose EN AW-7075-T651 for carriage-bottom and carriage-top, and still air at 
 
 ## Next Steps
 
-1. Set the drive continuous current to 1.96 A (181 N) for the MK21, or accept a PTC trip at full
-   current in long cuts.
+1. Enter 1.96 A as the continuous current of the motor thermal model when the drive is set up.
 2. Ask MAXWELL what R<sub>TH</sub> is measured to, and to confirm the 120 °C switch point.
 3. Ask TEYU for the pump curve and the model code of the CW-5200 with the 4 bar pump.
 4. Fit a needle valve on the spindle branch of the manifold.

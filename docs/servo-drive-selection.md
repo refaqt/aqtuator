@@ -53,7 +53,7 @@ That file is the source. This table is a copy for reading.
 | --- | --- | --- |
 | DRV-01 | At least 2.0 A rms continuous | Hard |
 | DRV-02 | At least 5.9 A rms for at least 1 s | Hard |
-| DRV-03 | A settable peak current limit and a thermal model of the motor | Hard |
+| DRV-03 | A settable peak current limit and a thermal model of the motor. Set its continuous current to **1.96 A rms**, not 2.0 A | Hard |
 | DRV-04 | A DC bus of 320 V to 600 V. A drive on 230 VAC single phase has about 325 V | Hard |
 | DRV-05 | Runs a linear synchronous motor with a 30 mm electrical period, and finds the commutation angle without Hall sensors | Hard |
 | DRV-06 | Reads the motor thermal sensor (three PTC in series, trip between 1 650 Ω and 3 990 Ω, 30 V at most), or stops on an input | Hard |
@@ -84,7 +84,14 @@ Buying rules that are not in the SysML file (they change with each search):
 
 The motor values behind DRV-01 to DRV-06 come from the MAXWELL data sheet: 181 N at 2.0 A rms
 continuous, 512 N at 5.9 A rms for 1 s, 670 N at 9.8 A rms for 0.5 s, 30 mm pole pitch, 600 V
-maximum bus. The thermal sensor is three PTC thermistors in series. Its values are in the
+maximum bus.
+
+**Drive setting: 1.96 A rms continuous.** 181 N needs 181 / 92.5 = 1.96 A; the data sheet rounds
+it up to 2.0 A. The
+[thermal study](../modules/compact-stage/simulation/results/forcer-cooling-thermal/summary.md)
+puts the coil at 124.7 °C at 2.0 A with 20 °C cooling water, over its 120 °C limit, and at 118.5 °C
+at 1.96 A. So the motor thermal model of the drive (DRV-03) gets 1.96 A as its continuous current.
+A drive must still be able to give 2.0 A (DRV-01). The thermal sensor is three PTC thermistors in series. Its values are in the
 [MK21 thermal sensor page](../modules/stoq/modules/maxwell/modules/mk2-mover/docs/mk21-thermal-sensor.md).
 
 ## How to read the tables

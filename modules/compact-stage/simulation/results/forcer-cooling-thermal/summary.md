@@ -20,7 +20,8 @@ recommended pump), still air at 20 °C, base on the machine table.
   on average, about the 25 °C of the data sheet test. 100 K of the 105 K rise sits inside the
   motor (data sheet 0.87 K/W × 116 W). Better cooling cannot fix this.
 - **The data sheet rounds the rated current up.** Its 181 N needs 1.957 A. At 1.957 A the coil
-  reaches 118.5 °C, 1.5 K under the limit. At 1.8 A it reaches 98.5 °C.
+  reaches 118.5 °C, 1.5 K under the limit. At 1.8 A it reaches 98.5 °C. The drive setting is now
+  1.96 A continuous (drive requirement DRV-03).
 - **Water in → out: 1.8 K** (20.0 → 21.8 °C). The water takes 74 W (64 %) of the 116 W. The base
   takes 35 W into the machine table, and the air 6 W.
 - **The printed cooling block does not deform from heat.** Its hottest point is 26.0 °C (31.6 °C

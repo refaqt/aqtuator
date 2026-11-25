@@ -145,8 +145,8 @@
         rounds the rated current up: its 181 N needs ${fmt(181 / cfg.motor.force_constant, 3)} A${c181 ? `, which gives
         ${C(c181.coil_max)}` : ""}.</p>
         <p><b>What to do.</b> Plan the continuous force at or below 181 N (1.96 A), or cool the water a little more${w15 ?
-        ` (15 °C water gives ${C(w15.coil_max)} at 2.0 A)` : ""}. Set the drive current limit (its motor heat model) to
-        1.96 A continuous. The water takes ${fmt(forcerShare, 0)} % of the heat; the rest goes to the air and through the
+        ` (15 °C water gives ${C(w15.coil_max)} at 2.0 A)` : ""}. The drive setting is now 1.96 A
+        continuous (the motor heat model of the drive, requirement DRV-03). The water takes ${fmt(forcerShare, 0)} % of the heat; the rest goes to the air and through the
         base into the table.</p>`;
     } else {
       lead = `<p><b>What this means.</b> With 20 °C water, the coil settles at <b>${C(M.coil_max)}</b>,
