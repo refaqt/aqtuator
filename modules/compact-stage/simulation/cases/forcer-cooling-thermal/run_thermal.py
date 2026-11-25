@@ -781,7 +781,9 @@ def main():
     fields = {"T_main": main_res["T"]}
 
     if scale != 1.0 or quick:
-        with open(os.path.join(out_dir, "thermal_mesh_s%g.json" % scale), "w") as f:
+        # mesh check: committed; quick test run: only in the ignored exports folder
+        name = "thermal_mesh_s%g.json" % scale if scale != 1.0 else os.path.join("exports", "thermal_quick.json")
+        with open(os.path.join(out_dir, name), "w") as f:
             json.dump(results, f, indent=1)
         if scale != 1.0:
             return
