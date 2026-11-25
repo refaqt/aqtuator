@@ -444,3 +444,32 @@ def rigid_modes(xyz):
     B[1::3, 4], B[2::3, 4] = -c[:, 2], c[:, 1]
     B[0::3, 5], B[2::3, 5] = c[:, 2], -c[:, 0]
     return B
+
+
+def interp_tet(xyz, tets, values, pts, k=24):
+    """Values of a P2 field at points, by finding the element that holds each
+    point. values: (n,) or (n, m) at the nodes. Points outside every element
+    take the closest element (clamped barycentrics)."""
+    cen = xyz[tets[:, :4]].mean(axis=1)
+    tree = cKDTree(cen)
+    k = min(k, len(tets))
+    _, cand = tree.query(pts, k=k)
+    if k == 1:
+        cand = cand[:, None]
+    p = xyz[tets[cand][..., :4]]                         # (n, k, 4, 3)
+    J = np.stack([p[..., 1, :] - p[..., 0, :], p[..., 2, :] - p[..., 0, :], p[..., 3, :] - p[..., 0, :]], axis=-1)
+    rhs = pts[:, None, :] - p[..., 0, :]
+    lam123 = np.linalg.solve(J, rhs[..., None])[..., 0]  # (n, k, 3)
+    lam = np.concatenate([1 - lam123.sum(axis=-1, keepdims=True), lam123], axis=-1)
+    score = lam.min(axis=-1)
+    best = np.argmax(score, axis=1)
+    r = np.arange(len(pts))
+    L = np.clip(lam[r, best], 0, None)
+    L /= L.sum(axis=1, keepdims=True)
+    N = np.stack([L[:, i] * (2 * L[:, i] - 1) for i in range(4)] +
+                 [4 * L[:, a] * L[:, b] for a, b in EDGES], axis=1)  # (n, 10)
+    el = tets[cand[r, best]]
+    v = np.asarray(values)
+    if v.ndim == 1:
+        return (v[el] * N).sum(axis=1)
+    return (v[el] * N[:, :, None]).sum(axis=1)

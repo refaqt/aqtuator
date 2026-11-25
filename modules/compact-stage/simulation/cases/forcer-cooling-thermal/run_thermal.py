@@ -105,7 +105,8 @@ class Model:
         self.names, self.mats, self.xyz, self.tets, self.offset = [], [], [], [], []
         n = 0
         for b in bodies + [wb]:
-            msh, removed = meshing.mesh_body(b["name"], gdir, cfg, scale=scale, log=log)
+            sc = scale.get(b["name"], scale.get("_default", 1.0)) if isinstance(scale, dict) else scale
+            msh, removed = meshing.mesh_body(b["name"], gdir, cfg, scale=sc, log=log)
             if removed:
                 self.removed_faces[b["name"]] = removed
             xyz, tets = meshing.read_msh(msh)
@@ -763,13 +764,33 @@ def main():
         if scale != 1.0:
             return
 
-    log("thermal growth, main case")
-    u = mechanics(model, main_res["T"], t_ref, "free")
-    results["mech_main"] = mech_summary(model, u, main_res["T"], t_ref)
-    fields["u_main"] = u
-    u2 = mechanics(model, main_res["T"], t_ref, "clamped")
-    results["mech_clamped"] = mech_summary(model, u2, main_res["T"], t_ref)
-    fields["u_clamped"] = u2
+    log("thermal growth, main case: coarser mesh for the growth solve")
+    mech_scale = {"_default": cfg["mesh"]["mech_scale"], "cooling_block": 1.0, "water": 1.0}
+    mech = Model(cfg, geom, gdir, scale=mech_scale)
+    # temperatures onto the growth mesh, inside the thermal elements of each part
+    Tm = np.zeros(mech.n)
+    for i, nm in enumerate(mech.names):
+        j = model.index[nm]
+        Tm[mech.offset[i]:mech.offset[i] + len(mech.xyz[i])] = fem.interp_tet(
+            model.xyz[j], model.tets[j], model.body_T(main_res["T"], j), mech.xyz[i])
+    results["mech_mesh"] = {nm: {"nodes": len(x), "elements": len(t)} for nm, x, t in
+                            zip(mech.names, mech.xyz, mech.tets)}
+    results["mech_removed_faces"] = mech.removed_faces
+
+    def to_thermal(um):
+        out = np.zeros((model.n, 3))
+        for i, nm in enumerate(model.names):
+            j = mech.index[nm]
+            out[model.offset[i]:model.offset[i] + len(model.xyz[i])] = fem.interp_tet(
+                mech.xyz[j], mech.tets[j], um[mech.offset[j]:mech.offset[j] + len(mech.xyz[j])], model.xyz[i])
+        return out
+    u = mechanics(mech, Tm, t_ref, "free")
+    results["mech_main"] = mech_summary(mech, u, Tm, t_ref)
+    fields["u_main"] = to_thermal(u)
+    u2 = mechanics(mech, Tm, t_ref, "clamped")
+    results["mech_clamped"] = mech_summary(mech, u2, Tm, t_ref)
+    fields["u_clamped"] = to_thermal(u2)
+    del mech, u, u2
     log("carriage-top lift %.2f um, pitch %.1f urad, roll %.1f urad" % (
         results["mech_main"]["top_lift_um"], results["mech_main"]["top_pitch_urad"],
         results["mech_main"]["top_roll_urad"]))

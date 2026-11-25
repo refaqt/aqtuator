@@ -134,6 +134,7 @@ size_mid = 2.5                # forcer pocket area of carriage-bottom
 size_coarse = 4.0
 size_base = 5.0
 refine = 0.75                 # factor for the mesh check run
+mech_scale = 2.5              # growth solve: mesh this much coarser (the printed block stays fine)
 
 [support]
 # Base held on the machine table. Main case: the base can grow freely in the
