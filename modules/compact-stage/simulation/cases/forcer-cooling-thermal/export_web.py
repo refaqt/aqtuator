@@ -125,7 +125,8 @@ def main():
         mats = tomllib.load(f)["material"]
     res_dir = os.path.join(ROOT, "simulation", "results", CASE)
     gdir = os.path.join(res_dir, "exports", "geom")
-    with open(os.path.join(res_dir, "thermal.json")) as f:
+    # THERMAL_JSON: another result file, to test the page with a quick run
+    with open(os.environ.get("THERMAL_JSON", os.path.join(res_dir, "thermal.json"))) as f:
         R = json.load(f)
     with open(os.path.join(gdir, "geometry.json")) as f:
         geom = json.load(f)

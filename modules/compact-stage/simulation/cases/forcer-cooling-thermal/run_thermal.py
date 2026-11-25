@@ -528,7 +528,7 @@ class Model:
 # Thermal growth
 # ---------------------------------------------------------------------------
 
-def mechanics(model, T, t_ref, support="free", block_material="resin"):
+def mechanics(model, T, t_ref, support="free", soft_forcer=False):
     cfg = model.cfg
     mats = cfg["materials"]
     n = model.n
@@ -538,7 +538,8 @@ def mechanics(model, T, t_ref, support="free", block_material="resin"):
     for i, (nm, mat) in enumerate(zip(model.names, model.mats)):
         mm = mats[mat]
         ne = len(model.tets[i])
-        E = np.full(ne, mm["E"])
+        # variant: the forcer does not hold carriage-bottom (its screws let it slide)
+        E = np.full(ne, mm["E"] * (1e-3 if (soft_forcer and mat == "forcer") else 1.0))
         nu = np.full(ne, mm["nu"])
         al = np.full(ne, mm["alpha"])
         Eb[i] = mm["E"]
@@ -814,7 +815,9 @@ def main():
     u2 = mechanics(mech, Tm, t_ref, "clamped")
     results["mech_clamped"] = mech_summary(mech, u2, Tm, t_ref)
     fields["u_clamped"] = to_thermal(u2)
-    del mech, u, u2
+    u3 = mechanics(mech, Tm, t_ref, "free", soft_forcer=True)
+    results["mech_soft_forcer"] = mech_summary(mech, u3, Tm, t_ref)
+    del mech, u, u2, u3
     log("carriage-top lift %.2f um, pitch %.1f urad, roll %.1f urad" % (
         results["mech_main"]["top_lift_um"], results["mech_main"]["top_pitch_urad"],
         results["mech_main"]["top_roll_urad"]))

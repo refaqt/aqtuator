@@ -151,16 +151,21 @@
       (forcer, magnet track, rails, guide blocks) are blocks with the sizes from the parts library and the maker
       data sheets, placed on their assembly positions.</p>
       <p><b>Heat in the forcer.</b> The copper loss is P = 1.5 · R<sub>LL</sub>(T) · I², with R<sub>LL</sub> from
-      13.8 Ω at 25 °C to 19.0 Ω at 120 °C. It is spread evenly over the forcer block. The conductivity of the block,
-      ${fmt(R.k_forcer, 2)} W/(m K), is set so that its hottest point is 0.87 K/W above its mounting face when that face
-      is held at one temperature: this is the data sheet thermal resistance.</p>
+      13.8 Ω at 25 °C to 19.0 Ω at 120 °C, taken at the hottest coil point. It is spread evenly over the forcer block.
+      The conductivity of the block, ${fmt(R.k_forcer, 2)} W/(m K), is set inside the full model: with the whole
+      mounting face held at one temperature, the hottest point is 0.87 K/W above it. That is the data sheet thermal
+      resistance. Some heat also leaves through the bottom of the forcer, across the air gap to the magnet track, as in
+      a real test of a motor on its track. Counting that path makes the block more resistive, so the coil comes out
+      hotter: the safe side.</p>
       <p><b>Water.</b> Film coefficient from the flow: Gnielinski, with his blend between laminar and turbulent
       flow between Re 2 300 and 10 000. Channel: ${fmt(M.params.h_channel, 0)} W/(m² K) at Re ${fmt(M.params.re_channel, 0)};
       2 mm passages: ${fmt(M.params.h_passage, 0)} W/(m² K) at Re ${fmt(M.params.re_passage, 0)}. The water temperature along
       the ${fmt(R.water_path_mm, 0)} mm path follows from the heat it takes up: dT<sub>w</sub>/ds = q'(s) / (ṁ c).</p>
       <p><b>Solve.</b> Steady heat conduction, then repeat: new water temperatures and new copper loss, until nothing
-      changes by more than 0.002 K (${M.iterations} rounds). The thermal growth is a linear elastic solve on the same
-      mesh with the steady temperatures, relative to 20 °C.</p>`;
+      changes by more than 0.002 K (${M.iterations} rounds). The thermal growth is a linear elastic solve with the
+      steady temperatures, relative to 20 °C, on a mesh 2.5 times coarser (the printed block keeps its fine mesh):
+      ${fmt(Object.values(R.mech_mesh || {}).reduce((a, m) => a + m.nodes, 0))} nodes. The temperatures move to it by
+      interpolation inside the heat mesh elements.</p>`;
     const g = D.geometry;
     const rows = g.bodies.filter((b) => b.name !== "water").map((b) => {
       const src = ["base", "carriage_bottom", "carriage_top", "cooling_block"].includes(b.name) ? "CAD part file" : "block from catalogue sizes";
@@ -362,7 +367,14 @@
       ["Printed block, thermal stress (highest / 99 %)", `${fmt(G.cooling_block_vm_MPa.max, 2)} / ${fmt(G.cooling_block_vm_MPa.p99, 2)}`,
         `${fmt(GC.cooling_block_vm_MPa.max, 2)}`, "MPa"],
     ];
-    table("growth-table", ["Result", "Base free to grow", "Base bottom clamped", "Unit"], rows, [1, 2]);
+    const GS = R.mech_soft_forcer;
+    if (GS) {
+      const soft = [GS.top_lift_um, GS.top_pitch_urad, GS.top_roll_urad, GS.top_flatness_um, GS.top_centre_u_um[0], GS.top_centre_u_um[1],
+        GS.read_head_ux_um, GS.scale_ux_um, GS.read_head_minus_scale_um, GS.table_centre_minus_read_head_ux_um, GS.air_gap_change_um.mean,
+        GS.u_max_um, GS.cooling_block_vm_MPa.max];
+      rows.forEach((r, i) => r.splice(3, 0, fmt(soft[i], i === 1 || i === 2 ? 1 : 2)));
+      table("growth-table", ["Result", "Base free to grow", "Base bottom clamped", "Forcer does not hold the carriage", "Unit"], rows, [1, 2, 3]);
+    } else table("growth-table", ["Result", "Base free to grow", "Base bottom clamped", "Unit"], rows, [1, 2]);
     const L = G.block_loads_N || {};
     const bl = Object.keys(L).sort().map((k) => `${NAME[k]}: ${fmt(L[k].Fz, 0)} N up/down, ${fmt(L[k].Fy_pos, 0)} / ${fmt(L[k].Fy_neg, 0)} N sideways`).join("; ");
     $("growth-text").innerHTML = `<p><b>What this means.</b> The aluminium carriage grows more than the steel rails under it
@@ -371,6 +383,10 @@
       pushes them apart a little. Extra load on the guide blocks from the heat: ${bl || "—"}. HIWIN rates each QEH15SA block
       at C0 = 8 790 N. The heat moves the top face centre ${fmt(G.table_centre_minus_read_head_ux_um, 1)} µm against the encoder
       read head along the travel: this is a position error the encoder does not see.</p>
+      <p><b>Why the top face bends.</b> The forcer is a steel block that runs at 25 to ${fmt(M.coil_max, 0)} °C inside. It is
+      screwed under carriage-bottom. It grows more than the aluminium around its mounting face and bends the carriage a
+      little, like a bimetal strip. How much depends on how firmly the six M4 screws hold the forcer, which is not known.
+      The column "Forcer does not hold the carriage" shows the other end: a forcer that slides on its screws.</p>
       <p class="muted">"Base free to grow": the base slides on the table in its plane, held at one point (main case).
       "Bottom clamped": the whole base bottom is held; a stiff, cold table and very tight clamps.</p>`;
   }
@@ -412,9 +428,13 @@
     add(Math.abs(k.water_rise_hand - k.water_rise_model) < 0.02, "Water warm-up", `Heat into the water / (ṁ c) = ${fmt(k.water_rise_hand, 3)} K;
       the model water profile ends ${fmt(k.water_rise_model, 3)} K above the inlet.`);
     add(Math.abs(k.loss_hand - k.loss_model) < 0.05, "Copper loss", `1.5 · R(T) · I² with the coil at ${C(M.coil_max)}: ${fmt(k.loss_hand, 2)} W; model ${fmt(k.loss_model, 2)} W.`);
-    add(Math.abs(k.coil_face_model / k.coil_face_hand - 1) < 0.12, "Coil above its mounting face", `Data sheet: 0.87 K/W × ${fmt(M.P_loss_W, 1)} W =
-      ${fmt(k.coil_face_hand, 1)} K, for a face at one temperature. Model: hottest coil point minus the mean face temperature = ${fmt(k.coil_face_model, 1)} K.
-      The model is a little higher because the real face is not at one temperature, and some heat leaves through other faces.`);
+    const cal = R.calibration || {};
+    add(cal.rth_model ? Math.abs(cal.rth_model / cfg.motor.rth - 1) < 0.005 : null, "Motor calibration", `With the whole mounting face held at one
+      temperature, the model gives ${fmt(cal.rth_model, 3)} K/W from the hottest coil point to the face (data sheet ${cfg.motor.rth} K/W), with a
+      forcer conductivity of ${fmt(cal.k_W_per_mK, 3)} W/(m K) after ${(cal.steps || []).length} tries.`);
+    add(null, "Coil above its mounting face in the stage", `Data sheet: 0.87 K/W × ${fmt(M.P_loss_W, 1)} W = ${fmt(k.coil_face_hand, 1)} K, for a face at one
+      temperature. In the stage the face is not at one temperature (it is ${C(M.forcer_face_mean)} on average, up to ${C(M.forcer_face_max)}), and part of
+      the heat leaves through the bottom of the forcer: hottest coil point minus the mean face temperature = ${fmt(k.coil_face_model, 1)} K.`);
     add(null, "Water film, hand check", `Heat into the water / (h × wetted channel area) = ${fmt(k.film_dT_hand, 1)} K: the mean step from the
       channel wall to the water. The rest of the coil rise is in the motor and in the aluminium.`);
     if (k.mesh) {
@@ -442,7 +462,7 @@
       "<b>The film coefficient in the channel</b> is in the change from laminar to turbulent flow (Re about 4 000), where correlations spread by ±30 % or more. The sweep with the film × 0.5 and × 2 covers this.",
       "<b>Still air.</b> A running machine moves air, and a spindle or coolant changes the room. More air flow cools the base and carriage a little.",
       "<b>Bought parts are blocks.</b> Rails, guide blocks, forcer and magnet track are simple solids with catalogue sizes, because their STEP files were not available in this session.",
-      "<b>Growth is linear and the joints do not slip.</b> Bolted joints are tied. A joint that slips would release some of the stress and change the tilt a little.",
+      "<b>Growth is linear and the joints do not slip.</b> Bolted joints are tied. A joint that slips would release some of the stress and change the tilt. The forcer joint matters most for the shape of the top face; see Thermal growth.",
       "<b>The table stays at the air temperature.</b> A machine table that warms up moves the whole stage.",
     ];
     $("doubt-list").innerHTML = L.map((x) => `<li>${x}</li>`).join("");
@@ -507,7 +527,7 @@
     tg.innerHTML = F.bodies.map((b, i) => `<label><input type="checkbox" data-b="${i}" ${b.name === "water" ? "" : "checked"}> ${esc(NAME[b.name] || b.name)}</label>`).join("");
     tg.querySelectorAll("input").forEach((cb) => {
       V.meshes[+cb.dataset.b].visible = cb.checked;
-      cb.addEventListener("change", () => { V.meshes[+cb.dataset.b].visible = cb.checked; });
+      cb.addEventListener("change", () => { V.meshes[+cb.dataset.b].visible = cb.checked; update3d(); });
     });
     Object.assign(V, { renderer, scene, camera, controls, resetView });
     function resize() { const w = el.clientWidth, h = el.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
@@ -536,6 +556,7 @@
     }));
     $("support").addEventListener("change", () => { V.support = $("support").value; update3d(); });
     $("scale").addEventListener("input", update3d);
+    $("range").addEventListener("change", update3d);
     V.ready = true;
     update3d();
   }
@@ -543,8 +564,14 @@
     if (!V.ready) return;
     const n = V.n, mode = V.mode, u = V.u[V.support];
     let lo = Infinity, hi = -Infinity, vals = null;
-    if (mode === "T") { vals = V.T; for (let i = 0; i < n; i++) if (F.bodies[V.body[i]].name !== "water") { lo = Math.min(lo, vals[i]); hi = Math.max(hi, vals[i]); } }
-    if (mode === "u") { vals = new Float32Array(n); for (let i = 0; i < n; i++) { vals[i] = Math.hypot(u[0][i], u[1][i], u[2][i]); hi = Math.max(hi, vals[i]); } lo = 0; }
+    // The colour range follows the parts that are switched on. By default the
+    // forcer is left out of it: it is much hotter and would make every other
+    // part look the same.
+    const stageOnly = $("range").value === "stage";
+    const counts = (i) => { const nm = F.bodies[V.body[i]].name; return nm !== "water" && V.meshes[V.body[i]].visible && !(stageOnly && nm === "forcer"); };
+    if (mode === "T") { vals = V.T; for (let i = 0; i < n; i++) if (counts(i)) { lo = Math.min(lo, vals[i]); hi = Math.max(hi, vals[i]); } }
+    if (mode === "u") { vals = new Float32Array(n); for (let i = 0; i < n; i++) { vals[i] = Math.hypot(u[0][i], u[1][i], u[2][i]); if (counts(i)) hi = Math.max(hi, vals[i]); } lo = 0; }
+    if (!isFinite(lo)) { lo = 0; hi = 1; }
     const scale = mode === "u" ? Math.round(Math.pow(10, parseFloat($("scale").value))) : 0;
     $("scale-v").textContent = mode === "u" ? fmt(scale) : "1 (only in Thermal growth)";
     for (const mesh of V.meshes) {
@@ -571,7 +598,7 @@
     ctx.clearRect(0, 0, cv.width, cv.height);
     if (mode === "T" || mode === "u") {
       for (let xx = 0; xx < cv.width; xx++) { const c = colourmap(xx / (cv.width - 1)); ctx.fillStyle = `rgb(${c.map((q) => Math.round(q * 255)).join(",")})`; ctx.fillRect(xx, 0, 1, cv.height); }
-      $("legend-text").textContent = mode === "T" ? `${C(lo)} to ${C(hi)}` : `0 to ${fmt(hi, 1)} µm movement, drawn ${fmt(scale)} × larger`;
+      $("legend-text").textContent = mode === "T" ? `${C(lo)} to ${C(hi)}${stageOnly ? " (the forcer is hotter: up to " + C(M.coil_max) + ")" : ""}` : `0 to ${fmt(hi, 1)} µm movement, drawn ${fmt(scale)} × larger`;
       cv.style.display = "";
     } else {
       cv.style.display = "none";
