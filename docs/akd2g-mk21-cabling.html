@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}</style>
+<title>MK21 to AKD2G Cabling</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column of a wiring dossier; figures break wider and scroll on their own. */
+:root{
+  --bg:#f6f7f8; --panel:#ffffff; --fg:#1b2127; --muted:#5b6670; --line:#cfd6dc;
+  --accent:#1f6f8b;           /* cable blue, used for links and headings marks */
+  --kbox:#2e7d4f;             /* comes in the box with "-A" */
+  --ksep:#b26a00;             /* Kollmorgen sells it, order separately */
+  --own:#8a3ffc;              /* we buy elsewhere or make */
+  --warn:#b42318;
+  --wire-u:#7a4a2a; --wire-v:#222; --wire-w:#7d7d7d; --wire-pe:#3d9a3d;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-head:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171b; --panel:#1a2126; --fg:#e4e9ed; --muted:#9aa7b1; --line:#33404a;
+  --accent:#5fb3d1; --kbox:#5cc28a; --ksep:#f0a43a; --own:#b28cff; --warn:#ff7a6e;
+  --wire-u:#c08a5e; --wire-v:#d8d8d8; --wire-w:#9a9a9a; --wire-pe:#6cc26c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171b; --panel:#1a2126; --fg:#e4e9ed; --muted:#9aa7b1; --line:#33404a;
+  --accent:#5fb3d1; --kbox:#5cc28a; --ksep:#f0a43a; --own:#b28cff; --warn:#ff7a6e;
+  --wire-u:#c08a5e; --wire-v:#d8d8d8; --wire-w:#9a9a9a; --wire-pe:#6cc26c; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--font-head);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:30px;font-weight:600}
+h2{font-size:21px;font-weight:600;padding-top:6px;border-top:2px solid var(--line)}
+h3{font-size:16px;font-weight:600}
+p{margin:0;max-width:68ch}
+.lead{color:var(--muted);max-width:70ch}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+a{color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code,.mono{font-family:var(--font-mono);font-size:.92em}
+.answer{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.answer ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block;border:2px solid currentColor}
+.sw.kbox{color:var(--kbox)} .sw.ksep{color:var(--ksep)} .sw.own{color:var(--own)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+.fig svg{display:block;min-width:760px;width:100%;height:auto}
+.cap{font-size:13px;color:var(--muted)}
+svg text{font-family:var(--font-body);fill:var(--fg)}
+svg .small{font-size:11px;fill:var(--muted)}
+svg .mono{font-family:var(--font-mono);font-size:11px}
+svg .box{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+svg .drive{fill:var(--bg);stroke:var(--fg);stroke-width:1.5}
+svg .kbox{stroke:var(--kbox);fill:none;stroke-width:2.5}
+svg .ksep{stroke:var(--ksep);fill:none;stroke-width:2.5}
+svg .own{stroke:var(--own);fill:none;stroke-width:2.5}
+svg .own-dash{stroke:var(--own);fill:none;stroke-width:2.5;stroke-dasharray:6 4}
+svg .cable{stroke:var(--fg);fill:none;stroke-width:3}
+svg .cable-thin{stroke:var(--fg);fill:none;stroke-width:1.5}
+svg .ptc{stroke:var(--warn);fill:none;stroke-width:2}
+svg .tk{fill:var(--kbox)} svg .ts{fill:var(--ksep)} svg .to{fill:var(--own)} svg .tw{fill:var(--warn)}
+.tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--font-head);font-weight:600;font-size:13px;letter-spacing:.03em;color:var(--muted);text-transform:uppercase}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:12px;font-weight:500;padding:1px 8px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap}
+.pill.kbox{color:var(--kbox)} .pill.ksep{color:var(--ksep)} .pill.own{color:var(--own)} .pill.warn{color:var(--warn)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.opt{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.opt.best{border-color:var(--kbox);border-width:2px}
+.opt ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.tag{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.opt.best .tag{color:var(--kbox)}
+.links{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.note{font-size:13px;color:var(--muted);max-width:75ch}
+td.num{font-variant-numeric:tabular-nums;font-family:var(--font-mono);font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:8px">
+  <h1>MK21 to AKD2G Cabling</h1>
+  <p class="lead">Which cables and plugs the AQTUATOR CS stage needs to connect the MAXWELL MK21 motor and the RSF AK MC 15 B encoder to a Kollmorgen AKD2G-SPE-6V03S-A1F3-0000-A. It shows what Kollmorgen puts in the box, what Kollmorgen sells separately, and what we must buy or make. Status: 25 November 2026, from the Kollmorgen manuals and guides.</p>
+</header>
+
+<section>
+  <h2>Short answer</h2>
+  <div class="answer">
+    <ul>
+      <li><b>Kollmorgen has no standard motor cable with an open end.</b> Its AKD2G motor cables end in a Kollmorgen motor plug: M23 SpeedTec or M15 ytec. The 2G Cable Guide offers open ends (flying leads <code>UF</code> or a blunt cut <code>UB</code>) only on feedback cables. A motor cable with an open end would be a special order. We can ask.</li>
+      <li><b>We do not need a Kollmorgen motor cable.</b> The best route is to ask Saho Robot for the MK21 with an open cable end, cut to length. The four power wires go straight into the Kollmorgen X1 plug, which has spring clamps. No soldering is needed there.</li>
+      <li><b>The motor temperature sensor must go to the encoder plug.</b> The MK21 PTC wires run inside the motor cable. On the AKD2G the PTC input sits on X23, the encoder connector, pins 8 and 9. So two PTC wires leave the motor cable and are soldered into the X23 plug, next to the encoder wires. Kollmorgen must still confirm that pins 8 and 9 work together with BiSS-C.</li>
+      <li><b>The encoder needs one small adapter cable that we make.</b> The RSF head ends in a standard 15-pin D-sub plug. The AKD2G X23 socket is a 15-pin <i>high-density</i> D-sub. Kollmorgen sells no cable for a third-party BiSS-C encoder.</li>
+    </ul>
+  </div>
+  <div class="legend" aria-label="Colour legend">
+    <span><i class="sw kbox"></i>In the Kollmorgen box with "-A"</span>
+    <span><i class="sw ksep"></i>Kollmorgen sells it, order separately</span>
+    <span><i class="sw own"></i>We buy elsewhere or make it</span>
+    <span style="color:var(--warn)"><i class="sw" style="color:var(--warn)"></i>Motor temperature (PTC) wires</span>
+  </div>
+</section>
+
+<section>
+  <h2>The whole set-up</h2>
+  <div class="fig">
+  <svg viewBox="0 0 960 560" role="img" aria-labelledby="f1t">
+    <title id="f1t">Wiring overview: AKD2G drive with its connectors, the MK21 motor cable, the RSF encoder adapter cable, mains filter, 24 V supply and network cables</title>
+    <!-- Drive -->
+    <rect class="drive" x="360" y="40" width="200" height="470" rx="6"/>
+    <text x="460" y="66" text-anchor="middle" style="font-weight:600">AKD2G-SPE-6V03S</text>
+    <text x="460" y="82" text-anchor="middle" class="small">front, connectors simplified</text>
+    <!-- connectors on drive -->
+    <rect x="378" y="100" width="164" height="34" rx="3" class="box"/><rect x="378" y="100" width="164" height="34" rx="3" class="kbox"/>
+    <text x="388" y="122" class="mono">X10  24 V supply</text>
+    <rect x="378" y="146" width="164" height="34" rx="3" class="box"/><rect x="378" y="146" width="164" height="34" rx="3" class="kbox"/>
+    <text x="388" y="168" class="mono">X3   mains, DC bus</text>
+    <rect x="378" y="192" width="164" height="34" rx="3" class="box"/><rect x="378" y="192" width="164" height="34" rx="3" class="kbox"/>
+    <text x="388" y="214" class="mono">X21  I/O, STO</text>
+    <rect x="378" y="238" width="164" height="34" rx="3" class="box"/>
+    <text x="388" y="260" class="mono">X20  service (RJ45)</text>
+    <rect x="378" y="284" width="164" height="34" rx="3" class="box"/>
+    <text x="388" y="306" class="mono">X11/X12 EtherCAT</text>
+    <rect x="378" y="350" width="164" height="40" rx="3" class="box"/><rect x="378" y="350" width="164" height="40" rx="3" class="own"/>
+    <text x="388" y="368" class="mono">X23  feedback</text><text x="388" y="383" class="small">HD15 female</text>
+    <rect x="378" y="420" width="164" height="60" rx="3" class="box"/><rect x="378" y="420" width="164" height="60" rx="3" class="ksep"/>
+    <text x="388" y="440" class="mono">X1   motor</text><text x="388" y="456" class="small">U V W PE + brake + 2-wire fb</text><text x="388" y="471" class="small">spring clamps</text>
+
+    <!-- Left side: supplies -->
+    <rect x="20" y="120" width="170" height="48" rx="4" class="box"/><rect x="20" y="120" width="170" height="48" rx="4" class="own"/>
+    <text x="30" y="140">24 VDC supply</text><text x="30" y="156" class="small">PELV, at least 1 A</text>
+    <path class="cable-thin" d="M190 144 H300 V117 H378"/>
+    <rect x="20" y="186" width="170" height="54" rx="4" class="box"/><rect x="20" y="186" width="170" height="54" rx="4" class="ksep"/>
+    <text x="30" y="206">Mains filter</text><text x="30" y="222" class="small">FN2090-6 or -12 (1 phase)</text>
+    <text x="30" y="236" class="small">230 VAC in</text>
+    <path class="cable" d="M190 210 H300 V163 H378"/>
+    <text x="205" y="202" class="small">shielded</text>
+    <rect x="20" y="258" width="170" height="40" rx="4" class="box"/>
+    <text x="30" y="282">STO, enable wiring</text>
+    <path class="cable-thin" d="M190 278 H300 V209 H378"/>
+    <rect x="20" y="314" width="170" height="40" rx="4" class="box"/><rect x="20" y="314" width="170" height="40" rx="4" class="own"/>
+    <text x="30" y="338">Laptop (setup)</text>
+    <path class="cable-thin" d="M190 334 H310 V255 H378"/>
+    <text x="205" y="326" class="small">any Cat 5 cable</text>
+    <rect x="20" y="370" width="170" height="40" rx="4" class="box"/><rect x="20" y="370" width="170" height="40" rx="4" class="own"/>
+    <text x="30" y="394">LinuxCNC PC</text>
+    <path class="cable-thin" d="M190 390 H320 V301 H378"/>
+    <text x="205" y="406" class="small">EtherCAT, Cat 5</text>
+
+    <!-- Right side: motor and encoder -->
+    <rect x="770" y="410" width="170" height="90" rx="6" class="box"/>
+    <text x="780" y="432" style="font-weight:600">MAXWELL MK21</text>
+    <text x="780" y="450" class="small">motor, one cable:</text>
+    <text x="780" y="465" class="small">U V W PE (1 mm², shielded)</text>
+    <text x="780" y="480" class="small" style="fill:var(--warn)">+ 2 PTC wires</text>
+    <!-- motor cable to X1 -->
+    <path class="own" d="M770 450 H542"/>
+    <text x="600" y="442" class="to" style="font-size:12px">MK21 cable, open end</text>
+    <text x="600" y="470" class="small">strip, ferrules, into X1 plug</text>
+    <!-- PTC branch -->
+    <path class="ptc" d="M700 450 V380 H542" />
+    <circle cx="700" cy="450" r="4" style="fill:var(--warn)"/>
+    <text x="606" y="396" class="tw" style="font-size:12px">PTC pair to X23 pins 8, 9</text>
+
+    <!-- Encoder -->
+    <rect x="770" y="250" width="170" height="80" rx="6" class="box"/>
+    <text x="780" y="272" style="font-weight:600">RSF AK MC 15 B</text>
+    <text x="780" y="290" class="small">read head, BiSS-C</text>
+    <text x="780" y="306" class="small">cable ends in a 15-pin</text>
+    <text x="780" y="320" class="small">D-sub, male</text>
+    <path class="cable-thin" d="M770 300 H700"/>
+    <rect x="640" y="286" width="60" height="28" rx="3" class="box"/><rect x="640" y="286" width="60" height="28" rx="3" class="own"/>
+    <text x="646" y="304" class="mono">DA-15 f</text>
+    <path class="own" d="M640 300 H600 V362 H542"/>
+    <text x="560" y="282" class="to" style="font-size:12px">our adapter cable</text>
+    <text x="560" y="340" class="small">HD15 male at the drive</text>
+
+    <!-- brake resistor note -->
+    <text x="20" y="470" class="small">Brake resistor: inside the drive (15 Ω, 100 W).</text>
+    <text x="20" y="486" class="small">Keep the jumper X3/5 to X3/6. No external one needed.</text>
+    <text x="20" y="526" class="small">Shield of motor and encoder cables: 360° at both ends (drive shield clamp, plug hoods).</text>
+  </svg>
+  </div>
+  <p class="cap">Figure 1. Drawn from the AKD2G-S Installation Manual FS1 Rev G (connector table page 54, X1 page 69, X3 page 70, X23 page 76). Real connector positions on the drive differ; see the manual drawings linked below.</p>
+</section>
+
+<section>
+  <h2>Three ways to make the motor cable</h2>
+  <div class="opts">
+    <div class="opt best">
+      <span class="tag">Recommended</span>
+      <h3>A. MK21 with an open cable end</h3>
+      <ul>
+        <li>Ask Saho Robot for the MK21 with flying leads instead of the D-sub 9W4 plug, at the length we need (under 10 m for EMC category C2).</li>
+        <li>U, V, W and PE go into the Kollmorgen X1 plug (AKD2G-CON-X1/X2). Strip, add ferrules, push into the spring clamps.</li>
+        <li>The two PTC wires go to the X23 plug (solder).</li>
+        <li>Fewest parts. But the motor cannot be unplugged at the stage.</li>
+      </ul>
+    </div>
+    <div class="opt">
+      <span class="tag">If the stage needs a plug</span>
+      <h3>B. M15 ytec plug on the motor, Kollmorgen cable</h3>
+      <ul>
+        <li>Saho Robot fits a TE Intercontec M15 ytec receptacle on the MK21 (our note of 13 October: 3 + PE + 5 contacts, fits the cable).</li>
+        <li>Kollmorgen standard power cable <code>P1-21-015-C1-00-003000</code> (PUR, 1.5 mm², AKD2G plug on one end, M15 ytec on the other, 3 m) plugs straight in.</li>
+        <li>This cable has no spare wires for the PTC. The PTC still needs its own two-wire cable to X23.</li>
+        <li>Check that our M15 receptacle has the same pin layout as a Kollmorgen AKM motor (cable guide page 18 onwards).</li>
+      </ul>
+    </div>
+    <div class="opt">
+      <span class="tag">Ask Kollmorgen</span>
+      <h3>C. Kollmorgen special cable with an open motor end</h3>
+      <ul>
+        <li>Ask DynamicDrives for a power cable <code>P1-21-015-…</code> with flying leads at the motor end. It is not in the standard list, so it is a special.</li>
+        <li>We then solder or crimp our own motor-side plug, or join it to the MK21 cable.</li>
+        <li>Same PTC problem as B.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Motor plug X1</h2>
+  <div class="fig">
+  <svg viewBox="0 0 760 250" role="img" aria-labelledby="f2t">
+    <title id="f2t">X1 plug wiring: motor wires U, V, W and PE into the four large spring clamps; brake and feedback clamps stay empty</title>
+    <rect x="300" y="30" width="200" height="190" rx="6" class="box"/><rect x="300" y="30" width="200" height="190" rx="6" class="ksep"/>
+    <text x="400" y="52" text-anchor="middle" style="font-weight:600">AKD2G-CON-X1/X2</text>
+    <text x="400" y="68" text-anchor="middle" class="small">spring clamps</text>
+    <g class="mono">
+      <text x="320" y="96">1  U</text><text x="320" y="118">2  V</text><text x="320" y="140">3  W</text><text x="320" y="162">5  PE</text>
+      <text x="420" y="96" class="small">B+  empty</text><text x="420" y="118" class="small">B−  empty</text>
+      <text x="420" y="140" class="small">F+  empty</text><text x="420" y="162" class="small">F−  empty</text>
+    </g>
+    <text x="320" y="200" class="small">pin 4: latch and shield screw</text>
+    <path d="M60 92 H312" stroke="var(--wire-u)" stroke-width="3" fill="none"/>
+    <path d="M60 114 H312" stroke="var(--wire-v)" stroke-width="3" fill="none"/>
+    <path d="M60 136 H312" stroke="var(--wire-w)" stroke-width="3" fill="none"/>
+    <path d="M60 158 H312" stroke="var(--wire-pe)" stroke-width="3" fill="none"/>
+    <text x="40" y="70" class="small">from the MK21 cable</text>
+    <text x="40" y="96" class="mono">U</text><text x="40" y="118" class="mono">V</text><text x="40" y="140" class="mono">W</text><text x="34" y="162" class="mono">PE</text>
+    <path class="ptc" d="M120 180 H220 V230 H700"/>
+    <text x="126" y="196" class="tw" style="font-size:12px">PTC pair: not into X1, to X23</text>
+    <text x="520" y="96" class="small">Brake pins: only for a</text>
+    <text x="520" y="110" class="small">holding brake (none on MK21).</text>
+    <text x="520" y="140" class="small">F+/F−: Kollmorgen 2-wire</text>
+    <text x="520" y="154" class="small">digital feedback only.</text>
+    <text x="520" y="168" class="small">Not for a PTC.</text>
+  </svg>
+  </div>
+  <p class="cap">Figure 2. X1 pin layout from the AKD2G manual page 69. The MK21 standard plug (D-sub 9W4) puts U, V, W, PE on power pins A1 to A4 and the PTC on signal pins 1 and 2 (Saho Robot wiring sheet, 16 December 2025).</p>
+</section>
+
+<section>
+  <h2>Encoder adapter cable for X23</h2>
+  <p>One short cable with a standard 15-pin D-sub socket (female, to take the RSF plug) at one end, and a 15-pin high-density D-sub plug (male) for X23 at the other end. The PTC pair from the motor cable is soldered into the same X23 plug. Use a shielded cable with twisted pairs and metal hoods; connect the shield to both hoods.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Signal</th><th>RSF plug pin</th><th>RSF wire colour</th><th>X23 pin</th><th>X23 name</th></tr></thead>
+    <tbody>
+      <tr><td>Clock + (MA+)</td><td class="num">8</td><td>violet</td><td class="num">2</td><td>CL+</td></tr>
+      <tr><td>Clock − (MA−)</td><td class="num">15</td><td>yellow</td><td class="num">3</td><td>CL−</td></tr>
+      <tr><td>Data + (SLO+)</td><td class="num">5</td><td>grey</td><td class="num">6</td><td>D+</td></tr>
+      <tr><td>Data − (SLO−)</td><td class="num">13</td><td>pink</td><td class="num">7</td><td>D−</td></tr>
+      <tr><td>Supply (UP)</td><td class="num">4</td><td>brown/green</td><td class="num">10</td><td>+5 V</td></tr>
+      <tr><td>0 V</td><td class="num">2</td><td>white/green</td><td class="num">11</td><td>0 V</td></tr>
+      <tr><td>Sense supply</td><td class="num">12</td><td>blue</td><td class="num">4</td><td>S+</td></tr>
+      <tr><td>Sense 0 V</td><td class="num">10</td><td>white</td><td class="num">5</td><td>S−</td></tr>
+      <tr><td style="color:var(--warn)">Motor PTC</td><td>from the MK21 cable</td><td>see MK21 sheet</td><td class="num">8, 9</td><td>Th+, Th− <span class="pill warn">confirm with BiSS-C</span></td></tr>
+      <tr><td>Shield</td><td>plug housing</td><td>braid</td><td>hood</td><td>housing</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">RSF pins from the AK MC 15 mounting instructions, section 8.1 (BiSS C column). X23 pins from the AKD2G manual page 76, BiSS-C column. In that table pins 8 and 9 show "–" for BiSS-C, while the FS2 manual wiring diagram shows Th+ and Th− there. This is question 3 in the email to DynamicDrives. If Kollmorgen says no, the PTC needs another route, for example a PTC relay on a digital input of X21.</p>
+</section>
+
+<section>
+  <h2>Shopping list</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Item</th><th>Part</th><th>From</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Drive with plugs for X3, X10, X21</td><td><code>AKD2G-SPE-6V03S-A1F3-0000-A</code></td><td><span class="pill kbox">in the box</span></td><td>"-A" adds the mating plugs, except X1/X2 and X23 (manual page 28)</td></tr>
+      <tr><td>Motor plug X1</td><td><code>AKD2G-CON-X1/X2</code></td><td><span class="pill ksep">Kollmorgen, separate</span></td><td>Accessories guide page 22. Needed in options A and C</td></tr>
+      <tr><td>Mains filter</td><td><code>FN2090-6</code> (DE-202203) or <code>FN2090-12</code> (DE-202204)</td><td><span class="pill ksep">Kollmorgen, separate</span></td><td>Size to confirm. Or buy the same Schaffner part from a distributor</td></tr>
+      <tr><td>Shield clamp</td><td><code>SK14</code> (DE-108248)</td><td><span class="pill ksep">Kollmorgen, separate</span></td><td>Optional. 360° shield contact for the motor cable</td></tr>
+      <tr><td>Motor cable, option B only</td><td><code>P1-21-015-C1-00-003000</code></td><td><span class="pill ksep">Kollmorgen, separate</span></td><td>Cable guide page 34. Only if the MK21 gets an M15 ytec receptacle</td></tr>
+      <tr><td>MK21 with open cable end</td><td>Ask Saho Robot</td><td><span class="pill own">Saho Robot</span></td><td>Option A. Length under 10 m. Or the M15 ytec receptacle for option B</td></tr>
+      <tr><td>X23 plug</td><td>15-pin high-density D-sub, male, solder cups, metal hood with 4-40 screws</td><td><span class="pill own">electronics shop</span></td><td>Kollmorgen sells none on its own (accessories guide page 22)</td></tr>
+      <tr><td>RSF socket</td><td>15-pin standard D-sub, female, solder cups, metal hood</td><td><span class="pill own">electronics shop</span></td><td>Takes the RSF plug</td></tr>
+      <tr><td>Adapter cable</td><td>Shielded, 4 twisted pairs, about 0.25 mm², short</td><td><span class="pill own">electronics shop</span></td><td>Plus 2 cores for the PTC if you route it in the same hood</td></tr>
+      <tr><td>Ferrules</td><td>for 1 mm² wires</td><td><span class="pill own">electronics shop</span></td><td>For the X1 spring clamps</td></tr>
+      <tr><td>24 VDC supply</td><td>PELV, ±10 %, at least 1 A</td><td><span class="pill own">we choose</span></td><td>Manual page 39</td></tr>
+      <tr><td>Ethernet cables</td><td>any Cat 5 (or Kollmorgen ENCP-xxxx)</td><td><span class="pill own">we choose</span></td><td>One for EtherCAT, one for the laptop on X20</td></tr>
+      <tr><td>External brake resistor</td><td>not needed</td><td>–</td><td>The drive has 15 Ω, 100 W inside (manual page 41)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Where to see the real parts</h2>
+  <p>The Kollmorgen documents show photos and drawings of the plugs and cables. The page links open the PDF at the right page in most browsers.</p>
+  <ul class="links">
+    <li><a href="https://www.kollmorgen.com/sites/default/files/public_downloads/AKD%20Accessories%20Europe_en.pdf#page=22" target="_blank" rel="noopener">Kollmorgen accessories guide, page 22</a>: AKD2G connector kits and single plugs, including AKD2G-CON-X1/X2.</li>
+    <li><a href="https://www.kollmorgen.com/sites/default/files/2024-05/AKD2G-S-Installation-FS1-EN_RevG.pdf#page=54" target="_blank" rel="noopener">AKD2G installation manual FS1, page 54</a>: drawing of the drive front with every connector.</li>
+    <li><a href="https://www.kollmorgen.com/sites/default/files/2024-05/AKD2G-S-Installation-FS1-EN_RevG.pdf#page=69" target="_blank" rel="noopener">Same manual, page 69</a>: X1 motor plug pin layout. <a href="https://www.kollmorgen.com/sites/default/files/2024-05/AKD2G-S-Installation-FS1-EN_RevG.pdf#page=76" target="_blank" rel="noopener">Page 76</a>: X23 pin layout.</li>
+    <li><a href="https://www.kollmorgen.com/sites/default/files/2024-05/AKD2G-S-Installation-FS1-EN_RevG.pdf#page=97" target="_blank" rel="noopener">Same manual, page 97</a>: motor cable connection with a single cable, and the shield.</li>
+    <li><a href="https://www.kollmorgen.com/en-us/products/accessories/cables/literature/kollmorgen-2g-cable-guide" target="_blank" rel="noopener">Kollmorgen 2G Cable Guide</a>: the cable part number scheme on page 34, motor connector photos from page 18.</li>
+    <li><a href="https://www.ttieurope.com/content/dam/tti-europe/resources/Literature/SupplierGuides/Quick-Reference-Guide.pdf" target="_blank" rel="noopener">TE Intercontec quick reference guide</a>: the M15 ytec motor connector for option B.</li>
+  </ul>
+  <p class="note">The RSF pin layout is in the RSF "AK MC 15" mounting instructions, section 8.1, in the parts library (refaqt/stoq, modules/rsf). The MK21 plug layout is in the Saho Robot wiring sheet of 16 December 2025 (aqtuator, docs/documentation).</p>
+</section>
+
+</div>
+</body>
+</html>

@@ -60,6 +60,10 @@ The quotation holds no accessories. The Kollmorgen catalogue (2021) says the AKD
 AKD-x00606, AKD2G-6V03S and AKD2G-6V06S have **no internal brake resistor**. So we need an
 external one. The X23 plug of the AKD2G is not in the connector set.
 
+**Correction, later the same day:** the AKD2G installation manual of March 2024 says every AKD2G
+has a 15 Ω, 100 W brake resistor inside. Only the AKD-x00306 needs an external one. See the
+[log of the Kollmorgen manuals](2026-11-25_kollmorgen-manuals-accessories-and-open-questions.md).
+
 ### Drives still in the running
 
 "In the running" means: not from an Israeli supplier, and no hard requirement fails in the
@@ -82,7 +86,7 @@ maker's documents. **NC** means not confirmed in writing. NC is never a pass.
 | DRV-13: stops on following error, encoder fault, soft limits | Pass | NC | Following error and feedback loss pass. Soft limits NC |
 | P1: free biquad filters | Not checked | Pass: four biquads | Pass: custom biquads in the velocity loop |
 | P3: position loop 8 kHz | No | No | No |
-| Brake resistor | None inside. External needed | None inside. External needed | Inside: 60 Ω, 20 W, 248 J |
+| Brake resistor | None inside. External needed | Inside: 15 Ω, 100 W (corrected later the same day) | Inside: 60 Ω, 20 W, 248 J |
 | Drive price (excl. VAT) | € 961.88 (quote expired) | € 1,219.86 (quote expired) | About € 1,175, an indication for 1 to 2 pieces (Eltrex, 18 November) |
 | Accessories not yet priced | Brake resistor, encoder plug or cable, mains filter for C2 | Brake resistor, X23 plug or cable, mains filter for C2 | Connector kit (CK), serial cable for CME (asked 23 November), mains filter for C2 |
 | Setup software | WorkBench, no licence quoted | WorkBench, no licence quoted | CME, free download |
