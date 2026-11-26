@@ -219,3 +219,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-24 | [Price request to THK for SSR15 guides as a HIWIN replacement](2026-11-24_thk-quote-request-for-ssr15-guides.md) | engineering, purchasing |  |
 | 2026-11-25 | [Kollmorgen said our drives are too small. That is not true. Drives still in the running, with prices](2026-11-25_kollmorgen-too-small-answer-and-drive-comparison.md) | engineering, purchasing |  |
 | 2026-11-25 | [Kollmorgen manuals read: buy the AKD2G, not the AKD. What to buy with it, and what to still ask](2026-11-25_kollmorgen-manuals-accessories-and-open-questions.md) | engineering, purchasing |  |
+| 2026-11-25 | [Second source for the MK21 linear motor: only the HIWIN LMSA21 fits](2026-11-25_second-source-for-the-mk21-linear-motor.md) | engineering, purchasing |  |
