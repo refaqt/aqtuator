@@ -44,8 +44,9 @@ height of forcer plus magnet track at most 34 mm, and at least 181 N continuous 
 
 ## Next Steps
 
-- Ask HIWIN (HIWIN GmbH, who already answered on the E1 drive) for the LMSA21 drawing, price and
-  delivery time. Check that the hole pattern and the magnet track match the MK21 and the MK2
+- After the prototype with the MK21, ask HIWIN (HIWIN GmbH, who already answered on the E1
+  drive) for the LMSA21 drawing, price and delivery time. Niels Bosmans decided on 2026-11-26 to
+  wait until then. Check that the hole pattern and the magnet track match the MK21 and the MK2
   stators before calling it a drop-in second source.
 - Ask Maxwell and HIWIN under which conditions the 181 N is given: coil temperature, heat sink
   size and ambient temperature.
