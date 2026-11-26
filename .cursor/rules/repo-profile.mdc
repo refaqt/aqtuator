@@ -1,8 +1,0 @@
----
-description: Stack and execution context for this repository
-alwaysApply: true
----
-
-# Repository profile
-
-Follow [`.agents-local/rules/repo.md`](../../.agents-local/rules/repo.md).

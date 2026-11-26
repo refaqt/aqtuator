@@ -116,3 +116,6 @@ docs/log.docx
 # which needs a desktop FreeCAD. See
 # docs/decisions/2026-09-16_cloud-session-submodule-hook.md.
 .mcp.json
+
+# Skill links made by .agents/scripts/link_skills.sh at the start of each session.
+/.claude/skills/

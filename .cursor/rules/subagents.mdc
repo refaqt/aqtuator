@@ -1,8 +1,0 @@
----
-description: Delegation, scope limits, coordination, and validation when using subagents or parallel agents
-alwaysApply: false
----
-
-# Subagents
-
-Follow [`.agents/rules/subagents.md`](../../.agents/rules/subagents.md).

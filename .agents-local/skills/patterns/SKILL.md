@@ -1,6 +1,7 @@
 ---
-name: project-patterns
-description: Reusable implementation patterns proven in this project - serial ACK handshakes, framed CSV upload, DATA/DATA_END streaming, CSD/Welch transfer estimation, ODrive high-rate capture and CAN rates, multisine CSV export, Controllino GPIO-to-Arduino pin mapping, RP2040 timer-ISR PWM, GPIO1 analog verification, and RBJ biquad filters. Load before writing new code for serial protocols, ODrive control, RP2040 PWM/ADC, or transfer-function estimation.
+name: patterns
+description: >-
+  Use before you write new code for serial protocols, ODrive control, RP2040 PWM or ADC, Controllino pins, transfer-function estimates or biquad filters. Holds the patterns proven in this repository.
 ---
 
 The ODrive is for testing only. We will not use it in future developments. The ODrive patterns
