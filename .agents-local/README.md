@@ -1,20 +1,13 @@
-# Aqtuator-local agent kit
+# AQTUATOR: local agent files
 
-Repo-specific rules and skills (not in [refaqt-agents](https://github.com/refaqt/refaqt-agents)).
+What is true only for this repository. Everything shared lives in the kit at `.agents/`.
 
-## Rules
-
-| Rule | Path |
+| File | What it holds |
 | --- | --- |
-| Repository profile | [`rules/repo.md`](rules/repo.md) |
+| [`profile.toml`](profile.toml) | Name and profile, read by `.agents/scripts/sync_root.py` |
+| [`rules/repo.md`](rules/repo.md) | Rules for this repository. Every session loads it, so keep it under 3 KB |
+| [`skills/measurement-data/`](skills/measurement-data/SKILL.md) | The measurement archive |
+| [`skills/patterns/`](skills/patterns/SKILL.md) | Coding patterns proven here |
 
-Shared rules live under [`.agents/rules/`](../.agents/rules/).
-
-## Skills
-
-| Skill | Path |
-| --- | --- |
-| Measurement archive | [`skills/measurement-data/SKILL.md`](skills/measurement-data/SKILL.md) |
-| Coding patterns | [`skills/patterns/SKILL.md`](skills/patterns/SKILL.md) |
-
-Shared process skills live under [`.agents/skills/`](../.agents/skills/).
+`CLAUDE.md`, `AGENTS.md` and `.cursor/rules/refaqt-*.mdc` are generated from the kit. Do not edit
+them. Run `python3 .agents/scripts/sync_root.py` after a change here.

@@ -1,8 +1,0 @@
----
-description: Response style, code citations, and proportionality for agent replies
-alwaysApply: false
----
-
-# Communication
-
-Follow [`.agents/rules/communication.md`](../../.agents/rules/communication.md).
