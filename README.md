@@ -11,7 +11,7 @@ in a family's `catalog.toml` when there is one.
 | Family | What |
 | --- | --- |
 | [`modules/flexure-ball-screw-servo-stage/`](modules/flexure-ball-screw-servo-stage/) | Linear stage with active chatter suppression: flexure guidance, ball screw, servo drive |
-| [`modules/compact-stage/`](modules/compact-stage/) | Compact linear stage. Name reserved, nothing designed yet |
+| [`modules/compact-stage/`](modules/compact-stage/) | Compact linear stage with an iron core linear motor and a sealed slot. In design: CAD, requirements and studies done, not built yet |
 
 The flexure ball-screw servo stage is the work that started this project. Chatter — self-excited
 vibration between tool and workpiece — sets the maximum depth of cut a machine can take. The work so far has been measurement:
