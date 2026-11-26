@@ -1,0 +1,7 @@
+# Read by .agents/scripts/sync_root.py. See .agents/INSTALL.md, step 2.
+name = "AQTUATOR"
+profile = "doqs"
+
+[plugins]
+off = []
+on = []

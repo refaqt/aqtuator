@@ -1,6 +1,7 @@
 ---
 name: measurement-data
-description: Answer questions about the AQTUATOR measurement archive - which tests exist, at what spindle speed, material, axis or machine position, and where a given capture lives. Also covers fetching a specific data file from Google Drive and adding a new campaign. Use for any question about tap tests, stability tests, FRF measurements, WDH or CSV captures, or "what data do we have".
+description: >-
+  Use for any question about the measurement archive: which tap, stability or FRF tests exist, where a capture lives, fetching a file from Google Drive, or adding a new campaign.
 ---
 
 # Querying the measurement archive

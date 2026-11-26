@@ -28,6 +28,19 @@ jobs:
       - name: doqs validation
         run: python doqs/doqs.py check
 
+      # The shared agent files (CLAUDE.md, AGENTS.md, Cursor rules) come from the
+      # kit, and agent sessions use the kit's latest main. Check against the same.
+      - name: Shared agent files match the kit
+        run: |
+          git submodule update --remote -- .agents
+          if [ ! -f .agents/scripts/sync_root.py ]; then
+            echo "::notice::The kit has no sync script yet, so this check is skipped."
+            exit 0
+          fi
+          python .agents/scripts/sync_root.py --check
+          python .agents/scripts/mistakes_index.py --check
+          python .agents/scripts/context_budget.py --budget 24000
+
       - name: Strip seal designer model checks
         run: node simulation/cases/strip-seal-designer/check_model.mjs
 

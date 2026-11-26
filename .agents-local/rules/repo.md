@@ -1,147 +1,47 @@
-# AQTUATOR repository profile
-
-Agent-only. Humans: see `README.md` and `docs/onboarding.md`.
-
-## What this repository is
+# AQTUATOR: rules for this repository
 
 AQTUATOR is a product line of linear stages. Each stage family is a module under `modules/`:
-`flexure-ball-screw-servo-stage` (active chatter suppression, the family that started the project)
-and `compact-stage` (compact
-stage driven by a linear motor). A Mekanika Pro milling machine is the test bench. Layout follows
-[doqs](https://github.com/refaqt/doqs) — read `doqs/docs/architecture.md` before adding folders. If
-`doqs/` is empty: `bash setup-tooling.sh` from the repo root (agents, any OS). Humans on Windows may
-double-click `setup-tooling.bat`.
+`flexure-ball-screw-servo-stage` (active chatter suppression, the first family) and
+`compact-stage` (driven by a linear motor). A Mekanika Pro milling machine is the test bench. The
+layout follows doqs.
 
 ## Where things go
 
 | You are adding | It goes in |
 | --- | --- |
-| Code that runs on the Controllino | `modules/flexure-ball-screw-servo-stage/firmware/<target>/` |
-| Code that runs on a PC | `modules/<family>/software/<project>/src/<package>/` |
-| A model that predicts how one stage family behaves | `modules/<family>/simulation/cases/<slug>/` |
-| A model that is not about one stage family | `simulation/cases/<slug>/` |
-| A new stage family | `modules/<family>/` — read `doqs/docs/variants.md` first |
+| Code for the Controllino | `modules/flexure-ball-screw-servo-stage/firmware/<target>/` |
+| Code for a PC | `modules/<family>/software/<project>/src/<package>/` (installable: `pip install -e …`) |
+| A model of one stage family | `modules/<family>/simulation/cases/<slug>/` |
+| A model not about one family | `simulation/cases/<slug>/` |
 | A physical test campaign | `modules/<family>/measurement/cases/<slug>/` |
-| A day's work write-up | `docs/log/YYYY-MM-DD_topic.md` |
-| Why a choice was made | `docs/decisions/YYYY-MM-DD_topic.md` |
-| Something that went wrong | `docs/mistakes/YYYY-MM-DD_topic.md` |
-| A reusable coding pattern | `.agents-local/skills/patterns/SKILL.md` |
 
-## doqs references
+Stack: Python, Arduino C++, Octave, FreeCAD (`freecadcmd` for stress cases). Run commands from the
+repository root. Python tests: set `PYTHONPATH` to the root, then
+`python -m unittest discover -s tests -p "test*.py" -v`.
 
-| Read | When |
-| --- | --- |
-| `doqs/docs/using-doqs.md` | **Start here.** What to run, what doqs installs, what each gate checks |
-| `doqs/docs/architecture.md` | New modules, versioning, interfaces, builds |
-| `doqs/docs/naming.md` | Naming modules, parts, campaigns |
-| `doqs/docs/agent-cad.md` | Any CAD work by an agent; seeding a module's `build_model.py` |
-| `doqs/templates/` | Machine structure: CAD build script, measurement case, OKH, variants |
-| `.agents/skills/freecad/SKILL.md` | FreeCAD debugging, assemblies, master sketches |
-| `.agents/templates/adr.md` | Writing a decision record |
+## Hard rules
 
-`docs/architecture.md` in this repo is a short overview — not a second copy of the spec.
+- **The ODrive S1 is for testing only.** Do not suggest it, and do not choose any part because it
+  works with the ODrive. Keep the existing ODrive code and logs.
+  ([decision](../../docs/decisions/2026-10-02_odrive-is-for-testing-only.md))
+- **No Israeli suppliers.** Do not suggest or shortlist their parts (for example Servotronix, Elmo,
+  ACS, Agito Akribis, Dynamikwell).
+  ([decision](../../docs/decisions/2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md))
+- **Pass or fail needs the maker's own data sheet.** This went wrong three times. Use the skill
+  `source-documents`. If you cannot open the document, write "not confirmed".
+- **Never commit measurement data.** Use the skill `measurement-data`.
+- **When you add or connect a part, add the interface in the same change:** a versioned `port def`
+  in `architecture/<module>.sysml`, and in `okh.toml` when it is on the outside of the module. Do
+  not invent dimensions. Example: `modules/compact-stage/architecture/compact-stage.sysml`.
+- **Never edit `.FCStd` files directly.** After a parameter change, run
+  `exec(open("doqs/scripts/cad_sync_params.py").read())` and then `sync_active()` in the FreeCAD
+  Python console.
+- **People here use Windows and PowerShell.** In commands for them: no `&&`, no heredocs, no
+  `cd /d`.
+- Before a new solution for serial links, the ODrive, RP2040 PWM or ADC, or transfer estimates,
+  use the skill `patterns`.
 
-## The ODrive is for testing only
+## Commits
 
-The ODrive S1 was only a test drive on the Mekanika Pro. **We will not use it in future
-developments.** Do not suggest it, and do not choose a drive, an encoder or any other part
-because it works with the ODrive. Keep the existing ODrive code and logs. They support the test
-measurements. See
-[the decision record](../../docs/decisions/2026-10-02_odrive-is-for-testing-only.md).
-
-## No Israeli suppliers
-
-We do not buy from Israeli suppliers. Do not suggest their drives or other parts, and do not
-choose one as a candidate. This rejected Servotronix (STXI Motion) on 2026-10-06. Elmo, ACS,
-Agito Akribis and Dynamikwell are out for the same reason. See
-[the decision record](../../docs/decisions/2026-10-06_kollmorgen-akd-and-copley-xenus-plus-as-candidates.md).
-
-## Stack and execution
-
-- **Mixed stack:** Python (`modules/*/software/*`), Arduino/C++ (`modules/*/firmware/*`),
-  Octave (`simulation/cases/*`), FreeCAD (`cad/`, and stress cases in
-  `modules/*/simulation/cases/*`, run with `freecadcmd`).
-- Run commands from the repository root. The `software/*` folders are installable packages
-  (`pip install -e modules/flexure-ball-screw-servo-stage/software/identification`); import them rather than manipulating
-  `sys.path`.
-- **Windows / PowerShell:** no `&&`, no bash heredocs, no `cd /d`. See `docs/mistakes/`.
-- Before new solutions for serial / ODrive / RP2040 PWM/ADC / transfer estimation, read
-  `.agents-local/skills/patterns/SKILL.md` and use the `maintain-patterns` skill.
-- If living docs are missing, create them from `.agents/bootstrap/docs/`.
-
-## GitHub Actions workflows
-
-- **Use actions that run on Node 24.** GitHub has deprecated Node 20 for actions, and every run
-  that still uses one shows a warning. Before you add or change a `uses:` line, find the newest
-  major tag (`git ls-remote --tags https://github.com/actions/<name>.git`) and check `runs.using`
-  in its `action.yml`. It must say `node24`, or `composite` with only Node 24 actions inside.
-  Read the breaking changes of each major version you skip.
-- In use now: `checkout@v7`, `setup-python@v7`, `setup-node@v7`, `configure-pages@v6`,
-  `upload-pages-artifact@v5`, `deploy-pages@v5`.
-- `setup-node@v5` and newer cache by default. Set `package-manager-cache: false` in a job that
-  can deploy or holds secrets.
-- After a workflow change, open the first run and read its annotations, not only its result. A
-  green run can still carry a deprecation warning.
-- `ubuntu-latest` moves to Ubuntu 26 from 2026-10-19. Our jobs only need Python and Node, so
-  keep `ubuntu-latest`. If a job breaks after that date, check the runner image change first.
-
-## Interfaces between parts
-
-Every time you add a part, or connect two parts, add the interface between them in the same
-change. Do not wait to be asked.
-
-- In the module's `architecture/<module>.sysml`: a `port def` with the version in its name
-  (`..._v1`), a port on each part (plain on one side, conjugate `~` on the other), and a
-  `connect` in the assembly's `part def`.
-- An interface on the outside of the module also goes in its `okh.toml`, as
-  `[[provides-interface]]` or `[[consumes-interface]]`.
-- A bought part from `modules/stoq/` has interfaces too. When it enters the architecture, add
-  them.
-- Do not invent dimensions. Leave an interface without numbers until the CAD or a data sheet
-  fixes them.
-
-Example: [`modules/compact-stage/architecture/compact-stage.sysml`](../../modules/compact-stage/architecture/compact-stage.sysml).
-
-## Measurement data
-
-**Never commit measurement data.** Use `.agents-local/skills/measurement-data/SKILL.md` for archive
-queries and file access.
-
-## Branching
-
-Every task that changes the repo must start on a **new git branch** off `main`, unless the user explicitly says otherwise. Do not land task work as commits directly on `main`.
-
-## Conventions
-
-- **Commits:** `<type>(<scope>): <description>` — `feat`, `fix`, `docs`, `cad`, `arch`, `okh`,
-  `firmware`, `sim`, `chore`, `refactor`, `interface`, `model`, `build`
-- **Slugs:** kebab-case, name the function not the shape (`x-axis`, not `aluminium-plate`). Never
-  encode dimensions or materials in folder names.
-- **Never edit `.FCStd` files directly.** Use FreeCAD, and run
-  `exec(open("doqs/scripts/cad_sync_params.py").read())` then `sync_active()` in its Python console
-  after changing parameters. A module never keeps its own copy of a doqs tool.
-  That script stays a manual step, and `doqs.sh` has no subcommand for it: it runs
-  **inside** the FreeCAD interpreter, which `doqs.sh` cannot reach. `doqs.sh list`
-  says so too.
-
-## Numbers that decide a pass or a fail
-
-**This mistake has happened three times.** Before you call a part a pass or a fail on a hard
-requirement, read the deciding number in the maker's own data sheet or manual. A trade article, a
-search result, a shop page or a textbook constant is not enough. If you cannot open the primary
-document, write "not confirmed" in the short answer and in the table. See
-[docs/mistakes/2026-09-29_loop-rate-from-a-trade-article.md](../../docs/mistakes/2026-09-29_loop-rate-from-a-trade-article.md).
-
-## Validate
-
-```bash
-bash doqs.sh generate    # only after changing parameters, a BOM or a licence folder
-bash doqs.sh check       # every gate, before every commit
-```
-
-`doqs.sh list` prints every command. `python doqs/doqs.py check` is the same thing
-without the launcher, and is what CI runs.
-
-`doqs check` runs the seven gates **plus** three checks that the committed generated
-files are current. `python doqs/scripts/validate_all.py` still works and still runs
-only the seven.
+`<type>(<scope>): <description>`. Extra types here: `cad`, `arch`, `okh`, `firmware`, `sim`,
+`interface`, `model`, `build`. Slugs name the function, never a size or a material.
