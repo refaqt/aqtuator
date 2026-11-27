@@ -399,6 +399,25 @@ table.res td.bad .v { color: var(--bad); }
         <div class="chart-box" style="margin-top:16px"><p class="chart-title">Following error on a straight line at constant speed, µm</p>
           <svg id="cLine" class="chart" viewBox="0 0 880 260"></svg>
           <p class="chart-sub" id="lineText"></p></div>
+        <div class="two" style="margin-top:16px">
+          <div class="chart-box"><p class="chart-title">Speed along the circle, mm/min</p>
+            <div class="legend"><span><i></i>solid: measured</span>
+              <span><i class="dash"></i>dashed: actual</span></div>
+            <svg id="cCircleV" class="chart" viewBox="0 0 440 260"></svg>
+            <p class="chart-sub" id="circleVText"></p></div>
+          <div class="chart-box"><p class="chart-title">Speed on the straight line, mm/min</p>
+            <div class="legend"><span><i></i>solid: measured</span>
+              <span><i class="dash"></i>dashed: actual</span></div>
+            <svg id="cLineV" class="chart" viewBox="0 0 440 260"></svg>
+            <p class="chart-sub" id="lineVText"></p></div>
+        </div>
+        <p class="note"><b>Measured and actual speed.</b> The measured speed is what the controller can know: the
+          change of the rounded encoder position in one sample, divided by the sample time. The cascade uses this
+          speed in its velocity loop, from the motor encoder. The single loop does not use a speed; for it the chart
+          shows the same difference of the encoder it reads for position. On the circle, the two axis speeds are
+          combined into the path speed. The actual speed is the true speed of the stage at the samples. With
+          rounding, the measured speed can only take whole counts per sample: at a slow feed it is 0 for most
+          samples and very high in a few.</p>
         <p class="note">Two equal stages, X and Y, each with the drive and the controller of its case, follow a circle.
           The speed rises over the first 0.1 s with a smooth ramp, then stays at the feed. The chart shows one full
           turn after the loop has settled. The contour error is the radius of the stage path minus the radius of the
@@ -646,7 +665,7 @@ function logLabel(v) {
 
 // A line chart. Series share one x axis. Hover shows every series at the x
 // under the pointer.
-//   series: [{ pts: [[x, y]], color, dash, label, fmt, dots }]
+//   series: [{ pts: [[x, y]], color, dash, label, fmt, dots, opacity }]
 //   vlines: [{ x, label, color }], markers: [{ x, y, label, color }]
 //   yFromN: only the first N series set the y range (log axes get a decade
 //   of room on each side).
@@ -728,7 +747,7 @@ function chart(svg, o) {
     const pts = s.pts.filter((p) => Number.isFinite(p[1]) && (!o.yLog || p[1] > 0));
     if (!pts.length) continue;
     const d = pts.map((p, i) => `${i ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
-    plot.append(el("path", { d, fill: "none", stroke: s.color, "stroke-width": s.width ?? 2,
+    plot.append(el("path", { d, fill: "none", stroke: s.color, "stroke-width": s.width ?? 2, "stroke-opacity": s.opacity ?? 1,
       "stroke-dasharray": s.dash ? "5 4" : "none", "stroke-linejoin": "round" }));
     if (s.dots) for (const p of s.dots) {
       plot.append(el("circle", { cx: X(p[0]), cy: Y(p[1]), r: 2.6, fill: s.color, stroke: "var(--panel)", "stroke-width": 1 }));
@@ -1473,6 +1492,31 @@ function run() {
   $("lineText").textContent = live.length ? `At ${sig(p.lineV * 60000)} mm/min the encoder gives one count every ` +
     (p.q > 0 ? `${sig(p.q / p.lineV * 1000)} ms (${sig(p.q / p.lineV * p.fs)} samples). ` : "– (no rounding). ") +
     live.map((id) => `${CASE[id].name}: rms ${sig(LT[id].rms * um)} µm`).join(", ") + "." : "";
+
+  // Speed charts: measured (solid, thin, faded) and actual (dashed) per case.
+  // All measured traces first, so that no noisy trace hides an actual one.
+  const mmMin = 60000, spd = (v) => `${sig(v)} mm/min`;
+  const speedSeries = (R) => [
+    ...live.map((id) => ({ pts: R[id].speed.meas.map(([x, v]) => [x, v * mmMin]), color: CASE[id].color, width: 1,
+      opacity: 0.5, label: `${CASE[id].name}, measured`, fmt: spd })),
+    ...live.map((id) => ({ pts: R[id].speed.act.map(([x, v]) => [x, v * mmMin]), color: CASE[id].color, width: 2,
+      dash: true, label: `${CASE[id].name}, actual`, fmt: spd })),
+  ];
+  chart($("cCircleV"), { xLabel: "angle on the circle, °", yLabel: "mm/min", xRange: [0, 360], xTicks: 4,
+    xTip: (v) => `${v.toFixed(1)}°`, xFmt: (v) => String(Math.round(v)),
+    hlines: [{ y: p.circF * mmMin, label: "feed" }], series: speedSeries(CT) });
+  const speedText = (R) => live.map((id) => {
+    const s = R[id].speed;
+    return `${CASE[id].name}: measured ${sig(s.measStats.lo * mmMin)} to ${sig(s.measStats.hi * mmMin)}, ` +
+      `actual ${sig(s.actStats.lo * mmMin)} to ${sig(s.actStats.hi * mmMin)} mm/min`;
+  }).join(". ") + ".";
+  $("circleVText").textContent = live.length ? `Feed ${sig(p.circF * mmMin)} mm/min` +
+    (p.q > 0 ? `: one count per sample is ${sig(p.q * p.fs * mmMin)} mm/min. ` : ". ") + speedText(CT) : "";
+  chart($("cLineV"), { xLabel: "time at constant speed, ms", yLabel: "mm/min", xTip: (v) => `${v.toFixed(2)} ms`,
+    hlines: [{ y: p.lineV * mmMin, label: "speed" }], series: speedSeries(LT).map((s) => ({ ...s,
+      pts: s.pts.map(([tt, v]) => [tt * 1000, v]) })) });
+  $("lineVText").textContent = live.length ? `Speed ${sig(p.lineV * mmMin)} mm/min` +
+    (p.q > 0 ? `: one count per sample is ${sig(p.q * p.fs * mmMin)} mm/min. ` : ". ") + speedText(LT) : "";
 
   status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
 }

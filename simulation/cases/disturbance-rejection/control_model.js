@@ -1096,7 +1096,10 @@ function advance(S, x, u, Fmean, Famp, w, t0, out) {
 //   q:      encoder resolution in m (default p.q). Every measured position is
 //           rounded to a whole number of counts. 0: no rounding.
 //   track:  keep the reference r at every sample (with record 'all').
-//   each:   a function (k, x_stage, u, r) called at every sample.
+//   each:   a function (k, x_stage, u, r, sense) called at every sample.
+//           sense: {y, m, v}: the measured position (rounded) and the
+//           measured motor position (rounded) that the controller gets,
+//           and the true speed of the stage.
 function simulate(p, tuned, opts = {}) {
   const pl = tuned.plant, n = pl.n, T = 1 / p.fs;
   const w = 2 * Math.PI * toothFreq(p);
@@ -1119,10 +1122,11 @@ function simulate(p, tuned, opts = {}) {
   for (let k = 0; k < N; k++) {
     // Sample the encoders, run the controller.
     const rk = ref ? ref(k) : null;
-    const u = ctrlStep(p, tuned, cs, meas(x[pl.iy]), meas(x[pl.im]), rk);
+    const yq = meas(x[pl.iy]), mq = meas(x[pl.im]);
+    const u = ctrlStep(p, tuned, cs, yq, mq, rk);
     if (xs) { xs[k] = x[pl.is]; us[k] = u; }
     if (rs) rs[k] = rk ? rk.r : 0;
-    if (opts.each) opts.each(k, x[pl.is], u, rk ? rk.r : 0);
+    if (opts.each) opts.each(k, x[pl.is], u, rk ? rk.r : 0, { y: yq, m: mq, v: x[pl.is + 1] });
     if (Math.abs(u) > uPeak) uPeak = Math.abs(u);
     const t0 = k * T, xm0 = x[pl.im];
     if (k >= from) {
@@ -1271,6 +1275,17 @@ function stats(e) {
   return { lo, hi, ptp: hi - lo, peak: Math.max(Math.abs(lo), Math.abs(hi)), mean: s1 / n, rms: Math.sqrt(s2 / n) };
 }
 
+// The measured speed: the difference of two rounded encoder positions over
+// one sample. The cascade reads it from the motor encoder, as its velocity
+// loop does. The single loop has no speed in it; the page shows the same
+// difference from the encoder it reads for position. Returns a function
+// (k, sense) -> speed in m/s. The first call gives NaN.
+function speedMeter(tuned, T) {
+  const key = tuned.kind === "cascade" ? "m" : "y";
+  let prev = NaN;
+  return (sense) => { const v = (sense[key] - prev) / T; prev = sense[key]; return v; };
+}
+
 // Circle test: two equal stages, X and Y, follow a circle of diameter D (m)
 // at feed F (m/s):
 //
@@ -1278,7 +1293,9 @@ function stats(e) {
 //
 // Each axis is one simulation with its own profile. The contour error is the
 // radius of the stage path minus R, at the samples. It is shown over one full
-// turn, from the first whole turn after the ramp and the settle time.
+// turn, from the first whole turn after the ramp and the settle time. The
+// path speed is shown too: measured, √(v_x² + v_y²) from the two measured
+// speeds (see speedMeter), and actual, from the true stage speeds.
 function circleTest(p, tuned, D, F) {
   const R = D / 2, T = 1 / p.fs, prof = ramp(F);
   const settle = settleSamples(p, tuned);
@@ -1297,34 +1314,52 @@ function circleTest(p, tuned, D, F) {
       : { r: R * sn, v: R * c * w, a: R * (-sn * w * w + c * al) };
   };
   const run = (which) => {
-    const out = new Float64Array(win);
+    const out = new Float64Array(win), vm = new Float64Array(win), va = new Float64Array(win);
+    const meter = speedMeter(tuned, T);
     simulate(p, tuned, { samples: N, Fmean: 0, Famp: 0, ref: axis(which),
-      each: (k, xs) => { if (k >= kStart) out[k - kStart] = xs; } });
-    return out;
+      each: (k, xs, u, r, sense) => {
+        const v = meter(sense);
+        if (k >= kStart) { out[k - kStart] = xs; vm[k - kStart] = v; va[k - kStart] = sense.v; }
+      } });
+    return { pos: out, vm, va };
   };
   const X = run("x"), Y = run("y");
   const ang = new Float64Array(win), err = new Float64Array(win);
+  const vMeas = new Float64Array(win), vAct = new Float64Array(win);
   for (let i = 0; i < win; i++) {
     const g = prof((kStart + i) * T);
     ang[i] = (g.s / R - 2 * Math.PI * n0) * 180 / Math.PI;
-    err[i] = Math.hypot(X[i] + R, Y[i]) - R;
+    err[i] = Math.hypot(X.pos[i] + R, Y.pos[i]) - R;
+    vMeas[i] = Math.hypot(X.vm[i], Y.vm[i]);
+    vAct[i] = Math.hypot(X.va[i], Y.va[i]);
   }
-  return { pts: thinMinMax(ang, err), ...stats(err), turn: win / kTurn, R, tTurn: turnS / F };
+  return { pts: thinMinMax(ang, err), ...stats(err), turn: win / kTurn, R, tTurn: turnS / F,
+    speed: { meas: thinMinMax(ang, vMeas), act: thinMinMax(ang, vAct), measStats: stats(vMeas), actStats: stats(vAct) } };
 }
 
 // Straight line at constant speed V (m/s): the following error r − x at the
 // stage, at the samples, over a window after the ramp and the settle time.
-// The window holds at least 30 encoder counts and 50 ms, at most 2 s.
+// The window holds at least 30 encoder counts and 50 ms, at most 2 s. The
+// speed along the line is shown too: measured (see speedMeter) and actual.
 function lineTest(p, tuned, V) {
   const T = 1 / p.fs, prof = ramp(V), q = p.q ?? 0;
   const kStart = Math.ceil(RAMP / T) + settleSamples(p, tuned);
   const len = Math.min(2, Math.max(0.05, q > 0 ? 30 * q / V : 0));
   const win = Math.min(Math.ceil(len / T), MAX_SAMPLES - kStart);
   const t = new Float64Array(win), err = new Float64Array(win);
+  const vMeas = new Float64Array(win), vAct = new Float64Array(win);
+  const meter = speedMeter(tuned, T);
   simulate(p, tuned, { samples: kStart + win, Fmean: 0, Famp: 0,
     ref: (k) => { const g = prof(k * T); return { r: g.s, v: g.v, a: g.a }; },
-    each: (k, xs, u, r) => { if (k >= kStart) { t[k - kStart] = (k - kStart) * T; err[k - kStart] = r - xs; } } });
-  return { pts: thinMinMax(t, err), ...stats(err), len: win * T };
+    each: (k, xs, u, r, sense) => {
+      const v = meter(sense);
+      if (k >= kStart) {
+        const i = k - kStart;
+        t[i] = i * T; err[i] = r - xs; vMeas[i] = v; vAct[i] = sense.v;
+      }
+    } });
+  return { pts: thinMinMax(t, err), ...stats(err), len: win * T,
+    speed: { meas: thinMinMax(t, vMeas), act: thinMinMax(t, vAct), measStats: stats(vMeas), actStats: stats(vAct) } };
 }
 
 // A plain script, not a module. Browsers refuse to load a module for a page
@@ -1335,5 +1370,5 @@ globalThis.ControlModel = {
   controllerAt, loopAt, complianceAt, forceRatioAt, sampledSteadyAt, sineComplianceAt, lobePoint, lobes, chatter, tune, margins, spectralRadius,
   plantFamily, robustness, velocityLoopFor, cascadeFor, feedforward, ctrlRow, ctrlStep, massLine, butterLP, CASCADE,
   logspace, toothFreq, frequencyData, simulate, settleSamples, steadyState, steadyAmplitude,
-  entrySamples, entryTrace, steadyTrace, sweep, ramp, circleTest, lineTest, RAMP,
+  entrySamples, entryTrace, steadyTrace, sweep, ramp, speedMeter, circleTest, lineTest, RAMP,
 };
