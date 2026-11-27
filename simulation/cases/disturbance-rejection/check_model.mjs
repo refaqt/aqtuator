@@ -1,6 +1,6 @@
 // Checks for control_model.js. Node 18 or newer, no packages:
 //
-//     node simulation/cases/cutting-force-rejection/check_model.mjs
+//     node simulation/cases/disturbance-rejection/check_model.mjs
 //
 // For each case (linear motor, ball screw with the motor encoder, ball screw
 // with the linear encoder):
@@ -30,6 +30,16 @@
 // 16. Each lobe point solves 1 + a·(1 − e^{−jωT})·G = 0 with a = −1/(2 Re G).
 // 17. The floor matches a dense scan, and the lobes touch it but never go
 //     below it.
+// Checks 1 to 3 run for both controllers, the single loop and the cascade.
+// For the cascade also: the velocity loop alone meets the rules on every
+// plant, and |F·Cv·D·G| = 1 at f_v.
+// Feedforward and motion:
+// 18. The exact feedforward solves Vi·A² − (Vp + Vi·T/2)·A + m = 0.
+// 19. With the position loop off, the exact feedforward follows a ramp, and
+//     the standard one does not.
+// 20. Without encoder rounding, both controllers follow the circle and the
+//     line (the collocated ball screw within its spring deflection).
+// 21. With 0.1 µm rounding, all errors stay within three counts.
 
 // The model is a plain script (see its end), so it hands over one object.
 import "./control_model.js";
@@ -42,14 +52,23 @@ const check = (ok, text) => {
 };
 const near = (got, want, tol) => Math.abs(got / want - 1) <= tol;
 
-for (const id of M.CASES) {
-  const p = { ...M.DEFAULTS };
+for (const ctrl of ["single", "cascade"]) for (const id of M.CASES) {
+  const p = { ...M.DEFAULTS, ctrl };
   const t = M.tune(p, id);
-  const tag = id;
+  const tag = `${ctrl} ${id}`;
 
   check(t.stable, `${tag}: stable, largest closed-loop pole |z| = ${t.rho.toFixed(5)}`);
-  const l = M.loopAt(t.fb, p, t);
-  check(near(M.cabs(l.h), 1, 1e-6), `${tag}: |C·G| at f_b = ${M.cabs(l.h).toFixed(6)}`);
+  if (ctrl === "single") {
+    const l = M.loopAt(t.fb, p, t);
+    check(near(M.cabs(l.h), 1, 1e-6), `${tag}: |C·G| at f_b = ${M.cabs(l.h).toFixed(6)}`);
+  } else {
+    const l = M.loopAt(t.fv, p, { ...t, stage: "vel" });
+    check(near(M.cabs(l.h), 1, 1e-6), `${tag}: velocity loop |F·Cv·D·G| at f_v ${t.fv.toFixed(1)} Hz = ${M.cabs(l.h).toFixed(6)}`);
+    const v = t.worst.vel;
+    check(v && v.msDb <= p.msDb + 0.01 && v.pmDeg >= p.pm - 0.01 && v.gmDb >= p.gmMinDb - 0.01 && v.rho < 1,
+      `${tag}: velocity loop alone, over ${t.family} plants: sensitivity peak ${v.msDb.toFixed(2)} dB, phase margin ` +
+      `${v.pmDeg.toFixed(1)}°, gain margin ${v.gmDb.toFixed(1)} dB, largest pole |z| ${v.rho.toFixed(5)}`);
+  }
   // At least 30°. More when a resonance sets the limit: a slightly higher
   // f_b would make the loop cross 1 again there, with a poor margin.
   check(t.pmDeg >= 29.9, `${tag}: worst phase margin ${t.pmDeg.toFixed(3)}° at ${t.fc.toFixed(1)} Hz`);
@@ -58,8 +77,8 @@ for (const id of M.CASES) {
   check(t.robust && w.msDb <= p.msDb + 0.01 && w.pmDeg >= p.pm - 0.01 && w.gmDb >= p.gmMinDb - 0.01 && w.rho < 1,
     `${tag}: over ${t.family} plants, worst sensitivity peak ${w.msDb.toFixed(2)} dB, phase margin ` +
     `${w.pmDeg.toFixed(1)}°, gain margin ${w.gmDb.toFixed(1)} dB, largest pole |z| ${w.rho.toFixed(5)}`);
-  check(t.limit.length > 0, `${tag}: f_b ${t.fb.toFixed(1)} Hz is the highest, 2 % above it breaks ` +
-    t.limit.map((b) => `${b.rule} (coupling × ${b.sc.toFixed(3)}, axial × ${b.sa.toFixed(3)})`).join(", "));
+  check(t.limit.length > 0, `${tag}: ${ctrl === "single" ? "f_b" : "f_v"} ${(t.fv ?? t.fb).toFixed(1)} Hz is the highest, 2 % above it breaks ` +
+    t.limit.map((b) => `${b.loop ? "velocity loop " : ""}${b.rule} (coupling × ${b.sc.toFixed(3)}, axial × ${b.sa.toFixed(3)})`).join(", "));
 
   const n = 3 * M.settleSamples(p, t);
   const r = M.simulate(p, t, { samples: n, Famp: 0, window: n - 10 });
@@ -290,6 +309,64 @@ for (const id of M.CASES) {
   check(c.minRe <= best * (1 - 1e-9) && near(c.minRe, best, 1e-4) && lowest >= c.floor * (1 - 1e-9) && near(lowest, c.floor, 0.01),
     `${id}: floor −1/min Re G ${(c.floor / 1e6).toFixed(3)} N/µm at ${c.fMin.toFixed(1)} Hz, dense scan ` +
     `${(-1 / best / 1e6).toFixed(3)} N/µm, lowest lobe from 1000 to 30000 rev/min ${(lowest / 1e6).toFixed(3)} N/µm`);
+}
+
+// Cascade: the feedforward. A, the velocity error per acceleration, solves
+// Vi·A² − (Vp + Vi·T/2)·A + m = 0, and Vcff = −Vi·A.
+for (const id of M.CASES) {
+  const p = { ...M.DEFAULTS, ctrl: "cascade" };
+  const t = M.tune(p, id), T = 1 / p.fs, m = M.massLine(p, id), A = t.Aff + T / 2;
+  const res = t.Vi * A * A - (t.Vp + t.Vi * T / 2) * A + m;
+  check(t.exact && Math.abs(res) < 1e-9 * m && near(t.Vcff, -t.Vi * A, 1e-12),
+    `cascade ${id}: exact feedforward Aff = ${(t.Aff * 1e3).toFixed(4)} ms, Vcff = ${t.Vcff.toFixed(1)} N·s/m, residual ${res.toExponential(2)}`);
+}
+
+// With the position loop off, the exact feedforward alone moves the linear
+// motor along a ramp to 50 mm/s. The standard one leaves the force Vi·Aff·v
+// from the velocity integrator, and the stage falls behind.
+{
+  const off = {};
+  for (const ffExact of [true, false]) {
+    const p = { ...M.DEFAULTS, ctrl: "cascade", ffExact };
+    const t = { ...M.tune(p, "linear"), Pp: 0, Pi: 0, Pd: 0 };
+    const V = 0.05, T = 1 / p.fs, prof = M.ramp(V);
+    let worst = 0;
+    M.simulate(p, t, { samples: Math.round(0.5 / T), Famp: 0, Fmean: 0,
+      ref: (k) => { const g = prof(k * T); return { r: g.s, v: g.v, a: g.a }; },
+      each: (k, xs, u, r) => { worst = Math.max(worst, Math.abs(r - xs)); } });
+    off[ffExact] = worst;
+  }
+  check(off[true] < 0.05e-6 && off[false] > 100 * off[true],
+    `cascade linear, position loop off: exact feedforward follows within ${(off[true] * 1e9).toFixed(1)} nm, ` +
+    `standard falls ${(off[false] * 1e6).toFixed(2)} µm behind`);
+}
+
+// Motion without encoder rounding: both controllers follow the circle and
+// the straight line. Only the collocated ball screw keeps the deflection of
+// its springs under the acceleration: the coupling carries (m_s + m)·a and
+// the axial spring m·a, so on the circle the stage runs
+// a_c·((m_s + m)/k_c + m/k_a) outside the motor path, a_c = v²/R.
+for (const ctrl of ["single", "cascade"]) for (const id of M.CASES) {
+  const p = { ...M.DEFAULTS, ctrl };
+  const t = M.tune(p, id);
+  const c = M.circleTest(p, t, 0.05, 0.05), l = M.lineTest(p, t, 0.01 / 60);
+  const q = M.mechanics(p);
+  const want = id === "colloc" ? 0.05 ** 2 / 0.025 * ((q.ms + q.m) / q.kc + q.m / q.ka) : 0;
+  const bound = want * 1.02 + 1e-10;
+  check(c.peak <= bound && c.peak >= want * 0.98 && c.turn === 1 && l.peak < 1e-10,
+    `${ctrl} ${id}: no rounding, circle Ø50 mm at 3000 mm/min, contour error at most ${(c.peak * 1e9).toFixed(2)} nm ` +
+    `(spring deflection ${(want * 1e9).toFixed(2)} nm); line at 10 mm/min ${(l.peak * 1e9).toFixed(4)} nm`);
+}
+
+// With encoder rounding (0.1 µm) the errors stay within a few counts, and
+// the mean following error on the line stays below one count.
+for (const ctrl of ["single", "cascade"]) for (const id of M.CASES) {
+  const p = { ...M.DEFAULTS, ctrl, q: 1e-7 };
+  const t = M.tune(p, id);
+  const c = M.circleTest(p, t, 0.05, 0.05), l = M.lineTest(p, t, 0.01 / 60);
+  check(c.peak < 3 * p.q && l.peak < 3 * p.q && Math.abs(l.mean) < p.q,
+    `${ctrl} ${id}: rounding 0.1 µm, contour error ${(c.lo * 1e6).toFixed(3)} to ${(c.hi * 1e6).toFixed(3)} µm, ` +
+    `line ${(l.lo * 1e6).toFixed(3)} to ${(l.hi * 1e6).toFixed(3)} µm, mean ${(l.mean * 1e6).toFixed(4)} µm`);
 }
 
 if (failed) {

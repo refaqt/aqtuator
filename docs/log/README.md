@@ -222,3 +222,4 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-25 | [Second source for the MK21 linear motor: only the HIWIN LMSA21 fits](2026-11-25_second-source-for-the-mk21-linear-motor.md) | engineering, purchasing |  |
 | 2026-11-26 | [HIWIN E2 lubrication units leak when mounted vertically: ask about grease and maintenance](2026-11-26_e2-lubrication-unit-vertical-use-and-maintenance.md) | engineering, purchasing |  |
 | 2026-11-26 | [Agents now read about a quarter of the text at the start of a task](2026-11-26_agents-read-less-at-start.md) | software |  |
+| 2026-11-27 | [Disturbance Rejection page: cascade controller, feedforward and encoder resolution](2026-11-27_disturbance-rejection-cascade.md) | engineering, simulation, software |  |

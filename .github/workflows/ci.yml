@@ -45,7 +45,7 @@ jobs:
         run: node simulation/cases/strip-seal-designer/check_model.mjs
 
       - name: Cutting force rejection model checks
-        run: node simulation/cases/cutting-force-rejection/check_model.mjs
+        run: node simulation/cases/disturbance-rejection/check_model.mjs
 
       - name: Damper sizing model checks
         run: node simulation/cases/damper-sizing/check_model.mjs

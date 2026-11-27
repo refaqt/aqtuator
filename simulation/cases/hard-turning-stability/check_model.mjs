@@ -2,9 +2,9 @@
 //
 //     node simulation/cases/hard-turning-stability/check_model.mjs
 //
-// 1. The motor loops meet the robustness rules of the cutting force page.
+// 1. The motor loops meet the robustness rules of the disturbance rejection page.
 // 2. With very stiff guides and shank (within 1 %), the tip compliance along X and Z is the
-//    linear motor loop of the cutting force page, for the same mass.
+//    linear motor loop of the disturbance rejection page, for the same mass.
 // 3. The static structure is the sum of the two block sets and the shank,
 //    each worked out on its own (series springs), and it is symmetric.
 // 4. With rigid carriages, the shank is one mass on a spring: the peak sits at
@@ -19,9 +19,9 @@
 //    agrees with the lobe envelope of control_model.js.
 // 9. The lobes never go below the floor, and touch it.
 // 10. For one direction only (chip and force along X), the floor is the one
-//     of the cutting force page: −1/min Re G.
+//     of the disturbance rejection page: −1/min Re G.
 
-import "../cutting-force-rejection/control_model.js";
+import "../disturbance-rejection/control_model.js";
 import "./turning_model.js";
 const CM = globalThis.ControlModel;
 const T = globalThis.TurningModel;
@@ -168,7 +168,7 @@ const r = T.analyse(q);
   check(r.apAtRpm.ap >= r.lobes.apFloor * (1 - 1e-6), `limit at the chosen speed ${r.apAtRpm.ap.toFixed(4)} mm is not below the floor`);
 }
 
-// 10. One direction: the floor of the cutting force page.
+// 10. One direction: the floor of the disturbance rejection page.
 {
   const c1 = { ...r.cut, uh: [1, 0, 0], w: [1, 0, 0] };
   const stiff = T.structure({ ...q, kRadial: 1e7, shankMm: 200, overhangMm: 1 });
@@ -176,7 +176,7 @@ const r = T.analyse(q);
   const viaTurn = CM.lobes((f) => T.oriented(T.tipAt(f, stiff, loops), c1), L.tuned.fb / 200, L.p.fs / 2 * 0.98, 1, 1000, 30000, 3000, 50);
   const viaPage = CM.chatter({ ...L.p, teeth: 1 }, L.tuned, 1000, 30000, 50);
   check(near(viaTurn.floor, viaPage.floor, 2e-3), `one direction, stiff structure: floor ${(viaTurn.floor / 1e6).toFixed(3)} N/µm, ` +
-    `cutting force page ${(viaPage.floor / 1e6).toFixed(3)} N/µm`);
+    `disturbance rejection page ${(viaPage.floor / 1e6).toFixed(3)} N/µm`);
 }
 
 console.log(failed ? `\n${failed} check(s) failed` : "\nall checks passed");
