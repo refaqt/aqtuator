@@ -123,6 +123,11 @@ svg text { font-family: var(--mono); fill: var(--ink); }
 
 .range-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 8px; font-size: 13px; }
 .range-row input { width: 96px; }
+.btn { font: 500 13px var(--sans); color: var(--ink); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+.btn:hover { border-color: var(--accent); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.sub-head { font: 600 14px var(--sans); margin: 20px 0 6px; }
 .note { color: var(--muted); font-size: 13px; }
 .note p, .note ul { max-width: 95ch; }
 .note p { margin: 0 0 8px; }
@@ -399,25 +404,34 @@ table.res td.bad .v { color: var(--bad); }
         <div class="chart-box" style="margin-top:16px"><p class="chart-title">Following error on a straight line at constant speed, µm</p>
           <svg id="cLine" class="chart" viewBox="0 0 880 260"></svg>
           <p class="chart-sub" id="lineText"></p></div>
-        <div class="two" style="margin-top:16px">
-          <div class="chart-box"><p class="chart-title">Speed along the circle, mm/min</p>
-            <div class="legend"><span><i></i>solid: measured</span>
-              <span><i class="dash"></i>dashed: actual</span></div>
-            <svg id="cCircleV" class="chart" viewBox="0 0 440 260"></svg>
-            <p class="chart-sub" id="circleVText"></p></div>
-          <div class="chart-box"><p class="chart-title">Speed on the straight line, mm/min</p>
-            <div class="legend"><span><i></i>solid: measured</span>
-              <span><i class="dash"></i>dashed: actual</span></div>
-            <svg id="cLineV" class="chart" viewBox="0 0 440 260"></svg>
-            <p class="chart-sub" id="lineVText"></p></div>
+        <h3 class="sub-head">Measured and actual speed</h3>
+        <div class="legend"><span><i></i>solid, with dots at the samples when zoomed: measured</span>
+          <span><i class="dash"></i>dashed: actual</span></div>
+        <div class="range-row">
+          <button id="vZoom" class="btn" type="button">Show the whole run</button>
+          <label for="vPan">Window start</label>
+          <input id="vPan" type="range" min="0" max="1000" step="1" value="0" style="width:220px">
+          <span id="vWin" class="status"></span>
         </div>
+        <div class="two">
+          <div class="chart-box"><p class="chart-title">Speed of X on the circle, mm/min</p>
+            <svg id="cCircleVX" class="chart" viewBox="0 0 440 260"></svg>
+            <p class="chart-sub" id="circleVXText"></p></div>
+          <div class="chart-box"><p class="chart-title">Speed of Y on the circle, mm/min</p>
+            <svg id="cCircleVY" class="chart" viewBox="0 0 440 260"></svg>
+            <p class="chart-sub" id="circleVYText"></p></div>
+        </div>
+        <div class="chart-box" style="margin-top:16px"><p class="chart-title">Speed on the straight line, mm/min</p>
+          <svg id="cLineV" class="chart" viewBox="0 0 880 260"></svg>
+          <p class="chart-sub" id="lineVText"></p></div>
         <p class="note"><b>Measured and actual speed.</b> The measured speed is what the controller can know: the
           change of the rounded encoder position in one sample, divided by the sample time. The cascade uses this
           speed in its velocity loop, from the motor encoder. The single loop does not use a speed; for it the chart
-          shows the same difference of the encoder it reads for position. On the circle, the two axis speeds are
-          combined into the path speed. The actual speed is the true speed of the stage at the samples. With
-          rounding, the measured speed can only take whole counts per sample: at a slow feed it is 0 for most
-          samples and very high in a few.</p>
+          shows the same difference of the encoder it reads for position. The actual speed is the true speed of the
+          stage at the samples. With rounding, the measured speed can only change in whole counts per sample: at a
+          slow feed it is 0 for most samples and very high in a few. The charts start zoomed in on 100 samples. The
+          button shows the whole run; the slider moves the window through it. The circle charts start at the
+          beginning of the turn of the contour error chart; the line chart starts where the speed is constant.</p>
         <p class="note">Two equal stages, X and Y, each with the drive and the controller of its case, follow a circle.
           The speed rises over the first 0.1 s with a smooth ramp, then stays at the feed. The chart shows one full
           turn after the loop has settled. The contour error is the radius of the stage path minus the radius of the
@@ -1493,33 +1507,73 @@ function run() {
     (p.q > 0 ? `${sig(p.q / p.lineV * 1000)} ms (${sig(p.q / p.lineV * p.fs)} samples). ` : "– (no rounding). ") +
     live.map((id) => `${CASE[id].name}: rms ${sig(LT[id].rms * um)} µm`).join(", ") + "." : "";
 
-  // Speed charts: measured (solid, thin, faded) and actual (dashed) per case.
-  // All measured traces first, so that no noisy trace hides an actual one.
-  const mmMin = 60000, spd = (v) => `${sig(v)} mm/min`;
-  const speedSeries = (R) => [
-    ...live.map((id) => ({ pts: R[id].speed.meas.map(([x, v]) => [x, v * mmMin]), color: CASE[id].color, width: 1,
-      opacity: 0.5, label: `${CASE[id].name}, measured`, fmt: spd })),
-    ...live.map((id) => ({ pts: R[id].speed.act.map(([x, v]) => [x, v * mmMin]), color: CASE[id].color, width: 2,
-      dash: true, label: `${CASE[id].name}, actual`, fmt: spd })),
-  ];
-  chart($("cCircleV"), { xLabel: "angle on the circle, °", yLabel: "mm/min", xRange: [0, 360], xTicks: 4,
-    xTip: (v) => `${v.toFixed(1)}°`, xFmt: (v) => String(Math.round(v)),
-    hlines: [{ y: p.circF * mmMin, label: "feed" }], series: speedSeries(CT) });
-  const speedText = (R) => live.map((id) => {
-    const s = R[id].speed;
-    return `${CASE[id].name}: measured ${sig(s.measStats.lo * mmMin)} to ${sig(s.measStats.hi * mmMin)}, ` +
-      `actual ${sig(s.actStats.lo * mmMin)} to ${sig(s.actStats.hi * mmMin)} mm/min`;
-  }).join(". ") + ".";
-  $("circleVText").textContent = live.length ? `Feed ${sig(p.circF * mmMin)} mm/min` +
-    (p.q > 0 ? `: one count per sample is ${sig(p.q * p.fs * mmMin)} mm/min. ` : ". ") + speedText(CT) : "";
-  chart($("cLineV"), { xLabel: "time at constant speed, ms", yLabel: "mm/min", xTip: (v) => `${v.toFixed(2)} ms`,
-    hlines: [{ y: p.lineV * mmMin, label: "speed" }], series: speedSeries(LT).map((s) => ({ ...s,
-      pts: s.pts.map(([tt, v]) => [tt * 1000, v]) })) });
-  $("lineVText").textContent = live.length ? `Speed ${sig(p.lineV * mmMin)} mm/min` +
-    (p.q > 0 ? `: one count per sample is ${sig(p.q * p.fs * mmMin)} mm/min. ` : ". ") + speedText(LT) : "";
+  // Speed charts. They redraw on their own when the zoom changes.
+  speedData = { p, live, CT, LT };
+  drawSpeeds();
 
   status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
 }
+
+// Speed charts: measured (solid, thin, faded) and actual (dashed) per case,
+// over a window of the run. All measured traces first, so that no noisy
+// trace hides an actual one. Zoomed: ZOOM samples from the slider position.
+const ZOOM = 100;
+let speedData = null, zoomed = true;
+function speedWindow(rec) {
+  const n = rec.meas.length;
+  if (!zoomed || n <= ZOOM) return [0, n];
+  const i0 = Math.round(parseFloat($("vPan").value) / 1000 * (n - ZOOM));
+  return [i0, i0 + ZOOM];
+}
+function drawSpeeds() {
+  if (!speedData) return;
+  const { p, live, CT, LT } = speedData;
+  const mmMin = 60000, spd = (v) => `${sig(v)} mm/min`;
+  const trace = (rec, key, i0, i1) => {
+    const t = new Float64Array(i1 - i0), v = new Float64Array(i1 - i0);
+    for (let i = i0; i < i1; i++) { t[i - i0] = i * rec.T * 1000; v[i - i0] = rec[key][i] * mmMin; }
+    return i1 - i0 > 1500 ? M.thinMinMax(t, v) : Array.from(t, (tt, j) => [tt, v[j]]);
+  };
+  const draw = (svg, recs, xLabel, hlines) => {
+    let win = null;
+    const series = [];
+    for (const key of ["meas", "act"]) for (const id of live) {
+      const rec = recs[id];
+      const [i0, i1] = speedWindow(rec);
+      win ??= [i0 * rec.T * 1000, (i1 - 1) * rec.T * 1000];
+      const pts = trace(rec, key, i0, i1);
+      series.push(key === "meas"
+        ? { pts, color: CASE[id].color, width: 1, opacity: 0.5, label: `${CASE[id].name}, measured`, fmt: spd,
+            dots: zoomed ? pts : null }
+        : { pts, color: CASE[id].color, width: 2, dash: true, label: `${CASE[id].name}, actual`, fmt: spd });
+    }
+    chart(svg, { xLabel, yLabel: "mm/min", xRange: win ?? undefined, xTip: (v) => `${v.toFixed(2)} ms`, hlines, series });
+  };
+  const counts = p.q > 0 ? `One count per sample is ${sig(p.q * p.fs * mmMin)} mm/min. ` : "No rounding. ";
+  const errText = (recs) => counts + live.map((id) => {
+    const e = recs[id].errStats;
+    return `${CASE[id].name}: measured − actual rms ${sig(e.rms * mmMin)}, peak ${sig(e.peak * mmMin)} mm/min`;
+  }).join(". ") + (live.some((id) => recs[id].cut) ? `. Only the first ${sig(4e5 / p.fs)} s are kept for the chart.` : ".");
+  const pick = (R, f) => Object.fromEntries(live.map((id) => [id, f(R[id].speed)]));
+  const vx = pick(CT, (s) => s.x), vy = pick(CT, (s) => s.y), vl = pick(LT, (s) => s);
+  draw($("cCircleVX"), vx, "time from the start of the turn, ms", [{ y: 0 }]);
+  draw($("cCircleVY"), vy, "time from the start of the turn, ms", [{ y: 0 }]);
+  draw($("cLineV"), vl, "time at constant speed, ms", [{ y: p.lineV * mmMin, label: "speed" }]);
+  $("circleVXText").textContent = live.length ? `Feed ${sig(p.circF * mmMin)} mm/min. ` + errText(vx) : "";
+  $("circleVYText").textContent = live.length ? errText(vy) : "";
+  $("lineVText").textContent = live.length ? `Speed ${sig(p.lineV * mmMin)} mm/min. ` + errText(vl) : "";
+  const span = (R) => { const [i0, i1] = speedWindow(R); const T = R.T * 1000; return `${sig(i0 * T)} to ${sig((i1 - 1) * T)} ms of ${sig(R.meas.length * T)} ms`; };
+  const id0 = live[0];
+  $("vWin").textContent = id0 ? (zoomed ? `${ZOOM} samples (${sig(ZOOM / p.fs * 1000)} ms). ` : "Whole run. ") +
+    `Circle ${span(vx[id0])}, line ${span(vl[id0])}.` : "";
+  $("vPan").disabled = !zoomed;
+}
+$("vZoom").addEventListener("click", () => {
+  zoomed = !zoomed;
+  $("vZoom").textContent = zoomed ? "Show the whole run" : `Zoom to ${ZOOM} samples`;
+  drawSpeeds();
+});
+$("vPan").addEventListener("input", drawSpeeds);
 
 for (const id of [...ids, "spreadPct", "rpmLo", "rpmHi", "qUm", "circD", "circF", "lineV"]) $(id).addEventListener("input", schedule);
 for (const id of ["ctrl-single", "ctrl-cascade", "ffExact"]) $(id).addEventListener("change", update);

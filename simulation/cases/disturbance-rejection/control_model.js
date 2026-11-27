@@ -1286,6 +1286,20 @@ function speedMeter(tuned, T) {
   return (sense) => { const v = (sense[key] - prev) / T; prev = sense[key]; return v; };
 }
 
+// The longest speed record that is kept, in samples. The page zooms into it,
+// so it keeps every sample, as 32-bit numbers.
+const MAX_SPEED_SAMPLES = 4e5;
+
+// Speeds over a window: meas and act at every sample (m/s), T the sample
+// time, and the statistics of meas, act and meas − act.
+function speedRecord(meas, act, T) {
+  const n = Math.min(meas.length, MAX_SPEED_SAMPLES);
+  const m = Float32Array.from(meas.subarray(0, n)), a = Float32Array.from(act.subarray(0, n));
+  const d = new Float64Array(meas.length);
+  for (let i = 0; i < d.length; i++) d[i] = meas[i] - act[i];
+  return { meas: m, act: a, T, cut: n < meas.length, measStats: stats(meas), actStats: stats(act), errStats: stats(d) };
+}
+
 // Circle test: two equal stages, X and Y, follow a circle of diameter D (m)
 // at feed F (m/s):
 //
@@ -1294,8 +1308,8 @@ function speedMeter(tuned, T) {
 // Each axis is one simulation with its own profile. The contour error is the
 // radius of the stage path minus R, at the samples. It is shown over one full
 // turn, from the first whole turn after the ramp and the settle time. The
-// path speed is shown too: measured, √(v_x² + v_y²) from the two measured
-// speeds (see speedMeter), and actual, from the true stage speeds.
+// speeds of X and Y are kept too, at every sample of the window: measured
+// (see speedMeter) and actual (the true stage speed). See speedRecord.
 function circleTest(p, tuned, D, F) {
   const R = D / 2, T = 1 / p.fs, prof = ramp(F);
   const settle = settleSamples(p, tuned);
@@ -1325,16 +1339,13 @@ function circleTest(p, tuned, D, F) {
   };
   const X = run("x"), Y = run("y");
   const ang = new Float64Array(win), err = new Float64Array(win);
-  const vMeas = new Float64Array(win), vAct = new Float64Array(win);
   for (let i = 0; i < win; i++) {
     const g = prof((kStart + i) * T);
     ang[i] = (g.s / R - 2 * Math.PI * n0) * 180 / Math.PI;
     err[i] = Math.hypot(X.pos[i] + R, Y.pos[i]) - R;
-    vMeas[i] = Math.hypot(X.vm[i], Y.vm[i]);
-    vAct[i] = Math.hypot(X.va[i], Y.va[i]);
   }
   return { pts: thinMinMax(ang, err), ...stats(err), turn: win / kTurn, R, tTurn: turnS / F,
-    speed: { meas: thinMinMax(ang, vMeas), act: thinMinMax(ang, vAct), measStats: stats(vMeas), actStats: stats(vAct) } };
+    speed: { x: speedRecord(X.vm, X.va, T), y: speedRecord(Y.vm, Y.va, T) } };
 }
 
 // Straight line at constant speed V (m/s): the following error r − x at the
@@ -1358,8 +1369,7 @@ function lineTest(p, tuned, V) {
         t[i] = i * T; err[i] = r - xs; vMeas[i] = v; vAct[i] = sense.v;
       }
     } });
-  return { pts: thinMinMax(t, err), ...stats(err), len: win * T,
-    speed: { meas: thinMinMax(t, vMeas), act: thinMinMax(t, vAct), measStats: stats(vMeas), actStats: stats(vAct) } };
+  return { pts: thinMinMax(t, err), ...stats(err), len: win * T, speed: speedRecord(vMeas, vAct, T) };
 }
 
 // A plain script, not a module. Browsers refuse to load a module for a page
@@ -1370,5 +1380,5 @@ globalThis.ControlModel = {
   controllerAt, loopAt, complianceAt, forceRatioAt, sampledSteadyAt, sineComplianceAt, lobePoint, lobes, chatter, tune, margins, spectralRadius,
   plantFamily, robustness, velocityLoopFor, cascadeFor, feedforward, ctrlRow, ctrlStep, massLine, butterLP, CASCADE,
   logspace, toothFreq, frequencyData, simulate, settleSamples, steadyState, steadyAmplitude,
-  entrySamples, entryTrace, steadyTrace, sweep, ramp, speedMeter, circleTest, lineTest, RAMP,
+  entrySamples, entryTrace, steadyTrace, sweep, ramp, speedMeter, speedRecord, thinMinMax, circleTest, lineTest, RAMP,
 };

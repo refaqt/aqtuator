@@ -93,3 +93,8 @@ defaults (0.1 µm, 4000 Hz) one count per sample is 24 mm/min:
 - **Line, 1 mm/min.** The measured speed is 0 for most samples and 24 mm/min in one. The actual
   speed of the ball screw stays between about 0.4 and 1.5 mm/min. The linear motor stage swings
   between about −12 and +14 mm/min: it moves back and forth over the edge of a count.
+
+Then, on request: the speed charts start zoomed in on 100 samples (25 ms), with a button for the
+whole run and a slider to move the window. The circle shows the speed of X and of Y each on its
+own chart, not the path speed. On the circle at 3000 mm/min, the measured speed differs from the
+actual speed by about 9 to 10 mm/min rms on every drive: the rounding, not the stage.
