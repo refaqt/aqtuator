@@ -1,0 +1,224 @@
+# SPDX-FileCopyrightText: 2025-2026 Refaqt (BE 0804.145.539) and contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Thermal study of the forcer water cooling of the compact stage.
+# build_geometry.py, run_thermal.py, hydraulics.py and evaluate.py read this file.
+# Units: mm, W, K, degree Celsius, s, unless a key says otherwise.
+#
+# Coordinates are the assembly coordinates of compact-stage.FCStd: x along the
+# travel (0 to 440), y across (0 to 210), z up from the base bottom.
+
+[motor]
+# MAXWELL MK21, data sheet page 010 (modules/stoq/modules/maxwell/docs/datasheets/).
+current = 2.0                 # A rms, continuous current Ic (the rated current)
+# 1.957 A = 181 N / 92.5 N/A: the current for the rated continuous force. The data
+# sheet rounds it to 2.0 A.
+current_sweep = [1.8, 1.957]
+force_constant = 92.5         # N per A rms
+r_ll_25 = 13.8                # ohm, line to line at 25 C
+r_ll_120 = 19.0               # ohm, line to line at 120 C
+rth = 0.87                    # K/W, coil to mounting face (see README for how it is used)
+t_max = 120.0                 # C, highest coil temperature
+tau_th = 2830.0               # s, thermal time constant from the data sheet
+mass = 1.1                    # kg, mover mass
+length = 118.0                # mm, along x
+width = 86.0                  # mm, along y
+height = 23.7                 # mm, mover height (drawing, MK21 dimensions)
+air_gap = 0.6                 # mm, nominal air gap (drawing: 0.6 +0.35 / -0.15)
+install_height = 34.0         # mm, stator bottom to mover mounting face
+side_inset = 0.25             # mm, box narrower on each long side (see build_geometry.py)
+c_specific = 500.0            # J/(kg K), mix of copper, iron and resin (estimate)
+
+[track]
+# MAXWELL MK2-180 magnet track, two pieces end to end (stoq mk2-stator parts table).
+length = 180.0
+width = 86.0
+height = 9.6
+k = 25.0                      # W/(m K), steel back plate with NdFeB magnets (estimate)
+
+[rail]
+# HIWIN EGR15U418H (stoq egr-rail; HIWIN GW-13-1 catalogue, EGR15).
+length = 418.0
+width = 15.0
+height = 12.5
+
+[block]
+# HIWIN QEH15SA (stoq qeh-block; HIWIN GW-13-1 catalogue, QEH15SA row).
+H = 24.0                      # mm, rail bottom to block top
+H1 = 4.0                      # mm, rail bottom to block bottom
+W = 34.0                      # mm, block width
+L1 = 23.1                     # mm, steel body length (L = 40.1 with end caps)
+envelope = 56.0               # mm, length with the E2 unit, measured on the HIWIN model
+
+[water]
+t_in = 20.0                   # C, water at the inlet of the forcer
+flow_lpm = 0.5                # l/min per axis; replaced by the pump operating point in evaluate.py
+flows_sweep = [0.2, 0.3, 0.4, 0.5, 0.75, 1.0]
+t_in_sweep = [15.0, 18.0, 20.0, 22.0, 25.0]   # C, water at the inlet
+# Water at 20 to 30 C (VDI Heat Atlas, D3.1)
+rho = 997.0                   # kg/m3
+cp = 4180.0                   # J/(kg K)
+k = 0.603                     # W/(m K)
+mu = 0.89e-3                  # Pa s at 25 C
+pr = 6.1
+
+[air]
+t_air = 20.0
+t_air_sweep = [15.0, 20.0, 25.0, 30.0]
+k = 0.026                     # W/(m K), air at 20 to 40 C
+emissivity_bare = 0.10        # machined aluminium, steel ground surfaces
+emissivity_anodised = 0.80
+# Still-air natural convection, film coefficient by face direction (W/(m2 K)).
+# Typical values for small parts and 5 to 20 K above the air (VDI Heat Atlas F2).
+h_up = 6.0
+h_side = 5.0
+h_down = 3.0
+h_cavity = 2.0                # faces in narrow pockets and under the carriage
+
+[contact]
+# Thermal contact conductance of each joint, W/(m2 K). None is measured.
+# Bolted, flat, dry metal joints: 1000 to 10000 (VDI Heat Atlas, Madhusudana).
+# Each value is swept from low to high in evaluate.py.
+metal_bolted = 3000.0
+metal_bolted_range = [1000.0, 10000.0]
+forcer_face = 3000.0          # forcer top on the pocket ceiling, 6 x M4
+forcer_face_range = [1000.0, 10000.0]
+balls = 800.0                 # rail to block through the balls, over the touching faces
+balls_range = [300.0, 3000.0]
+resin_block = 500.0           # printed cooling block on the pocket floor, 3 x M2.5
+resin_block_range = [200.0, 2000.0]
+table = 1000.0                # base bottom strips on the machine table
+table_range = [300.0, 3000.0]
+table_gap = 0.5               # mm, air gap between the middle of the base bottom and the table
+# Thermal growth: stiffness of the joints.
+tie_factor = 10.0             # bolted joints: penalty stiffness = 10 x E / 1 mm per mm2 (practically rigid)
+ball_stiffness_n_per_um = 115.0   # HIWIN QE15 at ZA preload, radial (as in the crash study)
+ball_contact_area = 346.5     # mm2, rail top under the block body (15 x 23.1); spread of the ball stiffness
+
+[materials]
+# Thermal and elastic values. Sources in the README.
+[materials.al7075]
+k = 130.0                     # W/(m K), EN AW-7075-T651
+rho = 2810.0
+c = 960.0
+E = 71700.0                   # MPa
+nu = 0.33
+alpha = 23.4e-6               # 1/K, 20 to 100 C
+[materials.steel]
+k = 45.0                      # rail and block steel
+rho = 7850.0
+c = 470.0
+E = 210000.0
+nu = 0.30
+alpha = 11.5e-6
+[materials.track]
+k = 25.0
+rho = 7500.0
+c = 460.0
+E = 160000.0
+nu = 0.28
+alpha = 9.0e-6                # steel plate with NdFeB magnets (NdFeB: 5 along, -1 across)
+[materials.forcer]
+k = 0.0                       # set by run_thermal.py from the data sheet thermal resistance
+rho = 0.0                     # set from the mover mass
+c = 500.0
+E = 100000.0                  # laminations in resin, estimate
+nu = 0.30
+alpha = 12.0e-6
+[materials.resin]
+k = 0.20                      # cured photopolymer, typical
+rho = 1180.0
+c = 1500.0
+E = 2500.0                    # Formlabs Grey V5, post-cured: 2500 to 2675 MPa
+nu = 0.38
+alpha = 80.0e-6               # typical cured photopolymer; Formlabs gives 41 to 143
+
+[mesh]
+size_fine = 0.75              # water channel, ports and the cooling block
+size_mid = 2.5                # forcer pocket area of carriage-bottom
+size_coarse = 4.0
+size_base = 5.0
+refine = 0.75                 # factor for the mesh check run
+mech_scale = 2.5              # growth solve: mesh this much coarser (the printed block stays fine)
+
+[support]
+# Base held on the machine table. Main case: the base can grow freely in the
+# table plane (one point fixed, one point held in y). Variant: bottom fixed.
+mode = "free"
+
+[geometry]
+assembly = "cad/assemblies/compact-stage/compact-stage.FCStd"
+read_head_mount = [248.0, 18.0, 26.5]   # AK-MC15 placement in the assembly
+scale_point = [248.0, 17.0, 34.0]       # on the base side wall, below the read head
+
+[hydraulics]
+# One pump, a supply and a return manifold, seven branches in parallel:
+# six axes like this one and the spindle. Sizes of the water path from the CAD
+# (run_thermal.py checks them against the geometry) and the bought parts.
+n_axes = 6
+hose_id = 2.6                 # mm, Festo PUN-H-4X0,75 (197383)
+hose_length = 1500.0          # mm, each of supply and return hose, per axis (swept 500 to 3000)
+k_fitting = 1.5               # minor loss of one NPQH push-in fitting (estimate, no catalogue value)
+passage_d = 2.0               # mm, cooling block passages (cooling_passage_d)
+passage_length = 205.0        # mm, both passages with risers and drops, from the CAD volumes
+k_passage = 7.0               # bends and jogs of both passages (3.5 each, sharp 90 degree turns)
+port_d = 2.5                  # mm, ports from the block pocket into the channel (Pocket026)
+port_length = 3.0             # mm, both ports
+k_port = 3.0                  # contraction and expansion at both ports
+channel_w = 3.0               # mm, 3 mm end mill (Sketch019)
+channel_d = 1.0               # mm, channel depth (Pocket008)
+channel_length = 771.0        # mm, channel volume / (3 x 1 mm), from the CAD
+channel_turns = 7             # U-turns between the 8 passes
+k_turn = 2.0                  # one 180 degree turn in the narrow channel (estimate 1.5 to 2.2)
+nu_lam_channel = 4.8          # laminar Nusselt number, 3 x 1 mm duct, heated walls (Shah and London)
+# Spindle branch: typical water-cooled 1.5 to 2.2 kW spindle with its hoses.
+# Estimate, not from a data sheet: 0.3 bar at 2.5 l/min. A needle valve sets it to 2.5 l/min.
+spindle_q_lpm = 2.5
+spindle_dp_bar = 0.3
+spindle_heat_w = 400.0        # W into the water, about 20 % of 2.2 kW (estimate)
+# Chiller tank, filter and manifolds: 0.15 bar at 5 l/min (estimate).
+loop_q_lpm = 5.0
+loop_dp_bar = 0.15
+
+# Pump candidates. Shape of the centrifugal curves: p = p_max (1 - (q / q_max)^2).
+# Only p_max and q_max come from the makers; the shape between is assumed.
+[[pump]]
+name = "TEYU CW-5200, 4 bar pump option"
+kind = "centrifugal"
+p_max_bar = 4.0               # TEYU product page: pump options 1.2 / 2.5 / 4 bar max
+q_max = 15.0                  # l/min, TEYU page seen only in a search summary: not confirmed
+cooling_w = 1430.0            # nominal cooling capacity
+price_eur = "500 to 550 (shop pages, not confirmed)"
+source = "https://www.teyuchiller.com/spindle-water-chiller-unit-cw5200-for-14kW-spindle"
+recommended = true
+[[pump]]
+name = "TEYU CW-5200, 2.5 bar pump option"
+kind = "centrifugal"
+p_max_bar = 2.5
+q_max = 13.0                  # not confirmed
+cooling_w = 1430.0
+price_eur = "500 to 550 (shop pages, not confirmed)"
+source = "https://www.teyuchiller.com/spindle-water-chiller-unit-cw5200-for-14kW-spindle"
+[[pump]]
+name = "TEYU CW-5200, 1.2 bar pump option"
+kind = "centrifugal"
+p_max_bar = 1.2
+q_max = 10.0                  # not confirmed
+cooling_w = 1430.0
+price_eur = "500 to 550 (shop pages, not confirmed)"
+source = "https://www.teyuchiller.com/spindle-water-chiller-unit-cw5200-for-14kW-spindle"
+[[pump]]
+name = "Laing / Xylem D5 Vario (D5-38/700)"
+kind = "centrifugal"
+p_max_bar = 0.38              # Xylem catalogue BR-19B: 38 kPa
+q_max = 25.0                  # 1.5 m3/h
+cooling_w = 0.0
+price_eur = "about 235 (shop page, not confirmed)"
+source = "https://hvacquick.com/catalog_files/Goulds_Laing_D5_Vario_Catalog.pdf"
+[[pump]]
+name = "Fluid-o-Tech PO 300 vane pump, relief valve 3 bar"
+kind = "fixed"
+q_lpm = 5.0                   # 300 l/h at 1450 rpm, almost flat up to 16 bar
+relief_bar = 3.0
+cooling_w = 0.0
+price_eur = "about 100 for the pump head, motor extra (shop page, not confirmed)"
+source = "https://www.fluidotech.it/site/assets/files/1302/po_brass70-400_en_datasheet.pdf"

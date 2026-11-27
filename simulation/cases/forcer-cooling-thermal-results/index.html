@@ -1,0 +1,286 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2025-2026 Refaqt (BE 0804.145.539) and contributors -->
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Forcer Cooling Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f2f4f4; --panel: #ffffff; --ink: #1a2227; --muted: #5d6a72; --line: #d5dcdf;
+  --grid: #e6ebed; --accent: #1d6b74; --digital: #eef4f5;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #6250d6; --ref: #8a959b;
+  --ok: #2f7d4a; --warn: #a86b00; --bad: #b3261e;
+  --ok-bg: #e5f2e9; --warn-bg: #fbf0d9; --bad-bg: #fae3e1;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cond: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab; --line: #2d3a40;
+    --grid: #233036; --accent: #5cb8c2; --digital: #1f2b30;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #9085e9; --ref: #7d8a91;
+    --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+    --ok-bg: #1d3226; --warn-bg: #3a2f17; --bad-bg: #3d2020;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #12181b; --panel: #1a2226; --ink: #e3e9ec; --muted: #93a3ab; --line: #2d3a40;
+  --grid: #233036; --accent: #5cb8c2; --digital: #1f2b30;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #9085e9; --ref: #7d8a91;
+  --ok: #6cc38a; --warn: #e0a73a; --bad: #f2786f;
+  --ok-bg: #1d3226; --warn-bg: #3a2f17; --bad-bg: #3d2020;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); padding: 0 16px 60px; }
+.wrap { max-width: 1240px; margin: 0 auto; }
+header { padding: 24px 0 8px; }
+h1 { font: 600 28px/1.15 var(--cond); margin: 0; text-wrap: balance; }
+h2 { font: 600 21px/1.2 var(--cond); margin: 0 0 4px; }
+h3 { font: 600 16px/1.3 var(--sans); margin: 18px 0 6px; }
+p { margin: 6px 0; max-width: 88ch; }
+.lead { color: var(--muted); max-width: 90ch; }
+a { color: var(--accent); }
+code, .mono { font-family: var(--mono); font-size: 0.92em; }
+small, .muted { color: var(--muted); }
+
+.picker {
+  position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 10px 0;
+  border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+}
+.picker label { font-weight: 600; }
+.picker select { font: 15px var(--sans); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); max-width: 100%; }
+.picker nav { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
+.status { font: 12px var(--mono); color: var(--muted); }
+.status.bad { color: var(--bad); font-weight: 600; }
+
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px 20px; margin-top: 18px; }
+section > .sub { color: var(--muted); margin-top: 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-top: 12px; }
+.tile { border: 1px solid var(--line); border-left: 5px solid var(--ref); border-radius: 5px; padding: 10px 12px; background: var(--panel); }
+.tile.ok { border-left-color: var(--ok); background: var(--ok-bg); }
+.tile.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+.tile.bad { border-left-color: var(--bad); background: var(--bad-bg); }
+.tile .name { font: 600 13px/1.3 var(--sans); text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.tile .val { font: 600 22px/1.25 var(--cond); margin: 4px 0 2px; }
+.tile .verdict { font-weight: 600; font-size: 14px; }
+.tile.ok .verdict { color: var(--ok); } .tile.warn .verdict { color: var(--warn); } .tile.bad .verdict { color: var(--bad); }
+.tile .lim { font-size: 12.5px; color: var(--muted); line-height: 1.35; margin-top: 4px; }
+
+.badge { display: inline-block; font: 600 12px/1 var(--sans); padding: 3px 7px; border-radius: 10px; white-space: nowrap; }
+.badge.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok); }
+.badge.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); }
+.badge.bad { background: var(--bad-bg); color: var(--bad); border: 1px solid var(--bad); }
+.badge.info { background: var(--digital); color: var(--muted); border: 1px solid var(--line); }
+
+table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: 13px; }
+td.num, th.num { text-align: right; font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.card { border: 1px solid var(--line); border-radius: 5px; padding: 12px 14px; background: var(--panel); }
+.eq { font-family: var(--mono); font-size: 13.5px; background: var(--digital); border-radius: 4px; padding: 8px 10px; margin: 6px 0; overflow-x: auto; white-space: pre; }
+details { margin-top: 8px; }
+summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+
+.viewer { position: relative; height: 560px; border: 1px solid var(--line); border-radius: 5px; background: var(--digital); overflow: hidden; }
+@media (max-width: 700px) { .viewer { height: 420px; } }
+.viewer canvas { display: block; }
+.viewer .overlay { position: absolute; left: 10px; top: 10px; font-size: 13px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 4px; padding: 6px 9px; max-width: 360px; pointer-events: none; opacity: 0.95; }
+.viewer .probe { position: absolute; right: 10px; bottom: 10px; font: 12px/1.4 var(--mono); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 4px; padding: 6px 9px; pointer-events: none; }
+.viewer .nolib { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center; color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 10px 0; font-size: 14px; }
+.controls select, .controls input[type=range] { font: 14px var(--sans); }
+.controls select { padding: 4px 6px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button { font: 14px var(--sans); border: 0; padding: 5px 10px; background: var(--panel); color: var(--ink); cursor: pointer; }
+.seg button[aria-pressed=true] { background: var(--accent); color: var(--panel); }
+.legendbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+.legendbar canvas { border: 1px solid var(--line); border-radius: 2px; }
+
+.plot { width: 100%; height: 330px; }
+.plot.tall { height: 380px; }
+.note { border-left: 3px solid var(--accent); padding: 4px 10px; background: var(--digital); border-radius: 0 4px 4px 0; margin: 10px 0; }
+.note.warn { border-left-color: var(--warn); }
+.schematic { width: 100%; height: auto; max-height: 300px; }
+.schematic text { font: 12px var(--sans); fill: var(--ink); }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; font-size: 14px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; font-family: var(--mono); font-size: 13px; }
+ol li, ul li { margin: 3px 0; }
+.check { display: grid; grid-template-columns: 22px 1fr; gap: 2px 8px; margin: 6px 0; }
+.check .mark { font-weight: 600; }
+.check .mark.ok { color: var(--ok); } .check .mark.warn { color: var(--warn); } .check .mark.bad { color: var(--bad); }
+.toggles { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13.5px; }
+.toggles label { white-space: nowrap; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; border: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Water cooling of the compact stage motor: temperatures, thermal growth and the printed cooling block</h1>
+  <p class="lead">The MAXWELL MK21 linear motor (the forcer) runs all the time at its rated current of 2.0 A.
+  Water at 20 °C flows through the channel in carriage-bottom. This page shows how hot every part gets,
+  how much the stage grows and tilts from the heat, whether the printed cooling block stays below the heat
+  limit of its material, and which pump gives enough flow for six axes and a spindle. It also shows the model,
+  every input and boundary condition, and the checks behind the numbers.</p>
+</header>
+
+<div class="picker">
+  <nav>
+    <a href="#answers">Short answers</a><a href="#model">The model</a><a href="#view">3D view</a>
+    <a href="#inputs">Inputs</a><a href="#temps">Temperatures</a><a href="#block">Cooling block</a>
+    <a href="#pump">Pump and flow</a><a href="#warm">Warm-up</a><a href="#growth">Thermal growth</a>
+    <a href="#spread">Unknown inputs</a><a href="#proof">Proof</a><a href="#doubt">What can be wrong</a>
+  </nav>
+  <span class="status" id="status">Loading…</span>
+</div>
+
+<section id="answers">
+  <h2>Short answers</h2>
+  <p class="sub" id="answers-sub"></p>
+  <div class="tiles" id="tiles"></div>
+  <p class="muted" style="margin-top:10px">Green: inside the limit with margin. Amber: inside the limit with little margin,
+  or a point to watch. Red: over the limit. Grey: a value with no limit. Each tile names its limit and where it comes from.</p>
+  <div id="answers-text"></div>
+</section>
+
+<section id="model">
+  <h2>The model, and how it was built</h2>
+  <div class="grid2">
+    <div id="model-text"></div>
+    <div>
+      <h3>Parts in the model</h3>
+      <div class="tablewrap"><table id="parts-table"></table></div>
+    </div>
+  </div>
+  <h3>Boundary conditions</h3>
+  <div class="tablewrap"><table id="bc-table"></table></div>
+  <div id="bc-text"></div>
+</section>
+
+<section id="view">
+  <h2>3D view</h2>
+  <p class="sub">Drag to turn, scroll to zoom, right-drag to move. Click a point to read its values. Switch parts off to look inside.</p>
+  <div class="controls">
+    <span class="seg" id="mode">
+      <button data-m="parts" aria-pressed="false">Parts</button>
+      <button data-m="bc" aria-pressed="false">Boundary conditions</button>
+      <button data-m="T" aria-pressed="true">Temperature</button>
+      <button data-m="u" aria-pressed="false">Thermal growth</button>
+    </span>
+    <label>Base on the table: <select id="support"><option value="free">free to grow (main case)</option><option value="clamped">bottom clamped</option></select></label>
+    <label>Colour range: <select id="range"><option value="stage">stage parts, without the forcer</option><option value="all">all parts switched on</option></select></label>
+    <label>Growth drawn <input type="range" id="scale" min="0" max="4" step="0.05" value="2.7"> × <span id="scale-v"></span></label>
+    <button id="reset">Reset view</button>
+  </div>
+  <div class="toggles" id="toggles"></div>
+  <div class="viewer" id="viewer">
+    <div class="overlay" id="overlay"></div>
+    <div class="probe" id="probe">Click a point</div>
+  </div>
+  <div class="legendbar" style="margin-top:8px"><canvas id="legend" width="260" height="14"></canvas><span id="legend-text"></span></div>
+</section>
+
+<section id="inputs">
+  <h2>Inputs and assumptions</h2>
+  <p class="sub">Every number the model uses, with its source. "Estimate" means no data sheet gives it; the section
+  <a href="#spread">Unknown inputs</a> shows how much each one changes the result.</p>
+  <div class="tablewrap"><table id="inputs-table"></table></div>
+  <h3>Assumptions</h3>
+  <ol id="assumptions"></ol>
+</section>
+
+<section id="temps">
+  <h2>Temperatures at rated current, steady state</h2>
+  <div class="grid2">
+    <div><div class="tablewrap"><table id="temp-table"></table></div></div>
+    <div><div id="plot-heat" class="plot"></div></div>
+  </div>
+  <h3>Water temperature along its path</h3>
+  <div id="plot-water" class="plot"></div>
+  <p class="muted" id="water-text"></p>
+</section>
+
+<section id="block">
+  <h2>Does the printed cooling block deform?</h2>
+  <div id="block-text"></div>
+  <div id="plot-mat" class="plot tall"></div>
+  <div class="tablewrap"><table id="mat-table"></table></div>
+</section>
+
+<section id="pump">
+  <h2>Pump and flow for six axes and a spindle</h2>
+  <div id="pump-text"></div>
+  <div class="grid2">
+    <div><div id="plot-pump" class="plot tall"></div></div>
+    <div><div id="plot-branch" class="plot tall"></div></div>
+  </div>
+  <div class="tablewrap"><table id="pump-table"></table></div>
+  <h3>Where the pressure goes in one axis branch</h3>
+  <div class="tablewrap"><table id="dp-table"></table></div>
+</section>
+
+<section id="warm">
+  <h2>Warm-up from a cold start</h2>
+  <p class="sub" id="warm-sub"></p>
+  <div id="plot-warm" class="plot tall"></div>
+</section>
+
+<section id="growth">
+  <h2>Thermal growth of the stage</h2>
+  <p class="sub">All values are relative to the stage at 20 °C everywhere. Positive x is along the travel, z is up.</p>
+  <div class="tablewrap"><table id="growth-table"></table></div>
+  <div id="growth-text"></div>
+</section>
+
+<section id="spread">
+  <h2>Unknown inputs: how much they change the answer</h2>
+  <p class="sub">Each bar is one input moved to its low or high value, the others at the main value.</p>
+  <div class="grid2">
+    <div><div id="plot-tornado" class="plot tall"></div></div>
+    <div><div id="plot-tornado-b" class="plot tall"></div></div>
+  </div>
+  <div class="grid2">
+    <div><div id="plot-flow" class="plot tall"></div></div>
+    <div><div id="plot-water-in" class="plot tall"></div></div>
+  </div>
+  <div class="tablewrap"><table id="sweep-table"></table></div>
+</section>
+
+<section id="proof">
+  <h2>Proof: checks that the numbers hold together</h2>
+  <div id="proof-list"></div>
+</section>
+
+<section id="doubt">
+  <h2>What can be wrong</h2>
+  <ol id="doubt-list"></ol>
+  <p class="muted">Made by <code>modules/compact-stage/simulation/cases/forcer-cooling-thermal/</code>. How to run it again: see the
+  README in that folder.</p>
+</section>
+</div>
+<script src="./thermal_data.js"></script>
+<script src="./thermal_fields.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script src="./page.js"></script>
+</body>
+</html>

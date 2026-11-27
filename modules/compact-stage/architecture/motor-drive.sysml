@@ -30,6 +30,13 @@ package MotorDriveRequirements {
          */
         attribute continuousForce : ForceValue = 181 [N];
         attribute continuousCurrent : ElectricCurrentValue = 2.0 [A];
+        // The current we set in the drive as the continuous current of the
+        // motor thermal model (DRV-03). Not from the data sheet: 181 N /
+        // 92.5 N/A = 1.96 A. The data sheet rounds this up to 2.0 A. The
+        // thermal study of 2026-11-25 (simulation case forcer-cooling-thermal)
+        // puts the coil at 124.7 degree Celsius at 2.0 A with 20 degree Celsius
+        // cooling water, over its 120 degree Celsius limit, and at 118.5 at 1.96 A.
+        attribute continuousCurrentSetting : ElectricCurrentValue = 1.96 [A];
         attribute peakForce : ForceValue = 512 [N];              // for 1 s
         attribute peakCurrent : ElectricCurrentValue = 5.9 [A];  // for 1 s
         attribute limitingForce : ForceValue = 670 [N];          // for 0.5 s
@@ -173,6 +180,9 @@ package MotorDriveRequirements {
             doc /*
              * The drive gives at least 2.0 A rms without a time limit. This is
              * the continuous current of the MK21, which gives 181 N.
+             *
+             * This is what the drive can give. What we set in the drive is
+             * 1.96 A rms (see DRV-03).
              */
             subject drive : MotorDrive;
             require constraint { drive.continuousCurrent >= 2.0 [A] }
@@ -201,6 +211,12 @@ package MotorDriveRequirements {
              * This matters because a strong drive can give far more current
              * than the MK21 takes. The MK21 takes at most 9.8 A rms, and only
              * for 0.5 s.
+             *
+             * Setting: the continuous current of the motor thermal model is
+             * 1.96 A rms (MaxwellMK21.continuousCurrentSetting), not the 2.0 A
+             * of the data sheet. 181 N needs 1.96 A. At 2.0 A all the time, the
+             * coil runs over its 120 degree Celsius limit even with 20 degree
+             * Celsius cooling water (thermal study of 2026-11-25).
              */
             subject drive : MotorDrive;
             require constraint { drive.canLimitPeakCurrent and drive.hasMotorThermalModel }

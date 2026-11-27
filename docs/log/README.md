@@ -220,5 +220,6 @@ To add an entry, see [`.agents/skills/log/SKILL.md`](../../.agents/skills/log/SK
 | 2026-11-25 | [Kollmorgen said our drives are too small. That is not true. Drives still in the running, with prices](2026-11-25_kollmorgen-too-small-answer-and-drive-comparison.md) | engineering, purchasing |  |
 | 2026-11-25 | [Kollmorgen manuals read: buy the AKD2G, not the AKD. What to buy with it, and what to still ask](2026-11-25_kollmorgen-manuals-accessories-and-open-questions.md) | engineering, purchasing |  |
 | 2026-11-25 | [Second source for the MK21 linear motor: only the HIWIN LMSA21 fits](2026-11-25_second-source-for-the-mk21-linear-motor.md) | engineering, purchasing |  |
+| 2026-11-25 | [Water cooling of the compact stage motor at rated current](2026-11-25_forcer-cooling-thermal-study.md) | simulation, engineering, purchasing |  |
 | 2026-11-26 | [HIWIN E2 lubrication units leak when mounted vertically: ask about grease and maintenance](2026-11-26_e2-lubrication-unit-vertical-use-and-maintenance.md) | engineering, purchasing |  |
 | 2026-11-26 | [Agents now read about a quarter of the text at the start of a task](2026-11-26_agents-read-less-at-start.md) | software |  |
