@@ -1,8 +1,0 @@
----
-description: Planning, code quality, dependencies, and verification before declaring work done
-alwaysApply: false
----
-
-# Planning and quality
-
-Follow [`.agents/rules/planning-and-testing.md`](../../.agents/rules/planning-and-testing.md).
