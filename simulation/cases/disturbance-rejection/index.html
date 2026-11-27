@@ -177,10 +177,10 @@ table.res td.bad .v { color: var(--bad); }
       <fieldset>
         <legend>Controller</legend>
         <div class="cases">
-          <label class="check"><input id="ctrl-single" name="ctrl" type="radio" value="single" checked>
+          <label class="check"><input id="ctrl-single" name="ctrl" type="radio" value="single">
             <span>Single-loop controller
               <small>One loop from the position error straight to the motor force, plus acceleration feedforward.</small></span></label>
-          <label class="check"><input id="ctrl-cascade" name="ctrl" type="radio" value="cascade">
+          <label class="check"><input id="ctrl-cascade" name="ctrl" type="radio" value="cascade" checked>
             <span>Cascade controller
               <small>Position PID around a velocity PI. Velocity from the change of the encoder position per sample.</small></span></label>
           <label class="check" id="ffBox"><input id="ffExact" type="checkbox" checked>
@@ -215,7 +215,7 @@ table.res td.bad .v { color: var(--bad); }
       <fieldset>
         <legend>Stage and controller</legend>
         <div class="field"><label for="m">Stage mass <small>kg, all cases</small></label>
-          <input id="m" type="number" step="0.1" min="0.01" value="2"></div>
+          <input id="m" type="number" step="0.1" min="0.01" value="20"></div>
         <div class="field"><label for="fs">Loop rate <small>Hz</small></label>
           <input id="fs" type="number" step="1000" min="100" value="4000"></div>
         <div class="field"><label for="msDb">Sensitivity peak limit <small>dB, 6 is usual for motion control</small></label>
@@ -414,7 +414,7 @@ table.res td.bad .v { color: var(--bad); }
           moves the stage by a fraction of a count. The stage then swings back and forth over the edge of a count, by
           about one count from peak to peak, and never settles. The derived velocity is very noisy: at 1 mm/min,
           4000 Hz and 0.1 µm it is 0 for 24 samples, then one count in one sample (0.4 mm/s, 24 times the true
-          speed). The force follows this noise (about ±1.4 N for the linear motor with the cascade), but the mass
+          speed). The force follows this noise (about ±14 N for the linear motor of 20 kg with the cascade), but the mass
           turns a force pulse of one sample into a very small movement. On the circle at 3000 mm/min, 125 counts
           pass in each sample, so the rounding looks like random noise. On a real machine, friction holds the stage
           between counts. The integrator then builds up force until the stage breaks free and jumps: those are the

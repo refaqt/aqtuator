@@ -52,7 +52,7 @@ Logs: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md),
 | Force mean | 50 N | |
 | Number of teeth | 2 | |
 | Spindle speed | 12000 rev/min | Tooth frequency = teeth · rev/min / 60 = 400 Hz |
-| Stage mass | 2 kg | The moving stage, in all three cases |
+| Stage mass | 20 kg | The moving stage, in all three cases. The model file default is 2 kg |
 | Loop rate | 4000 Hz | The loop rate of the velocity and position loops of the Copley Xenus Plus. The model file default is 10000 Hz, so the checks see 10 kHz |
 | Sensitivity peak limit | 6 dB | The usual limit for motion systems, see the tuning rules |
 | Resonance spread | ±15 % | The margins must hold with each resonance this much off |
@@ -67,7 +67,7 @@ Logs: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md),
 | Nut stiffness | 118 N/µm | HIWIN 16-5T4 |
 | Fixed bearing stiffness | 104 N/µm | TBI Motion BK12 |
 | Axial damping ratio | 0.02 | Of the stage on the axial spring. An estimate, range 0.01 to 0.05, see below |
-| Controller | single loop | Or the cascade |
+| Controller | cascade | Or the single loop. The model file default is the single loop |
 | Exact feedforward | on | Cascade only. Off: the standard values Aff = m/Vp, Vcff = 0 |
 | Encoder resolution | 0.1 µm | Per count, in linear terms at the stage, for every encoder. 0: no rounding. The model file default is 0, so the checks and the hard turning page see no rounding |
 | Circle diameter | 50 mm | Two equal stages, X and Y |
@@ -234,8 +234,8 @@ a_c·((m_s + m)/k_c + m/k_a)), and that with 0.1 µm rounding all errors stay wi
 
 ### The two controllers, at 10 kHz (encoder 0.1 µm)
 
-These results were made at 10000 Hz with the line at 10 mm/min, the defaults before
-2026-11-27. The page now starts at 4000 Hz and 1 mm/min.
+These results were made at 10000 Hz, with a stage of 2 kg and the line at 10 mm/min: the
+model file defaults. The page now starts with the cascade, at 4000 Hz, with 20 kg and 1 mm/min.
 
 | Case | Controller | Bandwidth | Lowest stiffness | Vibration at 400 Hz | Peak at the start of the cut | Chatter floor | Circle error | Line error, rms |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -270,7 +270,7 @@ Circle Ø50 mm at 3000 mm/min, line at 10 mm/min. Exact feedforward.
   itself. The feedback sees only a saw tooth of ±half a count, and the stage swings back and forth
   over the edge of a count, by about one count from peak to peak. At 4000 Hz and 1 mm/min the
   derived velocity is 0 for 24 samples and then 0.4 mm/s for one sample. The force follows this
-  noise (about ±1.4 N, linear motor, cascade), but the mass makes a force pulse of one sample into
+  noise (about ±1.4 N for a linear motor of 2 kg with the cascade, ±14 N at 20 kg), but the mass makes a force pulse of one sample into
   a very small movement. With friction, the stage would stick between counts until the integrator
   breaks it free: those are the steps with overshoot that a real machine shows.
 - **Standard feedforward (Vcff = 0)** leaves a radial error of about −0.05 µm on the circle for the
@@ -280,7 +280,7 @@ Circle Ø50 mm at 3000 mm/min, line at 10 mm/min. Exact feedforward.
 
 ### The single-loop controller
 
-Results at 10000 Hz, the other inputs at their defaults (no encoder rounding; with 0.1 µm the vibration and the peaks change by less
+Results at 10000 Hz and 2 kg, the other inputs at their defaults (no encoder rounding; with 0.1 µm the vibration and the peaks change by less
 than 1 %):
 
 | Case | f_b | Limited by | Sensitivity peak (worst plant) | Gain margin (worst plant) | Vibration at 400 Hz | Peak at the start of the cut | Lowest stiffness |
