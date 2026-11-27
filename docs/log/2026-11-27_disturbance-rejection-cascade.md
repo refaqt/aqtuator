@@ -39,6 +39,25 @@ through the velocity PI. Vff = 100 % does not depend on the velocity loop. Aff a
 exact feedforward, Vcff = −Vi·A and Vi·A² − (Vp + Vi·T/2)·A + m = 0, with A = Aff + T/2. See the
 [decision](../decisions/2026-11-27_feedforward-of-the-cascade-controller.md).
 
+## Later the same day: new defaults, and why the error has no steps
+
+The page now starts at a loop rate of 4000 Hz (the rate of the Copley Xenus Plus velocity and
+position loops) and a line speed of 1 mm/min. The model file keeps 10 kHz, so the checks are
+unchanged.
+
+Question asked: why does the following error show no steps of one count, with overshoot and
+settling? Answer, now also on the page and in the case README:
+
+- The stage is a mass. A new count changes only the measured position, not the true position.
+- The feedforward gives the force for the path. Without friction, constant speed needs no force,
+  so the stage moves on by itself. The feedback only sees a saw tooth of ±half a count.
+- The stage swings over the edge of a count, by about one count from peak to peak (about
+  ±0.05 µm at the new defaults). It never settles.
+- The derived velocity is very noisy (0 for 24 samples, then 0.4 mm/s), and the force follows it
+  (about ±1.4 N, linear motor, cascade). The mass turns these short pulses into a small movement.
+- Real steps come from friction: the stage sticks between counts until the integrator breaks it
+  free. The model has no friction, so it cannot show them.
+
 ## Open Questions
 
 - Does the Copley drive accept a negative Vcff? The manual gives no range. Ask Copley.
