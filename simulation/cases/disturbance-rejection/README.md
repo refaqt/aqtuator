@@ -53,7 +53,7 @@ Logs: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md),
 | Number of teeth | 2 | |
 | Spindle speed | 12000 rev/min | Tooth frequency = teeth · rev/min / 60 = 400 Hz |
 | Stage mass | 2 kg | The moving stage, in all three cases |
-| Loop rate | 10000 Hz | |
+| Loop rate | 4000 Hz | The loop rate of the velocity and position loops of the Copley Xenus Plus. The model file default is 10000 Hz, so the checks see 10 kHz |
 | Sensitivity peak limit | 6 dB | The usual limit for motion systems, see the tuning rules |
 | Resonance spread | ±15 % | The margins must hold with each resonance this much off |
 | Ball-screw pitch | 5 mm | Per revolution |
@@ -72,7 +72,7 @@ Logs: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md),
 | Encoder resolution | 0.1 µm | Per count, in linear terms at the stage, for every encoder. 0: no rounding. The model file default is 0, so the checks and the hard turning page see no rounding |
 | Circle diameter | 50 mm | Two equal stages, X and Y |
 | Feed on the circle | 3000 mm/min | |
-| Speed on a straight line | 10 mm/min | |
+| Speed on a straight line | 1 mm/min | At 0.1 µm and 4000 Hz, one count every 24 samples |
 
 The defaults are an SFU1605 screw with a BK12 fixed support at the motor end and a supported far
 end. The page has no computation delay: the controller applies the new
@@ -232,7 +232,10 @@ a_c·((m_s + m)/k_c + m/k_a)), and that with 0.1 µm rounding all errors stay wi
 
 ## What it shows
 
-### The two controllers, at the defaults (encoder 0.1 µm)
+### The two controllers, at 10 kHz (encoder 0.1 µm)
+
+These results were made at 10000 Hz with the line at 10 mm/min, the defaults before
+2026-11-27. The page now starts at 4000 Hz and 1 mm/min.
 
 | Case | Controller | Bandwidth | Lowest stiffness | Vibration at 400 Hz | Peak at the start of the cut | Chatter floor | Circle error | Line error, rms |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -261,6 +264,15 @@ Circle Ø50 mm at 3000 mm/min, line at 10 mm/min. Exact feedforward.
   the feedforward. The collocated ball screw keeps 11 nm: its springs give way under the
   0.1 m/s² centripetal acceleration, and the motor encoder does not see it.
 - **With 0.1 µm rounding, the errors are a fraction of a count**, mostly noise from the rounding.
+- **The error has no steps of one count, because the model has no friction.** A new count changes
+  only the measured position; the stage is a mass and cannot jump. The feedforward gives the force
+  for the path, and at constant speed without friction that force is zero, so the stage moves on by
+  itself. The feedback sees only a saw tooth of ±half a count, and the stage swings back and forth
+  over the edge of a count, by about one count from peak to peak. At 4000 Hz and 1 mm/min the
+  derived velocity is 0 for 24 samples and then 0.4 mm/s for one sample. The force follows this
+  noise (about ±1.4 N, linear motor, cascade), but the mass makes a force pulse of one sample into
+  a very small movement. With friction, the stage would stick between counts until the integrator
+  breaks it free: those are the steps with overshoot that a real machine shows.
 - **Standard feedforward (Vcff = 0)** leaves a radial error of about −0.05 µm on the circle for the
   ball screw: the integrator force m_tot·(Vi/Vp)·v changes direction around the circle, and the
   slower position loop does not push it back fully. For the linear motor the stiff position loop
@@ -268,7 +280,7 @@ Circle Ø50 mm at 3000 mm/min, line at 10 mm/min. Exact feedforward.
 
 ### The single-loop controller
 
-Results at the defaults (no encoder rounding; with 0.1 µm the vibration and the peaks change by less
+Results at 10000 Hz, the other inputs at their defaults (no encoder rounding; with 0.1 µm the vibration and the peaks change by less
 than 1 %):
 
 | Case | f_b | Limited by | Sensitivity peak (worst plant) | Gain margin (worst plant) | Vibration at 400 Hz | Peak at the start of the cut | Lowest stiffness |

@@ -198,7 +198,7 @@ table.res td.bad .v { color: var(--bad); }
         <div class="field"><label for="circF">Feed on the circle <small>mm/min</small></label>
           <input id="circF" type="number" step="500" min="1" value="3000"></div>
         <div class="field"><label for="lineV">Speed on a straight line <small>mm/min</small></label>
-          <input id="lineV" type="number" step="5" min="0.01" value="10"></div>
+          <input id="lineV" type="number" step="any" min="0.01" value="1"></div>
       </fieldset>
       <fieldset>
         <legend>Cutting force</legend>
@@ -217,7 +217,7 @@ table.res td.bad .v { color: var(--bad); }
         <div class="field"><label for="m">Stage mass <small>kg, all cases</small></label>
           <input id="m" type="number" step="0.1" min="0.01" value="2"></div>
         <div class="field"><label for="fs">Loop rate <small>Hz</small></label>
-          <input id="fs" type="number" step="1000" min="100" value="10000"></div>
+          <input id="fs" type="number" step="1000" min="100" value="4000"></div>
         <div class="field"><label for="msDb">Sensitivity peak limit <small>dB, 6 is usual for motion control</small></label>
           <input id="msDb" type="number" step="0.5" min="1" value="6"></div>
         <div class="field"><label for="spreadPct">Resonance spread <small>± %, the margins must hold over it</small></label>
@@ -407,6 +407,18 @@ table.res td.bad .v { color: var(--bad); }
           speed (Vff). Without encoder rounding both follow almost exactly; only the collocated ball screw keeps the
           spring deflection under the acceleration, which its motor encoder cannot see. With rounding, the controller
           sees steps of one count, and the derived velocity of the cascade jumps by one count per sample.</p>
+        <p class="note"><b>Why the error shows no steps of one count.</b> The stage is a mass. A new count changes
+          only the measured position; the true position cannot jump. The feedforward already gives the force for the
+          path, and the model has no friction, so at constant speed the stage needs no force and moves on by itself.
+          The feedback sees only the rounding: a saw tooth of ±half a count. It answers with a small force, which
+          moves the stage by a fraction of a count. The stage then swings back and forth over the edge of a count, by
+          about one count from peak to peak, and never settles. The derived velocity is very noisy: at 1 mm/min,
+          4000 Hz and 0.1 µm it is 0 for 24 samples, then one count in one sample (0.4 mm/s, 24 times the true
+          speed). The force follows this noise (about ±1.4 N for the linear motor with the cascade), but the mass
+          turns a force pulse of one sample into a very small movement. On the circle at 3000 mm/min, 125 counts
+          pass in each sample, so the rounding looks like random noise. On a real machine, friction holds the stage
+          between counts. The integrator then builds up force until the stage breaks free and jumps: those are the
+          steps, with overshoot and settling, that this model cannot show.</p>
       </section>
 
       <section class="panel note" aria-labelledby="h-model">
