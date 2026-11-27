@@ -11,7 +11,7 @@
 // Axes: X radial (+X into the part), Y up, Z along the spindle. Units inside
 // this file: SI (m, N, s, kg), except where a name ends in Mm (millimetres).
 //
-// This file needs control_model.js (the cutting force page) loaded first.
+// This file needs control_model.js (the disturbance rejection page) loaded first.
 // It reuses its tuned linear motor loop, its exact sampled compliance and its
 // stability lobes. Nothing is copied.
 //
@@ -44,7 +44,7 @@
 //   w    the force on the tool per newton of Fc: rt · u_h + (0, 1, 0)
 //   Kt   dFc/dh per unit chip width, (1 − mc) · kc1 · h^(−mc), the tangent of Kienzle
 //
-// So b_lim = −1/(2 · Kt · Re Φ), the same formula as the cutting force page
+// So b_lim = −1/(2 · Kt · Re Φ), the same formula as the disturbance rejection page
 // with one tooth, and the lobes come from its lobes() function.
 
 // The whole file sits in one function. The page loads it as a plain script
@@ -66,7 +66,7 @@ const TURNING_DEFAULTS = {
   kc1: 4700,        // N/mm², specific cutting force for 1 mm² chip section
   mc: 0.25,         // chip thickness factor
   rt: 1.5,          // Ft/Fc, thrust over cutting force. An estimate, range 1.1 to 2.5
-  // Drive and loop, as on the cutting force page.
+  // Drive and loop, as on the disturbance rejection page.
   fs: 10000,        // Hz, position loop rate
   // Masses, from the end-stop crash case of the compact stage (case.toml).
   mStageMoving: 4.24,  // kg, carriage, forcer, blocks, read head, dampers of one stage
@@ -318,7 +318,7 @@ function blockSetCompliance(q, which, point) {
 }
 
 // ---------------------------------------------------------------------------
-// Servo part: the linear motor loop of the cutting force page.
+// Servo part: the linear motor loop of the disturbance rejection page.
 // ---------------------------------------------------------------------------
 
 function servoLoops(q) {

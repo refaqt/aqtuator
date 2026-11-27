@@ -1,11 +1,17 @@
-// Motion controller against a milling force: a stage, a discrete controller
-// at the loop rate, and a sine cutting force with a mean. Three cases:
+// Disturbance rejection: a stage, a discrete controller at the loop rate, a
+// sine cutting force with a mean, and a path to follow. Three cases:
 //
 //   "linear"     linear motor. One rigid mass, the stage.
 //   "colloc"     BLDC motor, coupling, ball screw, stage. The controller reads
 //                the rotary encoder on the motor (collocated).
 //   "noncolloc"  the same mechanics. The controller reads a linear encoder on
 //                the stage (non-collocated).
+//
+// Two controllers (p.ctrl): "single", one loop from the position error to
+// the force, and "cascade", a position PID around a velocity PI with the
+// velocity derived from the encoder (see ctrlRow and ctrlStep). Both get
+// feedforward from the path. p.q rounds every measured position in the time
+// simulation to whole encoder counts.
 //
 // Units inside this file: SI (m, N, s, Hz, kg). The page converts to µm.
 //
@@ -96,6 +102,21 @@ const DEFAULTS = {
   msDb: 6,         // dB, highest allowed peak of the sensitivity |1/(1 + C·G)|
   gmMinDb: 6,      // dB, lowest allowed gain margin
   spread: 0.15,    // ± share by which each resonance frequency may move
+  ctrl: "single",  // "single": single-loop controller, "cascade": position PID around a velocity PI
+  ffExact: true,   // cascade only: exact feedforward (Vcff < 0) or standard (Aff = m/Vp, Vcff = 0)
+  q: 0,            // m, encoder resolution, linear equivalent. 0: no quantisation
+};
+
+// Fixed shape of the cascade controller. Only the two bandwidths f_v and f_p
+// are searched; these ratios set the rest. They were chosen at the defaults
+// for the highest bandwidths that meet the robustness rules (see the README).
+const CASCADE = {
+  nI: 6,       // velocity PI: integral corner Vi/Vp = 2π·f_v/nI
+  nO: 8,       // velocity output filter: two-pole Butterworth low pass at nO·f_v
+  nP: 3,       // position bandwidth f_p = f_v/nP
+  nPI: 10,     // position PID: integral corner Pi/Pp = 2π·f_p/nPI
+  pd: 0.1,     // position PID: Pd, (m/s)/(m/s), no unit
+  kg: 1,       // gain multiplier between position and velocity loop
 };
 
 const CASES = ["linear", "colloc", "noncolloc"];
@@ -299,9 +320,11 @@ function plantAt(f, p) {
   return { h: [mag * Math.cos(ph), mag * Math.sin(ph)], ph };
 }
 
-// The four discrete plant responses at f, complex:
+// The discrete plant responses at f, complex:
 //   mu: motor force to measured position, md: cutting force to measured,
-//   su: motor force to stage position,    sd: cutting force to stage.
+//   su: motor force to stage position,    sd: cutting force to stage,
+//   xu, xd: the same to the motor position (the velocity feedback of the
+//   cascade controller).
 // The cutting force is treated as held too, like the motor force. This is
 // close below about fs/4. The time simulation uses the true sine.
 // The responses are kept per frequency: the tuning asks for the same
@@ -314,7 +337,7 @@ function plantResp(f, p, pl) {
   const th = 2 * Math.PI * f * T, z = [Math.cos(th), Math.sin(th)];
   const M = d.Phi.map((row, i) => row.map((v, j) => (i === j ? csub(z, [v, 0]) : [-v, 0])));
   const [xu, xd] = csolve2(M, d.Gu, d.Gf);
-  const r = { mu: xu[pl.iy], md: xd[pl.iy], su: xu[pl.is], sd: xd[pl.is], n };
+  const r = { mu: xu[pl.iy], md: xd[pl.iy], su: xu[pl.is], sd: xd[pl.is], xu: xu[pl.im], xd: xd[pl.im], n };
   pl.memo.set(f, r);
   return r;
 }
@@ -347,7 +370,7 @@ function sectionAt(s, theta) {
   return { h: cdiv(num, den), ph: Math.atan2(num[1], num[0]) - Math.atan2(den[1], den[0]) };
 }
 
-// Controller C(z), with gain K.
+// Controller C(z) of the single loop, with gain K.
 function controllerAt(f, p, tuned) {
   const T = 1 / p.fs, theta = 2 * Math.PI * f * T;
   let h = [tuned.K, 0], ph = 0;
@@ -359,31 +382,88 @@ function controllerAt(f, p, tuned) {
   return { h, ph };
 }
 
+// Two-pole Butterworth low pass (RBJ coefficients), the output filter of the
+// velocity loop:
+//   y = (b0 + b1·z⁻¹ + b2·z⁻²) / (1 + a1·z⁻¹ + a2·z⁻²) · x
+// The cutoff is kept at or below 0.4·fs.
+function butterLP(fc, T) {
+  const fcUse = Math.min(fc, 0.4 / T);
+  const w0 = 2 * Math.PI * fcUse * T, c = Math.cos(w0), al = Math.sin(w0) / Math.SQRT2, a0 = 1 + al;
+  return { fc: fcUse, b0: (1 - c) / 2 / a0, b1: (1 - c) / a0, b2: (1 - c) / 2 / a0, a1: -2 * c / a0, a2: (1 - al) / a0 };
+}
+
+function biquadAt(b, theta) {
+  const z1 = [Math.cos(theta), -Math.sin(theta)], z2 = [Math.cos(2 * theta), -Math.sin(2 * theta)];
+  const num = [b.b0 + b.b1 * z1[0] + b.b2 * z2[0], b.b1 * z1[1] + b.b2 * z2[1]];
+  const den = [1 + b.a1 * z1[0] + b.a2 * z2[0], b.a1 * z1[1] + b.a2 * z2[1]];
+  return cdiv(num, den);
+}
+
+// The controller as a row of two transfer functions:
+//
+//   u = −cy(z)·y_m − cx(z)·x_motor   (plus the feedforward, which is outside
+//                                      the loop)
+//
+// Single loop: cy = C(z), cx = 0. Cascade (r = 0):
+//
+//   v_cmd = Kg·Cp·(r − y_m)                     position PID
+//   u     = F·(Cv·(v_cmd − D·x_motor) + Vcff·v_cmd)
+//   cy    = F·(Cv + Vcff)·Kg·Cp,   cx = F·Cv·D
+//
+//   Cp = Pp + Pi·T·z/(z − 1) + Pd·D,  Cv = Vp + Vi·T·z/(z − 1),
+//   D  = (1 − z⁻¹)/T (the derived velocity), F the output filter.
+//
+// While the velocity loop is tuned on its own (stage "vel"), the position
+// loop is open: cy = 0.
+function ctrlRow(f, p, t) {
+  if (t.kind !== "cascade") return { cy: controllerAt(f, p, t).h, cx: [0, 0] };
+  const T = 1 / p.fs, th = 2 * Math.PI * f * T;
+  const z = [Math.cos(th), Math.sin(th)];
+  const integ = cdiv([T * z[0], T * z[1]], [z[0] - 1, z[1]]);
+  const D = [(1 - z[0]) / T, z[1] / T];
+  const F = biquadAt(t.bq, th);
+  const Cv = cadd([t.Vp, 0], cmul([t.Vi, 0], integ));
+  const cx = cmul(F, cmul(Cv, D));
+  if (t.stage === "vel") return { cy: [0, 0], cx };
+  const Cp = cadd(cadd([t.Pp, 0], cmul([t.Pi, 0], integ)), cmul([t.Pd, 0], D));
+  const cy = cmul(F, cmul(cadd(Cv, [t.Vcff, 0]), cmul([t.Kg, 0], Cp)));
+  return { cy, cx };
+}
+
 // ---------------------------------------------------------------------------
 // Frequency responses. f in Hz, 0 < f < fs/2.
 // ---------------------------------------------------------------------------
 
 // Loop C·G_mu at f. The phases here are wrapped to (−π, π]. frequencyData
 // unwraps them over its grid.
+// The loop is broken at the force input: L = cy·G_mu + cx·G_xu. For the
+// single loop this is C·G_mu. c is the controller seen from the measured
+// position, L/G_mu (for the single loop C itself, with its phase).
 function loopAt(f, p, tuned) {
-  const g = plantResp(f, p, tuned.plant), c = controllerAt(f, p, tuned);
-  const h = cmul(g.mu, c.h);
-  return { h, g, c };
+  const g = plantResp(f, p, tuned.plant);
+  if (tuned.kind !== "cascade") {
+    const c = controllerAt(f, p, tuned);
+    return { h: cmul(g.mu, c.h), g, c, r: { cy: c.h, cx: [0, 0] } };
+  }
+  const r = ctrlRow(f, p, tuned);
+  const h = cadd(cmul(g.mu, r.cy), cmul(g.xu, r.cx));
+  return { h, g, r, c: { h: cdiv(h, g.mu) } };
 }
+
+// What the controller answers to the cutting force, (cy·G_md + cx·G_xd)/(1 + L).
+const distGain = (l) => cdiv(cadd(cmul(l.r.cy, l.g.md), cmul(l.r.cx, l.g.xd)), cadd([1, 0], l.h));
 
 // Compliance Y_s/F_d at the stage in m/N (complex).
 function complianceAt(f, p, tuned) {
   const l = loopAt(f, p, tuned);
-  const r = cdiv(cmul(l.c.h, l.g.md), cadd([1, 0], l.h));
-  return csub(l.g.sd, cmul(l.g.su, r));
+  return csub(l.g.sd, cmul(l.g.su, distGain(l)));
 }
 
 // Controller force per newton of cutting force, U/F_d = −C·G_md/(1 + C·G_mu)
 // (complex, no unit). Well below f_b the controller takes the whole force,
 // far above it the mass does.
 function forceRatioAt(f, p, tuned) {
-  const l = loopAt(f, p, tuned);
-  const r = cdiv(cmul(l.c.h, l.g.md), cadd([1, 0], l.h));
+  const r = distGain(loopAt(f, p, tuned));
   return [-r[0], -r[1]];
 }
 
@@ -391,7 +471,7 @@ function forceRatioAt(f, p, tuned) {
 // any ω that is not a multiple of fs/2, also above half the loop rate. Over
 // one sample u is constant, and the plant integrates u and the sine exactly:
 //
-//   x[k+1] = Φ·x[k] + Gu·u[k] + F_amp·(Ss + j·Sc)·e^{jωkT},   u[k] = −C(z)·y_m[k]
+//   x[k+1] = Φ·x[k] + Gu·u[k] + F_amp·(Ss + j·Sc)·e^{jωkT},   u[k] = −cy·y_m[k] − cx·x_motor[k]
 //
 // With x[k] = X·z^k and z = e^{jωT} this is one linear system in X. The
 // controller works u[k]·(x_motor[k+1] − x_motor[k]) in each sample, so its
@@ -401,15 +481,16 @@ function sampledSteadyAt(f, p, tuned) {
   const pl = tuned.plant, T = 1 / p.fs, w = 2 * Math.PI * f, n = pl.n;
   const s = stepMatrices(pl, T, w);
   const z = [Math.cos(w * T), Math.sin(w * T)];
-  const C = controllerAt(f, p, tuned).h;
+  const { cy, cx } = ctrlRow(f, p, tuned);
   const M = s.Phi.map((row, i) => row.map((v, j) => {
     let e = [-v, 0];
     if (i === j) e = cadd(e, z);
-    if (j === pl.iy) e = cadd(e, cmul(C, [s.Gu[i], 0]));
+    if (j === pl.iy) e = cadd(e, cmul(cy, [s.Gu[i], 0]));
+    if (j === pl.im) e = cadd(e, cmul(cx, [s.Gu[i], 0]));
     return e;
   }));
   const X = csolve(M, s.Ss.map((v, i) => [v * p.Famp, s.Sc[i] * p.Famp]));
-  const U = cmul([-C[0], -C[1]], X[pl.iy]);
+  const U = cadd(cmul([-cy[0], -cy[1]], X[pl.iy]), cmul([-cx[0], -cx[1]], X[pl.im]));
   const dX = cmul(X[pl.im], [z[0] - 1, z[1]]);
   const pMean = 0.5 * (U[0] * dX[0] + U[1] * dX[1]) / T;
   return { X: X[pl.is], U, pMean, n };
@@ -435,11 +516,12 @@ function sineComplianceAt(f, p, tuned) {
   const rhs = d.Phi.map((row, i) => row.reduce((s, v, j) =>
     cadd(s, cmul(i === j ? [z[0] - v, z[1]] : [-v, 0], [pl.Bd[j], 0])), [0, 0]));
   const g = csolve(Mg, rhs);
-  const C = controllerAt(f, p, tuned).h;
+  const { cy, cx } = ctrlRow(f, p, tuned);
   const M = d.Phi.map((row, i) => row.map((v, j) => {
     let e = [-v, 0];
     if (i === j) e = cadd(e, z);
-    if (j === pl.iy) e = cadd(e, cmul(C, [d.Gu[i], 0]));
+    if (j === pl.iy) e = cadd(e, cmul(cy, [d.Gu[i], 0]));
+    if (j === pl.im) e = cadd(e, cmul(cx, [d.Gu[i], 0]));
     return e;
   }));
   return csolve(M, g)[pl.is];
@@ -535,11 +617,144 @@ function chatter(p, tuned, rpmLo, rpmHi, nr = 800) {
 
 const wrap = (a) => a - 2 * Math.PI * Math.round(a / (2 * Math.PI));
 
-// The controller for a bandwidth f_b, with K set so that |C·G| = 1 there.
+// The low-frequency mass line seen at the motor force: the whole moving
+// mass, in linear terms. The acceleration feedforward pushes this mass.
+const massLine = (p, id) => {
+  if (id === "linear") return p.m;
+  const q = mechanics(p);
+  return q.m1 + q.ms + q.m;
+};
+
+// The single-loop controller for a bandwidth f_b, with K set so that
+// |C·G| = 1 there.
 function controllerFor(fb, p, pl) {
   const secs = sections(fb, 1 / p.fs);
   const K = 1 / cabs(loopAt(fb, p, { K: 1, sections: secs, plant: pl }).h);
-  return { plant: pl, fb, K, sections: secs };
+  return { kind: "single", plant: pl, fb, K, sections: secs, mTot: massLine(p, pl.id) };
+}
+
+// The velocity loop of the cascade for a bandwidth f_v: Vp makes
+// |F·Cv·D·G_xu| = 1 at f_v, Vi = Vp·2π·f_v/nI, the output filter sits at
+// nO·f_v. The position loop is open.
+function velocityLoopFor(fv, p, pl) {
+  const t = { kind: "cascade", stage: "vel", plant: pl, fb: fv, fv,
+    Vp: 1, Vi: 2 * Math.PI * fv / CASCADE.nI, bq: butterLP(CASCADE.nO * fv, 1 / p.fs),
+    Pp: 0, Pi: 0, Pd: 0, Kg: CASCADE.kg, Vff: 0, Aff: 0, Vcff: 0 };
+  const g = 1 / cabs(loopAt(fv, p, t).h);
+  t.Vp *= g;
+  t.Vi *= g;
+  return t;
+}
+
+// The feedforward of the cascade, from the velocity loop and the mass m.
+// With perfect tracking the velocity error is (Aff + T/2)·a: Aff, plus half
+// a sample because the derived velocity lags the profile velocity. Call
+// A = Aff + T/2. The integrator then holds Vi·A·v, so
+//
+//   u = Vp·A·a + Vi·A·v + Vcff·(v + Aff·a)
+//
+// and u = m·a needs Vcff = −Vi·A and Vp·A + Vcff·Aff = m, so
+//
+//   Vi·A² − (Vp + Vi·T/2)·A + m = 0,  A = the smaller root.
+//
+// Standard: Vff = 100 %, Aff = m/Vp, Vcff = 0. Then the integrator leaves a
+// force Vi·Aff·v, about m·(Vi/Vp)·v, that the position loop must fight.
+// exact is false when the quadratic has no real root; then the standard
+// values are used.
+function feedforward(vel, m, T, exactWanted) {
+  const std = { Vff: 1, Aff: m / vel.Vp, Vcff: 0, exact: false };
+  if (!exactWanted) return std;
+  const B = vel.Vp + vel.Vi * T / 2, disc = B * B - 4 * vel.Vi * m;
+  if (!(vel.Vi > 0)) return { Vff: 1, Aff: m / vel.Vp - T / 2, Vcff: 0, exact: true };
+  if (disc < 0) return { ...std, exactFailed: true };
+  const A = (B - Math.sqrt(disc)) / (2 * vel.Vi);
+  return { Vff: 1, Aff: A - T / 2, Vcff: -vel.Vi * A, exact: true };
+}
+
+// The full cascade for a position bandwidth f_p, around a tuned velocity
+// loop: Pp = 2π·f_p (with the velocity loop closed, the stage is close to an
+// integrator from velocity command to position, so the position loop
+// crosses 1 near f_p), Pi = Pp·2π·f_p/nPI, Pd fixed. Vcff is part of the
+// loop, so it is set here.
+function cascadeFor(vel, fp, p, pl) {
+  const Pp = 2 * Math.PI * fp;
+  const ff = feedforward(vel, massLine(p, pl.id), 1 / p.fs, p.ffExact ?? true);
+  return { ...vel, stage: "full", plant: pl, fb: fp, fp, Pp, Pi: Pp * 2 * Math.PI * fp / CASCADE.nPI,
+    Pd: CASCADE.pd, Kg: CASCADE.kg, ...ff, mTot: massLine(p, pl.id) };
+}
+
+// Scan up from a slow bandwidth, take the first place where a rule breaks,
+// and bisect there. Rules can hold again at a higher bandwidth, but such a
+// loop would be fragile, so the search stops at the first break. build(f)
+// gives the controller for bandwidth f. With top, a grid without a break
+// ends at its last point instead of failing.
+function searchBandwidth(p, build, family, grid, top = false) {
+  const okAt = (f) => robustness(p, build(f), family, false).ok;
+  if (!okAt(grid[0])) throw new Error("the robustness rules are stricter than this controller can reach");
+  let lo = NaN, hi = NaN;
+  for (let i = 1; i < grid.length; i++) {
+    if (!okAt(grid[i])) { lo = grid[i - 1]; hi = grid[i]; break; }
+  }
+  if (Number.isNaN(lo)) {
+    if (!top) throw new Error("no bandwidth meets the robustness rules");
+    lo = grid[grid.length - 1];
+  } else {
+    for (let i = 0; i < 20; i++) {
+      const mid = Math.sqrt(lo * hi);
+      if (okAt(mid)) lo = mid; else hi = mid;
+    }
+  }
+  // The search used a coarse grid. If the fine one finds a broken rule, step
+  // the bandwidth down until it agrees, then bisect that last step on the
+  // fine grid.
+  const fineAt = (f) => {
+    const t = build(f);
+    return { t, rob: robustness(p, t, family, true) };
+  };
+  let fb = lo, cur = fineAt(fb), bad = NaN;
+  for (let i = 0; i < 200 && !cur.rob.ok; i++) {
+    bad = fb;
+    fb *= 0.99;
+    cur = fineAt(fb);
+  }
+  for (let i = 0; i < 4 && !Number.isNaN(bad) && cur.rob.ok; i++) {
+    const mid = Math.sqrt(fb * bad), next = fineAt(mid);
+    if (next.rob.ok) { fb = mid; cur = next; } else bad = mid;
+  }
+  const { t: tuned, rob } = cur;
+  // The margins of the nominal plant, for the charts and the table.
+  Object.assign(tuned, margins(p, tuned));
+  tuned.rho = spectralRadius(p, tuned);
+  tuned.stable = tuned.rho < 1;
+  tuned.robust = rob.ok;
+  tuned.worst = rob.worst;
+  tuned.family = family.length;
+  // What stops a faster loop: the rules that break 2 % above the bandwidth.
+  tuned.limit = robustness(p, build(fb * 1.02), family, true).broken;
+  tuned.atTop = Number.isNaN(hi) && top;
+  return tuned;
+}
+
+// Tune for the rules above.
+//   Single loop: the highest f_b.
+//   Cascade: the highest f_v, with f_p = f_v/nP. The rules must hold twice:
+//   for the velocity loop alone, and for the whole loop broken at the force.
+//   (Tuning the velocity loop to its own limit first leaves no room for the
+//   position loop: the whole loop then already breaks the sensitivity peak.)
+function tune(p, id = "linear") {
+  const family = plantFamily(p, id), pl = family[0];
+  if ((p.ctrl ?? "single") !== "cascade") {
+    const t = searchBandwidth(p, (fb) => controllerFor(fb, p, pl), family, logspace(p.fs * 1e-4, p.fs * 0.2, 60));
+    t.id = id;
+    return t;
+  }
+  const build = (fv) => cascadeFor(velocityLoopFor(fv, p, pl), fv / CASCADE.nP, p, pl);
+  const t = searchBandwidth(p, build, family, logspace(p.fs * 1e-4, p.fs * 0.2, 60));
+  t.id = id;
+  // The velocity loop alone, nominal plant.
+  const v = { ...t, stage: "vel", fb: t.fv };
+  t.vel = { ...margins(p, v), rho: spectralRadius(p, v) };
+  return t;
 }
 
 // The plants the controller must work on: the nominal one, and for the ball
@@ -590,54 +805,14 @@ function robustness(p, tuned, family, fine = true) {
   }
   w.msDb = 20 * Math.log10(w.ms);
   w.gmDb = 20 * Math.log10(w.gm);
+  // The cascade: the velocity loop alone must meet the same rules, so the
+  // drive stays safe with the position loop off (as when it is tuned).
+  if (tuned.kind === "cascade" && tuned.stage === "full" && (fine || !broken.length)) {
+    const v = robustness(p, { ...tuned, stage: "vel", fb: tuned.fv }, family, fine);
+    w.vel = v.worst;
+    broken.push(...v.broken.map((b) => ({ ...b, loop: "velocity" })));
+  }
   return { ok: broken.length === 0, worst: w, broken };
-}
-
-// Tune for the rules above. Scan up from a slow f_b, take the first place
-// where a rule breaks, and bisect there. Rules can hold again at a higher
-// f_b, but such a loop would be fragile, so the search stops at the first
-// break.
-function tune(p, id = "linear") {
-  const family = plantFamily(p, id), pl = family[0];
-  const okAt = (fb) => robustness(p, controllerFor(fb, p, pl), family, false).ok;
-  const grid = logspace(p.fs * 1e-4, p.fs * 0.2, 60);
-  if (!okAt(grid[0])) throw new Error("the robustness rules are stricter than this controller can reach");
-  let lo = NaN, hi = NaN;
-  for (let i = 1; i < grid.length; i++) {
-    if (!okAt(grid[i])) { lo = grid[i - 1]; hi = grid[i]; break; }
-  }
-  if (Number.isNaN(lo)) throw new Error("no bandwidth meets the robustness rules");
-  for (let i = 0; i < 20; i++) {
-    const mid = Math.sqrt(lo * hi);
-    if (okAt(mid)) lo = mid; else hi = mid;
-  }
-  // The search used a coarse grid. If the fine one finds a broken rule, step
-  // f_b down until it agrees, then bisect that last step on the fine grid.
-  const fineAt = (f) => {
-    const t = { id, ...controllerFor(f, p, pl) };
-    return { t, rob: robustness(p, t, family, true) };
-  };
-  let fb = lo, cur = fineAt(fb), bad = NaN;
-  for (let i = 0; i < 200 && !cur.rob.ok; i++) {
-    bad = fb;
-    fb *= 0.99;
-    cur = fineAt(fb);
-  }
-  for (let i = 0; i < 4 && !Number.isNaN(bad) && cur.rob.ok; i++) {
-    const mid = Math.sqrt(fb * bad), next = fineAt(mid);
-    if (next.rob.ok) { fb = mid; cur = next; } else bad = mid;
-  }
-  const { t: tuned, rob } = cur;
-  // The margins of the nominal plant, for the charts and the table.
-  Object.assign(tuned, margins(p, tuned));
-  tuned.rho = spectralRadius(p, tuned);
-  tuned.stable = tuned.rho < 1;
-  tuned.robust = rob.ok;
-  tuned.worst = rob.worst;
-  tuned.family = family.length;
-  // What stops a faster loop: the rules that break 2 % above f_b.
-  tuned.limit = robustness(p, controllerFor(fb * 1.02, p, pl), family, true).broken;
-  return tuned;
 }
 
 // All gain crossovers and all −180° crossings up to fs/2. The phase margin
@@ -657,8 +832,8 @@ function margins(p, tuned, nGrid = 2000, iters = 40, fLo = tuned.fb / 1000) {
   const mech = tuned.plant.mech;
   if (mech) {
     // The motor encoder also sees the antiresonances. The stage encoder
-    // does not.
-    const peaks = tuned.plant.id === "colloc" ? [...mech.modes, ...mech.antis] : mech.modes;
+    // does not. The cascade always reads the motor encoder for its velocity.
+    const peaks = tuned.plant.id === "colloc" || tuned.kind === "cascade" ? [...mech.modes, ...mech.antis] : mech.modes;
     for (const f0 of peaks) {
       const fa = Math.abs(f0 - p.fs * Math.round(f0 / p.fs));
       for (const fc of f0 < nyq ? [f0] : [fa]) {
@@ -718,33 +893,116 @@ function margins(p, tuned, nGrid = 2000, iters = 40, fLo = tuned.fb / 1000) {
 // Closed loop at the samples, and its stability.
 // ---------------------------------------------------------------------------
 
-// One sample of the closed loop without the cutting force. The state is the
-// plant state, then the input and output memory of each controller section.
+// ---------------------------------------------------------------------------
+// The controller in time: one sample. The same code runs in the stability
+// test (as a linear map) and in the time simulation, so they cannot differ.
+// ---------------------------------------------------------------------------
+
+// Number of controller states.
+const ctrlSize = (t) => (t.kind === "cascade" ? 6 : 2 * t.sections.length);
+
+// One sample of the controller. cs: the controller state, changed in place.
+// ym: measured position, xm: measured motor position (the same sensor for the
+// linear motor and the collocated case), ref: {r, v, a} of the profile or
+// null (r = v = a = 0). Returns the force u.
+//
+// Single loop:  e = r − y_m, the three sections in series, u = K·out + m·a.
+//   Each section: out[k] = b0·in[k] + b1·in[k−1] − a1·out[k−1].
+// Cascade, written out:
+//   e_p     = r − y_m
+//   I_p[k]  = I_p[k−1] + T·e_p[k]            (the sum is the state)
+//   v_pos   = Pp·e_p + Pi·I_p[k] + Pd·(e_p[k] − e_p[k−1])/T
+//   v_cmd   = Kg·v_pos + Vff·v + Aff·a
+//   v_m     = (x_m[k] − x_m[k−1])/T          (derived velocity)
+//   e_v     = v_cmd − v_m
+//   I_v[k]  = I_v[k−1] + T·e_v[k]
+//   u_v     = Vp·e_v + Vi·I_v[k] + Vcff·v_cmd
+//   u       = output filter (u_v), transposed direct form II:
+//             y = b0·x + s1,  s1 = b1·x − a1·y + s2,  s2 = b2·x − a2·y
+// State: [e_p[k−1], I_p, x_m[k−1], I_v, s1, s2]. In stage "vel" the position
+// loop and the feedforward are off, and its two states stay 0.
+function ctrlStep(p, t, cs, ym, xm, ref) {
+  const r = ref ? ref.r : 0, v = ref ? ref.v : 0, a = ref ? ref.a : 0;
+  if (t.kind !== "cascade") {
+    let s = r - ym;
+    const secs = t.sections;
+    for (let i = 0; i < secs.length; i++) {
+      const c = secs[i];
+      const out = c.b0 * s + c.b1 * cs[2 * i] - c.a1 * cs[2 * i + 1];
+      cs[2 * i] = s;
+      cs[2 * i + 1] = out;
+      s = out;
+    }
+    return t.K * s + (a ? t.mTot * a : 0);
+  }
+  const T = 1 / p.fs;
+  let vcmd = 0;
+  if (t.stage !== "vel") {
+    const ep = r - ym, Ip = cs[1] + T * ep;
+    const vpos = t.Pp * ep + t.Pi * Ip + t.Pd * (ep - cs[0]) / T;
+    cs[0] = ep;
+    cs[1] = Ip;
+    vcmd = t.Kg * vpos + t.Vff * v + t.Aff * a;
+  } else {
+    cs[0] = 0;
+    cs[1] = 0;
+  }
+  const vm = (xm - cs[2]) / T;
+  cs[2] = xm;
+  const ev = vcmd - vm, Iv = cs[3] + T * ev;
+  cs[3] = Iv;
+  const uv = t.Vp * ev + t.Vi * Iv + (t.stage === "vel" ? 0 : t.Vcff * vcmd);
+  const b = t.bq, y = b.b0 * uv + cs[4];
+  cs[4] = b.b1 * uv - b.a1 * y + cs[5];
+  cs[5] = b.b2 * uv - b.a2 * y;
+  return y;
+}
+
+// One sample of the closed loop without the cutting force and without a
+// reference. The state is the plant state, then the controller state.
 function closedLoopStep(p, tuned, state) {
   const pl = tuned.plant, n = pl.n, d = discrete(pl, 1 / p.fs);
-  const x = state.slice(0, n), next = new Array(state.length).fill(0);
-  let s = x[pl.iy];
-  tuned.sections.forEach((c, i) => {
-    const out = c.b0 * s + c.b1 * state[n + 2 * i] - c.a1 * state[n + 2 * i + 1];
-    next[n + 2 * i] = s;
-    next[n + 2 * i + 1] = out;
-    s = out;
-  });
-  const u = -tuned.K * s;
+  const x = state.slice(0, n), cs = state.slice(n);
+  const u = ctrlStep(p, tuned, cs, x[pl.iy], x[pl.im], null);
+  const next = new Array(state.length).fill(0);
   for (let i = 0; i < n; i++) {
     let v = d.Gu[i] * u;
     for (let j = 0; j < n; j++) v += d.Phi[i][j] * x[j];
     next[i] = v;
   }
+  for (let i = 0; i < cs.length; i++) next[n + i] = cs[i];
   return next;
+}
+
+// The positions in the closed-loop state: those of the masses, and for the
+// cascade the stored motor position of the derived velocity.
+function positionStates(tuned) {
+  const pl = tuned.plant;
+  const pos = pl.id === "linear" ? [0] : [0, 2, 4];
+  if (tuned.kind === "cascade") pos.push(pl.n + 2);
+  return pos;
+}
+
+// The velocity loop alone never sees the absolute position: moving the whole
+// stage leaves it unchanged, so it has one pole at exactly z = 1. Here the
+// positions are written relative to the motor position, which then feeds
+// nothing else, and that row and column are taken out.
+function dropRigidMotion(A, pos, ref) {
+  const N = A.length;
+  const P = eye(N), Pi = eye(N);
+  for (const i of pos) if (i !== ref) { P[i][ref] = -1; Pi[i][ref] = 1; }
+  const B = matmul(matmul(P, A), Pi);
+  const keep = [...Array(N).keys()].filter((i) => i !== ref);
+  return keep.map((i) => keep.map((j) => B[i][j]));
 }
 
 // Spectral radius of the closed loop at the samples: the largest |pole|.
 // Found as ‖A^N‖^(1/N) with N = 2^20, by squaring. Below 1: stable.
 function spectralRadius(p, tuned) {
-  const N = tuned.plant.n + 2 * tuned.sections.length;
+  const N = tuned.plant.n + ctrlSize(tuned);
   const cols = eye(N).map((e) => closedLoopStep(p, tuned, e));
   let A = zeros(N).map((row, i) => row.map((_, j) => cols[j][i]));
+  if (tuned.stage === "vel") A = dropRigidMotion(A, positionStates(tuned), tuned.plant.im);
   let logScale = 0;
   const steps = 20;
   for (let i = 0; i < steps; i++) {
@@ -769,19 +1027,27 @@ const toothFreq = (p) => p.teeth * p.rpm / 60;
 // −180°, like a mass.
 function frequencyData(p, tuned, n = 600, fLo = tuned.fb / 200) {
   const f = logspace(fLo, p.fs / 2 * 0.98, n);
-  let gPrev = -Math.PI;
+  let gPrev = -Math.PI, cPrev = NaN;
   return f.map((fi) => {
     const l = loopAt(fi, p, tuned);
     let gph = carg(l.g.mu);
     gph += 2 * Math.PI * Math.round((gPrev - gph) / (2 * Math.PI));
     gPrev = gph;
-    const r = cdiv(cmul(l.c.h, l.g.md), cadd([1, 0], l.h));
-    const y = csub(l.g.sd, cmul(l.g.su, r));
+    // The single loop knows its controller phase. For the cascade, L/G is
+    // unwrapped along the grid. It starts near −180° (two integrators).
+    let cph = l.c.ph;
+    if (cph === undefined) {
+      cph = carg(l.c.h);
+      const ref = Number.isNaN(cPrev) ? -Math.PI : cPrev;
+      cph += 2 * Math.PI * Math.round((ref - cph) / (2 * Math.PI));
+      cPrev = cph;
+    }
+    const y = csub(l.g.sd, cmul(l.g.su, distGain(l)));
     return {
       f: fi,
       G: cabs(l.g.mu), Gph: gph,
-      C: cabs(l.c.h), Cph: l.c.ph,
-      L: cabs(l.h), Lph: gph + l.c.ph,
+      C: cabs(l.c.h), Cph: cph,
+      L: cabs(l.h), Lph: gph + cph,
       S: 1 / cabs(cadd([1, 0], l.h)),               // sensitivity, no unit
       Y: cabs(y),                                   // m/N
       mass: 1 / (p.m * (2 * Math.PI * fi) ** 2),    // m/N, the bare stage mass
@@ -825,6 +1091,12 @@ function advance(S, x, u, Fmean, Famp, w, t0, out) {
 //           the peak of the controller power u·v, and the work u·Δx.
 //           v and x are at the motor side, where u pushes.
 //   fine:   keep [t, x_stage, u, v_motor] at the sub points of the window.
+//   ref:    a profile function k -> {r, v, a} at sample k (see the
+//           trajectories below), or none: hold still at 0.
+//   q:      encoder resolution in m (default p.q). Every measured position is
+//           rounded to a whole number of counts. 0: no rounding.
+//   track:  keep the reference r at every sample (with record 'all').
+//   each:   a function (k, x_stage, u, r) called at every sample.
 function simulate(p, tuned, opts = {}) {
   const pl = tuned.plant, n = pl.n, T = 1 / p.fs;
   const w = 2 * Math.PI * toothFreq(p);
@@ -833,26 +1105,24 @@ function simulate(p, tuned, opts = {}) {
   const sub = opts.sub ?? 1;
   const from = opts.window ?? N;
   const full = stepCached(pl, T, w), part = stepCached(pl, T / sub, w);
-  const secs = tuned.sections, K = tuned.K;
-  const sin_ = secs.map(() => 0), sout = secs.map(() => 0);
+  const cs = new Array(ctrlSize(tuned)).fill(0);
+  const q = opts.q ?? p.q ?? 0;
+  const meas = q > 0 ? (v) => q * Math.round(v / q) : (v) => v;
+  const ref = opts.ref ?? null;
   let x = new Array(n).fill(0), y = new Array(n).fill(0);
   let lo = Infinity, hi = -Infinity, peak = 0;
   let uLo = Infinity, uHi = -Infinity, uPeak = 0, pPeak = 0, work = 0;
   const xs = opts.record === "all" ? new Float64Array(N + 1) : null;
   const us = opts.record === "all" ? new Float64Array(N) : null;
   const fine = opts.fine ? [] : null;
+  const rs = opts.track && xs ? new Float64Array(N) : null;
   for (let k = 0; k < N; k++) {
-    // Sample the position, run the controller: u = −K · C1 · C2 · C3 · y.
-    let s = x[pl.iy];
-    for (let i = 0; i < secs.length; i++) {
-      const c = secs[i];
-      const out = c.b0 * s + c.b1 * sin_[i] - c.a1 * sout[i];
-      sin_[i] = s;
-      sout[i] = out;
-      s = out;
-    }
-    const u = -K * s;
+    // Sample the encoders, run the controller.
+    const rk = ref ? ref(k) : null;
+    const u = ctrlStep(p, tuned, cs, meas(x[pl.iy]), meas(x[pl.im]), rk);
     if (xs) { xs[k] = x[pl.is]; us[k] = u; }
+    if (rs) rs[k] = rk ? rk.r : 0;
+    if (opts.each) opts.each(k, x[pl.is], u, rk ? rk.r : 0);
     if (Math.abs(u) > uPeak) uPeak = Math.abs(u);
     const t0 = k * T, xm0 = x[pl.im];
     if (k >= from) {
@@ -884,7 +1154,7 @@ function simulate(p, tuned, opts = {}) {
   }
   if (xs) xs[N] = x[pl.is];
   const tWin = Math.max(0, N - from) * T;
-  return { xs, us, fine, lo, hi, amp: (hi - lo) / 2, peak, T,
+  return { xs, us, rs, fine, lo, hi, amp: (hi - lo) / 2, peak, T,
     uAmp: (uHi - uLo) / 2, uPeak, pPeak, pMean: tWin > 0 ? work / tWin : NaN };
 }
 
@@ -957,13 +1227,113 @@ function sweep(p, tuned, rpmLo, rpmHi, n = 120) {
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// Motion: following a profile, without the cutting force.
+// ---------------------------------------------------------------------------
+//
+// The profile is what a trajectory generator gives at each sample: position
+// r, speed v and acceleration a. Both controllers get v and a as feedforward
+// (the single loop uses only a). The speed starts with a smooth ramp, so the
+// start does not kick the loop:
+//
+//   v(t) = V·(1 − cos(π·t/t_r))/2  for t < t_r,  then V.
+
+const RAMP = 0.1;   // s, ramp time to full speed
+
+function ramp(V, tr = RAMP) {
+  return (t) => {
+    if (t >= tr) return { s: V * (tr / 2 + t - tr), v: V, a: 0 };
+    const w = Math.PI / tr;
+    return { s: V * (t / 2 - Math.sin(w * t) / (2 * w)), v: V * (1 - Math.cos(w * t)) / 2, a: V * w * Math.sin(w * t) / 2 };
+  };
+}
+
+// The longest test that is run, in samples. A slow feed on a large circle
+// would take too long; then only part of the circle is run.
+const MAX_SAMPLES = 1.5e6;
+
+// Keep at most n points of a long trace, the lowest and the highest value in
+// each bucket, so the envelope stays true.
+function thinMinMax(xs, ys, n = 1500) {
+  const per = Math.max(1, Math.ceil(xs.length / n)), out = [];
+  for (let i = 0; i < xs.length; i += per) {
+    let lo = i, hi = i;
+    for (let j = i; j < Math.min(xs.length, i + per); j++) { if (ys[j] < ys[lo]) lo = j; if (ys[j] > ys[hi]) hi = j; }
+    for (const j of lo < hi ? [lo, hi] : lo > hi ? [hi, lo] : [lo]) out.push([xs[j], ys[j]]);
+  }
+  return out;
+}
+
+function stats(e) {
+  let lo = Infinity, hi = -Infinity, s2 = 0, s1 = 0;
+  for (const v of e) { if (v < lo) lo = v; if (v > hi) hi = v; s1 += v; s2 += v * v; }
+  const n = e.length || 1;
+  return { lo, hi, ptp: hi - lo, peak: Math.max(Math.abs(lo), Math.abs(hi)), mean: s1 / n, rms: Math.sqrt(s2 / n) };
+}
+
+// Circle test: two equal stages, X and Y, follow a circle of diameter D (m)
+// at feed F (m/s):
+//
+//   x = R·(cos θ − 1),  y = R·sin θ,  θ = s(t)/R,  centre (−R, 0)
+//
+// Each axis is one simulation with its own profile. The contour error is the
+// radius of the stage path minus R, at the samples. It is shown over one full
+// turn, from the first whole turn after the ramp and the settle time.
+function circleTest(p, tuned, D, F) {
+  const R = D / 2, T = 1 / p.fs, prof = ramp(F);
+  const settle = settleSamples(p, tuned);
+  const turnS = 2 * Math.PI * R;                       // path length of one turn
+  const sStart = prof(RAMP).s + F * settle * T;        // path when settled
+  const n0 = Math.ceil(sStart / turnS);                // first whole turn
+  const kStart = Math.ceil((RAMP + (n0 * turnS - prof(RAMP).s) / F) / T);
+  const kTurn = Math.ceil(turnS / F / T);
+  const N = Math.min(kStart + kTurn, MAX_SAMPLES);
+  const win = Math.max(0, N - kStart);
+  const axis = (which) => (k) => {
+    const g = prof(k * T), th = g.s / R, w = g.v / R, al = g.a / R;
+    const c = Math.cos(th), sn = Math.sin(th);
+    return which === "x"
+      ? { r: R * (c - 1), v: -R * sn * w, a: -R * (c * w * w + sn * al) }
+      : { r: R * sn, v: R * c * w, a: R * (-sn * w * w + c * al) };
+  };
+  const run = (which) => {
+    const out = new Float64Array(win);
+    simulate(p, tuned, { samples: N, Fmean: 0, Famp: 0, ref: axis(which),
+      each: (k, xs) => { if (k >= kStart) out[k - kStart] = xs; } });
+    return out;
+  };
+  const X = run("x"), Y = run("y");
+  const ang = new Float64Array(win), err = new Float64Array(win);
+  for (let i = 0; i < win; i++) {
+    const g = prof((kStart + i) * T);
+    ang[i] = (g.s / R - 2 * Math.PI * n0) * 180 / Math.PI;
+    err[i] = Math.hypot(X[i] + R, Y[i]) - R;
+  }
+  return { pts: thinMinMax(ang, err), ...stats(err), turn: win / kTurn, R, tTurn: turnS / F };
+}
+
+// Straight line at constant speed V (m/s): the following error r − x at the
+// stage, at the samples, over a window after the ramp and the settle time.
+// The window holds at least 30 encoder counts and 50 ms, at most 2 s.
+function lineTest(p, tuned, V) {
+  const T = 1 / p.fs, prof = ramp(V), q = p.q ?? 0;
+  const kStart = Math.ceil(RAMP / T) + settleSamples(p, tuned);
+  const len = Math.min(2, Math.max(0.05, q > 0 ? 30 * q / V : 0));
+  const win = Math.min(Math.ceil(len / T), MAX_SAMPLES - kStart);
+  const t = new Float64Array(win), err = new Float64Array(win);
+  simulate(p, tuned, { samples: kStart + win, Fmean: 0, Famp: 0,
+    ref: (k) => { const g = prof(k * T); return { r: g.s, v: g.v, a: g.a }; },
+    each: (k, xs, u, r) => { if (k >= kStart) { t[k - kStart] = (k - kStart) * T; err[k - kStart] = r - xs; } } });
+  return { pts: thinMinMax(t, err), ...stats(err), len: win * T };
+}
+
 // A plain script, not a module. Browsers refuse to load a module for a page
 // opened straight from disk (file://), so the page would never calculate.
 // The page and the checks both read the functions from this one object.
 globalThis.ControlModel = {
   DEFAULTS, CASES, cabs, carg, cmul, cdiv, cadd, csub, csolve, expm, mechanics, plantFor, stepMatrices, plantResp, sections, plantAt,
   controllerAt, loopAt, complianceAt, forceRatioAt, sampledSteadyAt, sineComplianceAt, lobePoint, lobes, chatter, tune, margins, spectralRadius,
-  plantFamily, robustness,
+  plantFamily, robustness, velocityLoopFor, cascadeFor, feedforward, ctrlRow, ctrlStep, massLine, butterLP, CASCADE,
   logspace, toothFreq, frequencyData, simulate, settleSamples, steadyState, steadyAmplitude,
-  entrySamples, entryTrace, steadyTrace, sweep,
+  entrySamples, entryTrace, steadyTrace, sweep, ramp, circleTest, lineTest, RAMP,
 };

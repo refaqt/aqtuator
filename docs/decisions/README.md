@@ -45,3 +45,4 @@ Template: [`.agents/templates/adr.md`](../../.agents/templates/adr.md).
 | 2026-11-09 | [We do not continue with DGSMARTWIN for now](2026-11-09_no-dgsmartwin-for-now.md) |
 | 2026-11-20 | [The seal strip ends are held by a printed clamp on a ramp](2026-11-20_strip-held-by-an-end-clamp.md) |
 | 2026-11-26 | [The agent entry files come from the shared kit](2026-11-26_shared-agent-files-come-from-the-kit.md) |
+| 2026-11-27 | [The cascade controller offers exact and standard feedforward](2026-11-27_feedforward-of-the-cascade-controller.md) |

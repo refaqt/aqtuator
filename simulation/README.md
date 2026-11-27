@@ -14,7 +14,7 @@ counterpart lives in [`modules/flexure-ball-screw-servo-stage/measurement/`](../
 | [`strip-seal-fatigue`](cases/strip-seal-fatigue/) | Python | Which strip material and roller size does the seal need, and how should its life be stated? (Fatigue values are measured supplier data, and they hold for dry air only.) |
 | [`strip-seal-preload`](cases/strip-seal-preload/) | Python (`numpy`, `scipy`) | Which radius does a 0.25 mm strip really take over 10 mm rollers, how does the pull change it, and can 304 replace 301? (Layout read off a sketch; confirm against CAD.) |
 | [`strip-seal-designer`](cases/strip-seal-designer/) | HTML + JavaScript (Node for checks) | How does the strip bend over the rollers, what force does each roller carry, and how much screw travel gives how much preload? Web page on GitHub Pages. (Magnet strip stiffness is an estimate.) |
-| [`cutting-force-rejection`](cases/cutting-force-rejection/) | HTML + JavaScript (Node for checks) | How much does the stage move under a milling force? Compares a linear motor with a ball-screw servo, read at the motor or at the stage. Web page on GitHub Pages. (Coupling and axial stiffness, one sine force.) |
+| [`disturbance-rejection`](cases/disturbance-rejection/) | HTML + JavaScript (Node for checks) | How much does the stage move under a milling force, and how well does it follow a circle or a line? Compares a linear motor with a ball-screw servo, read at the motor or at the stage, with a single-loop or a cascade controller and the encoder resolution. Web page on GitHub Pages. (Coupling and axial stiffness, one sine force.) |
 | [`damper-sizing`](cases/damper-sizing/) | HTML + JavaScript (Node for checks) | How fast does the stage hit its end damper after a runaway, and what damper stops it? Shows force, speed and energy along the damper stroke. Web page on GitHub Pages. (One rigid mass, no field weakening, damper force c·vⁿ.) |
 | [`hard-turning-stability`](cases/hard-turning-stability/) | HTML + JavaScript (Node for checks) | Can two stacked compact stages hard turn steel at 61 to 63 HRC? Stiffness at the tool tip and stability lobes for a given depth of cut, feed and cutting speed. Web page on GitHub Pages. (Damping, thrust ratio and holder are estimates; motor loop and guides added in series.) |
 
@@ -30,7 +30,7 @@ python3 simulation/cases/short-stroke-actuator-concepts/size_concepts.py
 python3 simulation/cases/encoder-stray-field/stray_field.py
 python3 simulation/cases/strip-seal-preload/strip_seal_preload.py
 node simulation/cases/strip-seal-designer/check_model.mjs
-node simulation/cases/cutting-force-rejection/check_model.mjs
+node simulation/cases/disturbance-rejection/check_model.mjs
 node simulation/cases/damper-sizing/check_model.mjs
 node simulation/cases/hard-turning-stability/check_model.mjs
 ```

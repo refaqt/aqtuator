@@ -190,7 +190,7 @@ svg text { font-family: var(--mono); fill: var(--ink); }
           MAXWELL MK21 linear motor, four HIWIN QEH15SA blocks with medium preload (ZA) on EGR15U rails.</p>
         <p><b>Stiffness at the tool tip.</b> Two parts add up in series.</p>
         <ul>
-          <li>The position loop of each motor, the same model as the cutting force page: one rigid mass, a digital
+          <li>The position loop of each motor, the same model as the disturbance rejection page: one rigid mass, a digital
             controller at the loop rate, tuned with the same robustness rules (sensitivity peak at most 6 dB, phase
             margin at least 30°, gain margin at least 6 dB). The upper motor moves the upper carriage and the tool
             holder. The lower motor moves everything on the lower blocks.</li>
@@ -207,7 +207,7 @@ svg text { font-family: var(--mono); fill: var(--ink); }
           1 + b · K<sub>t</sub> · (1 − e<sup>−jωT</sup>) · Φ = 0, with T one spindle turn,
           K<sub>t</sub> = dF<sub>c</sub>/dh per mm of chip width, and Φ the tip compliance seen from the direction of
           the chip thickness, under the force direction. The lobes come from the same function as the lobes of the
-          cutting force page. The limit chip width is turned back into a depth of cut through the edge shape.</p>
+          disturbance rejection page. The limit chip width is turned back into a depth of cut through the edge shape.</p>
         <p><b>Sources.</b> k<sub>c1</sub> and m<sub>c</sub>: ISCAR material table, hardened steel 60 HRC (4700 N/mm²,
           0.25). A row for 62 HRC is not given. Block stiffness: HIWIN catalogue GW-13-1-EN-2606-K, Table 3.44
           (QE15S, ZA: 115 N/µm). The sideways stiffness is not in the catalogue. Masses and block positions: the
@@ -231,7 +231,7 @@ svg text { font-family: var(--mono); fill: var(--ink); }
 </div>
 
 <!-- Plain scripts, so the page also works when opened straight from disk. -->
-<script src="../cutting-force-rejection/control_model.js"></script>
+<script src="../disturbance-rejection/control_model.js"></script>
 <script src="./turning_model.js"></script>
 <script>
 (() => {

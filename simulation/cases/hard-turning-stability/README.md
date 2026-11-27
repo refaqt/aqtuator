@@ -5,7 +5,7 @@ cross slide made of two stacked compact stages? It works out the stiffness at th
 the stability lobes: the depth of cut where chatter starts, against the spindle speed. The lathe bed
 and the spindle count as rigid.
 
-It is derived from the [cutting force page](../cutting-force-rejection/). It reuses that page's
+It is derived from the [disturbance rejection page](../disturbance-rejection/). It reuses that page's
 linear motor loop, its exact compliance at the samples and its lobe function, and adds the second
 stage, the guide blocks, the tool shank, three force directions and the turning forces.
 
@@ -45,7 +45,7 @@ down (−Y). The feed runs along −Z.
 | Entering angle | 95° | CNMG or DNMG style holder |
 | k<sub>c1</sub>, m<sub>c</sub> | 4700 N/mm², 0.25 | [ISCAR material table](https://www.iscar.com/eCatalog/Ecat/datafileENM/INFO/5092.pdf), hardened steel 60 HRC ("specific cutting force for 1 mm² chip section"). The 55 HRC row is 4600 and 0.25. No row for 62 HRC |
 | F<sub>t</sub>/F<sub>c</sub> | 1.5 | An estimate. A search summary of [Grzesik et al.](https://yadda.icm.edu.pl/baztech/element/bwmeta1.element.baztech-5e593c41-e62b-41de-972f-3f85802ce301/c/5_Grzesik_et_al._Energy-Based_54-62.pdf) gives 1.10 at 0.4 mm nose radius and 1.45 to 1.55 at 0.8 mm, for chamfered CBN in hardened 41Cr4 (55 HRC). Not confirmed: the paper could not be opened. Worn tools give more. Range 1.1 to 2.5 |
-| Loop rate | 10 kHz | As on the cutting force page. DRV-09 asks for at least 4 kHz |
+| Loop rate | 10 kHz | As on the disturbance rejection page. DRV-09 asks for at least 4 kHz |
 | Moving mass of one stage | 4.24 kg | Carriage halves, forcer, blocks, read head, small parts: the end stop crash case of the compact stage |
 | Fixed mass of one stage | 6.71 kg | Base, rails, stators, strip: same source |
 | Tool holder | 1.5 kg | An estimate |
@@ -59,7 +59,7 @@ down (−Y). The feed runs along −Z.
 ## What the model does
 
 - **Two parts in series.** The tip compliance is the motor loops plus the structure:
-  - **Motor loops.** The linear motor case of the cutting force page, one rigid mass each, with the
+  - **Motor loops.** The linear motor case of the disturbance rejection page, one rigid mass each, with the
     same robust tuning (sensitivity peak at most 6 dB, phase margin at least 30°, gain margin at
     least 6 dB). The X motor moves the upper carriage and the holder (5.74 kg). The Z motor moves
     everything on the lower blocks (16.69 kg). Its exact compliance at the samples is used up to
@@ -80,7 +80,7 @@ down (−Y). The feed runs along −Z.
   Kienzle), and Φ = u<sub>h</sub>ᵀ · G · w. u<sub>h</sub> is the direction in which the chip gets
   thicker; w is the force per newton of F<sub>c</sub>. G is the full 3 × 3 tip compliance, so the
   tilt that turns a downward force into an X motion counts. So b<sub>lim</sub> = −1/(2 · K<sub>t</sub> ·
-  Re Φ). The lobes come from `lobes()` of the cutting force page with one tooth. The chip width is
+  Re Φ). The lobes come from `lobes()` of the disturbance rejection page with one tooth. The chip width is
   turned back into a depth of cut through the edge shape. The force direction and the chip
   thickness are taken at the chosen cut.
 - **The limit at the chosen speed** is the lowest lobe that passes that speed, found directly from
@@ -89,13 +89,13 @@ down (−Y). The feed runs along −Z.
   the structure alone.
 
 `check_model.mjs` checks that both loops meet the robustness rules; that a very stiff structure
-gives back the motor loop of the cutting force page; that the static structure equals the two
+gives back the motor loop of the disturbance rejection page; that the static structure equals the two
 block sets and the shank worked out one by one, and is symmetric; that the shank alone peaks at
 √(k/m) with height 1/(2ζk); the low and high frequency limits; that the step at the end of the
 sampled range is negligible; that chip width and edge normal are continuous where the nose meets
 the straight edge, and the forces match a hand calculation; that the limit at the chosen speed
 solves the chatter equation and agrees with the lobe envelope; that the lobes never go below the
-floor; and that one direction alone gives the floor of the cutting force page.
+floor; and that one direction alone gives the floor of the disturbance rejection page.
 
 ## What it shows
 

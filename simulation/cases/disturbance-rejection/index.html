@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Cutting Force Rejection</title>
+<title>Disturbance Rejection</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -77,6 +77,8 @@ input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .check { display: flex; gap: 8px; align-items: flex-start; }
 .check input { margin-top: 3px; accent-color: var(--accent); }
 .check small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+.check[hidden] { display: none; }
+.polar { width: 100%; max-width: 440px; height: auto; margin: 0 auto; }
 .derived { font: 12px var(--mono); color: var(--muted); }
 
 main { display: grid; gap: 20px; min-width: 0; }
@@ -147,12 +149,13 @@ table.res td.bad .v { color: var(--bad); }
 <body>
 <div class="wrap">
   <header>
-    <h1>Cutting Force Rejection</h1>
-    <p>A stage held in place by a digital position controller, while a milling cutter pushes on it. Three drives
-      are compared: a linear motor, and a BLDC motor with a coupling and a ball screw, read at the motor or at the
-      stage. The page tunes the controller of each case with the same robustness rules, and shows how much the stage
-      moves.
-      All transfer functions are in discrete time, at the loop rate.</p>
+    <h1>Disturbance Rejection</h1>
+    <p>A stage held in place by a digital position controller, while a milling cutter pushes on it, and the same
+      stage following a path. Three drives are compared: a linear motor, and a BLDC motor with a coupling and a ball
+      screw, read at the motor or at the stage. Two controllers can be chosen: a single loop from the position error
+      to the force, or a cascade of a position loop around a velocity loop. The page tunes the controller of each
+      case with the same robustness rules, and shows how much the stage moves. The encoder resolution rounds every
+      measured position. All transfer functions are in discrete time, at the loop rate.</p>
   </header>
 
   <div class="layout">
@@ -170,6 +173,32 @@ table.res td.bad .v { color: var(--bad); }
             <span><i class="key" style="border-color:var(--s3)"></i>Ball-screw servo, non-collocated
               <small>Feedback from a linear encoder on the stage.</small></span></label>
         </div>
+      </fieldset>
+      <fieldset>
+        <legend>Controller</legend>
+        <div class="cases">
+          <label class="check"><input id="ctrl-single" name="ctrl" type="radio" value="single" checked>
+            <span>Single-loop controller
+              <small>One loop from the position error straight to the motor force, plus acceleration feedforward.</small></span></label>
+          <label class="check"><input id="ctrl-cascade" name="ctrl" type="radio" value="cascade">
+            <span>Cascade controller
+              <small>Position PID around a velocity PI. Velocity from the change of the encoder position per sample.</small></span></label>
+          <label class="check" id="ffBox"><input id="ffExact" type="checkbox" checked>
+            <span>Exact feedforward
+              <small>Vcff &lt; 0 cancels what the velocity integrator adds. Off: standard values, Aff = m/Vp, Vcff = 0.</small></span></label>
+        </div>
+        <div class="field"><label for="qUm">Encoder resolution <small>µm per count, at the stage. 0: no rounding</small></label>
+          <input id="qUm" type="number" step="0.05" min="0" value="0.1"></div>
+        <div class="derived" id="encText"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Path</legend>
+        <div class="field"><label for="circD">Circle diameter <small>mm, two equal stages, X and Y</small></label>
+          <input id="circD" type="number" step="5" min="0.1" value="50"></div>
+        <div class="field"><label for="circF">Feed on the circle <small>mm/min</small></label>
+          <input id="circF" type="number" step="500" min="1" value="3000"></div>
+        <div class="field"><label for="lineV">Speed on a straight line <small>mm/min</small></label>
+          <input id="lineV" type="number" step="5" min="0.01" value="10"></div>
       </fieldset>
       <fieldset>
         <legend>Cutting force</legend>
@@ -246,21 +275,21 @@ table.res td.bad .v { color: var(--bad); }
       </section>
 
       <section class="panel" aria-labelledby="h-ol">
-        <h2 id="h-ol">Open loop <span>plant G, controller C and loop C·G, up to half the loop rate</span></h2>
+        <h2 id="h-ol">Open loop <span>plant G, controller C and loop L, up to half the loop rate</span></h2>
         <div class="legend" data-legend="cases"></div>
         <div class="three">
           <div class="chart-box"><p class="chart-title">Plant G, motor force to measured position, µm/N</p>
             <svg id="cGm" class="chart" viewBox="0 0 420 210"></svg>
             <svg id="cGp" class="chart" viewBox="0 0 420 150"></svg></div>
-          <div class="chart-box"><p class="chart-title">Controller C, N/µm</p>
+          <div class="chart-box"><p class="chart-title" id="cTitle">Controller C, N/µm</p>
             <svg id="cCm" class="chart" viewBox="0 0 420 210"></svg>
             <svg id="cCp" class="chart" viewBox="0 0 420 150"></svg></div>
-          <div class="chart-box"><p class="chart-title">Loop C·G, no unit</p>
+          <div class="chart-box"><p class="chart-title" id="lTitle">Loop C·G, no unit</p>
             <svg id="cLm" class="chart" viewBox="0 0 420 210"></svg>
             <svg id="cLp" class="chart" viewBox="0 0 420 150"></svg>
             <p class="chart-sub" id="marginText"></p></div>
         </div>
-        <div class="chart-box" style="margin-top:16px"><p class="chart-title">Sensitivity |1/(1 + C·G)|, dB, nominal plant</p>
+        <div class="chart-box" style="margin-top:16px"><p class="chart-title" id="sTitle">Sensitivity |1/(1 + C·G)|, dB, nominal plant</p>
           <svg id="cSens" class="chart" viewBox="0 0 880 240"></svg>
           <p class="chart-sub">Where this is high, the loop comes close to −1 and amplifies disturbances. The dashed line is
             the limit. The peak of the worst plant in the family is in the table.</p></div>
@@ -269,6 +298,11 @@ table.res td.bad .v { color: var(--bad); }
           the axial spring, and the motor swinging against the screw on the coupling. The collocated plant also has a
           dip (an antiresonance) before each peak. The non-collocated plant has only the peaks, and its phase drops a
           further 180° at each one.</p>
+        <p class="note" id="cascadeOlNote" hidden>The cascade controller reads two signals: the measured position for
+          the position loop and the motor position for the velocity loop. So the loop is cut open at the motor force:
+          L = c<sub>y</sub>·G + c<sub>x</sub>·G<sub>motor</sub>, and the robustness rules apply to this L. The
+          controller chart shows L/G, the controller as the measured position sees it. For the linear motor and the
+          collocated ball screw both signals come from one encoder.</p>
       </section>
 
       <section class="panel" aria-labelledby="h-cl">
@@ -350,6 +384,31 @@ table.res td.bad .v { color: var(--bad); }
           tool and spindle.</p>
       </section>
 
+      <section class="panel" aria-labelledby="h-path">
+        <h2 id="h-path">Following a path <span>no cutting force, encoder rounding on</span></h2>
+        <div class="legend" data-legend="cases"></div>
+        <div class="two">
+          <div class="chart-box"><p class="chart-title">Contour error on the circle, µm</p>
+            <svg id="cCircle" class="chart" viewBox="0 0 440 260"></svg>
+            <p class="chart-sub" id="circleText"></p></div>
+          <div class="chart-box"><p class="chart-title">The same, around the circle, error enlarged</p>
+            <svg id="cPolar" class="polar" viewBox="0 0 440 300" role="img"
+              aria-label="Path of the stage around the circle, with the radial error drawn much larger than the circle"></svg>
+            <p class="chart-sub" id="polarText"></p></div>
+        </div>
+        <div class="chart-box" style="margin-top:16px"><p class="chart-title">Following error on a straight line at constant speed, µm</p>
+          <svg id="cLine" class="chart" viewBox="0 0 880 260"></svg>
+          <p class="chart-sub" id="lineText"></p></div>
+        <p class="note">Two equal stages, X and Y, each with the drive and the controller of its case, follow a circle.
+          The speed rises over the first 0.1 s with a smooth ramp, then stays at the feed. The chart shows one full
+          turn after the loop has settled. The contour error is the radius of the stage path minus the radius of the
+          circle, at the samples. The straight line uses the same ramp. Its error is the reference position minus the
+          stage position. Both controllers get the acceleration of the path as feedforward; the cascade also gets the
+          speed (Vff). Without encoder rounding both follow almost exactly; only the collocated ball screw keeps the
+          spring deflection under the acceleration, which its motor encoder cannot see. With rounding, the controller
+          sees steps of one count, and the derived velocity of the cascade jumps by one count per sample.</p>
+      </section>
+
       <section class="panel note" aria-labelledby="h-model">
         <h2 id="h-model">How this is calculated</h2>
         <p><b>Linear motor.</b> The stage is a single rigid mass: G(s) = 1/(m·s²), from force in N to position in m.
@@ -369,7 +428,7 @@ table.res td.bad .v { color: var(--bad); }
           is rigid. The motor force acts on m<sub>1</sub>. The cutting force always acts on the stage. The controller
           reads the motor (the rotary encoder, collocated) or the stage (the linear encoder, non-collocated). The plant
           with its hold is found with one matrix exponential, so it is exact at the samples.</p>
-        <p><b>Controller.</b> C(s) = K · 1/s · (s + 2πf<sub>i</sub>)(s + 2πf<sub>d</sub>) / (s + 2πf<sub>lp</sub>)²,
+        <p><b>Single-loop controller.</b> C(s) = K · 1/s · (s + 2πf<sub>i</sub>)(s + 2πf<sub>d</sub>) / (s + 2πf<sub>lp</sub>)²,
           with f<sub>i</sub> = f<sub>b</sub>/10, f<sub>d</sub> = f<sub>b</sub>/3 and f<sub>lp</sub> = 4·f<sub>b</sub>.
           Each factor is translated to discrete time with the bilinear rule (Tustin), s = (2/T)(z − 1)/(z + 1).
           K is set so that |C·G| = 1 at f<sub>b</sub>. Each case gets its own K and f<sub>b</sub>, with the same
@@ -389,6 +448,42 @@ table.res td.bad .v { color: var(--bad); }
         <p>The search starts at a slow f<sub>b</sub> and stops at the first bandwidth where a rule breaks. A resonance
           that sits above 0 dB with a good phase at an even higher f<sub>b</sub> is not used: such a loop would be
           fragile.</p>
+        <p>The single loop adds the force m<sub>tot</sub>·a to its output, with a the acceleration of the path and
+          m<sub>tot</sub> the whole moving mass seen at the motor: m for the linear motor,
+          m<sub>1</sub> + m<sub>s</sub> + m for the ball screw (the mass line at low frequency). For a rigid mass this
+          force alone moves the stage along the path, so the loop only has to correct what is left.</p>
+        <p><b>Cascade controller.</b> A position loop gives a speed command to a velocity loop, and the velocity loop
+          gives the motor force. Per sample, with T = 1/f<sub>s</sub>:</p>
+        <ul>
+          <li>Position loop, PID: e<sub>p</sub> = r − y, v<sub>cmd</sub> = Kg·(Pp·e<sub>p</sub> + Pi·Σ T·e<sub>p</sub>
+            + Pd·Δe<sub>p</sub>/T) + Vff·v<sub>path</sub> + Aff·a<sub>path</sub>, with Kg = 1.</li>
+          <li>Velocity: v<sub>m</sub> = (x<sub>m</sub>[k] − x<sub>m</sub>[k−1])/T, from the motor encoder (for the
+            linear motor, the stage encoder). The velocity always comes from the motor, also when the position comes
+            from the stage.</li>
+          <li>Velocity loop, PI: e<sub>v</sub> = v<sub>cmd</sub> − v<sub>m</sub>, u<sub>v</sub> = Vp·e<sub>v</sub> +
+            Vi·Σ T·e<sub>v</sub> + Vcff·v<sub>cmd</sub>. Vcff passes the speed command straight to the force,
+            around the PI.</li>
+          <li>Output filter: a two-pole Butterworth low pass on u<sub>v</sub>. Its output is the motor force u.
+            There is no current loop: the force follows u at once.</li>
+        </ul>
+        <p>Tuning: Vp makes the velocity loop gain 1 at f<sub>v</sub>. Vi = Vp·2π·f<sub>v</sub>/6, the filter sits
+          at 8·f<sub>v</sub> (at most 0.4·f<sub>s</sub>), f<sub>p</sub> = f<sub>v</sub>/3, Pp = 2π·f<sub>p</sub>,
+          Pi = Pp·2π·f<sub>p</sub>/10 and Pd = 0.1. These ratios gave the stiffest loops at the defaults. f<sub>v</sub>
+          is the highest bandwidth where the same rules hold twice: for the velocity loop alone, and for the whole
+          loop cut open at the motor force, on the same plant family. (Tuning the velocity loop to its own limit
+          first leaves no room for the position loop.)</p>
+        <p><b>Feedforward of the cascade.</b> Vff and Aff add to the speed command, not to the force. So they reach
+          the force through the velocity PI. When the stage follows the path exactly, the speed error is A·a, with
+          A = Aff + T/2 (the derived velocity lags half a sample). The integrator then holds Vi·A·v, so the force is
+          Vp·A·a + Vi·A·v + Vcff·(v + Aff·a). This equals m<sub>tot</sub>·a when Vff = 1 (100 %),
+          Vcff = −Vi·A and Vi·A² − (Vp + Vi·T/2)·A + m<sub>tot</sub> = 0. So Aff and Vcff both change when Vp or Vi
+          change; Vff does not. With the box "exact feedforward" off, the standard values Aff = m<sub>tot</sub>/Vp
+          and Vcff = 0 are used. Then the integrator adds a force of about m<sub>tot</sub>·(Vi/Vp)·v, and the position
+          loop must push it back. Vcff is in the loop, so it is part of the tuning. A drive may not accept a negative
+          Vcff: check this with the maker.</p>
+        <p><b>Encoder resolution.</b> In every time simulation, each measured position is rounded to a whole number
+          of counts. The derived velocity can then only take steps of one count per sample: resolution × loop rate.
+          The frequency charts leave the rounding out; it acts like noise.</p>
         <p><b>Why f<sub>b</sub> follows the loop rate and not the mass.</b> The controller shape is fixed, so the
           sensitivity peak of the continuous loop is the same at any bandwidth. The sampling lag adds to it, and that
           lag grows with f<sub>b</sub>/f<sub>s</sub>. So for the linear motor the 6 dB limit is reached at about
@@ -430,7 +525,10 @@ table.res td.bad .v { color: var(--bad); }
             the small forces of this page, and it can lose contact when the force changes sign. A preloaded nut is
             stiffer.</li>
           <li>The force is one pure sine plus a mean. A real cut has harmonics of the tooth frequency.</li>
-          <li>No sensor noise, no quantisation, no force or torque limit on the motor.</li>
+          <li>No sensor noise except the rounding of the encoder, no force or torque limit on the motor, no current
+            loop.</li>
+          <li>The motor encoder of the ball screw has the same resolution, in linear terms at the stage, as the linear
+            encoder.</li>
           <li>The vibration charts use a cut that does not react to the motion. The chatter chart uses a cut that
             does, in one direction only. It leaves out the compliance of the tool and the spindle, which is in series
             and would bring the drives closer together, and the extra damping of the cut at low speed (process
@@ -461,13 +559,19 @@ function params() {
   for (const id of ids) p[id] = parseFloat($(id).value);
   p.teeth = Math.max(1, Math.round(p.teeth));
   p.spread = parseFloat($("spreadPct").value) / 100;
+  p.ctrl = $("ctrl-cascade").checked ? "cascade" : "single";
+  p.ffExact = $("ffExact").checked;
+  p.q = parseFloat($("qUm").value) * 1e-6;
+  p.circD = parseFloat($("circD").value) / 1000;            // m
+  p.circF = parseFloat($("circF").value) / 60000;           // m/s
+  p.lineV = parseFloat($("lineV").value) / 60000;           // m/s
   return p;
 }
 function valid(p) {
   return p.Famp >= 0 && Number.isFinite(p.Fmean) && p.teeth >= 1 && p.rpm > 0 && p.m > 0 && p.fs >= 100 &&
     p.pitch > 0 && p.kc > 0 && p.d > 0 && p.L > 0 && p.Jr > 0 && p.zeta >= 0 &&
     p.droot > 0 && p.droot <= p.d && p.xnut > 0 && p.xnut <= p.L && p.knut > 0 && p.kbear > 0 && p.zetaA >= 0 &&
-    p.msDb > 0 && p.spread >= 0 && p.spread < 1;
+    p.msDb > 0 && p.spread >= 0 && p.spread < 1 && p.q >= 0 && p.circD > 0 && p.circF > 0 && p.lineV > 0;
 }
 const chosen = () => M.CASES.filter((id) => $(`case-${id}`).checked);
 
@@ -493,12 +597,12 @@ const spreadText = (at) => !at || (at.sc === 1 && at.sa === 1) ? "nominal plant"
 const RULE = { Ms: "sensitivity peak", PM: "phase margin", GM: "gain margin", unstable: "stability" };
 // The rules that break 2 % above f_b, with the first plant that breaks each.
 function limitText(t) {
-  if (!t.limit.length) return ["–", "no rule breaks 2 % above f_b"];
+  if (!t.limit.length) return ["–", `no rule breaks 2 % above ${t.kind === "cascade" ? "f_v" : "f_b"}`];
   const seen = new Map();
-  for (const b of t.limit) if (!seen.has(b.rule)) seen.set(b.rule, b);
+  for (const b of t.limit) if (!seen.has(b.rule + (b.loop ?? ""))) seen.set(b.rule + (b.loop ?? ""), b);
   const rules = [...seen.values()];
   const plants = [...new Set(rules.map((b) => spreadText(b)))];
-  return [rules.map((b) => RULE[b.rule]).join(", "), plants.join("; ")];
+  return [rules.map((b) => (b.loop ? "velocity loop " : "") + RULE[b.rule]).join(", "), plants.join("; ")];
 }
 
 // ----- SVG helpers ---------------------------------------------------------
@@ -746,6 +850,7 @@ function svgKit(svg) {
 
 function diagram(p) {
   const svg = $("diagram");
+  svg.setAttribute("viewBox", "0 0 900 250");
   const { line, box, text } = svgKit(svg);
   const sum = (x, y) => {
     svg.append(el("circle", { cx: x, cy: y, r: 11, fill: "var(--panel)", stroke: "var(--ink)", "stroke-width": 1.5 }));
@@ -756,15 +861,18 @@ function diagram(p) {
   svg.append(el("rect", { x: 20, y: 44, width: 400, height: 184, rx: 6, fill: "var(--digital)", stroke: "var(--line)", "stroke-dasharray": "4 3" }));
   text(30, 62, `controller, runs at fs = ${hz(p.fs)}`, { fill: "var(--muted)", "font-size": 11 });
 
-  text(34, yM - 8, "r = 0", { fill: "var(--muted)" });
-  line([[34, yM], [69, yM]]);
+  text(30, yM - 8, "r[k]", { fill: "var(--muted)" });
+  line([[30, yM], [69, yM]]);
   sum(80, yM);
   text(62, yM + 28, "−", { "font-size": 16 });
-  line([[91, yM], [134, yM]]);
-  text(98, yM - 8, "e[k]", { fill: "var(--muted)" });
-  box(136, yM - 26, 136, 52, "C(z)", "1/s, lead, low-pass");
-  line([[272, yM], [318, yM]]);
-  text(278, yM - 8, "u[k]", { fill: "var(--muted)" });
+  line([[91, yM], [124, yM]]);
+  text(94, yM - 8, "e[k]", { fill: "var(--muted)" });
+  box(126, yM - 26, 120, 52, "C(z)", "1/s, lead, low-pass");
+  line([[246, yM], [275, yM]]);
+  sum(286, yM);
+  line([[286, 76], [286, yM - 12]]);
+  text(296, 86, "m_tot·a[k]", { fill: "var(--muted)", "font-size": 10.5 });
+  line([[297, yM], [318, yM]]);
   box(320, yM - 22, 76, 44, "ZOH", "hold");
   line([[396, yM], [534, yM]]);
   text(404, yM - 8, "motor force u(t)", { fill: "var(--muted)" });
@@ -785,8 +893,80 @@ function diagram(p) {
   svg.append(el("line", { x1: 604, y1: 198, x2: 582, y2: 188, stroke: "var(--ink)", "stroke-width": 1.5 }));
   svg.append(el("circle", { cx: 578, cy: 200, r: 3, fill: "var(--ink)" }));
   text(540, 222, "sample every T = 1/fs", { fill: "var(--muted)", "font-size": 10.5 });
-  line([[575, 200], [80, 200], [80, yM + 13]]);
+  line([[575, 200], [452, 200]]);
+  box(380, 184, 70, 32, "round", "", { fill: "var(--panel)" });
+  text(462, 194, "counts", { fill: "var(--muted)", "font-size": 10 });
+  line([[380, 200], [80, 200], [80, yM + 13]]);
   text(300, 194, "y[k]", { fill: "var(--muted)" });
+  text(30, 82, `r: the path (0 under the cut)`, { fill: "var(--muted)", "font-size": 10.5 });
+}
+
+// The cascade: position PID, speed command, velocity PI with the derived
+// velocity, output filter, hold.
+function diagramCascade(p, t) {
+  const svg = $("diagram");
+  const { line, box, text } = svgKit(svg);
+  const sum = (x, y) => {
+    svg.append(el("circle", { cx: x, cy: y, r: 10, fill: "var(--panel)", stroke: "var(--ink)", "stroke-width": 1.5 }));
+    svg.append(el("path", { d: `M${x - 5},${y}H${x + 5}M${x},${y - 5}V${y + 5}`, stroke: "var(--ink)", "stroke-width": 1.2 }));
+  };
+  svg.setAttribute("viewBox", "0 0 900 270");
+  const yM = 112;
+  svg.append(el("rect", { x: 14, y: 34, width: 512, height: 214, rx: 6, fill: "var(--digital)", stroke: "var(--line)", "stroke-dasharray": "4 3" }));
+  text(22, 242, `controller, runs at fs = ${hz(p.fs)}`, { fill: "var(--muted)", "font-size": 11 });
+  text(20, yM - 8, "r[k]", { fill: "var(--muted)" });
+  line([[20, yM], [43, yM]]);
+  sum(54, yM);
+  text(38, yM + 24, "−", { "font-size": 15 });
+  line([[64, yM], [78, yM]]);
+  box(80, yM - 22, 74, 44, "PID", "position");
+  line([[154, yM], [175, yM]]);
+  sum(186, yM);
+  line([[186, 64], [186, yM - 11]]);
+  text(150, 60, "Vff·v + Aff·a", { fill: "var(--muted)", "font-size": 10.5 });
+  line([[196, yM], [223, yM]]);
+  text(190, yM + 20, "v_cmd", { fill: "var(--muted)", "font-size": 10 });
+  sum(234, yM);
+  text(240, yM + 26, "−", { "font-size": 15 });
+  line([[244, yM], [262, yM]]);
+  box(264, yM - 22, 64, 44, "PI", "velocity");
+  line([[328, yM], [345, yM]]);
+  sum(356, yM);
+  // Vcff: from the speed command straight to the force.
+  svg.append(el("polyline", { points: `210,${yM} 210,80 356,80`, fill: "none", stroke: "var(--ink)", "stroke-width": 1.2 }));
+  line([[356, 80], [356, yM - 11]]);
+  text(262, 76, "Vcff", { fill: "var(--muted)", "font-size": 10.5 });
+  line([[366, yM], [382, yM]]);
+  box(384, yM - 22, 62, 44, "LP", "filter");
+  line([[446, yM], [458, yM]]);
+  box(460, yM - 20, 56, 40, "ZOH", "hold");
+  line([[516, yM], [578, yM]]);
+  text(526, yM - 8, "u(t)", { fill: "var(--muted)" });
+
+  // Physical part.
+  line([[660, 22], [660, yM - 24]]);
+  text(672, 26, "cutting force F_d(t)", { "font-weight": 500 });
+  box(580, yM - 24, 160, 48, "stage plant", "one of the three cases");
+  line([[740, yM], [880, yM]]);
+  text(770, yM - 8, "stage position", { "font-weight": 500 });
+
+  // Position feedback.
+  svg.append(el("polyline", { points: `760,${yM} 760,176 600,176`, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }));
+  text(752, 168, "measured position y", { fill: "var(--muted)", "font-size": 10.5, "text-anchor": "end" });
+  line([[600, 176], [452, 176]]);
+  box(382, 162, 68, 28, "round", "", { fill: "var(--panel)" });
+  line([[382, 176], [54, 176], [54, yM + 12]]);
+  text(150, 170, "y[k]", { fill: "var(--muted)" });
+  // Motor position, velocity feedback.
+  svg.append(el("polyline", { points: `720,${yM + 24} 720,226 600,226`, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }));
+  text(712, 220, "motor position x_m", { fill: "var(--muted)", "font-size": 10.5, "text-anchor": "end" });
+  line([[600, 226], [452, 226]]);
+  box(382, 212, 68, 28, "round", "", { fill: "var(--panel)" });
+  line([[382, 226], [330, 226]]);
+  box(250, 210, 78, 32, "(1−z⁻¹)/T", "", { fill: "var(--panel)" });
+  line([[250, 226], [234, 226], [234, yM + 12]]);
+  text(150, 222, "derived velocity v_m", { fill: "var(--muted)", "font-size": 10, "text-anchor": "middle" });
+  text(890, 262, "linear motor and collocated case: one encoder gives y and x_m", { fill: "var(--muted)", "font-size": 10, "text-anchor": "end" });
 }
 
 // The ball-screw mechanics, with both encoders.
@@ -862,6 +1042,38 @@ function mechDiagram(p, q) {
   text(890, 210, `motor encoder dips ${q.antis.map(hz).join(", ")}`, { "text-anchor": "end", "font-size": 10.5, fill: "var(--muted)" });
 }
 
+// The circle seen from above, with the radial error enlarged so that the
+// largest error takes a quarter of the radius. Dashed rings: ± the largest
+// error.
+function polar(p, cases, CT) {
+  const svg = $("cPolar");
+  svg.replaceChildren();
+  if (!cases.length) return;
+  const cx = 220, cy = 150, R = 84;
+  const eMax = Math.max(1e-15, ...cases.map((id) => Math.max(Math.abs(CT[id].lo), Math.abs(CT[id].hi))));
+  const k = R * 0.3 / eMax;
+  for (const [rr, dash] of [[R, ""], [R + eMax * k, "3 3"], [R - eMax * k, "3 3"]]) {
+    svg.append(el("circle", { cx, cy, r: rr, fill: "none", stroke: dash ? "var(--line)" : "var(--ref)", "stroke-width": 1,
+      "stroke-dasharray": dash }));
+  }
+  for (const a of [0, 90, 180, 270]) {
+    const c = Math.cos(a * Math.PI / 180), s = -Math.sin(a * Math.PI / 180);
+    svg.append(el("line", { x1: cx + c * (R - eMax * k - 6), y1: cy + s * (R - eMax * k - 6), x2: cx + c * (R + eMax * k + 6),
+      y2: cy + s * (R + eMax * k + 6), stroke: "var(--grid)" }));
+    svg.append(el("text", { x: cx + c * (R + eMax * k + 22), y: cy + s * (R + eMax * k + 22) + 4, "text-anchor": "middle",
+      "font-size": 10.5, fill: "var(--muted)" }, `${a}°`));
+  }
+  for (const id of cases) {
+    const pts = CT[id].pts.map(([a, e]) => {
+      const r = R + e * k, t = a * Math.PI / 180;
+      return `${(cx + r * Math.cos(t)).toFixed(2)},${(cy - r * Math.sin(t)).toFixed(2)}`;
+    });
+    svg.append(el("polyline", { points: pts.join(" "), fill: "none", stroke: CASE[id].color, "stroke-width": 1.2 }));
+  }
+  $("polarText").textContent = `Solid grey: the circle. Dashed rings: ±${sig(eMax * 1e6)} µm, drawn at 30 % of the radius. ` +
+    "The angle is measured from the centre; X to the right, Y up.";
+}
+
 // ----- Results table -------------------------------------------------------
 function table(rows, cases) {
   const t = $("resTable");
@@ -913,7 +1125,8 @@ function cached(key, fn) {
   }
   return cache.get(key);
 }
-const tuneKey = (p, id) => JSON.stringify([id, p.m, p.fs, p.pm, p.msDb, p.gmMinDb, ...(id === "linear" ? [] : [p.pitch, p.kc, p.d, p.L, p.Jr, p.zeta, p.droot, p.xnut, p.knut, p.kbear, p.zetaA, p.spread])]);
+const tuneKey = (p, id) => JSON.stringify([id, p.ctrl, p.ctrl === "cascade" ? p.ffExact : 0, p.m, p.fs, p.pm, p.msDb, p.gmMinDb,
+  ...(id === "linear" ? [] : [p.pitch, p.kc, p.d, p.L, p.Jr, p.zeta, p.droot, p.xnut, p.knut, p.kbear, p.zetaA, p.spread])]);
 
 const um = 1e6;
 // Any error must reach the status line. Otherwise the page keeps saying
@@ -947,8 +1160,17 @@ function run() {
   $("mechText").textContent = `motor m₁ = ${sig(q.m1)} kg, screw m_s = ${sig(q.ms)} kg, stage ${sig(p.m)} kg. ` +
     `Coupling k_c = ${sig(q.kc / um)} N/µm. Axial k_a = ${sig(q.ka / um)} N/µm (shaft ${sig(q.kShaft / um)}, ` +
     `nut ${sig(q.kNut / um)}, bearing ${sig(q.kBear / um)}). Resonances ${q.modes.map(hz).join(" and ")}.`;
-  diagram(p);
+  const casc = p.ctrl === "cascade";
+  if (casc) diagramCascade(p); else diagram(p);
   mechDiagram(p, q);
+  $("ffBox").hidden = !casc;
+  $("cascadeOlNote").hidden = !casc;
+  $("cTitle").textContent = casc ? "Controller seen from the measured position, L/G, N/µm" : "Controller C, N/µm";
+  $("lTitle").textContent = casc ? "Loop L, cut at the motor force, no unit" : "Loop C·G, no unit";
+  $("sTitle").textContent = casc ? "Sensitivity |1/(1 + L)|, dB, nominal plant" : "Sensitivity |1/(1 + C·G)|, dB, nominal plant";
+  $("encText").textContent = p.q > 0
+    ? `Derived velocity in steps of ${sig(p.q * p.fs * 1000)} mm/s. Motor encoder ${sig(p.pitch / 1000 / p.q)} counts/rev.`
+    : "No rounding.";
   legends(cases);
 
   // Tune each case. A case that cannot be tuned, or is unstable, is shown in
@@ -981,10 +1203,33 @@ function run() {
     if (tc.stable) ref = CH.colloc ?? chatterOf("colloc", tc);
   } catch (e) { ref = null; }
 
+  // Path tests, no cutting force.
+  const CT = {}, LT = {};
+  for (const id of live) {
+    const key = `${tuneKey(p, id)}|${p.q}`;
+    CT[id] = cached(`circle|${key}|${p.circD}|${p.circF}`, () => M.circleTest(p, T[id], p.circD, p.circF));
+    LT[id] = cached(`line|${key}|${p.lineV}`, () => M.lineTest(p, T[id], p.lineV));
+  }
+
   $("resHead").textContent = `Tooth frequency ${hz(ft)}: ${sig(ft / nyq)} × half the loop rate.`;
-  table([
+  const gains = casc ? [
+    ["Velocity bandwidth f_v", (id) => T[id] ? [hz(T[id].fv), `loop rate / f_v = ${sig(p.fs / T[id].fv)}`] : ["none", err[id], "bad"]],
+    ["Position bandwidth f_p", (id) => T[id] && [hz(T[id].fp), `f_v / ${M.CASCADE.nP}, Pp = 2π·f_p`]],
+    ["Velocity loop", (id) => T[id] && [`Vp ${sig(T[id].Vp)} N·s/m`, `Vi ${sig(T[id].Vi)} N/m, filter ${hz(T[id].bq.fc)}`]],
+    ["Position loop", (id) => T[id] && [`Pp ${sig(T[id].Pp)} 1/s`, `Pi ${sig(T[id].Pi)} 1/s², Pd ${sig(T[id].Pd)}, Kg ${sig(T[id].Kg)}`]],
+    ["Feedforward", (id) => T[id] && [`Aff ${sig(T[id].Aff * 1000)} ms`,
+      `Vff ${sig(T[id].Vff * 100)} %, Vcff ${sig(T[id].Vcff)} N·s/m, ${T[id].exact ? "exact" : T[id].exactFailed ? "standard: no exact solution" : "standard"}`,
+      T[id].exactFailed ? "warn" : ""]],
+    ["Velocity loop alone", (id) => T[id] && [`${T[id].worst.vel.msDb.toFixed(1)} dB`,
+      `worst sensitivity peak; phase margin ${T[id].worst.vel.pmDeg.toFixed(1)}°, gain margin ${Number.isFinite(T[id].worst.vel.gmDb) ? T[id].worst.vel.gmDb.toFixed(1) + " dB" : "none"}`,
+      T[id].worst.vel.msDb <= p.msDb + 0.01 ? "ok" : "warn"]],
+  ] : [
     ["Bandwidth f_b", (id) => T[id] ? [hz(T[id].fb), `loop rate / f_b = ${sig(p.fs / T[id].fb)}`] : ["none", err[id], "bad"]],
     ["Gain K", (id) => T[id] && [sig(T[id].K), "N/(m·s)"]],
+    ["Feedforward", (id) => T[id] && [`${sig(T[id].mTot)} kg`, "m_tot·a, the mass line at the motor"]],
+  ];
+  table([
+    ...gains,
     ["Limited by", (id) => T[id] && limitText(T[id])],
     ["Sensitivity peak", (id) => T[id] && [`${T[id].worst.msDb.toFixed(1)} dB`,
       `worst of ${T[id].family} plant${T[id].family > 1 ? "s" : ""} (${spreadText(T[id].worst.msAt)}), at ${hz(T[id].worst.fMs)}`,
@@ -1006,6 +1251,10 @@ function run() {
     ["Peak controller force", (id) => EN[id] && [`${sig(EN[id].uPeak)} N`,
       `when the cut starts, mean included${id === "linear" ? "" : `, ${torque(id, EN[id].uPeak)}`}`]],
     ["Controller power", (id) => SS[id] && [`${sig(SS[id].pPeak)} W`, `peak |u·v|, mean ${sig(SS[id].pMean)} W`]],
+    ["Contour error, circle", (id) => CT[id] && [`${sig(CT[id].lo * um)} to ${sig(CT[id].hi * um)} µm`,
+      `rms ${sig(CT[id].rms * um)} µm, Ø${sig(p.circD * 1000)} mm at ${sig(p.circF * 60000)} mm/min${CT[id].turn < 1 ? `, ${Math.round(CT[id].turn * 100)} % of a turn` : ""}`]],
+    ["Following error, line", (id) => LT[id] && [`${sig(LT[id].lo * um)} to ${sig(LT[id].hi * um)} µm`,
+      `rms ${sig(LT[id].rms * um)} µm, mean ${sig(LT[id].mean * um)} µm, at ${sig(p.lineV * 60000)} mm/min`]],
     ["Chatter-free depth, any speed", (id) => CH[id] && (ref
       ? [`${sig(CH[id].floor / ref.floor)} ×`, `the collocated ball screw. −1/min Re G = ${sig(CH[id].floor / um)} N/µm at ${hz(CH[id].fMin)}`]
       : [`${sig(CH[id].floor / um)} N/µm`, `−1/min Re G at ${hz(CH[id].fMin)}. No collocated reference.`])],
@@ -1030,7 +1279,7 @@ function run() {
   for (const id of tuned) FD[id] = M.frequencyData(p, T[id], 600, fLo);
   const xTip = (f) => hz(f);
   const deg = (r) => r * 180 / Math.PI;
-  const vFb = tuned.map((id, i) => ({ x: T[id].fb, label: "f_b", color: CASE[id].color, row: i }));
+  const vFb = tuned.map((id, i) => ({ x: T[id].fb, label: casc ? "f_p" : "f_b", color: CASE[id].color, row: i }));
   if (!tuned.length) for (const c of ["cGm", "cGp", "cCm", "cCp", "cLm", "cLp", "cSens", "cY", "cS"]) $(c).replaceChildren();
   if (tuned.length) {
     const fd0 = FD[tuned[0]];
@@ -1047,7 +1296,7 @@ function run() {
     bode("cGm", "cGp", "G", um, (v) => `${sig(v)} µm/N`, { yLabel: "µm/N" });
     bode("cCm", "cCp", "C", 1 / um, (v) => `${sig(v)} N/µm`, { yLabel: "N/µm" });
     bode("cLm", "cLp", "L", 1, (v) => sig(v), {
-      yLabel: "|C·G|", hlines: [{ y: 1, label: "1" }],
+      yLabel: casc ? "|L|" : "|C·G|", hlines: [{ y: 1, label: "1" }],
       markers: tuned.flatMap((id) => [{ x: T[id].fc, y: 1, color: CASE[id].color },
         ...(Number.isFinite(T[id].f180) ? [{ x: T[id].f180, y: 1 / T[id].gm, color: CASE[id].color }] : [])]),
       phl: [{ y: -180, label: "−180°" }, { y: -540 }],
@@ -1137,10 +1386,10 @@ function run() {
   // Sweep.
   const SW = {};
   for (const id of live) {
-    SW[id] = cached(`${tuneKey(p, id)}|${p.Famp}|${p.teeth}|${lo}|${hi}`, () => M.sweep(p, T[id], lo, hi, 100));
+    SW[id] = cached(`${tuneKey(p, id)}|${p.Famp}|${p.teeth}|${p.q}|${lo}|${hi}`, () => M.sweep(p, T[id], lo, hi, 100));
   }
   const rpmAt = (f) => f * 60 / p.teeth;
-  const sv = [...live.map((id, i) => ({ x: rpmAt(T[id].fb), label: "tooth = f_b", color: CASE[id].color, row: i })),
+  const sv = [...live.map((id, i) => ({ x: rpmAt(T[id].fb), label: casc ? "tooth = f_p" : "tooth = f_b", color: CASE[id].color, row: i })),
     { x: rpmAt(nyq), label: "tooth = fs/2", row: live.length }];
   const swTip = (v) => `${Math.round(v)} rev/min, tooth ${hz(v * p.teeth / 60)}`;
   const onSpeed = p.rpm >= lo && p.rpm <= hi;
@@ -1193,10 +1442,31 @@ function run() {
     `(−1/min Re G = ${sig(CH[id].floor / um)} N/µm, min Re G = ${sig(CH[id].minRe * um)} µm/N at ${hz(CH[id].fMin)})`).join(". ") +
     (ref ? "." : ". The collocated ball screw has no stable controller, so the chart shows N/µm.");
 
+  // Path charts.
+  const qU = p.q * um;
+  const countLines = qU > 0 ? [{ y: qU, label: "+1 count" }, { y: -qU, label: "−1 count" }, { y: 0 }] : [{ y: 0 }];
+  chart($("cCircle"), { xLabel: "angle on the circle, °", yLabel: "µm", xRange: [0, 360], xTicks: 4,
+    xTip: (v) => `${v.toFixed(1)}°`, xFmt: (v) => String(Math.round(v)), hlines: countLines,
+    series: live.map((id) => ({ pts: CT[id].pts.map(([a, e]) => [a, e * um]), color: CASE[id].color, width: 1.2,
+      label: CASE[id].name, fmt: (v) => `${sig(v)} µm` })) });
+  $("circleText").textContent = live.length ? `Radius ${sig(p.circD * 500)} mm, ${sig(p.circF * 60000)} mm/min: ` +
+    `one turn takes ${sig(CT[live[0]].tTurn)} s, centripetal acceleration ${sig(p.circF ** 2 / (p.circD / 2))} m/s². ` +
+    live.map((id) => `${CASE[id].name}: ${sig(CT[id].lo * um)} to ${sig(CT[id].hi * um)} µm`).join(", ") + "." +
+    (live.some((id) => CT[id].turn < 1) ? " The feed is so slow that only part of the turn is simulated." : "") : "";
+  polar(p, live, CT);
+  chart($("cLine"), { xLabel: "time at constant speed, ms", yLabel: "µm", xTip: (v) => `${v.toFixed(2)} ms`,
+    hlines: countLines,
+    series: live.map((id) => ({ pts: LT[id].pts.map(([tt, e]) => [tt * 1000, e * um]), color: CASE[id].color, width: 1.2,
+      label: CASE[id].name, fmt: (v) => `${sig(v)} µm` })) });
+  $("lineText").textContent = live.length ? `At ${sig(p.lineV * 60000)} mm/min the encoder gives one count every ` +
+    (p.q > 0 ? `${sig(p.q / p.lineV * 1000)} ms (${sig(p.q / p.lineV * p.fs)} samples). ` : "– (no rounding). ") +
+    live.map((id) => `${CASE[id].name}: rms ${sig(LT[id].rms * um)} µm`).join(", ") + "." : "";
+
   status.textContent = `Updated in ${Math.round(performance.now() - t0)} ms.`;
 }
 
-for (const id of [...ids, "spreadPct", "rpmLo", "rpmHi"]) $(id).addEventListener("input", schedule);
+for (const id of [...ids, "spreadPct", "rpmLo", "rpmHi", "qUm", "circD", "circF", "lineV"]) $(id).addEventListener("input", schedule);
+for (const id of ["ctrl-single", "ctrl-cascade", "ffExact"]) $(id).addEventListener("change", update);
 for (const id of M.CASES) $(`case-${id}`).addEventListener("change", update);
 update();
 </script>

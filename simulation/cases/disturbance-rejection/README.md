@@ -1,7 +1,9 @@
-# cutting-force-rejection
+# disturbance-rejection
 
+**Disturbance Rejection** (until 2026-11-27: Cutting Force Rejection, in `cutting-force-rejection/`).
 A web page that shows how well a digital position controller holds a stage still while a milling
-cutter pushes on it. It compares three drives, each with a checkbox:
+cutter pushes on it, and how well it follows a circle and a straight line. It compares three
+drives, each with a checkbox:
 
 - **Linear motor.** The stage mass only.
 - **Ball-screw servo, collocated.** A BLDC motor drives a ball screw through a coupling. The
@@ -9,18 +11,28 @@ cutter pushes on it. It compares three drives, each with a checkbox:
 - **Ball-screw servo, non-collocated.** The same drive. The controller reads a linear encoder on the
   stage.
 
+Two controllers can be chosen:
+
+- **Single-loop controller.** One loop from the position error straight to the motor force, plus
+  acceleration feedforward m_tot·a.
+- **Cascade controller.** A position PID around a velocity PI, with the velocity derived from the
+  encoder position, a low-pass output filter, and the feedforward Vff, Aff and Vcff. The structure
+  follows the Copley Controls drive manuals (sources below).
+
 For each case the page tunes the controller with the same robustness rules (see below), and shows
 the open loop, the sensitivity, the compliance, the stiffness, the vibration of the stage, the
-force and power the controller must deliver, and the depth of cut where chatter starts.
+force and power the controller must deliver, the depth of cut where chatter starts, the contour
+error on a circle and the following error on a straight line. Every measured position is rounded to
+the encoder resolution in the time simulations.
 
-**Open it:** <https://refaqt.github.io/aqtuator/cutting-force/> (after the one-time Pages setup, see
-the [strip seal log](../../../docs/log/2026-09-28_strip-seal-designer.md)). No server and no install.
-It runs in the browser.
+**Open it:** <https://refaqt.github.io/aqtuator/disturbance-rejection/>. The old address
+<https://refaqt.github.io/aqtuator/cutting-force/> forwards to it. No server and no install. It runs
+in the browser, online or opened straight from disk.
 
 **Tool:** plain HTML and JavaScript. The checks need Node 18 or newer, no packages.
 
 ```bash
-node simulation/cases/cutting-force-rejection/check_model.mjs
+node simulation/cases/disturbance-rejection/check_model.mjs
 ```
 
 To run the page from a local clone, open `index.html` in the browser. No server is needed. The
@@ -55,6 +67,12 @@ Logs: [2026-09-28](../../../docs/log/2026-09-28_cutting-force-rejection.md),
 | Nut stiffness | 118 N/µm | HIWIN 16-5T4 |
 | Fixed bearing stiffness | 104 N/µm | TBI Motion BK12 |
 | Axial damping ratio | 0.02 | Of the stage on the axial spring. An estimate, range 0.01 to 0.05, see below |
+| Controller | single loop | Or the cascade |
+| Exact feedforward | on | Cascade only. Off: the standard values Aff = m/Vp, Vcff = 0 |
+| Encoder resolution | 0.1 µm | Per count, in linear terms at the stage, for every encoder. 0: no rounding. The model file default is 0, so the checks and the hard turning page see no rounding |
+| Circle diameter | 50 mm | Two equal stages, X and Y |
+| Feed on the circle | 3000 mm/min | |
+| Speed on a straight line | 10 mm/min | |
 
 The defaults are an SFU1605 screw with a BK12 fixed support at the motor end and a supported far
 end. The page has no computation delay: the controller applies the new
@@ -83,7 +101,7 @@ force in the same sample. The hold lag of half a sample is in the plant.
     600 Hz and 796 Hz.
   - The plant with its hold comes from one matrix exponential, so it is exact at the samples. For
     one mass it equals the formula above (a check tests this).
-- **Controller.** C(s) = K · 1/s · (s + 2πf_i)(s + 2πf_d) / (s + 2πf_lp)², with f_i = f_b/10,
+- **Single-loop controller.** C(s) = K · 1/s · (s + 2πf_i)(s + 2πf_d) / (s + 2πf_lp)², with f_i = f_b/10,
   f_d = f_b/3, f_lp = 4·f_b. The three factors are translated to discrete time with the bilinear rule
   (Tustin) and run as difference equations.
 - **Tuning, the same rules for each case.** K makes |C·G| = 1 at f_b. f_b is the highest bandwidth,
@@ -109,9 +127,57 @@ force in the same sample. The hold lag of half a sample is in the plant.
   van de Molengraft and Steinbuch,
   [Optimization aided loop shaping for motion systems](https://pure.tue.nl/ws/files/1735760/722626141095799.pdf)
   (a sensitivity peak below 6 dB).
-- **Compliance.** The cutting force acts on the stage. Y/F_d = G_sd − G_su·C·G_md/(1 + C·G_mu), in
-  µm/N, where m is the measured position and s the stage. For the linear motor this is
-  G/(1 + G·C). The stiffness is its inverse, in N/µm.
+- **Single-loop feedforward.** The force m_tot·a is added to the controller output, with a the
+  acceleration of the path and m_tot the mass line seen at the motor: m for the linear motor,
+  m₁ + m_s + m for the ball screw.
+- **Cascade controller.** The controller is written as a row of two transfer functions,
+  u = −c_y·y_m − c_x·x_motor (plus the feedforward, which is outside the loop). Per sample:
+  - position PID: e_p = r − y_m, v_cmd = Kg·(Pp·e_p + Pi·Σ T·e_p + Pd·Δe_p/T) + Vff·v + Aff·a, Kg = 1;
+  - derived velocity: v_m = (x_m[k] − x_m[k−1])/T, always from the motor encoder (for the linear
+    motor, from the stage encoder);
+  - velocity PI: e_v = v_cmd − v_m, u_v = Vp·e_v + Vi·Σ T·e_v + Vcff·v_cmd;
+  - output filter: a two-pole Butterworth low pass (RBJ biquad) gives the motor force u. There is no
+    current loop.
+
+  So c_y = F·(Cv + Vcff)·Kg·Cp and c_x = F·Cv·D, with D = (1 − z⁻¹)/T. The loop is cut open at the
+  motor force: L = c_y·G_mu + c_x·G_xu, and the robustness rules apply to this L. The same code
+  (`ctrlStep`) runs in the time simulation and in the stability test.
+- **Cascade tuning.** One bandwidth is searched, f_v. Vp makes the velocity loop gain 1 at f_v,
+  Vi = Vp·2π·f_v/6, the output filter sits at 8·f_v (at most 0.4·f_s), f_p = f_v/3, Pp = 2π·f_p,
+  Pi = Pp·2π·f_p/10, Pd = 0.1. The ratios are in `CASCADE` in the model file; they gave the
+  stiffest loops at the defaults in a scan of nP 2 to 6, nI 4 to 10, nO 2 to 8. The rules must hold
+  twice, on the same plant family: for the velocity loop alone (the position loop off), and for the
+  whole loop. Tuning the velocity loop to its own limit first, then the position loop, does not
+  work: the whole loop then already breaks the 6 dB limit at the lowest f_p.
+- **Cascade feedforward.** Vff and Aff add to the speed command, not to the force. So they reach the
+  force through the velocity PI. When the stage follows the path exactly, the speed error is A·a,
+  with A = Aff + T/2 (the derived velocity lags half a sample behind the profile speed). The
+  integrator then holds Vi·A·v, so the force is Vp·A·a + Vi·A·v + Vcff·(v + Aff·a). This is m_tot·a
+  when
+  - Vff = 1 (100 %), which does not depend on the velocity loop (no viscous friction in the model);
+  - Vcff = −Vi·A, which cancels the speed-proportional force that the integrator builds up;
+  - Vi·A² − (Vp + Vi·T/2)·A + m_tot = 0 (the smaller root).
+
+  So Aff and Vcff change whenever Vp or Vi change. With "exact feedforward" off, the standard values
+  Aff = m_tot/Vp and Vcff = 0 are used. Then the integrator adds about m_tot·(Vi/Vp)·v: about 70 N
+  at 50 mm/s for the linear motor at the defaults. The position loop pushes it back. A check shows
+  it with the position loop off: the exact values follow a ramp to 50 mm/s within 10 nm, the
+  standard ones fall 15 µm behind. Vcff is inside the loop, so it is part of the tuning. Whether a
+  real drive accepts a negative Vcff is **not confirmed**.
+- **Encoder resolution.** In every time simulation each measured position is rounded to a whole
+  number of counts, q·round(x/q). The derived velocity can only change in steps of q·f_s (1 mm/s at
+  the defaults). The frequency charts leave the rounding out.
+- **Circle and straight line.** No cutting force. The speed ramps up over 0.1 s,
+  v = V·(1 − cos(πt/t_r))/2, then stays constant. The profile gives r, v and a at each sample, like a
+  trajectory generator. Circle: x = R·(cos θ − 1), y = R·sin θ, one simulation per axis, two equal
+  stages. The contour error is the radius of the stage path minus R, over one full turn after the
+  loop has settled. Line: the error is r − x at the stage, over at least 50 ms and 30 encoder counts.
+  Both use the stage position at the samples. A very slow feed on a large circle is cut at 1.5
+  million samples.
+- **Compliance.** The cutting force acts on the stage.
+  Y/F_d = G_sd − G_su·(c_y·G_md + c_x·G_xd)/(1 + L), in µm/N, where m is the measured position, x
+  the motor and s the stage. For the linear motor with the single loop this is G/(1 + G·C). The
+  stiffness is its inverse, in N/µm.
 - **Vibration.** A time simulation: the plant moves in continuous time and is integrated exactly
   between samples, and the controller runs once per sample. The amplitude is half the peak-to-peak
   motion of the stage after the start transient, also between samples. It still holds when the tooth
@@ -158,10 +224,52 @@ not break the tuning, that the stability test agrees with the gain margin, and t
 controller matches C(s) at low frequency. For chatter it checks that the fast sine compliance equals
 the sampled steady state, that the lobes give the textbook result for one mass on a spring, that
 each lobe point solves the loop equation, and that the lobes touch the floor but never go below it.
+The per-case checks run for both controllers. For the cascade it also checks the velocity loop
+alone on all plants, that the feedforward solves its equation, that with the position loop off the
+exact feedforward follows a ramp and the standard one does not, that without rounding both
+controllers follow the circle and the line (the collocated ball screw within its spring deflection
+a_c·((m_s + m)/k_c + m/k_a)), and that with 0.1 µm rounding all errors stay within three counts.
 
 ## What it shows
 
-Results at the defaults:
+### The two controllers, at the defaults (encoder 0.1 µm)
+
+| Case | Controller | Bandwidth | Lowest stiffness | Vibration at 400 Hz | Peak at the start of the cut | Chatter floor | Circle error | Line error, rms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Linear motor | single loop | f_b 287 Hz | 2.5 N/µm | 7.8 µm | 25.3 µm | 7.5 N/µm | −0.053 to 0.079 µm | 0.005 µm |
+| Linear motor | cascade | f_v 678 Hz, f_p 226 Hz | 13.3 N/µm | 3.0 µm | 5.0 µm | 60 N/µm | −0.087 to 0.079 µm | 0.024 µm |
+| Ball screw, collocated | single loop | f_b 102 Hz | 1.3 N/µm | 2.1 µm | 10.3 µm | 2.6 N/µm | −0.020 to 0.067 µm | 0.004 µm |
+| Ball screw, collocated | cascade | f_v 61 Hz, f_p 20 Hz | 1.4 N/µm | 2.1 µm | 16.5 µm | 2.6 N/µm | −0.014 to 0.051 µm | 0.002 µm |
+| Ball screw, non-collocated | single loop | f_b 73 Hz | 2.1 N/µm | 2.5 µm | 12.5 µm | 4.2 N/µm | −0.024 to 0.039 µm | 0.002 µm |
+| Ball screw, non-collocated | cascade | f_v 62 Hz, f_p 21 Hz | 1.5 N/µm | 2.2 µm | 14.7 µm | 2.9 N/µm | −0.031 to 0.041 µm | 0.003 µm |
+
+Circle Ø50 mm at 3000 mm/min, line at 10 mm/min. Exact feedforward.
+
+- **For the linear motor the cascade is much stiffer.** Its velocity loop uses the derived velocity
+  with almost no filter, so it adds damping right up to the loop rate. It reaches 678 Hz (f_s/15)
+  against 287 Hz (f_s/35) for the fixed shape of the single loop, and five times the lowest
+  stiffness. Part of this is the shape of the single loop (lead at f_b/3, low pass at 4·f_b), which
+  was never optimised.
+- **The price is encoder noise.** One count per sample is 1 mm/s of velocity, and Vp is 8250 N·s/m,
+  so one count changes the force by about 8 N. On the slow line the stage then shakes with
+  0.024 µm rms, five times more than with the single loop. A lower output filter or a finer
+  encoder reduces it; the tuning here does not include noise.
+- **For the ball screw the two controllers are about equal.** The resonances set the limit, not
+  the controller. The cascade is a little softer when the cut starts and against chatter for the
+  linear encoder.
+- **Without rounding, both controllers follow the circle and the line almost exactly**, thanks to
+  the feedforward. The collocated ball screw keeps 11 nm: its springs give way under the
+  0.1 m/s² centripetal acceleration, and the motor encoder does not see it.
+- **With 0.1 µm rounding, the errors are a fraction of a count**, mostly noise from the rounding.
+- **Standard feedforward (Vcff = 0)** leaves a radial error of about −0.05 µm on the circle for the
+  ball screw: the integrator force m_tot·(Vi/Vp)·v changes direction around the circle, and the
+  slower position loop does not push it back fully. For the linear motor the stiff position loop
+  hides it.
+
+### The single-loop controller
+
+Results at the defaults (no encoder rounding; with 0.1 µm the vibration and the peaks change by less
+than 1 %):
 
 | Case | f_b | Limited by | Sensitivity peak (worst plant) | Gain margin (worst plant) | Vibration at 400 Hz | Peak at the start of the cut | Lowest stiffness |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -249,6 +357,23 @@ For the linear motor alone:
 | Mass 10 kg | 287 Hz | 1.6 µm | 5.1 µm | 12.5 N/µm |
 | Loop rate 40 kHz | 1146 Hz | 1.25 µm | 2.0 µm | 40 N/µm |
 
+## Sources for the cascade controller
+
+Read on 2026-11-27, from `modules/copley/docs/datasheets/` in the
+[refaqt/stoq](https://github.com/refaqt/stoq) repository.
+
+| Point | Source | What it says |
+| --- | --- | --- |
+| Position loop | CME User Guide 16-01157 Rev05, §12.5 and §12.6.1 to §12.6.4 | Velocity command = Gain Multiplier · (Pp·e + Pi·∫e + Pd·de/dt + Vff·profile velocity + Aff·profile acceleration). Vff 16384 = 100 % |
+| Velocity loop | Same, §12.4.1 and §12.4.5 | Input filter, error against "Feedback (Derived Velocity)", Vp and Vi, output filter, current command. The velocity feedback always comes from the motor encoder |
+| Vcff | Same, §12.2, velocity loop table | "The input command to the velocity loop (after limiting) is scaled by this value and added to the output of the velocity loop." No range is given |
+| Velocity filters | Same, §17.3.1; Xenus Plus User Guide 16-01344 Rev08, §2.2.5 | The velocity filter tab "has no effect on the servo loops". The loop has an input and an output filter: one pole, two-pole Butterworth or a custom biquad |
+| Defaults and loop rates | Xenus Plus User Guide, specifications | Velocity loop output filter default 200 Hz low pass. Current loop 16 kHz, velocity and position loops 4 kHz |
+
+Not confirmed in these documents: that the derived velocity is exactly the change per sample, the
+type of the default 200 Hz filter, whether the output filter comes before or after Vcff is added,
+and whether Vcff can be negative.
+
 ## Sources for the axial stiffness
 
 Checked on 2026-09-28.
@@ -284,7 +409,16 @@ look better than it is.
   preloaded nut is stiffer.
 - One damping ratio per spring. Each is exact only when the other spring is rigid.
 - The force is one sine plus a mean. A real cut also has harmonics of the tooth frequency.
-- No sensor noise, no quantisation, no force or torque limit on the motor.
+- No sensor noise apart from the encoder rounding, no force or torque limit on the motor, no current
+  loop.
+- The motor encoder of the ball screw has the same resolution, in linear terms, as the linear
+  encoder. For a 5 mm pitch and 0.1 µm this is 50 000 counts per revolution.
+- The tuning ignores the encoder noise. The cascade ratios are fixed; a real drive is tuned with its
+  own filters, often with a lower output filter (the Xenus Plus default is 200 Hz).
+- The cascade runs both loops at the loop rate of the page. The Copley Xenus Plus runs its velocity
+  and position loops at 4 kHz and its current loop at 16 kHz.
+- The structure follows the Copley manuals, but Copley's own units for the gains (for example
+  Vff 16384 = 100 %) are not used. The page gives the gains in SI units.
 - The vibration charts use a cut that does not react to the motion. The chatter chart uses a cut
   that does, in one direction only, with no process damping (the extra damping of the cut at low
   speed) and without the compliance of the tool and spindle.
