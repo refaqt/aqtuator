@@ -40,6 +40,8 @@
 // 20. Without encoder rounding, both controllers follow the circle and the
 //     line (the collocated ball screw within its spring deflection).
 // 21. With 0.1 µm rounding, all errors stay within three counts.
+// 22. The measured and the actual speed on both paths equal the feed without
+//     rounding; with rounding, the measured speed still averages to the feed.
 
 // The model is a plain script (see its end), so it hands over one object.
 import "./control_model.js";
@@ -367,6 +369,28 @@ for (const ctrl of ["single", "cascade"]) for (const id of M.CASES) {
   check(c.peak < 3 * p.q && l.peak < 3 * p.q && Math.abs(l.mean) < p.q,
     `${ctrl} ${id}: rounding 0.1 µm, contour error ${(c.lo * 1e6).toFixed(3)} to ${(c.hi * 1e6).toFixed(3)} µm, ` +
     `line ${(l.lo * 1e6).toFixed(3)} to ${(l.hi * 1e6).toFixed(3)} µm, mean ${(l.mean * 1e6).toFixed(4)} µm`);
+}
+
+// Speed during the path tests. Without rounding, the measured speed (one
+// sample difference of the encoder) and the actual stage speed both equal the
+// feed. With rounding (0.1 µm), the measured speed jumps by whole counts per
+// sample, but over the window it still adds up to the feed.
+for (const ctrl of ["single", "cascade"]) for (const id of M.CASES) {
+  const res = {};
+  for (const q of [0, 1e-7]) {
+    const p = { ...M.DEFAULTS, ctrl, q };
+    const t = M.tune(p, id);
+    res[q] = { c: M.circleTest(p, t, 0.05, 0.05).speed, l: M.lineTest(p, t, 0.01 / 60).speed };
+  }
+  const F = 0.05, V = 0.01 / 60;
+  const a = res[0], b = res[1e-7];
+  check(near(a.c.measStats.lo, F, 1e-3) && near(a.c.measStats.hi, F, 1e-3) && near(a.c.actStats.mean, F, 1e-3) &&
+    near(a.l.measStats.lo, V, 1e-3) && near(a.l.measStats.hi, V, 1e-3) && near(a.l.actStats.mean, V, 1e-3) &&
+    near(b.c.measStats.mean, F, 0.01) && near(b.l.measStats.mean, V, 0.1) && near(b.l.actStats.mean, V, 0.01),
+    `${ctrl} ${id}: speed, no rounding: circle ${(a.c.measStats.lo * 60000).toFixed(1)} to ${(a.c.measStats.hi * 60000).toFixed(1)} mm/min, ` +
+    `line ${(a.l.measStats.mean * 60000).toFixed(4)} mm/min; rounding 0.1 µm: measured mean circle ` +
+    `${(b.c.measStats.mean * 60000).toFixed(1)}, line ${(b.l.measStats.mean * 60000).toFixed(3)} mm/min ` +
+    `(peak ${(b.l.measStats.hi * 60000).toFixed(0)}), actual line ${(b.l.actStats.mean * 60000).toFixed(3)} mm/min`);
 }
 
 if (failed) {

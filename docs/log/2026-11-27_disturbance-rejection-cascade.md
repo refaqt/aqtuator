@@ -80,3 +80,16 @@ settling? Answer, now also on the page and in the case README:
   controllers, at desktop and phone width: no errors.
 
 </details>
+
+## Later the same day: measured and actual speed on the two paths
+
+Two new charts show the speed during the circle and the straight line: the measured speed (what
+the controller can derive from the rounded encoder) and the actual speed of the stage. At the
+defaults (0.1 µm, 4000 Hz) one count per sample is 24 mm/min:
+
+- **Circle, 3000 mm/min.** The measured speed jumps by about ±1 count per sample (about 2970 to
+  3030 mm/min). The actual speed stays within ±1 mm/min on the ball screw and ±14 mm/min on the
+  linear motor.
+- **Line, 1 mm/min.** The measured speed is 0 for most samples and 24 mm/min in one. The actual
+  speed of the ball screw stays between about 0.4 and 1.5 mm/min. The linear motor stage swings
+  between about −12 and +14 mm/min: it moves back and forth over the edge of a count.
