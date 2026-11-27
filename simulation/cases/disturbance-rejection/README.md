@@ -174,12 +174,14 @@ force in the same sample. The hold lag of half a sample is in the plant.
   loop has settled. Line: the error is r − x at the stage, over at least 50 ms and 30 encoder counts.
   Both use the stage position at the samples. A very slow feed on a large circle is cut at 1.5
   million samples.
-- **Speed on the circle and the line.** Two charts show the measured and the actual speed. The
-  measured speed is (y_q[k] − y_q[k−1])/T from the rounded encoder position: the motor encoder for
-  the cascade (the speed its velocity loop uses), the position encoder for the single loop (which
-  does not use a speed). On the circle it is the path speed √(v_x² + v_y²). The actual speed is the
-  true speed of the stage at the samples. With rounding, the measured speed moves in steps of
-  q·f_s (24 mm/min at 0.1 µm and 4000 Hz).
+- **Speed on the circle and the line.** Three charts show the measured and the actual speed: X
+  and Y of the circle, each on its own, and the line. The measured speed is (y_q[k] − y_q[k−1])/T
+  from the rounded encoder position: the motor encoder for the cascade (the speed its velocity loop
+  uses), the position encoder for the single loop (which does not use a speed). The actual speed is
+  the true speed of the stage at the samples. With rounding, the measured speed moves in steps of
+  q·f_s (24 mm/min at 0.1 µm and 4000 Hz). The charts start zoomed in on 100 samples (25 ms at
+  4000 Hz). A button shows the whole run, and a slider moves the window. Every sample is kept, up
+  to 400 000 samples per run.
 - **Compliance.** The cutting force acts on the stage.
   Y/F_d = G_sd − G_su·(c_y·G_md + c_x·G_xd)/(1 + L), in µm/N, where m is the measured position, x
   the motor and s the stage. For the linear motor with the single loop this is G/(1 + G·C). The
